@@ -19,7 +19,7 @@ const autenticarUsuario = async (req, res, next) => {
         const partes = authHeader.split(' ');
         let token;
 
-        if (partes.length === 2 && partes[0] === 'Bearer') {
+        if (partes.length === 2 && partes[0].toLowerCase() === 'bearer') {
             token = partes[1];
         } else {
             token = partes[0]; // Soporte para token plano
@@ -52,12 +52,10 @@ const autenticarUsuario = async (req, res, next) => {
             .maybeSingle();
 
         if (perfilError) {
-            console.error('Error al obtener perfil del usuario:', perfilError);
-            return res.status(500).json({
-                success: false,
-                mensaje: 'Error al obtener el perfil del usuario en la base de datos.',
-                error: perfilError.message
-            });
+            const error = new Error('Error al obtener el perfil del usuario en la base de datos.');
+            error.statusCode = 500;
+            error.originalError = perfilError;
+            return next(error);
         }
 
         // 3. Si el perfil existe, validar si el usuario está activo

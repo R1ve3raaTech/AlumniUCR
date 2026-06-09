@@ -1,4 +1,4 @@
-const usuarioService = require('../services/usuarioService');
+const usuarioService = require('../services/usuarios');
 
 // ======================================================
 // OBTENER TODOS LOS USUARIOS
@@ -64,6 +64,13 @@ const crearUsuario = async (req, res) => {
 const actualizarUsuario = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Verificar si el usuario autenticado tiene permisos (ser el mismo usuario o ser administrador)
+        if (!req.user || (req.user.id !== id && req.user.profile?.tipo !== 'admin')) {
+            return res.status(403).json({
+                mensaje: 'Acceso denegado. No tiene permisos para actualizar este perfil.'
+            });
+        }
 
         const usuarioActualizado =
             await usuarioService.actualizarUsuario(
