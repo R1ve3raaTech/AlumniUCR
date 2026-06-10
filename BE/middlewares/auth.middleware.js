@@ -46,7 +46,7 @@ const autenticarUsuario = async (req, res, next) => {
         // 2. Obtener el perfil del usuario en la tabla 'users' de la base de datos
         // Se usa maybeSingle para evitar excepciones si el perfil aún no se ha creado (ej. flujo de registro)
         const { data: perfil, error: perfilError } = await supabase
-            .from('users')
+            .from('usuarios')
             .select('*')
             .eq('id', user.id)
             .maybeSingle();

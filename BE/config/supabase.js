@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.SUPABASE_URL;
 // Se prefiere la clave secreta (service_role) para operaciones de backend, ya que permite
@@ -18,7 +18,7 @@ if (!esValido) {
 }
 
 const supabase = createClient(
-    supabaseUrl || 'https://placeholder.supabase.co',
+        supabaseUrl || 'https://placeholder.supabase.co',
     supabaseKey || 'placeholder-key',
     {
         auth: {

@@ -1,4 +1,4 @@
-const usuarioService = require('../services/usuarios');
+const usuarioService = require('../services/usuarioService');
 
 // ======================================================
 // OBTENER TODOS LOS USUARIOS

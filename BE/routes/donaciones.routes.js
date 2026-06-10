@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const donacionesController = require('../controllers/donaciones.controller');
+const autenticarUsuario = require('../middlewares/auth.middleware');
+const exigirRol = require('../middlewares/role.middleware');
 
-router.get('/', donacionesController.obtenerDonaciones);
-router.get('/usuario/:idUsuarioExalumno', donacionesController.obtenerDonacionesPorUsuario);
-router.get('/proyecto/:idProyecto', donacionesController.obtenerDonacionesPorProyecto);
-router.get('/estado/:estado', donacionesController.obtenerDonacionesPorEstado);
-router.get('/:id', donacionesController.obtenerDonacionPorId);
-router.post('/', donacionesController.crearDonacion);
-router.put('/:id', donacionesController.actualizarDonacion);
-router.delete('/:id', donacionesController.eliminarDonacion);
+router.get('/', autenticarUsuario, exigirRol('admin'), donacionesController.obtenerDonaciones);
+router.get('/estado/:estado', autenticarUsuario, exigirRol('admin'), donacionesController.obtenerDonacionesPorEstado);
+router.get('/usuario/:idUsuarioExalumno', autenticarUsuario, exigirRol(['admin', 'exalumno']), donacionesController.obtenerDonacionesPorUsuario);
+router.get('/proyecto/:idProyecto', autenticarUsuario, exigirRol(['admin', 'estudiante']), donacionesController.obtenerDonacionesPorProyecto);
+router.get('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno']), donacionesController.obtenerDonacionPorId);
+router.post('/', autenticarUsuario, exigirRol('exalumno'), donacionesController.crearDonacion);
+router.put('/:id', autenticarUsuario, exigirRol('admin'), donacionesController.actualizarDonacion);
+router.delete('/:id', autenticarUsuario, exigirRol('admin'), donacionesController.eliminarDonacion);
 
 module.exports = router;

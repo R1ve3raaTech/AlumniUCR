@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const sedeUCRController = require('../controllers/sede.UCR.controller');
+const autenticarUsuario = require('../middlewares/auth.middleware');
+const exigirRol = require('../middlewares/role.middleware');
 
-router.get('/buscar/:nombre', sedeUCRController.buscarSedesPorNombre);
-router.get('/', sedeUCRController.obtenerSedesUCR);
-router.get('/:id', sedeUCRController.obtenerSedeUCRPorId);
-router.post('/', sedeUCRController.crearSedeUCR);
-router.put('/:id', sedeUCRController.actualizarSedeUCR);
-router.delete('/:id', sedeUCRController.eliminarSedeUCR);
+router.get('/buscar/:nombre', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), sedeUCRController.buscarSedesPorNombre);
+router.get('/', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), sedeUCRController.obtenerSedesUCR);
+router.get('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), sedeUCRController.obtenerSedeUCRPorId);
+router.post('/', autenticarUsuario, exigirRol('admin'), sedeUCRController.crearSedeUCR);
+router.put('/:id', autenticarUsuario, exigirRol('admin'), sedeUCRController.actualizarSedeUCR);
+router.delete('/:id', autenticarUsuario, exigirRol('admin'), sedeUCRController.eliminarSedeUCR);
 
 module.exports = router;

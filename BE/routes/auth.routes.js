@@ -1,16 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const authController = require('../controllers/auth.controller');
 
-// ======================================================
-// RUTAS DE AUTENTICACIÓN (ESQUELETO INICIAL)
-// ======================================================
-
-// Login de usuario
-router.post('/login', (req, res) => {
-    res.status(200).json({
-        success: true,
-        mensaje: 'Ruta de inicio de sesión configurada.'
-    });
-});
+router.post('/register/estudiante', authController.registerEstudiante);
+router.post('/register/exalumno', authController.registerExalumno);
+router.post('/login', authController.login);
 
 module.exports = router;

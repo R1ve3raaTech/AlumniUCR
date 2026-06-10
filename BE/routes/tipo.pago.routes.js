@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const tipoPagoController = require('../controllers/tipo.pago.controller');
+const autenticarUsuario = require('../middlewares/auth.middleware');
+const exigirRol = require('../middlewares/role.middleware');
 
-router.get('/buscar/:descripcion', tipoPagoController.buscarTiposPagoPorDescripcion);
-router.get('/', tipoPagoController.obtenerTiposPago);
-router.get('/:id', tipoPagoController.obtenerTipoPagoPorId);
-router.post('/', tipoPagoController.crearTipoPago);
-router.put('/:id', tipoPagoController.actualizarTipoPago);
-router.delete('/:id', tipoPagoController.eliminarTipoPago);
+router.get('/buscar/:descripcion', autenticarUsuario, exigirRol(['admin', 'exalumno']), tipoPagoController.buscarTiposPagoPorDescripcion);
+router.get('/', autenticarUsuario, exigirRol(['admin', 'exalumno']), tipoPagoController.obtenerTiposPago);
+router.get('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno']), tipoPagoController.obtenerTipoPagoPorId);
+router.post('/', autenticarUsuario, exigirRol('admin'), tipoPagoController.crearTipoPago);
+router.put('/:id', autenticarUsuario, exigirRol('admin'), tipoPagoController.actualizarTipoPago);
+router.delete('/:id', autenticarUsuario, exigirRol('admin'), tipoPagoController.eliminarTipoPago);
 
 module.exports = router;
