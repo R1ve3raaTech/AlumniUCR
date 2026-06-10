@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const proyectoGraduacionController = require('../controllers/proyecto.graduacion.controller');
+const autenticarUsuario = require('../middlewares/auth.middleware');
+const exigirRol = require('../middlewares/role.middleware');
 
-router.get('/finalizados', proyectoGraduacionController.obtenerProyectosFinalizados);
-router.get('/usuario/:idUsuario', proyectoGraduacionController.obtenerProyectosPorUsuario);
-router.get('/area/:areaTematica', proyectoGraduacionController.buscarProyectosPorArea);
-router.get('/', proyectoGraduacionController.obtenerProyectosGraduacion);
-router.get('/:id', proyectoGraduacionController.obtenerProyectoGraduacionPorId);
-router.post('/', proyectoGraduacionController.crearProyectoGraduacion);
-router.put('/:id', proyectoGraduacionController.actualizarProyectoGraduacion);
-router.delete('/:id', proyectoGraduacionController.eliminarProyectoGraduacion);
+router.get('/finalizados', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), proyectoGraduacionController.obtenerProyectosFinalizados);
+router.get('/usuario/:idUsuario', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), proyectoGraduacionController.obtenerProyectosPorUsuario);
+router.get('/area/:areaTematica', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), proyectoGraduacionController.buscarProyectosPorArea);
+router.get('/', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), proyectoGraduacionController.obtenerProyectosGraduacion);
+router.get('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), proyectoGraduacionController.obtenerProyectoGraduacionPorId);
+router.post('/', autenticarUsuario, exigirRol(['admin', 'estudiante']), proyectoGraduacionController.crearProyectoGraduacion);
+router.put('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante']), proyectoGraduacionController.actualizarProyectoGraduacion);
+router.delete('/:id', autenticarUsuario, exigirRol('admin'), proyectoGraduacionController.eliminarProyectoGraduacion);
 
 module.exports = router;

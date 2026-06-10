@@ -5,7 +5,7 @@ require('dotenv').config();
  * Captura cualquier error lanzado en la aplicación o pasado a next().
  */
 const gestionarErrores = (err, req, res, next) => {
-    const statusCode = err.statusCode || res.statusCode !== 200 ? res.statusCode : 500;
+    const statusCode = err.statusCode || (res.statusCode !== 200 ? res.statusCode : 500);
     
     // Loggear el error detalladamente en consola para depuración
     console.error(`\x1b[31m[ERROR] [${req.method}] ${req.originalUrl}\x1b[0m`);

@@ -23,10 +23,11 @@ const exigirRol = (rolesPermitidos) => {
                 });
             }
 
-            const rolUsuario = req.user.profile.tipo; // 'estudiante', 'exalumno', o 'admin'
+            const rolUsuario = req.user.profile.tipo ? req.user.profile.tipo.toLowerCase().trim() : '';
             
             // 3. Formatear roles permitidos como arreglo para búsqueda uniforme
-            const roles = Array.isArray(rolesPermitidos) ? rolesPermitidos : [rolesPermitidos];
+            const roles = (Array.isArray(rolesPermitidos) ? rolesPermitidos : [rolesPermitidos])
+                .map(r => typeof r === 'string' ? r.toLowerCase().trim() : r);
 
             // 4. Validar el rol del usuario contra los permitidos
             if (!roles.includes(rolUsuario)) {
