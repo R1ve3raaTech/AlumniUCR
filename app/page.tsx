@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -46,7 +47,7 @@ export default function Home() {
           <a href="#" className="nav-link" style={{ fontSize: '0.9rem' }}>Inicio</a>
           <a href="#" className="nav-link" style={{ fontSize: '0.9rem' }}>Alumnos</a>
           <a href="#" className="nav-link" style={{ fontSize: '0.9rem' }}>Empresas</a>
-          <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Iniciar Sesión</button>
+          <Link href="/login" className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Iniciar Sesión</Link>
         </nav>
       </header>
 
@@ -101,10 +102,10 @@ export default function Home() {
           </p>
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button className="btn-primary pulse-glow">
+            <Link href="/registro" className="btn-primary pulse-glow">
               Comenzar Ahora
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
-            </button>
+            </Link>
             <button className="btn-secondary">
               Saber Más
             </button>
