@@ -1,13 +1,38 @@
 const supabase = require('../config/supabase');
 const supabaseAuth = require('../config/supabaseAuth');
 const { mapDbError } = require('../utils/dbError');
+const { generarToken, verificarToken } = require('../utils/aprobacionToken');
+const { enviarCorreoAprobacion } = require('./email.service');
 
 // Mapa de rol (string del endpoint) -> id_rol en la tabla 'roles'
 // (1 = Estudiante, 2 = Exalumno).
 const ROLES = { estudiante: 1, exalumno: 2 };
 
+// Nombre legible del rol para los correos de aprobación.
+const NOMBRE_ROL = { estudiante: 'Estudiante', exalumno: 'Exalumno' };
+
 // URL del frontend a la que apunta el magic link (ruta que procesa el token_hash).
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+// URL pública del backend, base de los enlaces de aprobar/rechazar del correo.
+const BACKEND_URL = process.env.APP_BACKEND_URL || 'http://localhost:5000';
+
+/**
+ * Envía al correo aprobador los enlaces para aprobar o rechazar una cuenta
+ * recién registrada. No interrumpe el registro si el correo falla.
+ */
+const notificarAprobacion = async (perfil, rol) => {
+  const token = generarToken(perfil.id);
+  const aprobarUrl = `${BACKEND_URL}/api/auth/aprobar/${perfil.id}?token=${token}`;
+  const rechazarUrl = `${BACKEND_URL}/api/auth/rechazar/${perfil.id}?token=${token}`;
+  await enviarCorreoAprobacion({
+    nombre: perfil.nombre,
+    correo: perfil.correo_electronico,
+    rol: NOMBRE_ROL[rol] || 'Usuario',
+    aprobarUrl,
+    rechazarUrl,
+  });
+};
 
 const registerUser = async (correo, contrasena, rol) => {
   // 1. Registrar en Supabase Auth
@@ -33,11 +58,17 @@ const registerUser = async (correo, contrasena, rol) => {
         nombre: correo.split('@')[0],
         correo_electronico: correo,
         id_rol: ROLES[rol] ?? ROLES.estudiante,
+        // La cuenta nace pendiente: requiere aprobación desde el correo.
+        confirmado: false,
+        estado: 'pendiente',
       },
     ])
     .select()
     .single();
   if (userError) throw mapDbError(userError);
+
+  // 3. Notificar al aprobador (no bloquea el registro si el correo falla).
+  await notificarAprobacion(userData, rol);
 
   return { auth: authData.user, perfil: userData };
 };
@@ -50,6 +81,24 @@ const loginUser = async (correo, contrasena) => {
   if (error) {
     error.statusCode = 401;
     throw error;
+  }
+
+  // Bloquear el acceso si la cuenta aún no fue aprobada por la administración.
+  const { data: perfil } = await supabase
+    .from('usuarios')
+    .select('estado')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (perfil && perfil.estado !== 'activo') {
+    const mensajes = {
+      pendiente: 'Tu cuenta está pendiente de aprobación. Te avisaremos cuando sea aprobada.',
+      rechazado: 'Tu solicitud de cuenta fue rechazada. Contacta a la administración.',
+      suspendido: 'Tu cuenta ha sido suspendida por la administración.',
+    };
+    const err = new Error(mensajes[perfil.estado] || 'Tu cuenta no está activa.');
+    err.statusCode = 403;
+    throw err;
   }
 
   return {
@@ -114,7 +163,10 @@ const completarPerfil = async (token, nombre, contrasena) => {
   if (passError) throw passError;
 
   // Crear o actualizar el perfil con las columnas reales de la tabla.
+  // La cuenta queda PENDIENTE: no podrá iniciar sesión hasta que la
+  // administración la apruebe desde el correo de verificación.
   const rol = user.user_metadata?.rol;
+  const rolNormalizado = rol === 'exalumno' ? 'exalumno' : 'estudiante';
   const { data: perfil, error: perfilError } = await supabase
     .from('usuarios')
     .upsert(
@@ -122,8 +174,9 @@ const completarPerfil = async (token, nombre, contrasena) => {
         id: user.id,
         nombre: nombre.trim(),
         correo_electronico: user.email,
-        id_rol: ROLES[rol] ?? ROLES.estudiante,
-        confirmado: true,
+        id_rol: ROLES[rolNormalizado],
+        confirmado: false,
+        estado: 'pendiente',
       },
       { onConflict: 'id' },
     )
@@ -131,7 +184,64 @@ const completarPerfil = async (token, nombre, contrasena) => {
     .single();
   if (perfilError) throw perfilError;
 
+  // Notificar al aprobador con los enlaces de aprobar/rechazar.
+  await notificarAprobacion(perfil, rolNormalizado);
+
   return { perfil };
+};
+
+// ─── Aprobación de cuentas (método de verificación) ──────────────────────
+
+/**
+ * Aprueba una cuenta pendiente: valida el token firmado del enlace y marca el
+ * perfil como activo y confirmado. Idempotente: aprobar dos veces no falla.
+ */
+const aprobarCuenta = async (userId, token) => {
+  if (!verificarToken(userId, token)) {
+    const err = new Error('Enlace de aprobación inválido o alterado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { data: perfil, error } = await supabase
+    .from('usuarios')
+    .update({ estado: 'activo', confirmado: true })
+    .eq('id', userId)
+    .select('nombre, correo_electronico')
+    .maybeSingle();
+  if (error) throw error;
+  if (!perfil) {
+    const err = new Error('La cuenta indicada no existe.');
+    err.statusCode = 404;
+    throw err;
+  }
+  return perfil;
+};
+
+/**
+ * Rechaza una cuenta pendiente: valida el token y marca el perfil como rechazado
+ * (el usuario no podrá iniciar sesión).
+ */
+const rechazarCuenta = async (userId, token) => {
+  if (!verificarToken(userId, token)) {
+    const err = new Error('Enlace de rechazo inválido o alterado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { data: perfil, error } = await supabase
+    .from('usuarios')
+    .update({ estado: 'rechazado', confirmado: false })
+    .eq('id', userId)
+    .select('nombre, correo_electronico')
+    .maybeSingle();
+  if (error) throw error;
+  if (!perfil) {
+    const err = new Error('La cuenta indicada no existe.');
+    err.statusCode = 404;
+    throw err;
+  }
+  return perfil;
 };
 
 module.exports = {
@@ -140,4 +250,6 @@ module.exports = {
   solicitarMagicLink,
   verificarMagicLink,
   completarPerfil,
+  aprobarCuenta,
+  rechazarCuenta,
 };

@@ -12,4 +12,8 @@ router.post('/magic-link/solicitar', authController.solicitarMagicLink);
 router.post('/magic-link/verificar', authController.verificarMagicLink);
 router.post('/completar-perfil', authController.completarPerfil);
 
+// Aprobación de cuentas desde el correo del administrador (enlaces con token).
+router.get('/aprobar/:userId', authController.aprobarCuenta);
+router.get('/rechazar/:userId', authController.rechazarCuenta);
+
 module.exports = router;

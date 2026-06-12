@@ -1,0 +1,698 @@
+/* Estilos del landing público de UCR Connect.
+   Identidad de marca Alumni UCR (tokens --brand-* definidos en globals.css).
+   Patrón del proyecto: un módulo compartido por los componentes del landing. */
+
+/* ─── Contenedor raíz ─────────────────────────────────────────────── */
+.landing {
+  background: var(--brand-blanco);
+  color: var(--brand-negro);
+  font-family: var(--font-brand-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.landing h1,
+.landing h2,
+.landing h3 {
+  font-family: var(--font-brand-heading);
+  color: var(--brand-esmeralda);
+  line-height: 1.1;
+  margin: 0;
+}
+
+/* Contenedor centrado reutilizable */
+.container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Etiqueta pequeña sobre los títulos */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-brand-heading);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--brand-naranja);
+  margin-bottom: 0.75rem;
+}
+
+/* ─── Botones ─────────────────────────────────────────────────────── */
+.btnPrimary,
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-brand-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  padding: 0.8rem 1.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+    color 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.btnPrimary {
+  background: var(--brand-naranja);
+  color: var(--brand-blanco);
+  box-shadow: 0 6px 18px -6px rgba(243, 75, 38, 0.6);
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -6px rgba(243, 75, 38, 0.7);
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--brand-blanco);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--brand-blanco);
+}
+
+/* Variante de botón fantasma sobre fondo claro */
+.btnGhostDark {
+  color: var(--brand-esmeralda);
+  border-color: var(--brand-esmeralda);
+}
+
+.btnGhostDark:hover {
+  background: var(--brand-esmeralda);
+  color: var(--brand-blanco);
+}
+
+/* ─── Navbar ──────────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e9eef0;
+}
+
+.navInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.navLink {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--brand-esmeralda);
+  position: relative;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-brand-body);
+  padding: 0;
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 0;
+  height: 2px;
+  background: var(--brand-naranja);
+  transition: width 0.25s ease;
+}
+
+.navLink:hover {
+  color: var(--brand-naranja);
+}
+
+.navLink:hover::after {
+  width: 100%;
+}
+
+.navCta {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+/* Botón hamburguesa (móvil) */
+.navToggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+}
+
+.navToggle span {
+  width: 24px;
+  height: 2px;
+  background: var(--brand-esmeralda);
+  border-radius: 2px;
+}
+
+/* ─── Logo de marca ───────────────────────────────────────────────── */
+.brandLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.brandLogoText {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.95;
+  font-family: var(--font-brand-heading);
+}
+
+.brandLogoText strong {
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: var(--brand-esmeralda);
+}
+
+.brandLogoText span {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--brand-esmeralda);
+}
+
+/* Logo en versión clara (sobre fondos oscuros) */
+.brandLogoLight .brandLogoText strong,
+.brandLogoLight .brandLogoText span {
+  color: var(--brand-blanco);
+}
+
+/* ─── Hero ────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--brand-esmeralda) 0%, #00667f 60%, #0a7fa0 100%);
+  color: var(--brand-blanco);
+  overflow: hidden;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 2.5rem;
+  align-items: center;
+  padding: 5rem 0 5.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.heroEyebrow {
+  color: var(--brand-celeste);
+}
+
+.heroTitle {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 800;
+  color: var(--brand-blanco);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin-bottom: 1.25rem;
+}
+
+.heroTitle em {
+  font-style: normal;
+  color: var(--brand-amarillo);
+}
+
+.heroText {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 520px;
+  margin-bottom: 2rem;
+}
+
+.heroActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Composición visual del hero (tarjetas/mockup) */
+.heroVisual {
+  position: relative;
+  min-height: 360px;
+}
+
+.heroCard {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  padding: 1.1rem;
+  font-family: var(--font-brand-heading);
+  font-weight: 700;
+  color: var(--brand-blanco);
+}
+
+.heroCard1 {
+  top: 0;
+  left: 0;
+  width: 54%;
+  height: 56%;
+  background: var(--brand-naranja);
+}
+
+.heroCard2 {
+  top: 8%;
+  right: 0;
+  width: 42%;
+  height: 44%;
+  background: var(--brand-celeste);
+  color: var(--brand-esmeralda);
+}
+
+.heroCard3 {
+  bottom: 0;
+  left: 12%;
+  width: 46%;
+  height: 40%;
+  background: var(--brand-amarillo);
+  color: var(--brand-esmeralda);
+}
+
+.heroCard4 {
+  bottom: 6%;
+  right: 6%;
+  width: 38%;
+  height: 34%;
+  background: var(--brand-azul);
+}
+
+/* ─── Formas decorativas de marca ─────────────────────────────────── */
+.shape {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.shapeFlower {
+  width: 120px;
+  height: 120px;
+  top: 8%;
+  right: 6%;
+  color: var(--brand-amarillo);
+  opacity: 0.9;
+}
+
+.shapeCircle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--brand-naranja);
+  bottom: -30px;
+  left: 8%;
+  opacity: 0.85;
+}
+
+.shapeBlock {
+  width: 160px;
+  height: 90px;
+  background: var(--brand-azul);
+  transform: skewX(-18deg);
+  bottom: 10%;
+  right: -40px;
+  opacity: 0.5;
+}
+
+/* ─── Sección genérica ────────────────────────────────────────────── */
+.section {
+  padding: 5rem 0;
+}
+
+.sectionAlt {
+  background: var(--brand-gris);
+}
+
+.sectionHead {
+  max-width: 640px;
+  margin-bottom: 3rem;
+}
+
+.sectionTitle {
+  font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sectionLead {
+  margin-top: 0.75rem;
+  color: #4a5a60;
+  font-size: 1.05rem;
+}
+
+/* ─── Servicios (tarjetas) ────────────────────────────────────────── */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--brand-blanco);
+  border: 1px solid #e9eef0;
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -18px rgba(0, 76, 99, 0.35);
+  border-color: transparent;
+}
+
+.cardIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  color: var(--brand-blanco);
+}
+
+.cardIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.iconEmpleo {
+  background: var(--brand-esmeralda);
+}
+.iconDonacion {
+  background: var(--brand-naranja);
+}
+.iconMentoria {
+  background: var(--brand-azul);
+}
+.iconEventos {
+  background: var(--brand-amarillo);
+  color: var(--brand-esmeralda);
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: none;
+}
+
+.cardText {
+  color: #5a686d;
+  font-size: 0.95rem;
+}
+
+/* La cuarta tarjeta ocupa el ancho destacado */
+.cardWide {
+  grid-column: span 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  background: linear-gradient(120deg, var(--brand-esmeralda), #00697f);
+  color: var(--brand-blanco);
+  border: none;
+}
+
+.cardWide .cardTitle,
+.cardWide .cardText {
+  color: var(--brand-blanco);
+}
+
+.cardWideText {
+  max-width: 620px;
+}
+
+/* ─── Historia / Sobre nosotros ───────────────────────────────────── */
+.split {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.splitVisual {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 18px;
+  background: var(--brand-celeste-claro);
+  overflow: hidden;
+}
+
+.splitVisualInner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  padding: 14px;
+}
+
+.splitTile {
+  border-radius: 12px;
+}
+.tileEsmeralda { background: var(--brand-esmeralda); }
+.tileNaranja { background: var(--brand-naranja); }
+.tileAmarillo { background: var(--brand-amarillo); }
+.tileAzul { background: var(--brand-azul); }
+
+.stats {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 2rem;
+}
+
+.statValue {
+  font-family: var(--font-brand-heading);
+  font-weight: 800;
+  font-size: 2.4rem;
+  color: var(--brand-naranja);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: #5a686d;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.35rem;
+}
+
+/* ─── Contacto / CTA ──────────────────────────────────────────────── */
+.cta {
+  position: relative;
+  background: linear-gradient(135deg, var(--brand-esmeralda) 0%, #00576e 100%);
+  color: var(--brand-blanco);
+  border-radius: 22px;
+  padding: 3.5rem 2rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.ctaTitle {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 800;
+  color: var(--brand-blanco);
+  text-transform: uppercase;
+  max-width: 640px;
+  margin: 0 auto 0.75rem;
+}
+
+.ctaText {
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 2rem;
+}
+
+.ctaForm {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 480px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ctaInput {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.85rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font-brand-body);
+  font-size: 0.95rem;
+  color: var(--brand-negro);
+}
+
+.ctaInput:focus {
+  outline: 3px solid var(--brand-celeste);
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────── */
+.footer {
+  background: var(--brand-esmeralda);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 3.5rem 0 1.5rem;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: 2rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.footerAbout {
+  max-width: 280px;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+.footerColTitle {
+  font-family: var(--font-brand-heading);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: var(--brand-celeste);
+  margin-bottom: 1rem;
+}
+
+.footerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footerList a {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.footerList a:hover {
+  color: var(--brand-amarillo);
+}
+
+.footerBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ─── Animaciones GSAP: estado inicial (evita parpadeo) ───────────── */
+.animItem {
+  opacity: 0;
+}
+
+/* Si el usuario prefiere menos movimiento, se muestra todo sin animar */
+@media (prefers-reduced-motion: reduce) {
+  .animItem {
+    opacity: 1;
+  }
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .heroGrid,
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .heroVisual {
+    min-height: 300px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cardWide {
+    grid-column: span 2;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .navLinks {
+    position: absolute;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: var(--brand-blanco);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9eef0;
+    transform: translateY(-150%);
+    transition: transform 0.3s ease;
+  }
+
+  .navLinksOpen {
+    transform: translateY(0);
+  }
+
+  .navToggle {
+    display: flex;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .cardWide {
+    grid-column: span 1;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+}
