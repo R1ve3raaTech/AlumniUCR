@@ -14,6 +14,7 @@ import {
   login as loginRequest,
   register as registerRequest,
   logout as logoutRequest,
+  verificarMagicLink as verificarMagicLinkRequest,
   getStoredSession,
 } from '@/lib/auth';
 
@@ -34,6 +35,7 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (correo: string, contrasena: string) => Promise<void>;
   signUp: (rol: Rol, correo: string, contrasena: string) => Promise<void>;
+  verificarCorreo: (tokenHash: string) => Promise<void>;
   signOut: () => void;
 }
 
@@ -68,6 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  // Verifica el magic link (paso 2) y refleja la sesión en el contexto, para que
+  // las rutas protegidas (/completar-perfil, /dashboard) la reconozcan al instante.
+  const verificarCorreo = useCallback(async (tokenHash: string) => {
+    const session = await verificarMagicLinkRequest(tokenHash);
+    setUser(session.user);
+    setToken(session.token);
+  }, []);
+
   const signOut = useCallback(() => {
     logoutRequest();
     setUser(null);
@@ -75,7 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, signIn, signUp, verificarCorreo, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

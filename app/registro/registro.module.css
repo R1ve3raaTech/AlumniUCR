@@ -53,3 +53,31 @@
   padding: 0.7rem 0.9rem;
   text-align: center;
 }
+
+/* Aviso "revisa tu correo" tras enviar el magic link */
+.aviso {
+  font-size: 0.95rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  line-height: 1.6;
+}
+
+.aviso strong {
+  color: hsl(var(--foreground));
+}
+
+/* Enlace en línea con apariencia de texto, no de botón */
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: hsl(var(--secondary));
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.linkButton:hover {
+  color: hsl(var(--primary));
+}
