@@ -70,11 +70,9 @@ const completarPerfil = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────
-//  CORRECCIÓN 2 y 3:
-//  - El rol se define aquí en el backend, no viene del req.body
-//  - Todos los errores pasan por next(error) → error.middleware.js
+//  REGISTRO ESTUDIANTE
+//  Rol ID: 1 = Estudiante
 // ─────────────────────────────────────────────
-
 const registerEstudiante = async (req, res, next) => {
   try {
     const { correo, contrasena } = req.body;
@@ -83,16 +81,17 @@ const registerEstudiante = async (req, res, next) => {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    // CORRECCIÓN 3: el rol lo define el backend según el endpoint usado
-    const result = await authService.registerUser(correo, contrasena, 'estudiante');
-
-    // CORRECCIÓN 1: 201 = Created
+    const result = await authService.registerUser(correo, contrasena, 1);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
 };
 
+// ─────────────────────────────────────────────
+//  REGISTRO EXALUMNO
+//  Rol ID: 2 = Exalumno
+// ─────────────────────────────────────────────
 const registerExalumno = async (req, res, next) => {
   try {
     const { correo, contrasena } = req.body;
@@ -101,23 +100,22 @@ const registerExalumno = async (req, res, next) => {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    // CORRECCIÓN 3: rol fijo desde el backend
-    const result = await authService.registerUser(correo, contrasena, 'exalumno');
-
-    // CORRECCIÓN 1: 201 = Created
+    const result = await authService.registerUser(correo, contrasena, 2);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
 };
 
+// ─────────────────────────────────────────────
+//  LOGIN
+// ─────────────────────────────────────────────
 const login = async (req, res, next) => {
   try {
     const { correo, contrasena } = req.body;
     const result = await authService.loginUser(correo, contrasena);
     res.status(200).json({ success: true, token: result.token, user: result.user });
   } catch (error) {
-    // CORRECCIÓN 2: next(error) en vez de res.status(401) directo
     next(error);
   }
 };

@@ -23,13 +23,16 @@ const exigirRol = (rolesPermitidos) => {
                 });
             }
 
-            const rolUsuario = req.user.profile.tipo ? req.user.profile.tipo.toLowerCase().trim() : '';
-            
-            // 3. Formatear roles permitidos como arreglo para búsqueda uniforme
+            // 3. Obtener el nombre del rol desde el join con la tabla roles
+            const rolUsuario = req.user.profile.roles?.nombre
+                ? req.user.profile.roles.nombre.toLowerCase().trim()
+                : '';
+
+            // 4. Formatear roles permitidos como arreglo para búsqueda uniforme
             const roles = (Array.isArray(rolesPermitidos) ? rolesPermitidos : [rolesPermitidos])
                 .map(r => typeof r === 'string' ? r.toLowerCase().trim() : r);
 
-            // 4. Validar el rol del usuario contra los permitidos
+            // 5. Validar el rol del usuario contra los permitidos
             if (!roles.includes(rolUsuario)) {
                 return res.status(403).json({
                     success: false,
