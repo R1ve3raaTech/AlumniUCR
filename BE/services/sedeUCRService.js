@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'sedes_ucr';
 
@@ -13,9 +14,7 @@ const obtenerSedesUCR = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerSedeUCRPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,19 +45,18 @@ const obtenerSedeUCRPorId = async (id) => {
 const crearSedeUCR = async (sedeData) => {
 
     const nuevaSede = {
-        Nombre: sedeData.Nombre
+        nombre: sedeData.nombre
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaSede])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -70,22 +66,20 @@ const crearSedeUCR = async (sedeData) => {
 
 const actualizarSedeUCR = async (id, sedeData) => {
 
-    const datosActualizar = {
-        ...sedeData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, sedeData, {
+        updated_at: new Date()
+    });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -98,11 +92,9 @@ const eliminarSedeUCR = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Sede UCR eliminada correctamente'
@@ -119,11 +111,9 @@ const buscarSedesPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

@@ -81,7 +81,7 @@ const registerEstudiante = async (req, res, next) => {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    const result = await authService.registerUser(correo, contrasena, 1);
+    const result = await authService.registerUser(correo, contrasena, 'estudiante');
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -100,7 +100,7 @@ const registerExalumno = async (req, res, next) => {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    const result = await authService.registerUser(correo, contrasena, 2);
+    const result = await authService.registerUser(correo, contrasena, 'exalumno');
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     next(error);

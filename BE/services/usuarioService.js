@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'usuarios';
 
@@ -9,9 +10,9 @@ const TABLA = 'usuarios';
 const obtenerUsuarios = async () => {
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*');
+        .select('*, roles(nombre)');
 
-    if (error) throw new Error(error.message);
+    if (error) throw mapDbError(error);
     return data;
 };
 
@@ -22,12 +23,12 @@ const obtenerUsuarios = async () => {
 const obtenerUsuarioPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
+        .select('*, roles(nombre)')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) throw mapDbError(error);
+    return data; // null si no existe -> el controller responde 404
 };
 
 // ======================================================
@@ -46,10 +47,11 @@ const crearUsuario = async (usuarioData) => {
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoUsuario])
-        .select();
+        .select()
+        .single();
 
-    if (error) throw new Error(error.message);
-    return data[0];
+    if (error) throw mapDbError(error);
+    return data;
 };
 
 // ======================================================
@@ -57,14 +59,17 @@ const crearUsuario = async (usuarioData) => {
 // ======================================================
 
 const actualizarUsuario = async (id, usuarioData) => {
+    const datosActualizar = { ...usuarioData, updated_at: new Date() };
+
     const { data, error } = await supabase
         .from(TABLA)
-        .update(usuarioData)
+        .update(datosActualizar)
         .eq('id', id)
-        .select();
+        .select()
+        .single();
 
-    if (error) throw new Error(error.message);
-    return data[0];
+    if (error) throw mapDbError(error);
+    return data;
 };
 
 // ======================================================
@@ -77,7 +82,7 @@ const eliminarUsuario = async (id) => {
         .delete()
         .eq('id', id);
 
-    if (error) throw new Error(error.message);
+    if (error) throw mapDbError(error);
     return { mensaje: 'Usuario eliminado correctamente' };
 };
 
@@ -88,10 +93,10 @@ const eliminarUsuario = async (id) => {
 const buscarUsuariosPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
+        .select('*, roles(nombre)')
         .ilike('nombre', `%${nombre}%`);
 
-    if (error) throw new Error(error.message);
+    if (error) throw mapDbError(error);
     return data;
 };
 
@@ -102,12 +107,12 @@ const buscarUsuariosPorNombre = async (nombre) => {
 const obtenerUsuarioPorCorreo = async (correoElectronico) => {
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
+        .select('*, roles(nombre)')
         .eq('correo_electronico', correoElectronico)
-        .single();
+        .maybeSingle();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) throw mapDbError(error);
+    return data; // null si no existe -> el controller responde 404
 };
 
 // ======================================================

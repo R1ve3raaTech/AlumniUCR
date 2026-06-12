@@ -3,7 +3,7 @@ const certificacionesEstudianteService = require('../services/certificacionesEst
 // ======================================================
 // GET - OBTENER TODAS LAS CERTIFICACIONES
 // ======================================================
-const obtenerCertificacionesEstudiante = async (req, res) => {
+const obtenerCertificacionesEstudiante = async (req, res, next) => {
     try {
         const certificaciones = await certificacionesEstudianteService.obtenerCertificacionesEstudiante();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerCertificacionesEstudiante = async (req, res) => {
             message: 'Certificaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener certificaciones',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER CERTIFICACIÓN POR ID
 // ======================================================
-const obtenerCertificacionPorId = async (req, res) => {
+const obtenerCertificacionPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,44 +45,40 @@ const obtenerCertificacionPorId = async (req, res) => {
             message: 'Certificación obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener certificación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR CERTIFICACIÓN
 // ======================================================
-const crearCertificacion = async (req, res) => {
+const crearCertificacion = async (req, res, next) => {
     try {
-        const { IdUsuario, Nombre, Institucion, Fecha, URLVerificacion } = req.body;
+        const { id_usuario, nombre, institucion, fecha, url_verificacion } = req.body;
 
         // Validaciones
-        if (!IdUsuario) {
+        if (!id_usuario) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdUsuario es requerido'
+                message: 'El id_usuario es requerido'
             });
         }
 
-        if (!Nombre) {
+        if (!nombre) {
             return res.status(400).json({
                 success: false,
                 message: 'El nombre de la certificación es requerido'
             });
         }
 
-        if (!Institucion) {
+        if (!institucion) {
             return res.status(400).json({
                 success: false,
                 message: 'La institución es requerida'
             });
         }
 
-        if (!Fecha) {
+        if (!fecha) {
             return res.status(400).json({
                 success: false,
                 message: 'La fecha es requerida'
@@ -94,11 +86,11 @@ const crearCertificacion = async (req, res) => {
         }
 
         const nuevaCertificacion = await certificacionesEstudianteService.crearCertificacion({
-            IdUsuario,
-            Nombre: Nombre.trim(),
-            Institucion: Institucion.trim(),
-            Fecha,
-            URLVerificacion: URLVerificacion ? URLVerificacion.trim() : null
+            id_usuario,
+            nombre: nombre.trim(),
+            institucion: institucion.trim(),
+            fecha,
+            url_verificacion: url_verificacion ? url_verificacion.trim() : null
         });
 
         res.status(201).json({
@@ -107,21 +99,17 @@ const crearCertificacion = async (req, res) => {
             message: 'Certificación creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear certificación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR CERTIFICACIÓN
 // ======================================================
-const actualizarCertificacion = async (req, res) => {
+const actualizarCertificacion = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { IdUsuario, Nombre, Institucion, Fecha, URLVerificacion } = req.body;
+        const { id_usuario, nombre, institucion, fecha, url_verificacion } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -131,11 +119,11 @@ const actualizarCertificacion = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdUsuario !== undefined) datosActualizar.IdUsuario = IdUsuario;
-        if (Nombre !== undefined) datosActualizar.Nombre = Nombre.trim();
-        if (Institucion !== undefined) datosActualizar.Institucion = Institucion.trim();
-        if (Fecha !== undefined) datosActualizar.Fecha = Fecha;
-        if (URLVerificacion !== undefined) datosActualizar.URLVerificacion = URLVerificacion ? URLVerificacion.trim() : null;
+        if (id_usuario !== undefined) datosActualizar.id_usuario = id_usuario;
+        if (nombre !== undefined) datosActualizar.nombre = nombre.trim();
+        if (institucion !== undefined) datosActualizar.institucion = institucion.trim();
+        if (fecha !== undefined) datosActualizar.fecha = fecha;
+        if (url_verificacion !== undefined) datosActualizar.url_verificacion = url_verificacion ? url_verificacion.trim() : null;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -152,18 +140,14 @@ const actualizarCertificacion = async (req, res) => {
             message: 'Certificación actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar certificación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR CERTIFICACIÓN
 // ======================================================
-const eliminarCertificacion = async (req, res) => {
+const eliminarCertificacion = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -181,18 +165,14 @@ const eliminarCertificacion = async (req, res) => {
             message: 'Certificación eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar certificación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER CERTIFICACIONES POR USUARIO
 // ======================================================
-const obtenerCertificacionesPorUsuario = async (req, res) => {
+const obtenerCertificacionesPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -211,18 +191,14 @@ const obtenerCertificacionesPorUsuario = async (req, res) => {
             message: 'Certificaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener certificaciones por usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR CERTIFICACIONES POR NOMBRE
 // ======================================================
-const buscarCertificacionesPorNombre = async (req, res) => {
+const buscarCertificacionesPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.query;
 
@@ -241,11 +217,7 @@ const buscarCertificacionesPorNombre = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar certificaciones',
-            error: error.message
-        });
+        next(error);
     }
 };
 

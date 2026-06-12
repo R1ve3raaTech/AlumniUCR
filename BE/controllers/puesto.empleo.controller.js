@@ -4,16 +4,13 @@ const puestoEmpleoService = require('../services/puestoEmpleoService');
 // OBTENER TODOS LOS PUESTOS DE EMPLEO
 // ======================================================
 
-const obtenerPuestosEmpleo = async (req, res) => {
+const obtenerPuestosEmpleo = async (req, res, next) => {
     try {
         const puestos = await puestoEmpleoService.obtenerPuestosEmpleo();
 
         res.status(200).json(puestos);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los puestos de empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -21,18 +18,21 @@ const obtenerPuestosEmpleo = async (req, res) => {
 // OBTENER PUESTO POR ID
 // ======================================================
 
-const obtenerPuestoEmpleoPorId = async (req, res) => {
+const obtenerPuestoEmpleoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const puesto = await puestoEmpleoService.obtenerPuestoEmpleoPorId(id);
 
+        if (!puesto) {
+            return res.status(404).json({
+                mensaje: 'Puesto de empleo no encontrado'
+            });
+        }
+
         res.status(200).json(puesto);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el puesto de empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -40,8 +40,22 @@ const obtenerPuestoEmpleoPorId = async (req, res) => {
 // CREAR PUESTO DE EMPLEO
 // ======================================================
 
-const crearPuestoEmpleo = async (req, res) => {
+const crearPuestoEmpleo = async (req, res, next) => {
     try {
+        const { id_usuario, titulo_puesto } = req.body;
+
+        if (!id_usuario) {
+            return res.status(400).json({
+                mensaje: 'El id_usuario es requerido'
+            });
+        }
+
+        if (!titulo_puesto) {
+            return res.status(400).json({
+                mensaje: 'El titulo_puesto es requerido'
+            });
+        }
+
         const nuevoPuesto = await puestoEmpleoService.crearPuestoEmpleo(req.body);
 
         res.status(201).json({
@@ -49,10 +63,7 @@ const crearPuestoEmpleo = async (req, res) => {
             data: nuevoPuesto
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear el puesto de empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -60,7 +71,7 @@ const crearPuestoEmpleo = async (req, res) => {
 // ACTUALIZAR PUESTO DE EMPLEO
 // ======================================================
 
-const actualizarPuestoEmpleo = async (req, res) => {
+const actualizarPuestoEmpleo = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -75,10 +86,7 @@ const actualizarPuestoEmpleo = async (req, res) => {
             data: puestoActualizado
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar el puesto de empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -86,7 +94,7 @@ const actualizarPuestoEmpleo = async (req, res) => {
 // ELIMINAR PUESTO DE EMPLEO
 // ======================================================
 
-const eliminarPuestoEmpleo = async (req, res) => {
+const eliminarPuestoEmpleo = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -95,10 +103,7 @@ const eliminarPuestoEmpleo = async (req, res) => {
 
         res.status(200).json(resultado);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar el puesto de empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -106,7 +111,7 @@ const eliminarPuestoEmpleo = async (req, res) => {
 // OBTENER PUESTOS POR USUARIO
 // ======================================================
 
-const obtenerPuestosPorUsuario = async (req, res) => {
+const obtenerPuestosPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -115,10 +120,7 @@ const obtenerPuestosPorUsuario = async (req, res) => {
 
         res.status(200).json(puestos);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los puestos del usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -126,17 +128,14 @@ const obtenerPuestosPorUsuario = async (req, res) => {
 // OBTENER PUESTOS ACTIVOS
 // ======================================================
 
-const obtenerPuestosActivos = async (req, res) => {
+const obtenerPuestosActivos = async (req, res, next) => {
     try {
         const puestos =
             await puestoEmpleoService.obtenerPuestosActivos();
 
         res.status(200).json(puestos);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los puestos activos',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -144,7 +143,7 @@ const obtenerPuestosActivos = async (req, res) => {
 // BUSCAR PUESTOS POR EMPRESA
 // ======================================================
 
-const buscarPuestosPorEmpresa = async (req, res) => {
+const buscarPuestosPorEmpresa = async (req, res, next) => {
     try {
         const { empresa } = req.params;
 
@@ -153,10 +152,7 @@ const buscarPuestosPorEmpresa = async (req, res) => {
 
         res.status(200).json(puestos);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar puestos por empresa',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -164,7 +160,7 @@ const buscarPuestosPorEmpresa = async (req, res) => {
 // BUSCAR PUESTOS POR TÍTULO
 // ======================================================
 
-const buscarPuestosPorTitulo = async (req, res) => {
+const buscarPuestosPorTitulo = async (req, res, next) => {
     try {
         const { titulo } = req.params;
 
@@ -173,10 +169,7 @@ const buscarPuestosPorTitulo = async (req, res) => {
 
         res.status(200).json(puestos);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar puestos por título',
-            error: error.message
-        });
+        next(error);
     }
 };
 

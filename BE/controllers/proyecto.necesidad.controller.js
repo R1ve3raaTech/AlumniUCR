@@ -4,17 +4,14 @@ const proyectoNecesidadService = require('../services/proyectoNecesidadService')
 // OBTENER TODAS LAS RELACIONES
 // ======================================================
 
-const obtenerProyectoNecesidades = async (req, res) => {
+const obtenerProyectoNecesidades = async (req, res, next) => {
     try {
         const relaciones =
             await proyectoNecesidadService.obtenerProyectoNecesidades();
 
         res.status(200).json(relaciones);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las relaciones proyecto-necesidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -22,19 +19,22 @@ const obtenerProyectoNecesidades = async (req, res) => {
 // OBTENER RELACIÓN POR ID
 // ======================================================
 
-const obtenerProyectoNecesidadPorId = async (req, res) => {
+const obtenerProyectoNecesidadPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const relacion =
             await proyectoNecesidadService.obtenerProyectoNecesidadPorId(id);
 
+        if (!relacion) {
+            return res.status(404).json({
+                mensaje: 'Relación proyecto-necesidad no encontrada'
+            });
+        }
+
         res.status(200).json(relacion);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener la relación proyecto-necesidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -42,20 +42,34 @@ const obtenerProyectoNecesidadPorId = async (req, res) => {
 // CREAR RELACIÓN
 // ======================================================
 
-const crearProyectoNecesidad = async (req, res) => {
+const crearProyectoNecesidad = async (req, res, next) => {
     try {
+        const { id_proyecto, id_necesidad } = req.body;
+
+        if (!id_proyecto) {
+            return res.status(400).json({
+                mensaje: 'El id_proyecto es requerido'
+            });
+        }
+
+        if (!id_necesidad) {
+            return res.status(400).json({
+                mensaje: 'El id_necesidad es requerido'
+            });
+        }
+
         const nuevaRelacion =
-            await proyectoNecesidadService.crearProyectoNecesidad(req.body);
+            await proyectoNecesidadService.crearProyectoNecesidad({
+                id_proyecto,
+                id_necesidad
+            });
 
         res.status(201).json({
             mensaje: 'Relación proyecto-necesidad creada correctamente',
             data: nuevaRelacion
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear la relación proyecto-necesidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,14 +77,19 @@ const crearProyectoNecesidad = async (req, res) => {
 // ACTUALIZAR RELACIÓN
 // ======================================================
 
-const actualizarProyectoNecesidad = async (req, res) => {
+const actualizarProyectoNecesidad = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { id_proyecto, id_necesidad } = req.body;
+
+        const datosActualizar = {};
+        if (id_proyecto !== undefined) datosActualizar.id_proyecto = id_proyecto;
+        if (id_necesidad !== undefined) datosActualizar.id_necesidad = id_necesidad;
 
         const relacionActualizada =
             await proyectoNecesidadService.actualizarProyectoNecesidad(
                 id,
-                req.body
+                datosActualizar
             );
 
         res.status(200).json({
@@ -78,10 +97,7 @@ const actualizarProyectoNecesidad = async (req, res) => {
             data: relacionActualizada
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar la relación proyecto-necesidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,7 +105,7 @@ const actualizarProyectoNecesidad = async (req, res) => {
 // ELIMINAR RELACIÓN
 // ======================================================
 
-const eliminarProyectoNecesidad = async (req, res) => {
+const eliminarProyectoNecesidad = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -98,10 +114,7 @@ const eliminarProyectoNecesidad = async (req, res) => {
 
         res.status(200).json(resultado);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar la relación proyecto-necesidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -109,7 +122,7 @@ const eliminarProyectoNecesidad = async (req, res) => {
 // OBTENER NECESIDADES POR PROYECTO
 // ======================================================
 
-const obtenerNecesidadesPorProyecto = async (req, res) => {
+const obtenerNecesidadesPorProyecto = async (req, res, next) => {
     try {
         const { idProyecto } = req.params;
 
@@ -120,10 +133,7 @@ const obtenerNecesidadesPorProyecto = async (req, res) => {
 
         res.status(200).json(necesidades);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las necesidades del proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -131,7 +141,7 @@ const obtenerNecesidadesPorProyecto = async (req, res) => {
 // OBTENER PROYECTOS POR NECESIDAD
 // ======================================================
 
-const obtenerProyectosPorNecesidad = async (req, res) => {
+const obtenerProyectosPorNecesidad = async (req, res, next) => {
     try {
         const { idNecesidad } = req.params;
 
@@ -142,10 +152,7 @@ const obtenerProyectosPorNecesidad = async (req, res) => {
 
         res.status(200).json(proyectos);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los proyectos asociados a la necesidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 

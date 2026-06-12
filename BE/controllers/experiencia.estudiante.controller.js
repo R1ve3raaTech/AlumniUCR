@@ -3,7 +3,7 @@ const experienciaEstudianteService = require('../services/experienciaEstudianteS
 // ======================================================
 // GET - OBTENER TODAS LAS EXPERIENCIAS
 // ======================================================
-const obtenerExperienciasEstudiante = async (req, res) => {
+const obtenerExperienciasEstudiante = async (req, res, next) => {
     try {
         const experiencias = await experienciaEstudianteService.obtenerExperienciasEstudiante();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerExperienciasEstudiante = async (req, res) => {
             message: 'Experiencias obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener experiencias',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER EXPERIENCIA POR ID
 // ======================================================
-const obtenerExperienciaPorId = async (req, res) => {
+const obtenerExperienciaPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,65 +45,61 @@ const obtenerExperienciaPorId = async (req, res) => {
             message: 'Experiencia obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener experiencia',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR EXPERIENCIA
 // ======================================================
-const crearExperiencia = async (req, res) => {
+const crearExperiencia = async (req, res, next) => {
     try {
-        const { Tipo, IdUsuario, Titulo, Organizacion, FechaInicio, FechaFin, Descripcion } = req.body;
+        const { tipo, id_usuario, titulo, organizacion, fecha_inicio, fecha_fin, descripcion } = req.body;
 
         // Validaciones
-        if (!Tipo) {
+        if (!tipo) {
             return res.status(400).json({
                 success: false,
                 message: 'El tipo es requerido'
             });
         }
 
-        if (!IdUsuario) {
+        if (!id_usuario) {
             return res.status(400).json({
                 success: false,
                 message: 'El IdUsuario es requerido'
             });
         }
 
-        if (!Titulo) {
+        if (!titulo) {
             return res.status(400).json({
                 success: false,
                 message: 'El título es requerido'
             });
         }
 
-        if (!Organizacion) {
+        if (!organizacion) {
             return res.status(400).json({
                 success: false,
                 message: 'La organización es requerida'
             });
         }
 
-        if (!FechaInicio) {
+        if (!fecha_inicio) {
             return res.status(400).json({
                 success: false,
                 message: 'La fecha de inicio es requerida'
             });
         }
 
-        if (!FechaFin) {
+        if (!fecha_fin) {
             return res.status(400).json({
                 success: false,
                 message: 'La fecha de fin es requerida'
             });
         }
 
-        if (!Descripcion) {
+        if (!descripcion) {
             return res.status(400).json({
                 success: false,
                 message: 'La descripción es requerida'
@@ -115,13 +107,13 @@ const crearExperiencia = async (req, res) => {
         }
 
         const nuevaExperiencia = await experienciaEstudianteService.crearExperiencia({
-            Tipo: Tipo.trim(),
-            IdUsuario,
-            Titulo: Titulo.trim(),
-            Organizacion: Organizacion.trim(),
-            FechaInicio,
-            FechaFin,
-            Descripcion: Descripcion.trim()
+            tipo: tipo.trim(),
+            id_usuario,
+            titulo: titulo.trim(),
+            organizacion: organizacion.trim(),
+            fecha_inicio,
+            fecha_fin,
+            descripcion: descripcion.trim()
         });
 
         res.status(201).json({
@@ -130,21 +122,17 @@ const crearExperiencia = async (req, res) => {
             message: 'Experiencia creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear experiencia',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR EXPERIENCIA
 // ======================================================
-const actualizarExperiencia = async (req, res) => {
+const actualizarExperiencia = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { Tipo, IdUsuario, Titulo, Organizacion, FechaInicio, FechaFin, Descripcion } = req.body;
+        const { tipo, id_usuario, titulo, organizacion, fecha_inicio, fecha_fin, descripcion } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -154,13 +142,13 @@ const actualizarExperiencia = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Tipo !== undefined) datosActualizar.Tipo = Tipo.trim();
-        if (IdUsuario !== undefined) datosActualizar.IdUsuario = IdUsuario;
-        if (Titulo !== undefined) datosActualizar.Titulo = Titulo.trim();
-        if (Organizacion !== undefined) datosActualizar.Organizacion = Organizacion.trim();
-        if (FechaInicio !== undefined) datosActualizar.FechaInicio = FechaInicio;
-        if (FechaFin !== undefined) datosActualizar.FechaFin = FechaFin;
-        if (Descripcion !== undefined) datosActualizar.Descripcion = Descripcion.trim();
+        if (tipo !== undefined) datosActualizar.tipo = tipo.trim();
+        if (id_usuario !== undefined) datosActualizar.id_usuario = id_usuario;
+        if (titulo !== undefined) datosActualizar.titulo = titulo.trim();
+        if (organizacion !== undefined) datosActualizar.organizacion = organizacion.trim();
+        if (fecha_inicio !== undefined) datosActualizar.fecha_inicio = fecha_inicio;
+        if (fecha_fin !== undefined) datosActualizar.fecha_fin = fecha_fin;
+        if (descripcion !== undefined) datosActualizar.descripcion = descripcion.trim();
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -177,18 +165,14 @@ const actualizarExperiencia = async (req, res) => {
             message: 'Experiencia actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar experiencia',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR EXPERIENCIA
 // ======================================================
-const eliminarExperiencia = async (req, res) => {
+const eliminarExperiencia = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -206,18 +190,14 @@ const eliminarExperiencia = async (req, res) => {
             message: 'Experiencia eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar experiencia',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER EXPERIENCIAS POR USUARIO
 // ======================================================
-const obtenerExperienciasPorUsuario = async (req, res) => {
+const obtenerExperienciasPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -236,18 +216,14 @@ const obtenerExperienciasPorUsuario = async (req, res) => {
             message: 'Experiencias obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener experiencias por usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER EXPERIENCIAS POR TIPO
 // ======================================================
-const obtenerExperienciasPorTipo = async (req, res) => {
+const obtenerExperienciasPorTipo = async (req, res, next) => {
     try {
         const { tipo } = req.params;
 
@@ -266,18 +242,14 @@ const obtenerExperienciasPorTipo = async (req, res) => {
             message: 'Experiencias obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener experiencias por tipo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR EXPERIENCIAS POR ORGANIZACIÓN
 // ======================================================
-const buscarExperienciasPorOrganizacion = async (req, res) => {
+const buscarExperienciasPorOrganizacion = async (req, res, next) => {
     try {
         const { organizacion } = req.query;
 
@@ -296,11 +268,7 @@ const buscarExperienciasPorOrganizacion = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar experiencias',
-            error: error.message
-        });
+        next(error);
     }
 };
 

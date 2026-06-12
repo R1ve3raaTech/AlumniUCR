@@ -4,16 +4,17 @@ const sectorService = require('../services/sectorService');
 // OBTENER TODOS LOS SECTORES
 // ======================================================
 
-const obtenerSectores = async (req, res) => {
+const obtenerSectores = async (req, res, next) => {
     try {
         const sectores = await sectorService.obtenerSectores();
 
-        res.status(200).json(sectores);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los sectores',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: sectores,
+            message: 'Sectores obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -21,18 +22,26 @@ const obtenerSectores = async (req, res) => {
 // OBTENER SECTOR POR ID
 // ======================================================
 
-const obtenerSectorPorId = async (req, res) => {
+const obtenerSectorPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const sector = await sectorService.obtenerSectorPorId(id);
 
-        res.status(200).json(sector);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el sector',
-            error: error.message
+        if (!sector) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sector no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: sector,
+            message: 'Sector obtenido correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -40,19 +49,28 @@ const obtenerSectorPorId = async (req, res) => {
 // CREAR SECTOR
 // ======================================================
 
-const crearSector = async (req, res) => {
+const crearSector = async (req, res, next) => {
     try {
-        const nuevoSector = await sectorService.crearSector(req.body);
+        const { nombre } = req.body;
+
+        if (!nombre) {
+            return res.status(400).json({
+                success: false,
+                message: 'El nombre es requerido'
+            });
+        }
+
+        const nuevoSector = await sectorService.crearSector({
+            nombre: nombre.trim()
+        });
 
         res.status(201).json({
-            mensaje: 'Sector creado correctamente',
-            data: nuevoSector
+            success: true,
+            data: nuevoSector,
+            message: 'Sector creado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear el sector',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -60,25 +78,29 @@ const crearSector = async (req, res) => {
 // ACTUALIZAR SECTOR
 // ======================================================
 
-const actualizarSector = async (req, res) => {
+const actualizarSector = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { nombre } = req.body;
 
-        const sectorActualizado =
-            await sectorService.actualizarSector(
-                id,
-                req.body
-            );
+        if (!nombre) {
+            return res.status(400).json({
+                success: false,
+                message: 'El nombre es requerido'
+            });
+        }
+
+        const sectorActualizado = await sectorService.actualizarSector(id, {
+            nombre: nombre.trim()
+        });
 
         res.status(200).json({
-            mensaje: 'Sector actualizado correctamente',
-            data: sectorActualizado
+            success: true,
+            data: sectorActualizado,
+            message: 'Sector actualizado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar el sector',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -86,19 +108,19 @@ const actualizarSector = async (req, res) => {
 // ELIMINAR SECTOR
 // ======================================================
 
-const eliminarSector = async (req, res) => {
+const eliminarSector = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const resultado =
-            await sectorService.eliminarSector(id);
+        const resultado = await sectorService.eliminarSector(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar el sector',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Sector eliminado correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -106,19 +128,19 @@ const eliminarSector = async (req, res) => {
 // BUSCAR SECTORES POR NOMBRE
 // ======================================================
 
-const buscarSectoresPorNombre = async (req, res) => {
+const buscarSectoresPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.params;
 
-        const sectores =
-            await sectorService.buscarSectoresPorNombre(nombre);
+        const sectores = await sectorService.buscarSectoresPorNombre(nombre);
 
-        res.status(200).json(sectores);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar sectores por nombre',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: sectores,
+            message: 'Sectores obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 

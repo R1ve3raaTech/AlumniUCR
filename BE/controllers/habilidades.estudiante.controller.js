@@ -3,7 +3,7 @@ const habilidadesEstudianteService = require('../services/habilidadesEstudianteS
 // ======================================================
 // GET - OBTENER TODAS LAS HABILIDADES
 // ======================================================
-const obtenerHabilidadesEstudiante = async (req, res) => {
+const obtenerHabilidadesEstudiante = async (req, res, next) => {
     try {
         const habilidades = await habilidadesEstudianteService.obtenerHabilidadesEstudiante();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerHabilidadesEstudiante = async (req, res) => {
             message: 'Habilidades obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener habilidades',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER HABILIDAD POR ID
 // ======================================================
-const obtenerHabilidadPorId = async (req, res) => {
+const obtenerHabilidadPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,41 +45,37 @@ const obtenerHabilidadPorId = async (req, res) => {
             message: 'Habilidad obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener habilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR HABILIDAD
 // ======================================================
-const crearHabilidad = async (req, res) => {
+const crearHabilidad = async (req, res, next) => {
     try {
-        const { IdUsuario, Tecnicas, Blandas, Idiomas } = req.body;
+        const { id_usuario, tecnicas, blandas, idiomas } = req.body;
 
         // Validaciones
-        if (!IdUsuario) {
+        if (!id_usuario) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdUsuario es requerido'
+                message: 'El id_usuario es requerido'
             });
         }
 
-        if (!Tecnicas && !Blandas && !Idiomas) {
+        if (!tecnicas && !blandas && !idiomas) {
             return res.status(400).json({
                 success: false,
-                message: 'Debe proporcionar al menos Tecnicas, Blandas o Idiomas'
+                message: 'Debe proporcionar al menos tecnicas, blandas o idiomas'
             });
         }
 
         const nuevaHabilidad = await habilidadesEstudianteService.crearHabilidad({
-            IdUsuario,
-            Tecnicas: Tecnicas ? Tecnicas.trim() : null,
-            Blandas: Blandas ? Blandas.trim() : null,
-            Idiomas: Idiomas ? Idiomas.trim() : null
+            id_usuario,
+            tecnicas: tecnicas ? tecnicas.trim() : null,
+            blandas: blandas ? blandas.trim() : null,
+            idiomas: idiomas ? idiomas.trim() : null
         });
 
         res.status(201).json({
@@ -92,21 +84,17 @@ const crearHabilidad = async (req, res) => {
             message: 'Habilidad creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear habilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR HABILIDAD
 // ======================================================
-const actualizarHabilidad = async (req, res) => {
+const actualizarHabilidad = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { IdUsuario, Tecnicas, Blandas, Idiomas } = req.body;
+        const { id_usuario, tecnicas, blandas, idiomas } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -116,10 +104,10 @@ const actualizarHabilidad = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdUsuario !== undefined) datosActualizar.IdUsuario = IdUsuario;
-        if (Tecnicas !== undefined) datosActualizar.Tecnicas = Tecnicas ? Tecnicas.trim() : null;
-        if (Blandas !== undefined) datosActualizar.Blandas = Blandas ? Blandas.trim() : null;
-        if (Idiomas !== undefined) datosActualizar.Idiomas = Idiomas ? Idiomas.trim() : null;
+        if (id_usuario !== undefined) datosActualizar.id_usuario = id_usuario;
+        if (tecnicas !== undefined) datosActualizar.tecnicas = tecnicas ? tecnicas.trim() : null;
+        if (blandas !== undefined) datosActualizar.blandas = blandas ? blandas.trim() : null;
+        if (idiomas !== undefined) datosActualizar.idiomas = idiomas ? idiomas.trim() : null;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -136,18 +124,14 @@ const actualizarHabilidad = async (req, res) => {
             message: 'Habilidad actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar habilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR HABILIDAD
 // ======================================================
-const eliminarHabilidad = async (req, res) => {
+const eliminarHabilidad = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -165,18 +149,14 @@ const eliminarHabilidad = async (req, res) => {
             message: 'Habilidad eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar habilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER HABILIDADES POR USUARIO
 // ======================================================
-const obtenerHabilidadesPorUsuario = async (req, res) => {
+const obtenerHabilidadesPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -195,18 +175,14 @@ const obtenerHabilidadesPorUsuario = async (req, res) => {
             message: 'Habilidades obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener habilidades por usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR HABILIDADES TÉCNICAS
 // ======================================================
-const buscarHabilidadesTecnicas = async (req, res) => {
+const buscarHabilidadesTecnicas = async (req, res, next) => {
     try {
         const { tecnica } = req.query;
 
@@ -225,18 +201,14 @@ const buscarHabilidadesTecnicas = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar habilidades técnicas',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR IDIOMAS
 // ======================================================
-const buscarIdiomas = async (req, res) => {
+const buscarIdiomas = async (req, res, next) => {
     try {
         const { idioma } = req.query;
 
@@ -255,11 +227,7 @@ const buscarIdiomas = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar idiomas',
-            error: error.message
-        });
+        next(error);
     }
 };
 

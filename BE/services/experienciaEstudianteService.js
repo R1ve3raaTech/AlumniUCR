@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'experiencia_estudiante';
 
@@ -13,9 +14,7 @@ const obtenerExperienciasEstudiante = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerExperienciaPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,25 +45,24 @@ const obtenerExperienciaPorId = async (id) => {
 const crearExperiencia = async (experienciaData) => {
 
     const nuevaExperiencia = {
-        Tipo: experienciaData.Tipo,
-        IdUsuario: experienciaData.IdUsuario,
-        Titulo: experienciaData.Titulo,
-        Organizacion: experienciaData.Organizacion,
-        FechaInicio: experienciaData.FechaInicio,
-        FechaFin: experienciaData.FechaFin,
-        Descripcion: experienciaData.Descripcion
+        tipo: experienciaData.tipo,
+        id_usuario: experienciaData.id_usuario,
+        titulo: experienciaData.titulo,
+        organizacion: experienciaData.organizacion,
+        fecha_inicio: experienciaData.fecha_inicio,
+        fecha_fin: experienciaData.fecha_fin,
+        descripcion: experienciaData.descripcion
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaExperiencia])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -76,22 +72,18 @@ const crearExperiencia = async (experienciaData) => {
 
 const actualizarExperiencia = async (id, experienciaData) => {
 
-    const datosActualizar = {
-        ...experienciaData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, experienciaData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -104,11 +96,9 @@ const eliminarExperiencia = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Experiencia eliminada correctamente'
@@ -125,11 +115,9 @@ const obtenerExperienciasPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario);
+        .eq('id_usuario', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -144,11 +132,9 @@ const obtenerExperienciasPorTipo = async (tipo) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Tipo', tipo);
+        .eq('tipo', tipo);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -163,11 +149,9 @@ const buscarExperienciasPorOrganizacion = async (organizacion) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Organizacion', `%${organizacion}%`);
+        .ilike('organizacion', `%${organizacion}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

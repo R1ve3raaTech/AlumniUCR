@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'informacion_estudiante';
 
@@ -13,9 +14,7 @@ const obtenerInformacionEstudiantes = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerInformacionPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario)
-        .single();
+        .eq('id_usuario', idUsuario)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,32 +45,31 @@ const obtenerInformacionPorUsuario = async (idUsuario) => {
 const crearInformacionEstudiante = async (infoData) => {
 
     const nuevaInformacion = {
-        IdUsuario: infoData.IdUsuario,
-        Carne: infoData.Carne,
-        AnoIngreso: infoData.AnoIngreso,
-        IdNivelAcademico: infoData.IdNivelAcademico,
-        PromedioPonderado: infoData.PromedioPonderado,
-        IdBeca: infoData.IdBeca,
-        BuscaFinanciamiento: infoData.BuscaFinanciamiento,
-        BuscaMentoria: infoData.BuscaMentoria,
-        BuscaEmpleo: infoData.BuscaEmpleo,
-        BuscaPasantia: infoData.BuscaPasantia,
-        Habilidades: infoData.Habilidades,
-        PerfilCompleto: infoData.PerfilCompleto,
-        Pausado: infoData.Pausado,
-        CursosRelevantes: infoData.CursosRelevantes
+        id_usuario: infoData.id_usuario,
+        carne: infoData.carne,
+        ano_ingreso: infoData.ano_ingreso,
+        id_nivel_academico: infoData.id_nivel_academico,
+        promedio_ponderado: infoData.promedio_ponderado,
+        id_beca: infoData.id_beca,
+        busca_financiamiento: infoData.busca_financiamiento,
+        busca_mentoria: infoData.busca_mentoria,
+        busca_empleo: infoData.busca_empleo,
+        busca_pasantia: infoData.busca_pasantia,
+        habilidades: infoData.habilidades,
+        perfil_completo: infoData.perfil_completo,
+        pausado: infoData.pausado,
+        cursos_relevantes: infoData.cursos_relevantes
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaInformacion])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -83,22 +79,18 @@ const crearInformacionEstudiante = async (infoData) => {
 
 const actualizarInformacionEstudiante = async (idUsuario, infoData) => {
 
-    const datosActualizar = {
-        ...infoData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, infoData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('IdUsuario', idUsuario)
-        .select();
+        .eq('id_usuario', idUsuario)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -111,11 +103,9 @@ const eliminarInformacionEstudiante = async (idUsuario) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('IdUsuario', idUsuario);
+        .eq('id_usuario', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Información del estudiante eliminada correctamente'
@@ -132,11 +122,9 @@ const obtenerEstudiantesBuscanEmpleo = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('BuscaEmpleo', true);
+        .eq('busca_empleo', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -151,11 +139,9 @@ const obtenerEstudiantesBuscanPasantia = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('BuscaPasantia', true);
+        .eq('busca_pasantia', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -170,11 +156,9 @@ const obtenerEstudiantesBuscanMentoria = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('BuscaMentoria', true);
+        .eq('busca_mentoria', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

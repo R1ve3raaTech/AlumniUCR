@@ -4,17 +4,18 @@ const responsabilidadEmpleoService = require('../services/responsabilidadEmpleoS
 // OBTENER TODAS LAS RELACIONES
 // ======================================================
 
-const obtenerResponsabilidadesEmpleo = async (req, res) => {
+const obtenerResponsabilidadesEmpleo = async (req, res, next) => {
     try {
         const relaciones =
             await responsabilidadEmpleoService.obtenerResponsabilidadesEmpleo();
 
-        res.status(200).json(relaciones);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las relaciones responsabilidad-empleo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: relaciones,
+            message: 'Relaciones responsabilidad-empleo obtenidas correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -22,19 +23,27 @@ const obtenerResponsabilidadesEmpleo = async (req, res) => {
 // OBTENER RELACIÓN POR ID
 // ======================================================
 
-const obtenerResponsabilidadEmpleoPorId = async (req, res) => {
+const obtenerResponsabilidadEmpleoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const relacion =
             await responsabilidadEmpleoService.obtenerResponsabilidadEmpleoPorId(id);
 
-        res.status(200).json(relacion);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener la relación responsabilidad-empleo',
-            error: error.message
+        if (!relacion) {
+            return res.status(404).json({
+                success: false,
+                message: 'Relación responsabilidad-empleo no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: relacion,
+            message: 'Relación responsabilidad-empleo obtenida correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -42,20 +51,37 @@ const obtenerResponsabilidadEmpleoPorId = async (req, res) => {
 // CREAR RELACIÓN
 // ======================================================
 
-const crearResponsabilidadEmpleo = async (req, res) => {
+const crearResponsabilidadEmpleo = async (req, res, next) => {
     try {
+        const { id_empleo, id_responsabilidad } = req.body;
+
+        if (!id_empleo) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_empleo es requerido'
+            });
+        }
+
+        if (!id_responsabilidad) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_responsabilidad es requerido'
+            });
+        }
+
         const nuevaRelacion =
-            await responsabilidadEmpleoService.crearResponsabilidadEmpleo(req.body);
+            await responsabilidadEmpleoService.crearResponsabilidadEmpleo({
+                id_empleo,
+                id_responsabilidad
+            });
 
         res.status(201).json({
-            mensaje: 'Relación responsabilidad-empleo creada correctamente',
-            data: nuevaRelacion
+            success: true,
+            data: nuevaRelacion,
+            message: 'Relación responsabilidad-empleo creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear la relación responsabilidad-empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,25 +89,28 @@ const crearResponsabilidadEmpleo = async (req, res) => {
 // ACTUALIZAR RELACIÓN
 // ======================================================
 
-const actualizarResponsabilidadEmpleo = async (req, res) => {
+const actualizarResponsabilidadEmpleo = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { id_empleo, id_responsabilidad } = req.body;
+
+        const datosActualizar = {};
+        if (id_empleo !== undefined) datosActualizar.id_empleo = id_empleo;
+        if (id_responsabilidad !== undefined) datosActualizar.id_responsabilidad = id_responsabilidad;
 
         const relacionActualizada =
             await responsabilidadEmpleoService.actualizarResponsabilidadEmpleo(
                 id,
-                req.body
+                datosActualizar
             );
 
         res.status(200).json({
-            mensaje: 'Relación responsabilidad-empleo actualizada correctamente',
-            data: relacionActualizada
+            success: true,
+            data: relacionActualizada,
+            message: 'Relación responsabilidad-empleo actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar la relación responsabilidad-empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,19 +118,20 @@ const actualizarResponsabilidadEmpleo = async (req, res) => {
 // ELIMINAR RELACIÓN
 // ======================================================
 
-const eliminarResponsabilidadEmpleo = async (req, res) => {
+const eliminarResponsabilidadEmpleo = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const resultado =
             await responsabilidadEmpleoService.eliminarResponsabilidadEmpleo(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar la relación responsabilidad-empleo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Relación responsabilidad-empleo eliminada correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -109,7 +139,7 @@ const eliminarResponsabilidadEmpleo = async (req, res) => {
 // OBTENER RESPONSABILIDADES POR EMPLEO
 // ======================================================
 
-const obtenerResponsabilidadesPorEmpleo = async (req, res) => {
+const obtenerResponsabilidadesPorEmpleo = async (req, res, next) => {
     try {
         const { idEmpleo } = req.params;
 
@@ -118,12 +148,13 @@ const obtenerResponsabilidadesPorEmpleo = async (req, res) => {
                 idEmpleo
             );
 
-        res.status(200).json(responsabilidades);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las responsabilidades del empleo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: responsabilidades,
+            message: 'Responsabilidades del empleo obtenidas correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -131,7 +162,7 @@ const obtenerResponsabilidadesPorEmpleo = async (req, res) => {
 // OBTENER EMPLEOS POR RESPONSABILIDAD
 // ======================================================
 
-const obtenerEmpleosPorResponsabilidad = async (req, res) => {
+const obtenerEmpleosPorResponsabilidad = async (req, res, next) => {
     try {
         const { idResponsabilidad } = req.params;
 
@@ -140,12 +171,13 @@ const obtenerEmpleosPorResponsabilidad = async (req, res) => {
                 idResponsabilidad
             );
 
-        res.status(200).json(empleos);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los empleos asociados a la responsabilidad',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: empleos,
+            message: 'Empleos asociados a la responsabilidad obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
