@@ -3,7 +3,7 @@ const carrerasService = require('../services/carrerasService');
 // ======================================================
 // GET - OBTENER TODAS LAS CARRERAS
 // ======================================================
-const obtenerCarreras = async (req, res) => {
+const obtenerCarreras = async (req, res, next) => {
     try {
         const carreras = await carrerasService.obtenerCarreras();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerCarreras = async (req, res) => {
             message: 'Carreras obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener carreras',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER CARRERA POR ID
 // ======================================================
-const obtenerCarreraPorId = async (req, res) => {
+const obtenerCarreraPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,39 +45,35 @@ const obtenerCarreraPorId = async (req, res) => {
             message: 'Carrera obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener carrera',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR CARRERA
 // ======================================================
-const crearCarrera = async (req, res) => {
+const crearCarrera = async (req, res, next) => {
     try {
-        const { Nombre, IdFacultad } = req.body;
+        const { nombre, id_facultad } = req.body;
 
         // Validaciones
-        if (!Nombre) {
+        if (!nombre) {
             return res.status(400).json({
                 success: false,
                 message: 'El nombre es requerido'
             });
         }
 
-        if (!IdFacultad) {
+        if (!id_facultad) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdFacultad es requerido'
+                message: 'El id_facultad es requerido'
             });
         }
 
         const nuevaCarrera = await carrerasService.crearCarrera({
-            Nombre: Nombre.trim(),
-            IdFacultad
+            nombre: nombre.trim(),
+            id_facultad
         });
 
         res.status(201).json({
@@ -90,21 +82,17 @@ const crearCarrera = async (req, res) => {
             message: 'Carrera creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear carrera',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR CARRERA
 // ======================================================
-const actualizarCarrera = async (req, res) => {
+const actualizarCarrera = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { Nombre, IdFacultad } = req.body;
+        const { nombre, id_facultad } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -114,8 +102,8 @@ const actualizarCarrera = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Nombre !== undefined) datosActualizar.Nombre = Nombre.trim();
-        if (IdFacultad !== undefined) datosActualizar.IdFacultad = IdFacultad;
+        if (nombre !== undefined) datosActualizar.nombre = nombre.trim();
+        if (id_facultad !== undefined) datosActualizar.id_facultad = id_facultad;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -132,18 +120,14 @@ const actualizarCarrera = async (req, res) => {
             message: 'Carrera actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar carrera',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR CARRERA
 // ======================================================
-const eliminarCarrera = async (req, res) => {
+const eliminarCarrera = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -161,18 +145,14 @@ const eliminarCarrera = async (req, res) => {
             message: 'Carrera eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar carrera',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER CARRERAS POR FACULTAD
 // ======================================================
-const obtenerCarrerasPorFacultad = async (req, res) => {
+const obtenerCarrerasPorFacultad = async (req, res, next) => {
     try {
         const { idFacultad } = req.params;
 
@@ -191,18 +171,14 @@ const obtenerCarrerasPorFacultad = async (req, res) => {
             message: 'Carreras obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener carreras por facultad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR CARRERAS POR NOMBRE
 // ======================================================
-const buscarCarrerasPorNombre = async (req, res) => {
+const buscarCarrerasPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.query;
 
@@ -221,11 +197,7 @@ const buscarCarrerasPorNombre = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar carreras',
-            error: error.message
-        });
+        next(error);
     }
 };
 

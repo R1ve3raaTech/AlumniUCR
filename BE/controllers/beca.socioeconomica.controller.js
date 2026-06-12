@@ -3,7 +3,7 @@ const becaSocioeconomicaService = require('../services/becaSocioeconomicaService
 // ======================================================
 // GET - OBTENER TODAS LAS BECAS
 // ======================================================
-const obtenerBecasSocioeconomicas = async (req, res) => {
+const obtenerBecasSocioeconomicas = async (req, res, next) => {
     try {
         const becas = await becaSocioeconomicaService.obtenerBecasSocioeconomicas();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerBecasSocioeconomicas = async (req, res) => {
             message: 'Becas socioeconómicas obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener becas socioeconómicas',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER BECA POR ID
 // ======================================================
-const obtenerBecaSocioeconomicaPorId = async (req, res) => {
+const obtenerBecaSocioeconomicaPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,23 +45,19 @@ const obtenerBecaSocioeconomicaPorId = async (req, res) => {
             message: 'Beca socioeconómica obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener beca socioeconómica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR BECA
 // ======================================================
-const crearBecaSocioeconomica = async (req, res) => {
+const crearBecaSocioeconomica = async (req, res, next) => {
     try {
-        const { Nombre } = req.body;
+        const { nombre } = req.body;
 
         // Validaciones
-        if (!Nombre) {
+        if (!nombre) {
             return res.status(400).json({
                 success: false,
                 message: 'El nombre es requerido'
@@ -73,7 +65,7 @@ const crearBecaSocioeconomica = async (req, res) => {
         }
 
         const nuevaBeca = await becaSocioeconomicaService.crearBecaSocioeconomica({
-            Nombre: Nombre.trim()
+            nombre: nombre.trim()
         });
 
         res.status(201).json({
@@ -82,21 +74,17 @@ const crearBecaSocioeconomica = async (req, res) => {
             message: 'Beca socioeconómica creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear beca socioeconómica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR BECA
 // ======================================================
-const actualizarBecaSocioeconomica = async (req, res) => {
+const actualizarBecaSocioeconomica = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { Nombre } = req.body;
+        const { nombre } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -106,7 +94,7 @@ const actualizarBecaSocioeconomica = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Nombre !== undefined) datosActualizar.Nombre = Nombre.trim();
+        if (nombre !== undefined) datosActualizar.nombre = nombre.trim();
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -123,18 +111,14 @@ const actualizarBecaSocioeconomica = async (req, res) => {
             message: 'Beca socioeconómica actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar beca socioeconómica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR BECA
 // ======================================================
-const eliminarBecaSocioeconomica = async (req, res) => {
+const eliminarBecaSocioeconomica = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -152,18 +136,14 @@ const eliminarBecaSocioeconomica = async (req, res) => {
             message: 'Beca socioeconómica eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar beca socioeconómica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR BECA POR NOMBRE
 // ======================================================
-const buscarBecaPorNombre = async (req, res) => {
+const buscarBecaPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.query;
 
@@ -182,11 +162,7 @@ const buscarBecaPorNombre = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar beca socioeconómica',
-            error: error.message
-        });
+        next(error);
     }
 };
 

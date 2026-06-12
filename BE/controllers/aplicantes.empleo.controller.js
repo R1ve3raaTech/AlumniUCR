@@ -3,7 +3,7 @@ const aplicantesService = require('../services/aplicantesService');
 // ======================================================
 // GET - OBTENER TODOS LOS APLICANTES
 // ======================================================
-const obtenerAplicantes = async (req, res) => {
+const obtenerAplicantes = async (req, res, next) => {
     try {
         const aplicantes = await aplicantesService.obtenerAplicantes();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerAplicantes = async (req, res) => {
             message: 'Aplicantes obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicantes',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER APLICANTE POR ID
 // ======================================================
-const obtenerAplicantePorId = async (req, res) => {
+const obtenerAplicantePorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,33 +45,29 @@ const obtenerAplicantePorId = async (req, res) => {
             message: 'Aplicante obtenido correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR APLICANTE
 // ======================================================
-const crearAplicante = async (req, res) => {
+const crearAplicante = async (req, res, next) => {
     try {
-        const { IdUsuario, IdEmpleo, Estado } = req.body;
+        const { id_usuario, id_empleo, estado } = req.body;
 
         // Validaciones
-        if (!IdUsuario || !IdEmpleo) {
+        if (!id_usuario || !id_empleo) {
             return res.status(400).json({
                 success: false,
-                message: 'IdUsuario e IdEmpleo son requeridos'
+                message: 'id_usuario e id_empleo son requeridos'
             });
         }
 
         const nuevoAplicante = await aplicantesService.crearAplicante({
-            IdUsuario,
-            IdEmpleo,
-            Estado: Estado || 'pendiente'
+            id_usuario,
+            id_empleo,
+            estado: estado || 'pendiente'
         });
 
         res.status(201).json({
@@ -84,21 +76,17 @@ const crearAplicante = async (req, res) => {
             message: 'Aplicante creado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear aplicante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR APLICANTE
 // ======================================================
-const actualizarAplicante = async (req, res) => {
+const actualizarAplicante = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { IdUsuario, IdEmpleo, Estado } = req.body;
+        const { id_usuario, id_empleo, estado } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -108,9 +96,9 @@ const actualizarAplicante = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdUsuario !== undefined) datosActualizar.IdUsuario = IdUsuario;
-        if (IdEmpleo !== undefined) datosActualizar.IdEmpleo = IdEmpleo;
-        if (Estado !== undefined) datosActualizar.Estado = Estado;
+        if (id_usuario !== undefined) datosActualizar.id_usuario = id_usuario;
+        if (id_empleo !== undefined) datosActualizar.id_empleo = id_empleo;
+        if (estado !== undefined) datosActualizar.estado = estado;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -127,18 +115,14 @@ const actualizarAplicante = async (req, res) => {
             message: 'Aplicante actualizado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar aplicante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR APLICANTE
 // ======================================================
-const eliminarAplicante = async (req, res) => {
+const eliminarAplicante = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -156,18 +140,14 @@ const eliminarAplicante = async (req, res) => {
             message: 'Aplicante eliminado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar aplicante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER APLICANTES POR EMPLEO
 // ======================================================
-const obtenerAplicantesPorEmpleo = async (req, res) => {
+const obtenerAplicantesPorEmpleo = async (req, res, next) => {
     try {
         const { idEmpleo } = req.params;
 
@@ -186,18 +166,14 @@ const obtenerAplicantesPorEmpleo = async (req, res) => {
             message: 'Aplicantes obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicantes por empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER APLICANTES POR USUARIO
 // ======================================================
-const obtenerAplicantesPorUsuario = async (req, res) => {
+const obtenerAplicantesPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -216,11 +192,7 @@ const obtenerAplicantesPorUsuario = async (req, res) => {
             message: 'Aplicantes obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicantes por usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -236,4 +208,3 @@ module.exports = {
     obtenerAplicantesPorEmpleo,
     obtenerAplicantesPorUsuario
 };
-

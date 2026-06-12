@@ -4,17 +4,18 @@ const sectorEmpleoService = require('../services/sectorEmpleoService');
 // OBTENER TODAS LAS RELACIONES
 // ======================================================
 
-const obtenerSectoresEmpleo = async (req, res) => {
+const obtenerSectoresEmpleo = async (req, res, next) => {
     try {
         const relaciones =
             await sectorEmpleoService.obtenerSectoresEmpleo();
 
-        res.status(200).json(relaciones);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las relaciones sector-empleo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: relaciones,
+            message: 'Relaciones sector-empleo obtenidas correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -22,19 +23,27 @@ const obtenerSectoresEmpleo = async (req, res) => {
 // OBTENER RELACIÓN POR ID
 // ======================================================
 
-const obtenerSectorEmpleoPorId = async (req, res) => {
+const obtenerSectorEmpleoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const relacion =
             await sectorEmpleoService.obtenerSectorEmpleoPorId(id);
 
-        res.status(200).json(relacion);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener la relación sector-empleo',
-            error: error.message
+        if (!relacion) {
+            return res.status(404).json({
+                success: false,
+                message: 'Relación sector-empleo no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: relacion,
+            message: 'Relación sector-empleo obtenida correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -42,20 +51,34 @@ const obtenerSectorEmpleoPorId = async (req, res) => {
 // CREAR RELACIÓN
 // ======================================================
 
-const crearSectorEmpleo = async (req, res) => {
+const crearSectorEmpleo = async (req, res, next) => {
     try {
+        const { id_empleo, id_sector } = req.body;
+
+        if (!id_empleo) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_empleo es requerido'
+            });
+        }
+
+        if (!id_sector) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_sector es requerido'
+            });
+        }
+
         const nuevaRelacion =
-            await sectorEmpleoService.crearSectorEmpleo(req.body);
+            await sectorEmpleoService.crearSectorEmpleo({ id_empleo, id_sector });
 
         res.status(201).json({
-            mensaje: 'Relación sector-empleo creada correctamente',
-            data: nuevaRelacion
+            success: true,
+            data: nuevaRelacion,
+            message: 'Relación sector-empleo creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear la relación sector-empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,25 +86,35 @@ const crearSectorEmpleo = async (req, res) => {
 // ACTUALIZAR RELACIÓN
 // ======================================================
 
-const actualizarSectorEmpleo = async (req, res) => {
+const actualizarSectorEmpleo = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { id_empleo, id_sector } = req.body;
+
+        const datosActualizar = {};
+        if (id_empleo !== undefined) datosActualizar.id_empleo = id_empleo;
+        if (id_sector !== undefined) datosActualizar.id_sector = id_sector;
 
         const relacionActualizada =
             await sectorEmpleoService.actualizarSectorEmpleo(
                 id,
-                req.body
+                datosActualizar
             );
 
+        if (!relacionActualizada) {
+            return res.status(404).json({
+                success: false,
+                message: 'Relación sector-empleo no encontrada'
+            });
+        }
+
         res.status(200).json({
-            mensaje: 'Relación sector-empleo actualizada correctamente',
-            data: relacionActualizada
+            success: true,
+            data: relacionActualizada,
+            message: 'Relación sector-empleo actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar la relación sector-empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,19 +122,20 @@ const actualizarSectorEmpleo = async (req, res) => {
 // ELIMINAR RELACIÓN
 // ======================================================
 
-const eliminarSectorEmpleo = async (req, res) => {
+const eliminarSectorEmpleo = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const resultado =
             await sectorEmpleoService.eliminarSectorEmpleo(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar la relación sector-empleo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Relación sector-empleo eliminada correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -109,7 +143,7 @@ const eliminarSectorEmpleo = async (req, res) => {
 // OBTENER SECTORES POR EMPLEO
 // ======================================================
 
-const obtenerSectoresPorEmpleo = async (req, res) => {
+const obtenerSectoresPorEmpleo = async (req, res, next) => {
     try {
         const { idEmpleo } = req.params;
 
@@ -118,12 +152,13 @@ const obtenerSectoresPorEmpleo = async (req, res) => {
                 idEmpleo
             );
 
-        res.status(200).json(sectores);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los sectores asociados al empleo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: sectores,
+            message: 'Sectores asociados al empleo obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -131,7 +166,7 @@ const obtenerSectoresPorEmpleo = async (req, res) => {
 // OBTENER EMPLEOS POR SECTOR
 // ======================================================
 
-const obtenerEmpleosPorSector = async (req, res) => {
+const obtenerEmpleosPorSector = async (req, res, next) => {
     try {
         const { idSector } = req.params;
 
@@ -140,12 +175,13 @@ const obtenerEmpleosPorSector = async (req, res) => {
                 idSector
             );
 
-        res.status(200).json(empleos);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los empleos asociados al sector',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: empleos,
+            message: 'Empleos asociados al sector obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 

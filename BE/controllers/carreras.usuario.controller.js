@@ -3,7 +3,7 @@ const carrerasUsuarioService = require('../services/carrerasUsuarioService');
 // ======================================================
 // GET - OBTENER TODAS LAS RELACIONES
 // ======================================================
-const obtenerCarrerasUsuario = async (req, res) => {
+const obtenerCarrerasUsuario = async (req, res, next) => {
     try {
         const relaciones = await carrerasUsuarioService.obtenerCarrerasUsuario();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerCarrerasUsuario = async (req, res) => {
             message: 'Relaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener relaciones',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER RELACIÓN POR ID
 // ======================================================
-const obtenerCarreraUsuarioPorId = async (req, res) => {
+const obtenerCarreraUsuarioPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,55 +45,51 @@ const obtenerCarreraUsuarioPorId = async (req, res) => {
             message: 'Relación obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR RELACIÓN
 // ======================================================
-const crearCarreraUsuario = async (req, res) => {
+const crearCarreraUsuario = async (req, res, next) => {
     try {
-        const { IdCarrera, IdUsuario, IdSede, AnoGraduacion } = req.body;
+        const { id_carrera, id_usuario, id_sede, ano_graduacion } = req.body;
 
         // Validaciones
-        if (!IdCarrera) {
+        if (!id_carrera) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdCarrera es requerido'
+                message: 'El id_carrera es requerido'
             });
         }
 
-        if (!IdUsuario) {
+        if (!id_usuario) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdUsuario es requerido'
+                message: 'El id_usuario es requerido'
             });
         }
 
-        if (!IdSede) {
+        if (!id_sede) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdSede es requerido'
+                message: 'El id_sede es requerido'
             });
         }
 
-        if (!AnoGraduacion) {
+        if (!ano_graduacion) {
             return res.status(400).json({
                 success: false,
-                message: 'El AnoGraduacion es requerido'
+                message: 'El ano_graduacion es requerido'
             });
         }
 
         const nuevaRelacion = await carrerasUsuarioService.crearCarreraUsuario({
-            IdCarrera,
-            IdUsuario,
-            IdSede,
-            AnoGraduacion
+            id_carrera,
+            id_usuario,
+            id_sede,
+            ano_graduacion
         });
 
         res.status(201).json({
@@ -106,21 +98,17 @@ const crearCarreraUsuario = async (req, res) => {
             message: 'Relación creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR RELACIÓN
 // ======================================================
-const actualizarCarreraUsuario = async (req, res) => {
+const actualizarCarreraUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { IdCarrera, IdUsuario, IdSede, AnoGraduacion } = req.body;
+        const { id_carrera, id_usuario, id_sede, ano_graduacion } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -130,10 +118,10 @@ const actualizarCarreraUsuario = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdCarrera !== undefined) datosActualizar.IdCarrera = IdCarrera;
-        if (IdUsuario !== undefined) datosActualizar.IdUsuario = IdUsuario;
-        if (IdSede !== undefined) datosActualizar.IdSede = IdSede;
-        if (AnoGraduacion !== undefined) datosActualizar.AnoGraduacion = AnoGraduacion;
+        if (id_carrera !== undefined) datosActualizar.id_carrera = id_carrera;
+        if (id_usuario !== undefined) datosActualizar.id_usuario = id_usuario;
+        if (id_sede !== undefined) datosActualizar.id_sede = id_sede;
+        if (ano_graduacion !== undefined) datosActualizar.ano_graduacion = ano_graduacion;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -150,18 +138,14 @@ const actualizarCarreraUsuario = async (req, res) => {
             message: 'Relación actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR RELACIÓN
 // ======================================================
-const eliminarCarreraUsuario = async (req, res) => {
+const eliminarCarreraUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -179,18 +163,14 @@ const eliminarCarreraUsuario = async (req, res) => {
             message: 'Relación eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER CARRERAS POR USUARIO
 // ======================================================
-const obtenerCarrerasPorUsuario = async (req, res) => {
+const obtenerCarrerasPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -209,18 +189,14 @@ const obtenerCarrerasPorUsuario = async (req, res) => {
             message: 'Carreras obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener carreras por usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER USUARIOS POR CARRERA
 // ======================================================
-const obtenerUsuariosPorCarrera = async (req, res) => {
+const obtenerUsuariosPorCarrera = async (req, res, next) => {
     try {
         const { idCarrera } = req.params;
 
@@ -239,18 +215,14 @@ const obtenerUsuariosPorCarrera = async (req, res) => {
             message: 'Usuarios obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener usuarios por carrera',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER USUARIOS POR SEDE
 // ======================================================
-const obtenerUsuariosPorSede = async (req, res) => {
+const obtenerUsuariosPorSede = async (req, res, next) => {
     try {
         const { idSede } = req.params;
 
@@ -269,11 +241,7 @@ const obtenerUsuariosPorSede = async (req, res) => {
             message: 'Usuarios obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener usuarios por sede',
-            error: error.message
-        });
+        next(error);
     }
 };
 

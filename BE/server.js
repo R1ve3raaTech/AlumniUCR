@@ -52,10 +52,6 @@ const tipoProyectoRoutes = require('./routes/tipo.proyecto.routes');
 const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
 
-// ======================================================
-// ENDPOINTS
-// ======================================================
-
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
 app.use('/api/areas-interes', areasInteresRoutes);
@@ -88,21 +84,12 @@ app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
 
-// ======================================================
-// HEALTH CHECK
-// ======================================================
-
+// Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Backend corriendo 🟢'
-  });
+  res.json({ success: true, message: 'Backend corriendo 🟢' });
 });
 
-// ======================================================
-// ERROR HANDLER
-// ======================================================
-
+// Error middleware (siempre al final)
 const errorMiddleware = require('./middlewares/error.middleware');
 app.use(errorMiddleware);
 

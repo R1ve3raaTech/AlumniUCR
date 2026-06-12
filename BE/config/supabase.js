@@ -3,15 +3,8 @@ require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.SUPABASE_URL;
 
-// Se prefiere la clave secreta (service_role) para operaciones de backend.
-// Si no existe, utiliza la clave anónima.
-const supabaseKey =
-  process.env.SUPABASE_SECRET_KEY ||
-  process.env.SUPABASE_ANON_KEY;
-
-// Validar variables de entorno
-const esValido =
-  supabaseUrl &&
+// Validar que las variables de entorno estén presentes y no sean placeholders
+const esValido = supabaseUrl &&
   supabaseKey &&
   !supabaseUrl.includes('your-project') &&
   !supabaseKey.includes('your-anon-key');
@@ -28,8 +21,8 @@ const supabase = createClient(
   supabaseKey || 'placeholder-key',
   {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false
+      persistSession: false, // El backend debe ser sin estado, no persistir sesiones locales
+      autoRefreshToken: false // No es necesario refrescar tokens en backend stateless
     }
   }
 );

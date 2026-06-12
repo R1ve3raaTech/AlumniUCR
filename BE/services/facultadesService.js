@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'facultades';
 
@@ -14,7 +15,7 @@ const obtenerFacultades = async () => {
         .select('*');
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
@@ -30,11 +31,11 @@ const obtenerFacultadPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
@@ -48,19 +49,20 @@ const obtenerFacultadPorId = async (id) => {
 const crearFacultad = async (facultadData) => {
 
     const nuevaFacultad = {
-        Nombre: facultadData.Nombre
+        nombre: facultadData.nombre
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaFacultad])
-        .select();
+        .select()
+        .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
-    return data[0];
+    return data;
 };
 
 
@@ -70,22 +72,22 @@ const crearFacultad = async (facultadData) => {
 
 const actualizarFacultad = async (id, facultadData) => {
 
-    const datosActualizar = {
-        ...facultadData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, facultadData, {
+        updated_at: new Date()
+    });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
-    return data[0];
+    return data;
 };
 
 
@@ -98,10 +100,10 @@ const eliminarFacultad = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return {
@@ -119,10 +121,10 @@ const buscarFacultadesPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
