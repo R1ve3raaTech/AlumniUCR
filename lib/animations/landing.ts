@@ -92,6 +92,69 @@ function animateStats(scope: HTMLElement) {
 }
 
 /**
+ * Animación interactiva con scroll para la sección Institucional (InfoUCR).
+ * Utiliza stagger para la entrada de textos y parallax (scrub) en la imagen
+ * y la forma decorativa superpuesta.
+ */
+function animateInfo(scope: HTMLElement) {
+  const section = scope.querySelector('[data-anim="info-split"]');
+  if (!section) return;
+
+  // Entrada de textos
+  gsap.from(q(scope, '[data-anim="info-text"] > *'), {
+    x: -40,
+    opacity: 0,
+    stagger: 0.15,
+    duration: 0.8,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 80%',
+    },
+  });
+
+  // Entrada del contenedor de la imagen
+  gsap.from(q(scope, '[data-anim="info-visual"]'), {
+    x: 60,
+    opacity: 0,
+    duration: 1,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: section,
+      start: 'top 80%',
+    },
+  });
+
+  // Efecto parallax sutil en la imagen con scroll
+  q(scope, '[data-anim="info-image"]').forEach((img) => {
+    gsap.to(img, {
+      y: 40, // La imagen subirá mientras el contenedor baja
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true,
+      },
+    });
+  });
+
+  // Efecto parallax acentuado en el círculo decorativo
+  q(scope, '[data-anim="info-shape"]').forEach((shape) => {
+    gsap.to(shape, {
+      y: -60,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.5,
+      },
+    });
+  });
+}
+
+/**
  * Punto de entrada único. Lo invoca LandingShell dentro de useGSAP.
  * Todo lo creado queda en el contexto de useGSAP y se revierte al desmontar.
  */
@@ -100,4 +163,5 @@ export function initLandingAnimations(scope: HTMLElement | null) {
   animateHero(scope);
   animateReveals(scope);
   animateStats(scope);
+  animateInfo(scope);
 }
