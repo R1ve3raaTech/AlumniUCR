@@ -3,7 +3,7 @@ const facultadesService = require('../services/facultadesService');
 // ======================================================
 // GET - OBTENER TODAS LAS FACULTADES
 // ======================================================
-const obtenerFacultades = async (req, res) => {
+const obtenerFacultades = async (req, res, next) => {
     try {
         const facultades = await facultadesService.obtenerFacultades();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerFacultades = async (req, res) => {
             message: 'Facultades obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener facultades',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER FACULTAD POR ID
 // ======================================================
-const obtenerFacultadPorId = async (req, res) => {
+const obtenerFacultadPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,23 +45,19 @@ const obtenerFacultadPorId = async (req, res) => {
             message: 'Facultad obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener facultad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR FACULTAD
 // ======================================================
-const crearFacultad = async (req, res) => {
+const crearFacultad = async (req, res, next) => {
     try {
-        const { Nombre } = req.body;
+        const { nombre } = req.body;
 
         // Validaciones
-        if (!Nombre) {
+        if (!nombre) {
             return res.status(400).json({
                 success: false,
                 message: 'El nombre es requerido'
@@ -73,7 +65,7 @@ const crearFacultad = async (req, res) => {
         }
 
         const nuevaFacultad = await facultadesService.crearFacultad({
-            Nombre: Nombre.trim()
+            nombre: nombre.trim()
         });
 
         res.status(201).json({
@@ -82,21 +74,17 @@ const crearFacultad = async (req, res) => {
             message: 'Facultad creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear facultad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR FACULTAD
 // ======================================================
-const actualizarFacultad = async (req, res) => {
+const actualizarFacultad = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { Nombre } = req.body;
+        const { nombre } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -106,7 +94,7 @@ const actualizarFacultad = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Nombre !== undefined) datosActualizar.Nombre = Nombre.trim();
+        if (nombre !== undefined) datosActualizar.nombre = nombre.trim();
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -123,18 +111,14 @@ const actualizarFacultad = async (req, res) => {
             message: 'Facultad actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar facultad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR FACULTAD
 // ======================================================
-const eliminarFacultad = async (req, res) => {
+const eliminarFacultad = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -152,18 +136,14 @@ const eliminarFacultad = async (req, res) => {
             message: 'Facultad eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar facultad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR FACULTADES POR NOMBRE
 // ======================================================
-const buscarFacultadesPorNombre = async (req, res) => {
+const buscarFacultadesPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.query;
 
@@ -182,11 +162,7 @@ const buscarFacultadesPorNombre = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar facultades',
-            error: error.message
-        });
+        next(error);
     }
 };
 

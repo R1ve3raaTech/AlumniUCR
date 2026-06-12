@@ -4,16 +4,12 @@ const usuarioService = require('../services/usuarioService');
 // OBTENER TODOS LOS USUARIOS
 // ======================================================
 
-const obtenerUsuarios = async (req, res) => {
+const obtenerUsuarios = async (req, res, next) => {
     try {
         const usuarios = await usuarioService.obtenerUsuarios();
-
         res.status(200).json(usuarios);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los usuarios',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -21,18 +17,16 @@ const obtenerUsuarios = async (req, res) => {
 // OBTENER USUARIO POR ID
 // ======================================================
 
-const obtenerUsuarioPorId = async (req, res) => {
+const obtenerUsuarioPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
-
         const usuario = await usuarioService.obtenerUsuarioPorId(id);
-
+        if (!usuario) {
+            return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
+        }
         res.status(200).json(usuario);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -40,20 +34,15 @@ const obtenerUsuarioPorId = async (req, res) => {
 // CREAR USUARIO
 // ======================================================
 
-const crearUsuario = async (req, res) => {
+const crearUsuario = async (req, res, next) => {
     try {
-        const nuevoUsuario =
-            await usuarioService.crearUsuario(req.body);
-
+        const nuevoUsuario = await usuarioService.crearUsuario(req.body);
         res.status(201).json({
             mensaje: 'Usuario creado correctamente',
             data: nuevoUsuario
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear el usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -61,32 +50,25 @@ const crearUsuario = async (req, res) => {
 // ACTUALIZAR USUARIO
 // ======================================================
 
-const actualizarUsuario = async (req, res) => {
+const actualizarUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         // Verificar si el usuario autenticado tiene permisos (ser el mismo usuario o ser administrador)
-        if (!req.user || (req.user.id !== id && req.user.profile?.tipo !== 'admin')) {
+        if (!req.user || (req.user.id !== id && req.user.profile?.roles?.nombre !== 'Admin')) {
             return res.status(403).json({
+                success: false,
                 mensaje: 'Acceso denegado. No tiene permisos para actualizar este perfil.'
             });
         }
 
-        const usuarioActualizado =
-            await usuarioService.actualizarUsuario(
-                id,
-                req.body
-            );
-
+        const usuarioActualizado = await usuarioService.actualizarUsuario(id, req.body);
         res.status(200).json({
             mensaje: 'Usuario actualizado correctamente',
             data: usuarioActualizado
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar el usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -94,19 +76,13 @@ const actualizarUsuario = async (req, res) => {
 // ELIMINAR USUARIO
 // ======================================================
 
-const eliminarUsuario = async (req, res) => {
+const eliminarUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
-
-        const resultado =
-            await usuarioService.eliminarUsuario(id);
-
+        const resultado = await usuarioService.eliminarUsuario(id);
         res.status(200).json(resultado);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar el usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -114,21 +90,13 @@ const eliminarUsuario = async (req, res) => {
 // BUSCAR USUARIOS POR NOMBRE
 // ======================================================
 
-const buscarUsuariosPorNombre = async (req, res) => {
+const buscarUsuariosPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.params;
-
-        const usuarios =
-            await usuarioService.buscarUsuariosPorNombre(
-                nombre
-            );
-
+        const usuarios = await usuarioService.buscarUsuariosPorNombre(nombre);
         res.status(200).json(usuarios);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar usuarios por nombre',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -136,21 +104,16 @@ const buscarUsuariosPorNombre = async (req, res) => {
 // BUSCAR USUARIO POR CORREO
 // ======================================================
 
-const obtenerUsuarioPorCorreo = async (req, res) => {
+const obtenerUsuarioPorCorreo = async (req, res, next) => {
     try {
         const { correoElectronico } = req.params;
-
-        const usuario =
-            await usuarioService.obtenerUsuarioPorCorreo(
-                correoElectronico
-            );
-
+        const usuario = await usuarioService.obtenerUsuarioPorCorreo(correoElectronico);
+        if (!usuario) {
+            return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
+        }
         res.status(200).json(usuario);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el usuario por correo electrónico',
-            error: error.message
-        });
+        next(error);
     }
 };
 

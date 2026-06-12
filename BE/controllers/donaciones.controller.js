@@ -3,7 +3,7 @@ const donacionesService = require('../services/donacionesService');
 // ======================================================
 // GET - OBTENER TODAS LAS DONACIONES
 // ======================================================
-const obtenerDonaciones = async (req, res) => {
+const obtenerDonaciones = async (req, res, next) => {
     try {
         const donaciones = await donacionesService.obtenerDonaciones();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerDonaciones = async (req, res) => {
             message: 'Donaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener donaciones',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER DONACIÓN POR ID
 // ======================================================
-const obtenerDonacionPorId = async (req, res) => {
+const obtenerDonacionPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,76 +45,72 @@ const obtenerDonacionPorId = async (req, res) => {
             message: 'Donación obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener donación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR DONACIÓN
 // ======================================================
-const crearDonacion = async (req, res) => {
+const crearDonacion = async (req, res, next) => {
     try {
         const {
-            IdUsuarioExalumno,
-            IdTipoPago,
-            Monto,
-            IdProyecto,
-            Moneda,
-            FechaHoraTransferencia,
-            NumeroReferencia,
-            Comprobante,
-            Mensaje,
-            Estado
+            id_usuario_exalumno,
+            id_tipo_pago,
+            monto,
+            id_proyecto,
+            moneda,
+            fecha_hora_transferencia,
+            numero_referencia,
+            comprobante,
+            mensaje,
+            estado
         } = req.body;
 
         // Validaciones
-        if (!IdUsuarioExalumno) {
+        if (!id_usuario_exalumno) {
             return res.status(400).json({
                 success: false,
                 message: 'El IdUsuarioExalumno es requerido'
             });
         }
 
-        if (!IdTipoPago) {
+        if (!id_tipo_pago) {
             return res.status(400).json({
                 success: false,
                 message: 'El IdTipoPago es requerido'
             });
         }
 
-        if (!Monto || Monto <= 0) {
+        if (!monto || monto <= 0) {
             return res.status(400).json({
                 success: false,
                 message: 'El monto debe ser mayor a 0'
             });
         }
 
-        if (!IdProyecto) {
+        if (!id_proyecto) {
             return res.status(400).json({
                 success: false,
                 message: 'El IdProyecto es requerido'
             });
         }
 
-        if (!Moneda) {
+        if (!moneda) {
             return res.status(400).json({
                 success: false,
                 message: 'La moneda es requerida'
             });
         }
 
-        if (!FechaHoraTransferencia) {
+        if (!fecha_hora_transferencia) {
             return res.status(400).json({
                 success: false,
                 message: 'La fecha y hora de transferencia es requerida'
             });
         }
 
-        if (!NumeroReferencia) {
+        if (!numero_referencia) {
             return res.status(400).json({
                 success: false,
                 message: 'El número de referencia es requerido'
@@ -126,16 +118,16 @@ const crearDonacion = async (req, res) => {
         }
 
         const nuevaDonacion = await donacionesService.crearDonacion({
-            IdUsuarioExalumno,
-            IdTipoPago,
-            Monto,
-            IdProyecto,
-            Moneda,
-            FechaHoraTransferencia,
-            NumeroReferencia,
-            Comprobante: Comprobante ? Comprobante.trim() : null,
-            Mensaje: Mensaje ? Mensaje.trim() : null,
-            Estado: Estado || 'pendiente'
+            id_usuario_exalumno,
+            id_tipo_pago,
+            monto,
+            id_proyecto,
+            moneda,
+            fecha_hora_transferencia,
+            numero_referencia,
+            comprobante: comprobante ? comprobante.trim() : null,
+            mensaje: mensaje ? mensaje.trim() : null,
+            estado: estado || 'pendiente'
         });
 
         res.status(201).json({
@@ -144,31 +136,27 @@ const crearDonacion = async (req, res) => {
             message: 'Donación creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear donación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR DONACIÓN
 // ======================================================
-const actualizarDonacion = async (req, res) => {
+const actualizarDonacion = async (req, res, next) => {
     try {
         const { id } = req.params;
         const {
-            IdUsuarioExalumno,
-            IdTipoPago,
-            Monto,
-            IdProyecto,
-            Moneda,
-            FechaHoraTransferencia,
-            NumeroReferencia,
-            Comprobante,
-            Mensaje,
-            Estado
+            id_usuario_exalumno,
+            id_tipo_pago,
+            monto,
+            id_proyecto,
+            moneda,
+            fecha_hora_transferencia,
+            numero_referencia,
+            comprobante,
+            mensaje,
+            estado
         } = req.body;
 
         if (!id) {
@@ -179,24 +167,24 @@ const actualizarDonacion = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdUsuarioExalumno !== undefined) datosActualizar.IdUsuarioExalumno = IdUsuarioExalumno;
-        if (IdTipoPago !== undefined) datosActualizar.IdTipoPago = IdTipoPago;
-        if (Monto !== undefined) {
-            if (Monto <= 0) {
+        if (id_usuario_exalumno !== undefined) datosActualizar.id_usuario_exalumno = id_usuario_exalumno;
+        if (id_tipo_pago !== undefined) datosActualizar.id_tipo_pago = id_tipo_pago;
+        if (monto !== undefined) {
+            if (monto <= 0) {
                 return res.status(400).json({
                     success: false,
                     message: 'El monto debe ser mayor a 0'
                 });
             }
-            datosActualizar.Monto = Monto;
+            datosActualizar.monto = monto;
         }
-        if (IdProyecto !== undefined) datosActualizar.IdProyecto = IdProyecto;
-        if (Moneda !== undefined) datosActualizar.Moneda = Moneda;
-        if (FechaHoraTransferencia !== undefined) datosActualizar.FechaHoraTransferencia = FechaHoraTransferencia;
-        if (NumeroReferencia !== undefined) datosActualizar.NumeroReferencia = NumeroReferencia;
-        if (Comprobante !== undefined) datosActualizar.Comprobante = Comprobante ? Comprobante.trim() : null;
-        if (Mensaje !== undefined) datosActualizar.Mensaje = Mensaje ? Mensaje.trim() : null;
-        if (Estado !== undefined) datosActualizar.Estado = Estado;
+        if (id_proyecto !== undefined) datosActualizar.id_proyecto = id_proyecto;
+        if (moneda !== undefined) datosActualizar.moneda = moneda;
+        if (fecha_hora_transferencia !== undefined) datosActualizar.fecha_hora_transferencia = fecha_hora_transferencia;
+        if (numero_referencia !== undefined) datosActualizar.numero_referencia = numero_referencia;
+        if (comprobante !== undefined) datosActualizar.comprobante = comprobante ? comprobante.trim() : null;
+        if (mensaje !== undefined) datosActualizar.mensaje = mensaje ? mensaje.trim() : null;
+        if (estado !== undefined) datosActualizar.estado = estado;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -213,18 +201,14 @@ const actualizarDonacion = async (req, res) => {
             message: 'Donación actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar donación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR DONACIÓN
 // ======================================================
-const eliminarDonacion = async (req, res) => {
+const eliminarDonacion = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -242,18 +226,14 @@ const eliminarDonacion = async (req, res) => {
             message: 'Donación eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar donación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER DONACIONES POR USUARIO
 // ======================================================
-const obtenerDonacionesPorUsuario = async (req, res) => {
+const obtenerDonacionesPorUsuario = async (req, res, next) => {
     try {
         const { idUsuarioExalumno } = req.params;
 
@@ -272,18 +252,14 @@ const obtenerDonacionesPorUsuario = async (req, res) => {
             message: 'Donaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener donaciones por usuario',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER DONACIONES POR PROYECTO
 // ======================================================
-const obtenerDonacionesPorProyecto = async (req, res) => {
+const obtenerDonacionesPorProyecto = async (req, res, next) => {
     try {
         const { idProyecto } = req.params;
 
@@ -302,18 +278,14 @@ const obtenerDonacionesPorProyecto = async (req, res) => {
             message: 'Donaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener donaciones por proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER DONACIONES POR ESTADO
 // ======================================================
-const obtenerDonacionesPorEstado = async (req, res) => {
+const obtenerDonacionesPorEstado = async (req, res, next) => {
     try {
         const { estado } = req.params;
 
@@ -332,11 +304,7 @@ const obtenerDonacionesPorEstado = async (req, res) => {
             message: 'Donaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener donaciones por estado',
-            error: error.message
-        });
+        next(error);
     }
 };
 

@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'tipo_pago';
 
@@ -13,9 +14,7 @@ const obtenerTiposPago = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerTipoPagoPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,19 +45,18 @@ const obtenerTipoPagoPorId = async (id) => {
 const crearTipoPago = async (tipoPagoData) => {
 
     const nuevoTipoPago = {
-        Descripcion: tipoPagoData.Descripcion
+        descripcion: tipoPagoData.descripcion
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoTipoPago])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -70,22 +66,20 @@ const crearTipoPago = async (tipoPagoData) => {
 
 const actualizarTipoPago = async (id, tipoPagoData) => {
 
-    const datosActualizar = {
-        ...tipoPagoData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, tipoPagoData, {
+        updated_at: new Date()
+    });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -98,11 +92,9 @@ const eliminarTipoPago = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Tipo de pago eliminado correctamente'
@@ -119,11 +111,9 @@ const buscarTiposPagoPorDescripcion = async (descripcion) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Descripcion', `%${descripcion}%`);
+        .ilike('descripcion', `%${descripcion}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

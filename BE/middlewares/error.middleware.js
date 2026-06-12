@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../.env.local' });
 
 /**
  * Middleware centralizado para el manejo de errores en Express.

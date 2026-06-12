@@ -4,16 +4,17 @@ const sedeUCRService = require('../services/sedeUCRService');
 // OBTENER TODAS LAS SEDES UCR
 // ======================================================
 
-const obtenerSedesUCR = async (req, res) => {
+const obtenerSedesUCR = async (req, res, next) => {
     try {
         const sedes = await sedeUCRService.obtenerSedesUCR();
 
-        res.status(200).json(sedes);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las sedes UCR',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: sedes,
+            message: 'Sedes UCR obtenidas correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -21,18 +22,26 @@ const obtenerSedesUCR = async (req, res) => {
 // OBTENER SEDE POR ID
 // ======================================================
 
-const obtenerSedeUCRPorId = async (req, res) => {
+const obtenerSedeUCRPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const sede = await sedeUCRService.obtenerSedeUCRPorId(id);
 
-        res.status(200).json(sede);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener la sede UCR',
-            error: error.message
+        if (!sede) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sede UCR no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: sede,
+            message: 'Sede UCR obtenida correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -40,19 +49,28 @@ const obtenerSedeUCRPorId = async (req, res) => {
 // CREAR SEDE
 // ======================================================
 
-const crearSedeUCR = async (req, res) => {
+const crearSedeUCR = async (req, res, next) => {
     try {
-        const nuevaSede = await sedeUCRService.crearSedeUCR(req.body);
+        const { nombre } = req.body;
+
+        if (!nombre) {
+            return res.status(400).json({
+                success: false,
+                message: 'El nombre es requerido'
+            });
+        }
+
+        const nuevaSede = await sedeUCRService.crearSedeUCR({
+            nombre: nombre.trim()
+        });
 
         res.status(201).json({
-            mensaje: 'Sede UCR creada correctamente',
-            data: nuevaSede
+            success: true,
+            data: nuevaSede,
+            message: 'Sede UCR creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear la sede UCR',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -60,25 +78,37 @@ const crearSedeUCR = async (req, res) => {
 // ACTUALIZAR SEDE
 // ======================================================
 
-const actualizarSedeUCR = async (req, res) => {
+const actualizarSedeUCR = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { nombre } = req.body;
 
-        const sedeActualizada =
-            await sedeUCRService.actualizarSedeUCR(
-                id,
-                req.body
-            );
+        if (!nombre) {
+            return res.status(400).json({
+                success: false,
+                message: 'El nombre es requerido'
+            });
+        }
+
+        const sedeActualizada = await sedeUCRService.actualizarSedeUCR(
+            id,
+            { nombre: nombre.trim() }
+        );
+
+        if (!sedeActualizada) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sede UCR no encontrada'
+            });
+        }
 
         res.status(200).json({
-            mensaje: 'Sede UCR actualizada correctamente',
-            data: sedeActualizada
+            success: true,
+            data: sedeActualizada,
+            message: 'Sede UCR actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar la sede UCR',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -86,19 +116,19 @@ const actualizarSedeUCR = async (req, res) => {
 // ELIMINAR SEDE
 // ======================================================
 
-const eliminarSedeUCR = async (req, res) => {
+const eliminarSedeUCR = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const resultado =
-            await sedeUCRService.eliminarSedeUCR(id);
+        const resultado = await sedeUCRService.eliminarSedeUCR(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar la sede UCR',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Sede UCR eliminada correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -106,19 +136,19 @@ const eliminarSedeUCR = async (req, res) => {
 // BUSCAR SEDES POR NOMBRE
 // ======================================================
 
-const buscarSedesPorNombre = async (req, res) => {
+const buscarSedesPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.params;
 
-        const sedes =
-            await sedeUCRService.buscarSedesPorNombre(nombre);
+        const sedes = await sedeUCRService.buscarSedesPorNombre(nombre);
 
-        res.status(200).json(sedes);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar sedes por nombre',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: sedes,
+            message: 'Búsqueda de sedes UCR realizada correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 

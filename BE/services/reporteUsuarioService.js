@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'reportes_usuarios';
 
@@ -13,9 +14,7 @@ const obtenerReportesUsuarios = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerReportePorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,22 +45,25 @@ const obtenerReportePorId = async (id) => {
 const crearReporteUsuario = async (reporteData) => {
 
     const nuevoReporte = {
-        IdUsuarioReportado: reporteData.IdUsuarioReportado,
-        IdUsuarioEmisor: reporteData.IdUsuarioEmisor,
-        Motivo: reporteData.Motivo,
-        Descripcion: reporteData.Descripcion
+        id_usuario_reportado: reporteData.id_usuario_reportado,
+        id_usuario_emisor: reporteData.id_usuario_emisor,
+        motivo: reporteData.motivo,
+        descripcion: reporteData.descripcion
     };
+
+    if (reporteData.resuelto !== undefined) {
+        nuevoReporte.resuelto = reporteData.resuelto;
+    }
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoReporte])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -73,22 +73,18 @@ const crearReporteUsuario = async (reporteData) => {
 
 const actualizarReporteUsuario = async (id, reporteData) => {
 
-    const datosActualizar = {
-        ...reporteData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, reporteData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -101,11 +97,9 @@ const eliminarReporteUsuario = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Reporte eliminado correctamente'
@@ -122,11 +116,9 @@ const obtenerReportesPorUsuarioReportado = async (idUsuarioReportado) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuarioReportado', idUsuarioReportado);
+        .eq('id_usuario_reportado', idUsuarioReportado);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -141,11 +133,9 @@ const obtenerReportesPorUsuarioEmisor = async (idUsuarioEmisor) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuarioEmisor', idUsuarioEmisor);
+        .eq('id_usuario_emisor', idUsuarioEmisor);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -160,11 +150,9 @@ const buscarReportesPorMotivo = async (motivo) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Motivo', `%${motivo}%`);
+        .ilike('motivo', `%${motivo}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

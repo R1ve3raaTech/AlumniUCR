@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'responsabilidades';
 
@@ -13,9 +14,7 @@ const obtenerResponsabilidades = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerResponsabilidadPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,19 +45,18 @@ const obtenerResponsabilidadPorId = async (id) => {
 const crearResponsabilidad = async (responsabilidadData) => {
 
     const nuevaResponsabilidad = {
-        Nombre: responsabilidadData.Nombre
+        nombre: responsabilidadData.nombre
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaResponsabilidad])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -70,22 +66,20 @@ const crearResponsabilidad = async (responsabilidadData) => {
 
 const actualizarResponsabilidad = async (id, responsabilidadData) => {
 
-    const datosActualizar = {
-        ...responsabilidadData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, responsabilidadData, {
+        updated_at: new Date()
+    });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -98,11 +92,9 @@ const eliminarResponsabilidad = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Responsabilidad eliminada correctamente'
@@ -119,11 +111,9 @@ const buscarResponsabilidadesPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
