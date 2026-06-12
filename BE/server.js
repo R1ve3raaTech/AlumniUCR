@@ -4,10 +4,27 @@ const cors = require('cors');
 const app = express();
 
 // CORS
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+// El frontend (Next.js) puede arrancar en distintos puertos locales (3000, 3001,
+// 3002…) si el 3000 está ocupado. Para que el backend SIEMPRE conecte con el
+// frontend, se acepta cualquier origen localhost/127.0.0.1 en desarrollo, además
+// del FRONTEND_URL configurado (útil en producción).
+const origenPermitido = (origin) => {
+  // Peticiones sin origin (curl, Postman, health checks) se permiten.
+  if (!origin) return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return true;
+  return false;
+};
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (origenPermitido(origin)) return callback(null, true);
+      callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 

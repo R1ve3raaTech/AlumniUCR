@@ -108,6 +108,76 @@ const registerExalumno = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────
+//  APROBACIÓN DE CUENTAS (enlaces del correo)
+//  Devuelven una página HTML simple, ya que se abren desde el correo.
+// ─────────────────────────────────────────────
+
+// Página HTML mínima de respuesta para los enlaces de aprobar/rechazar.
+const paginaResultado = (titulo, mensaje, color) => `<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${titulo}</title></head>
+<body style="font-family:Arial,Helvetica,sans-serif;background:#0f0f1e;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0">
+  <div style="text-align:center;max-width:440px;padding:2.5rem;background:rgba(255,255,255,.05);border-radius:16px">
+    <div style="font-size:3rem;margin-bottom:1rem;color:${color}">${titulo.split(' ')[0]}</div>
+    <h1 style="font-size:1.4rem;margin:.5rem 0">${titulo}</h1>
+    <p style="color:#b8b8c8;line-height:1.5">${mensaje}</p>
+  </div>
+</body></html>`;
+
+const aprobarCuenta = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { token } = req.query;
+    const perfil = await authService.aprobarCuenta(userId, token);
+    res
+      .status(200)
+      .type('html')
+      .send(
+        paginaResultado(
+          '✓ Cuenta aprobada',
+          `La cuenta de <strong>${perfil.nombre}</strong> (${perfil.correo_electronico}) fue aprobada. Ya puede iniciar sesión.`,
+          '#16a34a',
+        ),
+      );
+  } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .type('html')
+        .send(paginaResultado('✗ No se pudo aprobar', error.message, '#dc2626'));
+    }
+    next(error);
+  }
+};
+
+const rechazarCuenta = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { token } = req.query;
+    const perfil = await authService.rechazarCuenta(userId, token);
+    res
+      .status(200)
+      .type('html')
+      .send(
+        paginaResultado(
+          '✗ Cuenta rechazada',
+          `La cuenta de <strong>${perfil.nombre}</strong> (${perfil.correo_electronico}) fue rechazada. El usuario no podrá iniciar sesión.`,
+          '#dc2626',
+        ),
+      );
+  } catch (error) {
+    if (error.statusCode) {
+      return res
+        .status(error.statusCode)
+        .type('html')
+        .send(paginaResultado('✗ No se pudo rechazar', error.message, '#dc2626'));
+    }
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────
 //  LOGIN
 // ─────────────────────────────────────────────
 const login = async (req, res, next) => {
@@ -127,4 +197,6 @@ module.exports = {
   solicitarMagicLink,
   verificarMagicLink,
   completarPerfil,
+  aprobarCuenta,
+  rechazarCuenta,
 };
