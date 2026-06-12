@@ -48,9 +48,9 @@ const obtenerAplicantePorId = async (id) => {
 const crearAplicante = async (aplicanteData) => {
 
     const nuevoAplicante = {
-        IdUsuario: aplicanteData.IdUsuario,
-        IdEmpleo: aplicanteData.IdEmpleo,
-        Estado: aplicanteData.Estado || 'pendiente'
+        idusuario: aplicanteData.IdUsuario,
+        idempleo: aplicanteData.IdEmpleo,
+        estado: aplicanteData.Estado || 'pendiente'
     };
 
     const { data, error } = await supabase

@@ -51,7 +51,7 @@ const obtenerAplicantePorId = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error al obtener aplicante',
+            message: 'Error al obtener aplicante', 
             error: error.message
         });
     }
