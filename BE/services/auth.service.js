@@ -1,6 +1,6 @@
 const supabase = require('../config/supabase');
 
-const registerUser = async (correo, contrasena, rol) => {
+const registerUser = async (correo, contrasena, id_rol) => {
   // 1. Registrar en Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: correo,
@@ -8,14 +8,15 @@ const registerUser = async (correo, contrasena, rol) => {
   });
   if (authError) throw authError;
 
-  // 2. Insertar en tu tabla personalizada 'usuarios' usando el UUID generado
+  // 2. Insertar en tabla 'usuarios' usando el UUID generado por Supabase Auth
   const { data: userData, error: userError } = await supabase
     .from('usuarios')
     .insert([
       {
-        id: authData.user.id, // Vincula con el Auth de Supabase
-        correo,
-        rol,
+        id: authData.user.id,
+        correo_electronico: correo,
+        id_rol: id_rol,
+        nombre: correo.split('@')[0], // nombre temporal hasta que complete el perfil
       },
     ])
     .select()
