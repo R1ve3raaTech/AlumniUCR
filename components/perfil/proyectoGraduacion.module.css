@@ -74,6 +74,11 @@
   color: hsl(var(--accent));
 }
 
+.ayuda {
+  font-size: 0.78rem;
+  color: hsl(var(--muted-foreground));
+}
+
 .contador {
   align-self: flex-end;
   font-size: 0.75rem;

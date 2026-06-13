@@ -14,8 +14,8 @@ import {
   obtenerNecesidadesEspecificas,
   obtenerProyectoDelEstudiante,
   guardarProyectoGraduacion,
-  obtenerAreaTematicaDelProyecto,
-  guardarAreaTematica,
+  obtenerAreasDelProyecto,
+  agregarAreaInteresProyecto,
   obtenerNecesidadesDelProyecto,
   agregarNecesidadProyecto,
 } from '@/lib/proyectoGraduacion';
@@ -34,7 +34,7 @@ interface OpcionCatalogo {
 interface ErroresFormulario {
   titulo?: string;
   descripcion?: string;
-  area?: string;
+  areas?: string;
   tipo?: string;
   porcentaje?: string;
   necesidades?: string;
@@ -54,14 +54,15 @@ export default function ProyectoGraduacionForm() {
 
   // IDs de los registros ya guardados, para saber si hay que crear o actualizar.
   const [idProyecto, setIdProyecto] = useState<number | string | null>(null);
-  const [idAreaRelacion, setIdAreaRelacion] = useState<number | string | null>(null);
+  const [areasGuardadas, setAreasGuardadas] = useState<Set<string>>(new Set());
   const [necesidadesGuardadas, setNecesidadesGuardadas] = useState<Set<string>>(new Set());
 
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [idAreaTematica, setIdAreaTematica] = useState('');
+  const [areasSeleccionadas, setAreasSeleccionadas] = useState<Set<string>>(new Set());
   const [idTipoProyecto, setIdTipoProyecto] = useState('');
   const [porcentajeAvance, setPorcentajeAvance] = useState('0');
+  const [proyectoFinalizado, setProyectoFinalizado] = useState(false);
   const [necesidadesSeleccionadas, setNecesidadesSeleccionadas] = useState<Set<string>>(new Set());
 
   const [errores, setErrores] = useState<ErroresFormulario>({});
@@ -95,17 +96,21 @@ export default function ProyectoGraduacionForm() {
           setPorcentajeAvance(
             proyecto.porcentaje_avance != null ? String(proyecto.porcentaje_avance) : '0',
           );
+          setProyectoFinalizado(Boolean(proyecto.proyecto_finalizado));
 
-          const [areaRelacion, necesidadesProyecto] = await Promise.all([
-            obtenerAreaTematicaDelProyecto(token, proyecto.id),
+          const [areasProyecto, necesidadesProyecto] = await Promise.all([
+            obtenerAreasDelProyecto(token, proyecto.id),
             obtenerNecesidadesDelProyecto(token, proyecto.id),
           ]);
           if (!activo) return;
 
-          if (areaRelacion) {
-            setIdAreaRelacion(areaRelacion.id);
-            setIdAreaTematica(String(areaRelacion.id_area_tematica));
-          }
+          const idsAreas = new Set<string>(
+            (areasProyecto ?? []).map((rel: { id_area_tematica: number | string }) =>
+              String(rel.id_area_tematica),
+            ),
+          );
+          setAreasGuardadas(idsAreas);
+          setAreasSeleccionadas(new Set(idsAreas));
 
           const idsGuardados = new Set<string>(
             (necesidadesProyecto ?? []).map((rel: { id_necesidad: number | string }) =>
@@ -139,6 +144,16 @@ export default function ProyectoGraduacionForm() {
     if (errores.necesidades) setErrores((e) => ({ ...e, necesidades: undefined }));
   }
 
+  function alternarArea(id: string) {
+    setAreasSeleccionadas((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    if (errores.areas) setErrores((e) => ({ ...e, areas: undefined }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!token || !user?.id) return;
@@ -146,7 +161,7 @@ export default function ProyectoGraduacionForm() {
     const nuevosErrores: ErroresFormulario = {
       titulo: validarTituloProyecto(titulo) ?? undefined,
       descripcion: validarDescripcionProyecto(descripcion) ?? undefined,
-      area: idAreaTematica ? undefined : 'Selecciona el área temática del proyecto.',
+      areas: areasSeleccionadas.size > 0 ? undefined : 'Selecciona al menos un área de interés.',
       tipo: idTipoProyecto ? undefined : 'Selecciona el tipo de proyecto.',
       porcentaje: validarPorcentajeAvance(porcentajeAvance) ?? undefined,
       necesidades:
@@ -158,6 +173,19 @@ export default function ProyectoGraduacionForm() {
     if (Object.values(nuevosErrores).some(Boolean)) return;
 
     const porcentaje = Number(porcentajeAvance);
+
+    // Criterio de aceptación: si el avance llega a 100%, se pregunta si se
+    // desea marcar el proyecto como finalizado (no se asume automáticamente).
+    let finalizado = proyectoFinalizado;
+    if (porcentaje >= 100 && !proyectoFinalizado) {
+      finalizado = window.confirm(
+        'Tu proyecto llegó al 100% de avance. ¿Deseas marcarlo como finalizado?',
+      );
+      setProyectoFinalizado(finalizado);
+    } else if (porcentaje < 100 && proyectoFinalizado) {
+      finalizado = false;
+      setProyectoFinalizado(false);
+    }
 
     setGuardando(true);
     setError(null);
@@ -171,7 +199,7 @@ export default function ProyectoGraduacionForm() {
           descripcion: descripcion.trim(),
           id_tipo_proyecto: Number(idTipoProyecto),
           porcentaje_avance: porcentaje,
-          proyecto_finalizado: porcentaje >= 100,
+          proyecto_finalizado: finalizado,
         },
         idProyecto,
       );
@@ -182,13 +210,13 @@ export default function ProyectoGraduacionForm() {
       }
       setIdProyecto(idProyectoActual);
 
-      const relacionArea = await guardarAreaTematica(
-        token,
-        idProyectoActual,
-        Number(idAreaTematica),
-        idAreaRelacion ? { id: idAreaRelacion } : null,
+      const areasNuevas = Array.from(areasSeleccionadas).filter(
+        (id) => !areasGuardadas.has(id),
       );
-      if (relacionArea?.data?.id) setIdAreaRelacion(relacionArea.data.id);
+      for (const idArea of areasNuevas) {
+        await agregarAreaInteresProyecto(token, idProyectoActual, Number(idArea));
+      }
+      setAreasGuardadas(new Set(areasSeleccionadas));
 
       const necesidadesNuevas = Array.from(necesidadesSeleccionadas).filter(
         (id) => !necesidadesGuardadas.has(id),
@@ -255,54 +283,49 @@ export default function ProyectoGraduacionForm() {
         {errores.descripcion && <span className={styles.fieldError}>{errores.descripcion}</span>}
       </div>
 
-      <div className={styles.row}>
-        <div className={styles.field}>
-          <label htmlFor="areaTematica" className={styles.label}>
-            Área temática
-          </label>
-          <select
-            id="areaTematica"
-            className={`${styles.select} ${errores.area ? styles.inputError : ''}`}
-            value={idAreaTematica}
-            onChange={(e) => {
-              setIdAreaTematica(e.target.value);
-              if (errores.area) setErrores((er) => ({ ...er, area: undefined }));
-            }}
-            required
-          >
-            <option value="">Selecciona un área</option>
-            {areasInteres.map((area) => (
-              <option key={area.id} value={area.id}>
-                {area.nombre}
-              </option>
-            ))}
-          </select>
-          {errores.area && <span className={styles.fieldError}>{errores.area}</span>}
-        </div>
+      <div className={styles.field}>
+        <label htmlFor="tipoProyecto" className={styles.label}>
+          Tipo de proyecto
+        </label>
+        <select
+          id="tipoProyecto"
+          className={`${styles.select} ${errores.tipo ? styles.inputError : ''}`}
+          value={idTipoProyecto}
+          onChange={(e) => {
+            setIdTipoProyecto(e.target.value);
+            if (errores.tipo) setErrores((er) => ({ ...er, tipo: undefined }));
+          }}
+          required
+        >
+          <option value="">Selecciona un tipo</option>
+          {tiposProyecto.map((tipo) => (
+            <option key={tipo.id} value={tipo.id}>
+              {tipo.nombre}
+            </option>
+          ))}
+        </select>
+        {errores.tipo && <span className={styles.fieldError}>{errores.tipo}</span>}
+      </div>
 
-        <div className={styles.field}>
-          <label htmlFor="tipoProyecto" className={styles.label}>
-            Tipo de proyecto
-          </label>
-          <select
-            id="tipoProyecto"
-            className={`${styles.select} ${errores.tipo ? styles.inputError : ''}`}
-            value={idTipoProyecto}
-            onChange={(e) => {
-              setIdTipoProyecto(e.target.value);
-              if (errores.tipo) setErrores((er) => ({ ...er, tipo: undefined }));
-            }}
-            required
-          >
-            <option value="">Selecciona un tipo</option>
-            {tiposProyecto.map((tipo) => (
-              <option key={tipo.id} value={tipo.id}>
-                {tipo.nombre}
-              </option>
-            ))}
-          </select>
-          {errores.tipo && <span className={styles.fieldError}>{errores.tipo}</span>}
+      <div className={styles.field}>
+        <span className={styles.label}>Áreas de interés del proyecto</span>
+        <span className={styles.ayuda}>
+          Selecciona todas las áreas relacionadas con tu proyecto (mínimo 1). Esto permite
+          encontrar colaboradores de otras disciplinas.
+        </span>
+        <div className={styles.checkboxGrid}>
+          {areasInteres.map((area) => (
+            <label key={area.id} className={styles.checkboxOption}>
+              <input
+                type="checkbox"
+                checked={areasSeleccionadas.has(String(area.id))}
+                onChange={() => alternarArea(String(area.id))}
+              />
+              {area.nombre}
+            </label>
+          ))}
         </div>
+        {errores.areas && <span className={styles.fieldError}>{errores.areas}</span>}
       </div>
 
       <div className={styles.field}>

@@ -77,6 +77,11 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
   const [promedioPonderado, setPromedioPonderado] = useState('');
   const [anoGraduacion, setAnoGraduacion] = useState('');
   const [idBeca, setIdBeca] = useState('');
+  const [buscaFinanciamiento, setBuscaFinanciamiento] = useState(false);
+  const [buscaMentoria, setBuscaMentoria] = useState(false);
+  const [buscaEmpleo, setBuscaEmpleo] = useState(false);
+  const [buscaPasantia, setBuscaPasantia] = useState(false);
+  const [pausado, setPausado] = useState(false);
 
   const [errores, setErrores] = useState<ErroresFormulario>({});
 
@@ -118,6 +123,11 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
             informacion.promedio_ponderado != null ? String(informacion.promedio_ponderado) : '',
           );
           setIdBeca(informacion.id_beca != null ? String(informacion.id_beca) : '');
+          setBuscaFinanciamiento(Boolean(informacion.busca_financiamiento));
+          setBuscaMentoria(Boolean(informacion.busca_mentoria));
+          setBuscaEmpleo(Boolean(informacion.busca_empleo));
+          setBuscaPasantia(Boolean(informacion.busca_pasantia));
+          setPausado(Boolean(informacion.pausado));
 
           const carreraRelacion = await obtenerCarreraDelEstudiante(token, user.id);
           if (!activo) return;
@@ -191,6 +201,11 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
           id_nivel_academico: Number(idNivelAcademico),
           promedio_ponderado: promedioPonderado ? Number(promedioPonderado) : null,
           id_beca: idBeca ? Number(idBeca) : null,
+          busca_financiamiento: buscaFinanciamiento,
+          busca_mentoria: buscaMentoria,
+          busca_empleo: buscaEmpleo,
+          busca_pasantia: buscaPasantia,
+          pausado,
         },
         informacionExiste,
       );
@@ -434,6 +449,55 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
           Privado: no se muestra en tu perfil público ni en el directorio. Solo se revela a un
           exalumno cuando aceptas su solicitud de contacto.
         </span>
+      </div>
+
+      <div className={styles.field}>
+        <span className={styles.label}>Tipo de apoyo buscado</span>
+        <div className={styles.checkboxGrid}>
+          <label className={styles.checkboxOption}>
+            <input
+              type="checkbox"
+              checked={buscaFinanciamiento}
+              onChange={(e) => setBuscaFinanciamiento(e.target.checked)}
+            />
+            Financiamiento económico
+          </label>
+          <label className={styles.checkboxOption}>
+            <input
+              type="checkbox"
+              checked={buscaMentoria}
+              onChange={(e) => setBuscaMentoria(e.target.checked)}
+            />
+            Mentoría técnica
+          </label>
+          <label className={styles.checkboxOption}>
+            <input
+              type="checkbox"
+              checked={buscaEmpleo}
+              onChange={(e) => setBuscaEmpleo(e.target.checked)}
+            />
+            Empleo mientras estudia
+          </label>
+          <label className={styles.checkboxOption}>
+            <input
+              type="checkbox"
+              checked={buscaPasantia}
+              onChange={(e) => setBuscaPasantia(e.target.checked)}
+            />
+            Pasantía relacionada
+          </label>
+        </div>
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.checkboxOption}>
+          <input
+            type="checkbox"
+            checked={pausado}
+            onChange={(e) => setPausado(e.target.checked)}
+          />
+          Pausar mi perfil temporalmente (no recibir contactos)
+        </label>
       </div>
 
       <button type="submit" className={`btn-primary ${styles.submit}`} disabled={guardando}>

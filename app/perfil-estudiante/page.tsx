@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import InformacionAcademicaForm from '@/components/perfil/InformacionAcademicaForm';
 import ProyectoGraduacionForm from '@/components/perfil/ProyectoGraduacionForm';
+import HabilidadesForm from '@/components/perfil/HabilidadesForm';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
 import dashboardStyles from '../dashboard/dashboard.module.css';
 import perfilStyles from '@/components/perfil/perfil.module.css';
@@ -86,6 +87,18 @@ export default function PerfilEstudiantePage() {
               de graduación.
             </p>
           )}
+        </section>
+
+        <section className={`glass-card ${dashboardStyles.panel}`}>
+          <h1 className={dashboardStyles.welcomeTitle}>Habilidades</h1>
+          <p className={dashboardStyles.welcomeText}>
+            Agrega tus habilidades técnicas (opcional) para mejorar las coincidencias con tu
+            perfil.
+          </p>
+        </section>
+
+        <section className={`glass-card ${dashboardStyles.panel}`}>
+          <HabilidadesForm />
         </section>
       </main>
     </div>
