@@ -62,6 +62,7 @@ function animateReveals(scope: HTMLElement) {
       scrollTrigger: {
         trigger: group,
         start: 'top 82%',
+        toggleActions: 'play none none reverse',
       },
     });
   });
@@ -83,7 +84,11 @@ function animateStats(scope: HTMLElement) {
       val: target,
       duration: 1.6,
       ease: 'power1.out',
-      scrollTrigger: { trigger: el, start: 'top 88%' },
+      scrollTrigger: { 
+        trigger: el, 
+        start: 'top 88%',
+        toggleActions: 'play none none reverse',
+      },
       onUpdate: () => {
         el.textContent = Math.round(obj.val).toLocaleString('es-CR') + suffix;
       },
@@ -110,6 +115,7 @@ function animateInfo(scope: HTMLElement) {
     scrollTrigger: {
       trigger: section,
       start: 'top 80%',
+      toggleActions: 'play none none reverse',
     },
   });
 
@@ -122,6 +128,7 @@ function animateInfo(scope: HTMLElement) {
     scrollTrigger: {
       trigger: section,
       start: 'top 80%',
+      toggleActions: 'play none none reverse',
     },
   });
 
@@ -155,6 +162,136 @@ function animateInfo(scope: HTMLElement) {
 }
 
 /**
+ * Efecto "Magnético" para botones. El elemento sigue suavemente al cursor del ratón.
+ */
+function animateMagnetic(scope: HTMLElement) {
+  q(scope, '[data-anim="magnetic"]').forEach((el) => {
+    // Solo aplicar en dispositivos con puntero (no touch)
+    if (window.matchMedia('(hover: none)').matches) return;
+    
+    el.addEventListener('mousemove', (e: MouseEvent) => {
+      const { left, top, width, height } = el.getBoundingClientRect();
+      const x = e.clientX - left - width / 2;
+      const y = e.clientY - top - height / 2;
+      
+      gsap.to(el, {
+        x: x * 0.3,
+        y: y * 0.3,
+        duration: 0.6,
+        ease: 'power3.out',
+      });
+    });
+
+    el.addEventListener('mouseleave', () => {
+      gsap.to(el, { 
+        x: 0, 
+        y: 0, 
+        duration: 1, 
+        ease: 'elastic.out(1, 0.3)' 
+      });
+    });
+  });
+}
+
+/**
+ * Efecto Tilt 3D. El contenedor detecta el ratón e inclina sus elementos hijos.
+ */
+function animateTilt(scope: HTMLElement) {
+  q(scope, '[data-anim="tilt-container"]').forEach((container) => {
+    if (window.matchMedia('(hover: none)').matches) return;
+    
+    // Podemos usar clases específicas o el atributo data-anim
+    const targets = Array.from(container.children) as HTMLElement[];
+    
+    container.addEventListener('mousemove', (e: MouseEvent) => {
+      const { left, top, width, height } = container.getBoundingClientRect();
+      const x = (e.clientX - left) / width - 0.5; // -0.5 a 0.5
+      const y = (e.clientY - top) / height - 0.5; // -0.5 a 0.5
+      
+      gsap.to(targets, {
+        rotationY: x * 25,
+        rotationX: -y * 25,
+        z: 30, // Levantar un poco en Z
+        transformPerspective: 1000,
+        transformOrigin: "center center",
+        duration: 0.6,
+        ease: 'power2.out',
+      });
+    });
+
+    container.addEventListener('mouseleave', () => {
+      gsap.to(targets, {
+        rotationY: 0,
+        rotationX: 0,
+        z: 0,
+        duration: 1.2,
+        ease: 'elastic.out(1, 0.5)',
+      });
+    });
+  });
+}
+
+/**
+ * Animación creativa para las tarjetas de Impacto de la UCR.
+ * Entran desde abajo con un efecto de persiana (stagger).
+ */
+function animateImpactCards(scope: HTMLElement) {
+  q(scope, '[data-anim="impact-cards"]').forEach((group) => {
+    gsap.from(group.children, {
+      y: 80,
+      opacity: 0,
+      stagger: 0.15,
+      duration: 1,
+      ease: 'back.out(1.4)',
+      scrollTrigger: {
+        trigger: group,
+        start: 'top 85%',
+        toggleActions: 'play none none reverse',
+      }
+    });
+  });
+}
+
+/**
+ * Animación para la sección de Anexos:
+ * 1. El texto fijo (sticky) entra suavemente desde la izquierda.
+ * 2. Las tarjetas de anexos se revelan a medida que haces scroll.
+ */
+function animateAnexos(scope: HTMLElement) {
+  // Panel izquierdo
+  q(scope, '[data-anim="sticky-panel"]').forEach((panel) => {
+    gsap.from(panel.children, {
+      x: -60,
+      opacity: 0,
+      stagger: 0.15,
+      duration: 0.8,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: panel,
+        start: 'top 80%',
+        toggleActions: 'play none none reverse',
+      }
+    });
+  });
+
+  // Tarjetas derechas
+  q(scope, '[data-anim="anexo-card"]').forEach((card) => {
+    gsap.from(card, {
+      scale: 0.9,
+      y: 60,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: card,
+        start: 'top 85%',
+        toggleActions: 'play none none reverse',
+      }
+    });
+  });
+}
+
+/**
  * Punto de entrada único. Lo invoca LandingShell dentro de useGSAP.
  * Todo lo creado queda en el contexto de useGSAP y se revierte al desmontar.
  */
@@ -164,4 +301,8 @@ export function initLandingAnimations(scope: HTMLElement | null) {
   animateReveals(scope);
   animateStats(scope);
   animateInfo(scope);
+  animateImpactCards(scope);
+  animateAnexos(scope);
+  animateMagnetic(scope);
+  animateTilt(scope);
 }

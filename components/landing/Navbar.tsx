@@ -9,10 +9,10 @@ import styles from './landing.module.css';
 // Navegación pública simple (cuando no hay sesión): anclas a las secciones
 // del landing + acceso a registro.
 const LINKS = [
-  { label: 'Inicio', href: '#inicio' },
-  { label: 'Historia', href: '#historia' },
-  { label: 'Servicios', href: '#servicios' },
-  { label: 'Contáctanos', href: '#contacto' },
+  { label: 'Inicio', href: '/' },
+  { label: 'Historia', href: '/historia' },
+  { label: 'Servicios', href: '/servicios' },
+  { label: 'Información', href: '/#informacion' },
 ];
 
 export default function Navbar() {
@@ -46,6 +46,7 @@ export default function Navbar() {
               <button
                 type="button"
                 className={`${styles.btnPrimary} ${styles.navCta}`}
+                data-anim="magnetic"
                 onClick={() => {
                   signOut();
                   cerrarMenu();
@@ -58,6 +59,7 @@ export default function Navbar() {
             <Link
               href="/registro"
               className={`${styles.btnPrimary} ${styles.navCta}`}
+              data-anim="magnetic"
               onClick={cerrarMenu}
             >
               Registro

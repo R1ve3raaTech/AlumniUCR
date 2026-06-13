@@ -26,6 +26,27 @@ function Flower() {
 export default function Hero() {
   return (
     <section id="inicio" className={styles.hero} data-anim="hero">
+      {/* Video de fondo UCR */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 0,
+          opacity: 0.45, // Mayor opacidad para que el video resalte más sobre el fondo azul
+          pointerEvents: 'none',
+        }}
+      >
+        <source src="/images/ucr-trabajo.mp4" type="video/mp4" />
+      </video>
+
       <Flower />
       <span className={`${styles.shape} ${styles.shapeBlock}`} data-anim="shape" aria-hidden />
 
@@ -44,20 +65,20 @@ export default function Hero() {
               donaciones y mentorías que abren nuevas oportunidades.
             </p>
             <div className={styles.heroActions}>
-              <Link href="/registro" className={styles.btnPrimary}>
+              <Link href="/registro" className={styles.btnPrimary} data-anim="magnetic">
                 Únete ahora
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14m-7-7 7 7-7 7" />
                 </svg>
               </Link>
-              <a href="#servicios" className={styles.btnGhost}>
+              <a href="#servicios" className={styles.btnGhost} data-anim="magnetic">
                 Ver servicios
               </a>
             </div>
           </div>
 
           {/* Composición visual de tarjetas (estilo del diseño de referencia) */}
-          <div className={styles.heroVisual}>
+          <div className={styles.heroVisual} data-anim="tilt-container" style={{ perspective: '1200px' }}>
             <div className={`${styles.heroCard} ${styles.heroCard1}`} data-anim="hero-card">
               Empleo
             </div>
