@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
+import AdminSolicitudes from '@/components/AdminSolicitudes';
 import styles from './dashboard.module.css';
 
 export default function DashboardPage() {
@@ -64,6 +65,9 @@ export default function DashboardPage() {
             <span>{id}</span>
           </div>
         </section>
+
+        {/* Panel solo visible para administradores (se autodetecta por el rol). */}
+        {token && <AdminSolicitudes token={token} />}
       </main>
     </div>
   );
