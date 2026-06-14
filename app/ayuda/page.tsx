@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './ayuda.module.css';
 
 // ─── Íconos SVG inline (patrón del proyecto: heredan currentColor) ────────
@@ -95,7 +96,7 @@ export default function AyudaPage() {
     <div className={styles.page}>
       {/* Cabecera */}
       <header className={styles.header}>
-        <Link href="/" className={styles.brand}>UCR Connect</Link>
+        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={36} /></Link>
         <nav className={styles.headerNav}>
           <Link href="/login" className={styles.back}><IArrowLeft /> Volver</Link>
           <span className={styles.headerHelp} aria-hidden><IHelp /></span>
@@ -205,7 +206,7 @@ export default function AyudaPage() {
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div>
-            <span className={styles.footerBrand}>UCR Connect</span>
+            <AlumniLogo height={34} />
             <p className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</p>
           </div>
           <div className={styles.footerLinks}>

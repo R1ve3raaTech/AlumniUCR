@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { solicitarMagicLink } from '@/lib/auth';
 import { validarCorreoUCR } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './registro.module.css';
 
 type Rol = 'estudiante' | 'exalumno';
@@ -90,7 +91,7 @@ export default function RegistroPage() {
       </div>
 
       <header className={styles.header}>
-        <div className={styles.brand}>UCR Connect</div>
+        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
         <div className={styles.headerActions}>
           <Link href="/ayuda" className={styles.backLink}>Ayuda</Link>
           <Link href="/login" className={styles.backLink}>
@@ -256,7 +257,7 @@ export default function RegistroPage() {
       </main>
 
       <footer className={styles.footer}>
-        <div className={styles.footerBrand}>UCR Connect</div>
+        <AlumniLogo height={34} />
         <div className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</div>
         <div className={styles.footerLinks}>
           <a href="#">Privacidad</a>

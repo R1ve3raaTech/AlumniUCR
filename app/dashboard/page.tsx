@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './dashboard.module.css';
 
 export default function DashboardPage() {
@@ -33,10 +34,9 @@ export default function DashboardPage() {
   return (
     <div className={styles.page}>
       <header className={`glass-card ${styles.topbar}`}>
-        <div className={styles.brand}>
-          <span className={styles.logo}>CT</span>
-          Conectando Talento UCR
-        </div>
+        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio">
+          <AlumniLogo height={36} />
+        </Link>
         <div className={styles.topbarActions}>
           <Link href="/ayuda" className={styles.helpLink}>Ayuda</Link>
           <button type="button" className="btn-secondary" onClick={handleSignOut}>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './mentorias.module.css';
 
 // ─── Íconos SVG inline (heredan currentColor) ─────────────────────────────
@@ -65,7 +66,7 @@ export default function MentoriasPage() {
       {/* Cabecera */}
       <header className={styles.header}>
         <div className={styles.nav}>
-          <Link href="/" className={styles.brand}>Alumni UCR Connect</Link>
+          <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={40} /></Link>
           <nav className={styles.navLinks}>
             <Link href="/" className={styles.navLink}>Inicio</Link>
             <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
@@ -198,7 +199,7 @@ export default function MentoriasPage() {
       {/* Footer */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
-          <span className={styles.footerBrand}>Alumni UCR</span>
+          <AlumniLogo height={36} />
           <nav className={styles.footerLinks}>
             <Link href="/ayuda">Contacto</Link>
             <a href="#">Privacidad</a>

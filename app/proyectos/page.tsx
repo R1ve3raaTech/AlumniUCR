@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './proyectos.module.css';
 
 // ─── Íconos SVG inline (heredan currentColor) ─────────────────────────────
@@ -86,7 +87,7 @@ export default function ProyectosPage() {
       <header className={styles.header}>
         <nav className={styles.nav}>
           <div className={styles.navLeft}>
-            <Link href="/" className={styles.brand}>Alumni UCR</Link>
+            <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={40} /></Link>
             <div className={styles.navLinks}>
               <Link href="/" className={styles.navLink}>Inicio</Link>
               <span className={`${styles.navLink} ${styles.navLinkActive}`}>Proyectos</span>
@@ -215,7 +216,7 @@ export default function ProyectosPage() {
         <div className={styles.footerInner}>
           <div className={styles.footerTop}>
             <div className={styles.footerBrandCol}>
-              <span className={styles.footerBrand}>Alumni UCR</span>
+              <AlumniLogo height={44} />
               <p className={styles.footerDesc}>
                 Plataforma institucional de vinculación profesional y académica.
                 Fortaleciendo el ecosistema de innovación costarricense.
