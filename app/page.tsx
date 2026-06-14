@@ -2,24 +2,31 @@ import React from 'react';
 import LandingShell from '@/components/landing/LandingShell';
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
-import UCRImpacto from '@/components/landing/UCRImpacto';
-import UCRAnexos from '@/components/landing/UCRAnexos';
-import InfoUCR from '@/components/landing/Contacto'; // InfoUCR is in Contacto.tsx
+import ProyectosDestacados from '@/components/landing/ProyectosDestacados';
+import Impacto from '@/components/landing/Impacto';
+import ProyectosGraduacion from '@/components/landing/ProyectosGraduacion';
+import Testimonios from '@/components/landing/Testimonios';
+import CTAFinal from '@/components/landing/CTAFinal';
 import Footer from '@/components/landing/Footer';
+import ScrollToHero from '@/components/landing/ScrollToHero';
 
-// Landing público de UCR Connect. LandingShell (cliente) aporta el scope de GSAP;
-// las secciones se renderizan en el servidor y se animan al entrar en viewport.
+// Landing público de UCR Connect (diseño Stitch adaptado a CSS Modules + GSAP).
+// LandingShell (cliente) aporta el scope de GSAP; las secciones se renderizan en
+// el servidor y se animan al entrar en viewport.
 export default function Home() {
   return (
     <LandingShell>
       <Navbar />
       <main>
         <Hero />
-        <UCRImpacto />
-        <UCRAnexos />
-        <InfoUCR />
+        <ProyectosDestacados />
+        <Impacto />
+        <ProyectosGraduacion />
+        <Testimonios />
+        <CTAFinal />
       </main>
       <Footer />
+      <ScrollToHero />
     </LandingShell>
   );
 }

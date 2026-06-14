@@ -1,38 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
 import BrandLogo from './BrandLogo';
+import { Mail, Phone, Linkedin, Instagram, Facebook } from './icons';
 import styles from './landing.module.css';
 
-const COLUMNAS = [
-  {
-    titulo: 'Plataforma',
-    links: [
-      { label: 'Bolsa de empleo', href: '#servicios' },
-      { label: 'Donaciones', href: '#servicios' },
-      { label: 'Mentorías', href: '#servicios' },
-      { label: 'Eventos', href: '#servicios' },
-    ],
-  },
-  {
-    titulo: 'Institución',
-    links: [
-      { label: 'UCR sitio oficial', href: 'https://www.ucr.ac.cr' },
-      { label: 'Nuestra historia', href: '#historia' },
-      { label: 'Reglamento', href: '#' },
-      { label: 'Transparencia', href: '#' },
-    ],
-  },
-  {
-    titulo: 'Cuenta',
-    links: [
-      { label: 'Iniciar sesión', href: '/login' },
-      { label: 'Registro', href: '/registro' },
-    ],
-  },
+const ENLACES = [
+  { label: 'Políticas de Privacidad', href: '#' },
+  { label: 'Términos de Servicio', href: '#' },
+  { label: 'Contacto', href: '#contacto' },
+  { label: 'Directorio', href: '#proyectos' },
 ];
 
 export default function Footer() {
-  const anio = 2025;
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -40,32 +19,49 @@ export default function Footer() {
           <div>
             <BrandLogo light />
             <p className={styles.footerAbout}>
-              Conectando la excelencia académica con el éxito profesional de los
-              egresados de la Universidad de Costa Rica.
+              Potenciando la red de profesionales más grande de Costa Rica a través de
+              la colaboración y el intercambio de conocimientos.
             </p>
+            <div className={styles.footerSocial}>
+              <a href="#" aria-label="LinkedIn"><Linkedin /></a>
+              <a href="#" aria-label="Instagram"><Instagram /></a>
+              <a href="#" aria-label="Facebook"><Facebook /></a>
+            </div>
           </div>
 
-          {COLUMNAS.map((col) => (
-            <div key={col.titulo}>
-              <h4 className={styles.footerColTitle}>{col.titulo}</h4>
-              <ul className={styles.footerList}>
-                {col.links.map((l) => (
-                  <li key={l.label}>
-                    {l.href.startsWith('/') ? (
-                      <Link href={l.href}>{l.label}</Link>
-                    ) : (
-                      <a href={l.href}>{l.label}</a>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h5 className={styles.footerColTitle}>Enlaces</h5>
+            <ul className={styles.footerList}>
+              {ENLACES.map((e) => (
+                <li key={e.label}>
+                  <a href={e.href}>{e.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h5 className={styles.footerColTitle}>Contacto</h5>
+            <p className={styles.footerContactItem}>
+              <Mail /> alumni@ucr.ac.cr
+            </p>
+            <p className={styles.footerContactItem}>
+              <Phone /> +506 2511-0000
+            </p>
+            <Link href="/registro" className={styles.navCta}>
+              Unirse
+            </Link>
+          </div>
         </div>
 
         <div className={styles.footerBottom}>
-          <span>© {anio} UCR Connect — Universidad de Costa Rica. Todos los derechos reservados.</span>
-          <span>San Pedro de Montes de Oca, Costa Rica</span>
+          <p className={styles.footerCopy}>
+            © 2025 Fundación Alumni UCR. Todos los derechos reservados.
+          </p>
+          <div className={styles.footerStatus}>
+            <span className={styles.footerStatusDot} />
+            <span className={styles.footerStatusText}>System Status: Online</span>
+          </div>
         </div>
       </div>
     </footer>

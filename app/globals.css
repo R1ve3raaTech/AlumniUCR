@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow+Semi+Condensed:wght@600;700;800&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
   /* ───────────────────────────────────────────────────────────────
@@ -21,8 +21,26 @@
   --brand-rosa: #FBD5CE;
   --brand-gris: #F4F6F7;
 
+  /* ───────────────────────────────────────────────────────────────
+     Paleta del landing (diseño Stitch). Editable desde un solo lugar.
+     ─────────────────────────────────────────────────────────────── */
+  --ucr-primary: #003445;            /* esmeralda profundo (fondos oscuros) */
+  --ucr-celeste: #54BCEB;            /* acento principal */
+  --ucr-naranja: #F34B26;            /* acento secundario */
+  --ucr-secondary: #006687;
+  --ucr-secondary-container: #6acfff; /* acentos suaves (íconos, chips) */
+  --ucr-esmeralda: #007D67;          /* acento de selección (rol activo) */
+  --ucr-surface: #fcf9f8;            /* fondo claro */
+  --ucr-surface-container: #f0edec;
+  --ucr-surface-variant: #e5e2e1;
+  --ucr-on-surface: #1c1b1b;         /* texto sobre claro */
+  --ucr-on-surface-variant: #40484c;
+  --ucr-outline: #70787d;
+  --ucr-outline-variant: #c0c8cd;
+
   --font-brand-heading: 'Barlow Semi Condensed', sans-serif;
   --font-brand-body: 'Work Sans', sans-serif;
+  --font-ucr-display: 'Barlow Condensed', sans-serif;  /* titulares del landing */
 }
 
 :root {
