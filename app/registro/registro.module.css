@@ -66,6 +66,12 @@
   color: var(--ucr-primary);
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .backLink {
   display: inline-flex;
   align-items: center;
