@@ -178,6 +178,49 @@ const rechazarCuenta = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────
+//  RECUPERACIÓN DE CONTRASEÑA
+// ─────────────────────────────────────────────
+
+// Etapa 1: el usuario ingresa su correo para recibir el enlace de cambio.
+const solicitarRecuperacion = async (req, res, next) => {
+  try {
+    const { correo } = req.body;
+    if (!correo || !correo.includes('@')) {
+      throw errorValidacion('Ingresa un correo válido.');
+    }
+
+    await authService.solicitarRecuperacion(correo.trim());
+
+    // Respuesta uniforme: nunca se revela si el correo está registrado.
+    res.status(200).json({
+      success: true,
+      mensaje: 'Si el correo está registrado, te enviamos las instrucciones.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Etapa 2: con el token del correo, se define la nueva contraseña.
+const restablecerContrasena = async (req, res, next) => {
+  try {
+    const { uid, token, contrasena } = req.body;
+    if (!uid || !token) throw errorValidacion('Enlace de restablecimiento incompleto.');
+
+    const errorPass = validarContrasena(contrasena);
+    if (errorPass) throw errorValidacion(errorPass);
+
+    await authService.restablecerContrasena(uid, token, contrasena);
+    res.status(200).json({
+      success: true,
+      mensaje: 'Tu contraseña fue actualizada. Ya puedes iniciar sesión.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────
 //  LOGIN
 // ─────────────────────────────────────────────
 const login = async (req, res, next) => {
@@ -199,4 +242,6 @@ module.exports = {
   completarPerfil,
   aprobarCuenta,
   rechazarCuenta,
+  solicitarRecuperacion,
+  restablecerContrasena,
 };

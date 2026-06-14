@@ -6,66 +6,61 @@ import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
 
-// Navegación pública simple (cuando no hay sesión): anclas a las secciones
-// del landing + acceso a registro.
+// Navegación pública: anclas a las secciones del landing.
 const LINKS = [
-  { label: 'Inicio', href: '/' },
-  { label: 'Historia', href: '/historia' },
-  { label: 'Servicios', href: '/servicios' },
-  { label: 'Información', href: '/#informacion' },
+  { label: 'Inicio', href: '#inicio' },
+  { label: 'Proyectos', href: '#proyectos' },
+  { label: 'Impacto', href: '#impacto' },
+  { label: 'Historias', href: '#historias' },
 ];
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
   const [abierto, setAbierto] = useState(false);
 
-  const cerrarMenu = () => setAbierto(false);
+  const cerrar = () => setAbierto(false);
 
   return (
-    <header className={styles.navbar}>
+    <nav className={styles.navbar}>
       <div className={`${styles.container} ${styles.navInner}`}>
-        <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrarMenu}>
+        <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrar}>
           <BrandLogo />
         </Link>
 
-        <nav
-          className={`${styles.navLinks} ${abierto ? styles.navLinksOpen : ''}`}
-          aria-label="Navegación principal"
-        >
-          {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className={styles.navLink} onClick={cerrarMenu}>
+        <div className={`${styles.navLinks} ${abierto ? styles.navLinksOpen : ''}`}>
+          {LINKS.map((l, i) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className={`${styles.navLink} ${i === 0 ? styles.navLinkActive : ''}`}
+              onClick={cerrar}
+            >
               {l.label}
             </a>
           ))}
 
           {user ? (
             <>
-              <Link href="/dashboard" className={styles.navLink} onClick={cerrarMenu}>
+              <Link href="/dashboard" className={styles.navLink} onClick={cerrar}>
                 Dashboard
               </Link>
               <button
                 type="button"
-                className={`${styles.btnPrimary} ${styles.navCta}`}
-                data-anim="magnetic"
+                className={styles.navCta}
                 onClick={() => {
                   signOut();
-                  cerrarMenu();
+                  cerrar();
                 }}
               >
-                Cerrar sesión
+                Salir
               </button>
             </>
           ) : (
-            <Link
-              href="/registro"
-              className={`${styles.btnPrimary} ${styles.navCta}`}
-              data-anim="magnetic"
-              onClick={cerrarMenu}
-            >
-              Registro
+            <Link href="/registro" className={styles.navCta} onClick={cerrar}>
+              Unirse
             </Link>
           )}
-        </nav>
+        </div>
 
         <button
           type="button"
@@ -79,6 +74,6 @@ export default function Navbar() {
           <span />
         </button>
       </div>
-    </header>
+    </nav>
   );
 }
