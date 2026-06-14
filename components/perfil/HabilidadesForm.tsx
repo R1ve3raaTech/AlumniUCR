@@ -73,8 +73,14 @@ export default function HabilidadesForm() {
     e.preventDefault();
     if (!token || !user?.id) return;
 
+    // Incluye lo que esté escrito en el campo aunque no se haya confirmado
+    // con Enter/coma (p. ej. si el usuario hace clic directo en "Guardar").
+    const pendiente = entrada.trim();
+    const tagsFinales =
+      pendiente && !tags.includes(pendiente) ? [...tags, pendiente] : tags;
+
     // Campo opcional: si no hay registro previo ni etiquetas, no hay nada que guardar.
-    if (!idHabilidad && tags.length === 0) {
+    if (!idHabilidad && tagsFinales.length === 0) {
       setExito(true);
       setError(null);
       return;
@@ -88,11 +94,13 @@ export default function HabilidadesForm() {
         token,
         {
           id_usuario: user.id,
-          tecnicas: tags.join(', '),
+          tecnicas: tagsFinales.join(', '),
         },
         idHabilidad,
       );
       if (guardado?.id) setIdHabilidad(guardado.id);
+      setTags(tagsFinales);
+      setEntrada('');
       setExito(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar tus habilidades.');
