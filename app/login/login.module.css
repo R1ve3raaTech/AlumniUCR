@@ -31,10 +31,10 @@
   padding: 1rem clamp(1rem, 4vw, 64px);
 }
 
-.headerLeft {
+.headerRight {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 /* Botón "Volver al inicio" (landing). Mismo lenguaje que .forgot / .back
@@ -474,10 +474,15 @@
   }
 }
 
-/* En pantallas pequeñas se prioriza el botón "Volver al inicio";
-   la marca se oculta para no saturar la cabecera. */
+/* En pantallas pequeñas se compacta el botón "Volver al inicio":
+   se oculta el texto y queda solo la flecha junto a "Ayuda". */
 @media (max-width: 480px) {
-  .headerLeft .brand {
-    display: none;
+  .headerRight {
+    gap: 1rem;
+  }
+
+  .back {
+    font-size: 0;
+    gap: 0;
   }
 }
