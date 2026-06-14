@@ -6,10 +6,12 @@ import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
 
-// Navegación pública: anclas a las secciones del landing.
+// Navegación pública: anclas a las secciones del landing. "Proyectos" lleva a
+// la página dedicada /proyectos (ruta interna, no ancla).
 const LINKS = [
   { label: 'Inicio', href: '#inicio' },
-  { label: 'Proyectos', href: '#proyectos' },
+  { label: 'Proyectos', href: '/proyectos' },
+  { label: 'Mentorías', href: '/mentorias' },
   { label: 'Impacto', href: '#impacto' },
   { label: 'Historias', href: '#historias' },
 ];
@@ -28,16 +30,27 @@ export default function Navbar() {
         </Link>
 
         <div className={`${styles.navLinks} ${abierto ? styles.navLinksOpen : ''}`}>
-          {LINKS.map((l, i) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className={`${styles.navLink} ${i === 0 ? styles.navLinkActive : ''}`}
-              onClick={cerrar}
-            >
-              {l.label}
-            </a>
-          ))}
+          {LINKS.map((l, i) =>
+            l.href.startsWith('/') ? (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={styles.navLink}
+                onClick={cerrar}
+              >
+                {l.label}
+              </Link>
+            ) : (
+              <a
+                key={l.href}
+                href={l.href}
+                className={`${styles.navLink} ${i === 0 ? styles.navLinkActive : ''}`}
+                onClick={cerrar}
+              >
+                {l.label}
+              </a>
+            ),
+          )}
 
           <Link href="/ayuda" className={styles.navLink} onClick={cerrar}>
             Ayuda

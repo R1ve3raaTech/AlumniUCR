@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthForm } from '@/hooks/useAuthForm';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './login.module.css';
 
 // ─── Íconos SVG inline ────────────────────────────────────────────────
@@ -48,7 +49,7 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link href="/" className={styles.brand}>UCR Connect</Link>
+        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={40} /></Link>
         <div className={styles.headerRight}>
           <Link href="/" className={styles.back}>
             <IArrowLeft /> Volver al inicio

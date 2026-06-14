@@ -1,38 +1,16 @@
 import React from 'react';
-import styles from './landing.module.css';
+import AlumniLogo from '../AlumniLogo';
 
 interface BrandLogoProps {
-  /** Versión clara para fondos oscuros (esmeralda). */
+  /** Conservado por compatibilidad; el logo trae su propio fondo de marca. */
   light?: boolean;
 }
 
 /**
- * Logo de UCR Connect inspirado en el isotipo Alumni UCR:
- * tres arcos ascendentes (caminos que se unen) coronados por tres círculos
- * (comunidad de egresados). El color hereda según la variante.
+ * Marca de la aplicación: logo oficial Alumni UCR. Delega en <AlumniLogo />
+ * (único punto de verdad). Se mantiene el nombre y la prop `light` para no
+ * alterar a Navbar/Footer que ya lo consumen.
  */
 export default function BrandLogo({ light = false }: BrandLogoProps) {
-  const color = light ? 'var(--brand-blanco)' : 'var(--ucr-primary)';
-  return (
-    <span className={`${styles.brandLogo} ${light ? styles.brandLogoLight : ''}`}>
-      <svg
-        viewBox="0 0 64 64"
-        fill="none"
-        role="img"
-        aria-label="UCR Connect"
-        style={{ color }}
-      >
-        <path d="M32 56 C32 40 20 34 10 32" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-        <path d="M32 56 C32 40 44 34 54 32" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-        <path d="M32 56 L32 38" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-        <circle cx="20" cy="22" r="4.5" fill="currentColor" />
-        <circle cx="44" cy="22" r="4.5" fill="currentColor" />
-        <circle cx="32" cy="16" r="5.5" fill="currentColor" />
-      </svg>
-      <span className={styles.brandLogoText}>
-        <strong>UCR</strong>
-        <span>Connect</span>
-      </span>
-    </span>
-  );
+  return <AlumniLogo height={light ? 44 : 40} />;
 }
