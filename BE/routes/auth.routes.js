@@ -16,4 +16,8 @@ router.post('/completar-perfil', authController.completarPerfil);
 router.get('/aprobar/:userId', authController.aprobarCuenta);
 router.get('/rechazar/:userId', authController.rechazarCuenta);
 
+// Recuperación de contraseña (solicitar enlace y definir nueva contraseña).
+router.post('/recuperar', authController.solicitarRecuperacion);
+router.post('/restablecer', authController.restablecerContrasena);
+
 module.exports = router;

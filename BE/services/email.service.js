@@ -73,4 +73,52 @@ const enviarCorreoAprobacion = async ({ nombre, correo, rol, aprobarUrl, rechaza
   }
 };
 
-module.exports = { enviarCorreoAprobacion, CORREO_APROBADOR };
+/**
+ * Envía al usuario el enlace para restablecer su contraseña.
+ * @param {object} params
+ * @param {string} params.correo  Destinatario.
+ * @param {string} params.url     Enlace de restablecimiento (con token).
+ * @returns {Promise<boolean>}
+ */
+const enviarCorreoRecuperacion = async ({ correo, url }) => {
+  if (!resend) {
+    console.warn(
+      '⚠️  RESEND_API_KEY no configurada: no se envió el correo de recuperación. ' +
+        `Restablecer manualmente: ${url}`,
+    );
+    return false;
+  }
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
+      <h2 style="color:#003445">Restablece tu contraseña</h2>
+      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en UCR Connect.</p>
+      <p style="margin:24px 0">
+        <a href="${url}" style="background:#F34B26;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Restablecer contraseña</a>
+      </p>
+      <p style="font-size:13px;color:#666">Este enlace expira pronto por seguridad. Si no solicitaste el cambio, ignora este correo: tu contraseña no cambiará.</p>
+    </div>`;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: REMITENTE,
+      to: correo,
+      subject: 'Restablece tu contraseña — UCR Connect',
+      html,
+    });
+    if (error) {
+      console.error('🔴 Error al enviar el correo de recuperación:', error.message || error);
+      // Fallback útil en desarrollo (sandbox de Resend): registrar el enlace.
+      console.warn(`🔗 Enlace de restablecimiento: ${url}`);
+      return false;
+    }
+    console.log(`📧 Correo de recuperación enviado a ${correo}.`);
+    return true;
+  } catch (err) {
+    console.error('🔴 Excepción al enviar el correo de recuperación:', err.message);
+    console.warn(`🔗 Enlace de restablecimiento: ${url}`);
+    return false;
+  }
+};
+
+module.exports = { enviarCorreoAprobacion, enviarCorreoRecuperacion, CORREO_APROBADOR };

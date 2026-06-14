@@ -2,7 +2,7 @@ const supabase = require('../config/supabase');
 const supabaseAuth = require('../config/supabaseAuth');
 const { mapDbError } = require('../utils/dbError');
 const { generarToken, verificarToken } = require('../utils/aprobacionToken');
-const { enviarCorreoAprobacion } = require('./email.service');
+const { enviarCorreoAprobacion, enviarCorreoRecuperacion } = require('./email.service');
 
 // Mapa de rol (string del endpoint) -> id_rol en la tabla 'roles'
 // (1 = Estudiante, 2 = Exalumno).
@@ -244,6 +244,53 @@ const rechazarCuenta = async (userId, token) => {
   return perfil;
 };
 
+// ─── Recuperación de contraseña ──────────────────────────────────────────
+
+/**
+ * Etapa 1: el usuario pide restablecer su contraseña desde su correo.
+ * Genera un token firmado (scope 'reset') y envía el enlace a /restablecer.
+ * Por seguridad NO revela si el correo existe: responde igual en ambos casos.
+ */
+const solicitarRecuperacion = async (correo) => {
+  const { data: perfil } = await supabase
+    .from('usuarios')
+    .select('id, correo_electronico')
+    .eq('correo_electronico', correo)
+    .maybeSingle();
+
+  // Si la cuenta existe, se envía el enlace; si no, se ignora en silencio
+  // (respuesta uniforme para no filtrar qué correos están registrados).
+  if (perfil) {
+    const token = generarToken(perfil.id, 'reset');
+    const url = `${FRONTEND_URL}/restablecer?uid=${perfil.id}&token=${token}`;
+    await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, url });
+  }
+
+  return { enviado: true };
+};
+
+/**
+ * Etapa 2: valida el token firmado (scope 'reset') y define la nueva
+ * contraseña usando la service_role key.
+ */
+const restablecerContrasena = async (uid, token, contrasena) => {
+  if (!verificarToken(uid, token, 'reset')) {
+    const err = new Error('Enlace de restablecimiento inválido o expirado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { error } = await supabase.auth.admin.updateUserById(uid, {
+    password: contrasena,
+  });
+  if (error) {
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { actualizado: true };
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -252,4 +299,6 @@ module.exports = {
   completarPerfil,
   aprobarCuenta,
   rechazarCuenta,
+  solicitarRecuperacion,
+  restablecerContrasena,
 };
