@@ -8,6 +8,7 @@
   position: relative;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: clamp(1.5rem, 4vw, 3rem);
@@ -256,4 +257,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* Enlace al Centro de Ayuda (bajo la tarjeta) */
+.helpLink {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.helpLink a {
+  color: var(--ucr-celeste);
+  font-weight: 600;
+}
+
+.helpLink a:hover {
+  text-decoration: underline;
 }

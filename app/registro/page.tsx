@@ -91,9 +91,12 @@ export default function RegistroPage() {
 
       <header className={styles.header}>
         <div className={styles.brand}>UCR Connect</div>
-        <Link href="/login" className={styles.backLink}>
-          <IArrowBack /> Volver al Login
-        </Link>
+        <div className={styles.headerActions}>
+          <Link href="/ayuda" className={styles.backLink}>Ayuda</Link>
+          <Link href="/login" className={styles.backLink}>
+            <IArrowBack /> Volver al Login
+          </Link>
+        </div>
       </header>
 
       <main className={styles.main}>
@@ -258,7 +261,7 @@ export default function RegistroPage() {
         <div className={styles.footerLinks}>
           <a href="#">Privacidad</a>
           <a href="#">Términos</a>
-          <a href="#">Soporte</a>
+          <Link href="/ayuda">Soporte</Link>
         </div>
       </footer>
     </div>

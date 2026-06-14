@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import styles from './dashboard.module.css';
@@ -36,9 +37,12 @@ export default function DashboardPage() {
           <span className={styles.logo}>CT</span>
           Conectando Talento UCR
         </div>
-        <button type="button" className="btn-secondary" onClick={handleSignOut}>
-          Cerrar sesión
-        </button>
+        <div className={styles.topbarActions}>
+          <Link href="/ayuda" className={styles.helpLink}>Ayuda</Link>
+          <button type="button" className="btn-secondary" onClick={handleSignOut}>
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <main className={styles.content}>

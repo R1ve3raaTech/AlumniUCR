@@ -48,13 +48,13 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.headerLeft}>
+        <Link href="/" className={styles.brand}>UCR Connect</Link>
+        <div className={styles.headerRight}>
           <Link href="/" className={styles.back}>
             <IArrowLeft /> Volver al inicio
           </Link>
-          <Link href="/" className={styles.brand}>UCR Connect</Link>
+          <Link href="/ayuda" className={styles.help}>Ayuda</Link>
         </div>
-        <button type="button" className={styles.help}>Ayuda</button>
       </header>
 
       <main className={styles.main}>
@@ -176,7 +176,7 @@ export default function LoginPage() {
         <div className={styles.footerLinks}>
           <a href="#">Privacidad</a>
           <a href="#">Términos</a>
-          <a href="#">Soporte</a>
+          <Link href="/ayuda">Soporte</Link>
         </div>
       </footer>
     </div>

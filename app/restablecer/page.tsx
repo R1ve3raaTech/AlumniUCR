@@ -147,6 +147,10 @@ function RestablecerForm() {
           </>
         )}
       </div>
+
+      <p className={styles.helpLink}>
+        ¿Necesitas ayuda? <Link href="/ayuda">Centro de Ayuda</Link>
+      </p>
     </div>
   );
 }

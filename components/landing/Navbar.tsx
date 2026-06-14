@@ -39,6 +39,10 @@ export default function Navbar() {
             </a>
           ))}
 
+          <Link href="/ayuda" className={styles.navLink} onClick={cerrar}>
+            Ayuda
+          </Link>
+
           {user ? (
             <>
               <Link href="/dashboard" className={styles.navLink} onClick={cerrar}>
