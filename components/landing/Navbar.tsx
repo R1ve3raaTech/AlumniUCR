@@ -11,6 +11,7 @@ import styles from './landing.module.css';
 const LINKS = [
   { label: 'Inicio', href: '#inicio' },
   { label: 'Proyectos', href: '/proyectos' },
+  { label: 'Mentorías', href: '/mentorias' },
   { label: 'Impacto', href: '#impacto' },
   { label: 'Historias', href: '#historias' },
 ];
