@@ -1,0 +1,150 @@
+/* Estilos del formulario de Proyecto de Graduación (RF-03, Sección 3).
+   Reutiliza las variables HSL del tema definidas en app/globals.css. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.row .field {
+  flex: 1 1 220px;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: hsl(var(--foreground));
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 8rem;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: hsl(var(--muted));
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsla(250, 85%, 65%, 0.25);
+}
+
+.inputError {
+  border-color: hsl(var(--accent));
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: hsl(var(--accent));
+}
+
+.ayuda {
+  font-size: 0.78rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.contador {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem;
+}
+
+.checkboxOption {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  color: hsl(var(--foreground));
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.checkboxOption input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: hsl(var(--primary));
+}
+
+.formError {
+  font-size: 0.85rem;
+  color: hsl(var(--accent));
+  background: hsla(320, 85%, 60%, 0.08);
+  border: 1px solid hsla(320, 85%, 60%, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+}
+
+.formExito {
+  font-size: 0.85rem;
+  color: hsl(var(--secondary));
+  background: hsla(160, 70%, 50%, 0.08);
+  border: 1px solid hsla(160, 70%, 50%, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+}
+
+.submit {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.4rem;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cargando {
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  padding: 2rem 0;
+}
