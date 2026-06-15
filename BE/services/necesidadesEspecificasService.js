@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'necesidades_especificas';
 
@@ -14,7 +15,7 @@ const obtenerNecesidadesEspecificas = async () => {
         .select('*');
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
@@ -30,11 +31,11 @@ const obtenerNecesidadEspecificaPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
@@ -48,19 +49,20 @@ const obtenerNecesidadEspecificaPorId = async (id) => {
 const crearNecesidadEspecifica = async (necesidadData) => {
 
     const nuevaNecesidad = {
-        Nombre: necesidadData.Nombre
+        nombre: necesidadData.nombre
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaNecesidad])
-        .select();
+        .select()
+        .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
-    return data[0];
+    return data;
 };
 
 
@@ -70,22 +72,20 @@ const crearNecesidadEspecifica = async (necesidadData) => {
 
 const actualizarNecesidadEspecifica = async (id, necesidadData) => {
 
-    const datosActualizar = {
-        ...necesidadData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, necesidadData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
-    return data[0];
+    return data;
 };
 
 
@@ -98,10 +98,10 @@ const eliminarNecesidadEspecifica = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return {
@@ -119,10 +119,10 @@ const buscarNecesidadesPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;

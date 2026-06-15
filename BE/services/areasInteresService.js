@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'areas_interes';
 
@@ -14,7 +15,7 @@ const obtenerAreasInteres = async () => {
         .select('*');
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
@@ -30,11 +31,11 @@ const obtenerAreaInteresPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;
@@ -48,20 +49,21 @@ const obtenerAreaInteresPorId = async (id) => {
 const crearAreaInteres = async (areaData) => {
 
     const nuevaArea = {
-        Nombre: areaData.Nombre,
-        Descripcion: areaData.Descripcion
+        nombre: areaData.nombre,
+        descripcion: areaData.descripcion
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaArea])
-        .select();
+        .select()
+        .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
-    return data[0];
+    return data;
 };
 
 
@@ -71,22 +73,20 @@ const crearAreaInteres = async (areaData) => {
 
 const actualizarAreaInteres = async (id, areaData) => {
 
-    const datosActualizar = {
-        ...areaData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, areaData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
-    return data[0];
+    return data;
 };
 
 
@@ -99,10 +99,10 @@ const eliminarAreaInteres = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return {
@@ -120,10 +120,10 @@ const buscarAreasPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
     if (error) {
-        throw new Error(error.message);
+        throw mapDbError(error);
     }
 
     return data;

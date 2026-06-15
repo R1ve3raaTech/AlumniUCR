@@ -1,30 +1,33 @@
 const aplicantesService = require('../services/aplicantesService');
 
+
 // ======================================================
 // GET - OBTENER TODOS LOS APLICANTES
 // ======================================================
-const obtenerAplicantes = async (req, res) => {
+const obtenerAplicantes = async (req, res, next) => {
     try {
+
         const aplicantes = await aplicantesService.obtenerAplicantes();
+
         res.status(200).json({
             success: true,
             data: aplicantes,
             message: 'Aplicantes obtenidos correctamente'
         });
+
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicantes',
-            error: error.message
-        });
+        next(error);
     }
 };
+
+
 
 // ======================================================
 // GET - OBTENER APLICANTE POR ID
 // ======================================================
-const obtenerAplicantePorId = async (req, res) => {
+const obtenerAplicantePorId = async (req, res, next) => {
     try {
+
         const { id } = req.params;
 
         if (!id) {
@@ -34,7 +37,9 @@ const obtenerAplicantePorId = async (req, res) => {
             });
         }
 
+
         const aplicante = await aplicantesService.obtenerAplicantePorId(id);
+
 
         if (!aplicante) {
             return res.status(404).json({
@@ -43,191 +48,260 @@ const obtenerAplicantePorId = async (req, res) => {
             });
         }
 
-        res.status(200).json({
+
+        return res.json({
             success: true,
             data: aplicante,
-            message: 'Aplicante obtenido correctamente'
+            message: 'Aplicante obtenido correctamente' 
         });
+
+
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicante', 
-            error: error.message
-        });
+        next(error);
     }
 };
+
+
+
 
 // ======================================================
 // POST - CREAR APLICANTE
 // ======================================================
-const crearAplicante = async (req, res) => {
-    try {
-        const { IdUsuario, IdEmpleo, Estado } = req.body;
+const crearAplicante = async (req, res, next) => {
 
-        // Validaciones
-        if (!IdUsuario || !IdEmpleo) {
+    try {
+
+        const {
+            id_usuario,
+            id_empleo,
+            estado
+        } = req.body;
+
+
+
+        if (!id_usuario || !id_empleo) {
+
             return res.status(400).json({
                 success: false,
-                message: 'IdUsuario e IdEmpleo son requeridos'
+                message: 'id_usuario e id_empleo son requeridos'
             });
+
         }
 
-        const nuevoAplicante = await aplicantesService.crearAplicante({
-            IdUsuario,
-            IdEmpleo,
-            Estado: Estado || 'pendiente'
-        });
 
-        res.status(201).json({
+        const nuevoAplicante =
+            await aplicantesService.crearAplicante({
+
+                id_usuario,
+                id_empleo,
+                estado: estado ?? 'pendiente'
+
+            });
+
+
+
+        return res.status(201).json({
+
             success: true,
             data: nuevoAplicante,
             message: 'Aplicante creado correctamente'
+
         });
+
+
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear aplicante',
-            error: error.message
-        });
+
+        next(error);
+
     }
+
 };
+
+
+
 
 // ======================================================
 // PUT - ACTUALIZAR APLICANTE
 // ======================================================
-const actualizarAplicante = async (req, res) => {
+const actualizarAplicante = async (req, res, next) => {
+
     try {
+
         const { id } = req.params;
-        const { IdUsuario, IdEmpleo, Estado } = req.body;
 
         if (!id) {
+
             return res.status(400).json({
                 success: false,
                 message: 'El ID es requerido'
             });
+
         }
 
-        const datosActualizar = {};
-        if (IdUsuario !== undefined) datosActualizar.IdUsuario = IdUsuario;
-        if (IdEmpleo !== undefined) datosActualizar.IdEmpleo = IdEmpleo;
-        if (Estado !== undefined) datosActualizar.Estado = Estado;
+
+        const datosActualizar = {
+            ...req.body
+        };
+
 
         if (Object.keys(datosActualizar).length === 0) {
+
             return res.status(400).json({
-                success: false,
-                message: 'Debe proporcionar al menos un campo para actualizar'
+                success:false,
+                message:'No hay datos para actualizar'
             });
+
         }
 
-        const aplicanteActualizado = await aplicantesService.actualizarAplicante(id, datosActualizar);
 
-        res.status(200).json({
-            success: true,
-            data: aplicanteActualizado,
-            message: 'Aplicante actualizado correctamente'
+
+        const actualizado =
+            await aplicantesService.actualizarAplicante(
+                id,
+                datosActualizar
+            );
+
+
+
+        return res.json({
+
+            success:true,
+            data: actualizado,
+            message:'Aplicante actualizado correctamente'
+
         });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar aplicante',
-            error: error.message
-        });
+
+
+    } catch(error){
+
+        next(error);
+
     }
+
 };
+
+
+
 
 // ======================================================
 // DELETE - ELIMINAR APLICANTE
 // ======================================================
-const eliminarAplicante = async (req, res) => {
-    try {
-        const { id } = req.params;
+const eliminarAplicante = async (req,res,next)=>{
 
-        if (!id) {
+    try{
+
+        const {id}=req.params;
+
+
+        if(!id){
+
             return res.status(400).json({
-                success: false,
-                message: 'El ID es requerido'
+                success:false,
+                message:'El ID es requerido'
             });
+
         }
+
+
 
         await aplicantesService.eliminarAplicante(id);
 
-        res.status(200).json({
-            success: true,
-            message: 'Aplicante eliminado correctamente'
+
+
+        return res.json({
+
+            success:true,
+            message:'Aplicante eliminado correctamente'
+
         });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar aplicante',
-            error: error.message
-        });
+
+
+
+    }catch(error){
+
+        next(error);
+
     }
+
 };
 
+
+
+
 // ======================================================
-// GET - OBTENER APLICANTES POR EMPLEO
+// GET - POR EMPLEO
 // ======================================================
-const obtenerAplicantesPorEmpleo = async (req, res) => {
-    try {
-        const { idEmpleo } = req.params;
+const obtenerAplicantesPorEmpleo = async(req,res,next)=>{
 
-        if (!idEmpleo) {
-            return res.status(400).json({
-                success: false,
-                message: 'El ID del empleo es requerido'
-            });
-        }
+    try{
 
-        const aplicantes = await aplicantesService.obtenerAplicantesPorEmpleo(idEmpleo);
+        const {idEmpleo}=req.params;
 
-        res.status(200).json({
-            success: true,
-            data: aplicantes,
-            message: 'Aplicantes obtenidos correctamente'
+
+        const aplicantes =
+            await aplicantesService.obtenerAplicantesPorEmpleo(idEmpleo);
+
+
+
+        return res.json({
+
+            success:true,
+            data:aplicantes,
+            message:'Aplicantes obtenidos correctamente'
+
         });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicantes por empleo',
-            error: error.message
-        });
+
+
+    }catch(error){
+
+        next(error);
+
     }
+
 };
 
+
+
+
 // ======================================================
-// GET - OBTENER APLICANTES POR USUARIO
+// GET - POR USUARIO
 // ======================================================
-const obtenerAplicantesPorUsuario = async (req, res) => {
-    try {
-        const { idUsuario } = req.params;
+const obtenerAplicantesPorUsuario = async(req,res,next)=>{
 
-        if (!idUsuario) {
-            return res.status(400).json({
-                success: false,
-                message: 'El ID del usuario es requerido'
-            });
-        }
+    try{
 
-        const aplicantes = await aplicantesService.obtenerAplicantesPorUsuario(idUsuario);
+        const {idUsuario}=req.params;
 
-        res.status(200).json({
-            success: true,
-            data: aplicantes,
-            message: 'Aplicantes obtenidos correctamente'
+
+
+        const aplicantes =
+            await aplicantesService.obtenerAplicantesPorUsuario(idUsuario);
+
+
+
+        return res.json({
+
+            success:true,
+            data:aplicantes,
+            message:'Aplicantes obtenidos correctamente'
+
         });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener aplicantes por usuario',
-            error: error.message
-        });
+
+
+
+    }catch(error){
+
+        next(error);
+
     }
+
 };
 
-// ======================================================
-// EXPORTAR CONTROLADOR
-// ======================================================
+
+
+
 module.exports = {
+
     obtenerAplicantes,
     obtenerAplicantePorId,
     crearAplicante,
@@ -235,5 +309,5 @@ module.exports = {
     eliminarAplicante,
     obtenerAplicantesPorEmpleo,
     obtenerAplicantesPorUsuario
-};
 
+};

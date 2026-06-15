@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'tipo_proyecto';
 
@@ -13,9 +14,7 @@ const obtenerTiposProyecto = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerTipoProyectoPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,19 +45,18 @@ const obtenerTipoProyectoPorId = async (id) => {
 const crearTipoProyecto = async (tipoProyectoData) => {
 
     const nuevoTipoProyecto = {
-        Nombre: tipoProyectoData.Nombre
+        nombre: tipoProyectoData.nombre
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoTipoProyecto])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -70,22 +66,20 @@ const crearTipoProyecto = async (tipoProyectoData) => {
 
 const actualizarTipoProyecto = async (id, tipoProyectoData) => {
 
-    const datosActualizar = {
-        ...tipoProyectoData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, tipoProyectoData, {
+        updated_at: new Date()
+    });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -98,11 +92,9 @@ const eliminarTipoProyecto = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Tipo de proyecto eliminado correctamente'
@@ -119,11 +111,9 @@ const buscarTiposProyectoPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

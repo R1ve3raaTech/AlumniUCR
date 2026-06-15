@@ -4,17 +4,18 @@ const sectorExalumnoService = require('../services/sectorExalumnoService');
 // OBTENER TODAS LAS RELACIONES
 // ======================================================
 
-const obtenerSectoresExalumno = async (req, res) => {
+const obtenerSectoresExalumno = async (req, res, next) => {
     try {
         const relaciones =
             await sectorExalumnoService.obtenerSectoresExalumno();
 
-        res.status(200).json(relaciones);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las relaciones sector-exalumno',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: relaciones,
+            message: 'Relaciones sector-exalumno obtenidas correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -22,19 +23,27 @@ const obtenerSectoresExalumno = async (req, res) => {
 // OBTENER RELACIÓN POR ID
 // ======================================================
 
-const obtenerSectorExalumnoPorId = async (req, res) => {
+const obtenerSectorExalumnoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const relacion =
             await sectorExalumnoService.obtenerSectorExalumnoPorId(id);
 
-        res.status(200).json(relacion);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener la relación sector-exalumno',
-            error: error.message
+        if (!relacion) {
+            return res.status(404).json({
+                success: false,
+                message: 'Relación sector-exalumno no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: relacion,
+            message: 'Relación sector-exalumno obtenida correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -42,20 +51,37 @@ const obtenerSectorExalumnoPorId = async (req, res) => {
 // CREAR RELACIÓN
 // ======================================================
 
-const crearSectorExalumno = async (req, res) => {
+const crearSectorExalumno = async (req, res, next) => {
     try {
+        const { id_exalumno, id_sector } = req.body;
+
+        if (!id_exalumno) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_exalumno es requerido'
+            });
+        }
+
+        if (!id_sector) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_sector es requerido'
+            });
+        }
+
         const nuevaRelacion =
-            await sectorExalumnoService.crearSectorExalumno(req.body);
+            await sectorExalumnoService.crearSectorExalumno({
+                id_exalumno,
+                id_sector
+            });
 
         res.status(201).json({
-            mensaje: 'Relación sector-exalumno creada correctamente',
-            data: nuevaRelacion
+            success: true,
+            data: nuevaRelacion,
+            message: 'Relación sector-exalumno creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear la relación sector-exalumno',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,25 +89,28 @@ const crearSectorExalumno = async (req, res) => {
 // ACTUALIZAR RELACIÓN
 // ======================================================
 
-const actualizarSectorExalumno = async (req, res) => {
+const actualizarSectorExalumno = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { id_exalumno, id_sector } = req.body;
+
+        const datosActualizar = {};
+        if (id_exalumno !== undefined) datosActualizar.id_exalumno = id_exalumno;
+        if (id_sector !== undefined) datosActualizar.id_sector = id_sector;
 
         const relacionActualizada =
             await sectorExalumnoService.actualizarSectorExalumno(
                 id,
-                req.body
+                datosActualizar
             );
 
         res.status(200).json({
-            mensaje: 'Relación sector-exalumno actualizada correctamente',
-            data: relacionActualizada
+            success: true,
+            data: relacionActualizada,
+            message: 'Relación sector-exalumno actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar la relación sector-exalumno',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,19 +118,20 @@ const actualizarSectorExalumno = async (req, res) => {
 // ELIMINAR RELACIÓN
 // ======================================================
 
-const eliminarSectorExalumno = async (req, res) => {
+const eliminarSectorExalumno = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const resultado =
             await sectorExalumnoService.eliminarSectorExalumno(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar la relación sector-exalumno',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Relación sector-exalumno eliminada correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -109,7 +139,7 @@ const eliminarSectorExalumno = async (req, res) => {
 // OBTENER SECTORES POR EXALUMNO
 // ======================================================
 
-const obtenerSectoresPorExalumno = async (req, res) => {
+const obtenerSectoresPorExalumno = async (req, res, next) => {
     try {
         const { idExalumno } = req.params;
 
@@ -118,12 +148,13 @@ const obtenerSectoresPorExalumno = async (req, res) => {
                 idExalumno
             );
 
-        res.status(200).json(sectores);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los sectores del exalumno',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: sectores,
+            message: 'Sectores del exalumno obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -131,7 +162,7 @@ const obtenerSectoresPorExalumno = async (req, res) => {
 // OBTENER EXALUMNOS POR SECTOR
 // ======================================================
 
-const obtenerExalumnosPorSector = async (req, res) => {
+const obtenerExalumnosPorSector = async (req, res, next) => {
     try {
         const { idSector } = req.params;
 
@@ -140,12 +171,13 @@ const obtenerExalumnosPorSector = async (req, res) => {
                 idSector
             );
 
-        res.status(200).json(exalumnos);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los exalumnos del sector',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: exalumnos,
+            message: 'Exalumnos del sector obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 

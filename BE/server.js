@@ -13,13 +13,6 @@ app.use(express.json());
 
 // Rutas
 const authRoutes = require('./routes/auth.routes');
-// const usersRoutes = require('./routes/users.routes');  // pendiente
-// const cvRoutes = require('./routes/cv.routes');         // pendiente
-
-app.use('/api/auth', authRoutes);
-// app.use('/api/users', usersRoutes);
-// app.use('/api/cv', cvRoutes);
-
 const aplicantesEmpleoRoutes = require('./routes/aplicantes.empleo.routes');
 const areasInteresRoutes = require('./routes/areas.interes.routes');
 const areasInteresExalumnosRoutes = require('./routes/areas.interes.exalumnos.routes');
@@ -51,6 +44,7 @@ const tipoProyectoRoutes = require('./routes/tipo.proyecto.routes');
 const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
 
+app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
 app.use('/api/areas-interes', areasInteresRoutes);
 app.use('/api/areas-interes-exalumnos', areasInteresExalumnosRoutes);
@@ -81,6 +75,7 @@ app.use('/api/tipos-pago', tipoPagoRoutes);
 app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
+
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Backend corriendo 🟢' });

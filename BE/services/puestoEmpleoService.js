@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'puestos_empleo';
 
@@ -13,9 +14,7 @@ const obtenerPuestosEmpleo = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerPuestoEmpleoPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,32 +45,31 @@ const obtenerPuestoEmpleoPorId = async (id) => {
 const crearPuestoEmpleo = async (puestoData) => {
 
     const nuevoPuesto = {
-        IdUsuario: puestoData.IdUsuario,
-        TituloPuesto: puestoData.TituloPuesto,
-        Tipo: puestoData.Tipo,
-        Modalidad: puestoData.Modalidad,
-        Jornada: puestoData.Jornada,
-        LugarTrabajo: puestoData.LugarTrabajo,
-        Empresa: puestoData.Empresa,
-        FechaLimite: puestoData.FechaLimite,
-        Habilidades: puestoData.Habilidades,
-        Descripcion: puestoData.Descripcion,
-        Contexto: puestoData.Contexto,
-        Estado: puestoData.Estado,
-        Pausada: puestoData.Pausada,
-        Eliminada: puestoData.Eliminada
+        id_usuario: puestoData.id_usuario,
+        titulo_puesto: puestoData.titulo_puesto,
+        tipo: puestoData.tipo,
+        modalidad: puestoData.modalidad,
+        jornada: puestoData.jornada,
+        lugar_trabajo: puestoData.lugar_trabajo,
+        empresa: puestoData.empresa,
+        fecha_limite: puestoData.fecha_limite,
+        habilidades: puestoData.habilidades,
+        descripcion: puestoData.descripcion,
+        contexto: puestoData.contexto,
+        estado: puestoData.estado,
+        pausada: puestoData.pausada,
+        eliminada: puestoData.eliminada
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoPuesto])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -83,22 +79,18 @@ const crearPuestoEmpleo = async (puestoData) => {
 
 const actualizarPuestoEmpleo = async (id, puestoData) => {
 
-    const datosActualizar = {
-        ...puestoData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, puestoData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -111,11 +103,9 @@ const eliminarPuestoEmpleo = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Puesto de empleo eliminado correctamente'
@@ -132,11 +122,9 @@ const obtenerPuestosPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario);
+        .eq('id_usuario', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -151,13 +139,11 @@ const obtenerPuestosActivos = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Estado', true)
-        .eq('Pausada', false)
-        .eq('Eliminada', false);
+        .eq('estado', true)
+        .eq('pausada', false)
+        .eq('eliminada', false);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -172,11 +158,9 @@ const buscarPuestosPorEmpresa = async (empresa) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Empresa', `%${empresa}%`);
+        .ilike('empresa', `%${empresa}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -191,11 +175,9 @@ const buscarPuestosPorTitulo = async (titulo) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('TituloPuesto', `%${titulo}%`);
+        .ilike('titulo_puesto', `%${titulo}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

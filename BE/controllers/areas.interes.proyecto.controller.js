@@ -3,7 +3,7 @@ const areasInteresProyectoService = require('../services/areasInteresProyectoSer
 // ======================================================
 // GET - OBTENER TODAS LAS RELACIONES
 // ======================================================
-const obtenerAreasInteresProyecto = async (req, res) => {
+const obtenerAreasInteresProyecto = async (req, res, next) => {
     try {
         const relaciones = await areasInteresProyectoService.obtenerAreasInteresProyecto();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerAreasInteresProyecto = async (req, res) => {
             message: 'Relaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener relaciones',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER RELACIÓN POR ID
 // ======================================================
-const obtenerAreaInteresProyectoPorId = async (req, res) => {
+const obtenerAreaInteresProyectoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,39 +45,35 @@ const obtenerAreaInteresProyectoPorId = async (req, res) => {
             message: 'Relación obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR RELACIÓN
 // ======================================================
-const crearAreaInteresProyecto = async (req, res) => {
+const crearAreaInteresProyecto = async (req, res, next) => {
     try {
-        const { IdProyecto, IdAreaTematica } = req.body;
+        const { id_proyecto, id_area_tematica } = req.body;
 
         // Validaciones
-        if (!IdProyecto) {
+        if (!id_proyecto) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdProyecto es requerido'
+                message: 'El id_proyecto es requerido'
             });
         }
 
-        if (!IdAreaTematica) {
+        if (!id_area_tematica) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdAreaTematica es requerido'
+                message: 'El id_area_tematica es requerido'
             });
         }
 
         const nuevaRelacion = await areasInteresProyectoService.crearAreaInteresProyecto({
-            IdProyecto,
-            IdAreaTematica
+            id_proyecto,
+            id_area_tematica
         });
 
         res.status(201).json({
@@ -90,21 +82,17 @@ const crearAreaInteresProyecto = async (req, res) => {
             message: 'Relación creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR RELACIÓN
 // ======================================================
-const actualizarAreaInteresProyecto = async (req, res) => {
+const actualizarAreaInteresProyecto = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { IdProyecto, IdAreaTematica } = req.body;
+        const { id_proyecto, id_area_tematica } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -114,8 +102,8 @@ const actualizarAreaInteresProyecto = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdProyecto !== undefined) datosActualizar.IdProyecto = IdProyecto;
-        if (IdAreaTematica !== undefined) datosActualizar.IdAreaTematica = IdAreaTematica;
+        if (id_proyecto !== undefined) datosActualizar.id_proyecto = id_proyecto;
+        if (id_area_tematica !== undefined) datosActualizar.id_area_tematica = id_area_tematica;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -132,18 +120,14 @@ const actualizarAreaInteresProyecto = async (req, res) => {
             message: 'Relación actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR RELACIÓN
 // ======================================================
-const eliminarAreaInteresProyecto = async (req, res) => {
+const eliminarAreaInteresProyecto = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -161,18 +145,14 @@ const eliminarAreaInteresProyecto = async (req, res) => {
             message: 'Relación eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER ÁREAS POR PROYECTO
 // ======================================================
-const obtenerAreasPorProyecto = async (req, res) => {
+const obtenerAreasPorProyecto = async (req, res, next) => {
     try {
         const { idProyecto } = req.params;
 
@@ -191,18 +171,14 @@ const obtenerAreasPorProyecto = async (req, res) => {
             message: 'Áreas obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener áreas por proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER PROYECTOS POR ÁREA TEMÁTICA
 // ======================================================
-const obtenerProyectosPorArea = async (req, res) => {
+const obtenerProyectosPorArea = async (req, res, next) => {
     try {
         const { idAreaTematica } = req.params;
 
@@ -221,11 +197,7 @@ const obtenerProyectosPorArea = async (req, res) => {
             message: 'Proyectos obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener proyectos por área',
-            error: error.message
-        });
+        next(error);
     }
 };
 

@@ -3,7 +3,7 @@ const necesidadesEspecificasService = require('../services/necesidadesEspecifica
 // ======================================================
 // GET - OBTENER TODAS LAS NECESIDADES ESPECÍFICAS
 // ======================================================
-const obtenerNecesidadesEspecificas = async (req, res) => {
+const obtenerNecesidadesEspecificas = async (req, res, next) => {
     try {
         const necesidades = await necesidadesEspecificasService.obtenerNecesidadesEspecificas();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerNecesidadesEspecificas = async (req, res) => {
             message: 'Necesidades específicas obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener necesidades específicas',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER NECESIDAD ESPECÍFICA POR ID
 // ======================================================
-const obtenerNecesidadEspecificaPorId = async (req, res) => {
+const obtenerNecesidadEspecificaPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,23 +45,19 @@ const obtenerNecesidadEspecificaPorId = async (req, res) => {
             message: 'Necesidad específica obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener necesidad específica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR NECESIDAD ESPECÍFICA
 // ======================================================
-const crearNecesidadEspecifica = async (req, res) => {
+const crearNecesidadEspecifica = async (req, res, next) => {
     try {
-        const { Nombre } = req.body;
+        const { nombre } = req.body;
 
         // Validaciones
-        if (!Nombre) {
+        if (!nombre) {
             return res.status(400).json({
                 success: false,
                 message: 'El nombre es requerido'
@@ -73,7 +65,7 @@ const crearNecesidadEspecifica = async (req, res) => {
         }
 
         const nuevaNecesidad = await necesidadesEspecificasService.crearNecesidadEspecifica({
-            Nombre: Nombre.trim()
+            nombre: nombre.trim()
         });
 
         res.status(201).json({
@@ -82,21 +74,17 @@ const crearNecesidadEspecifica = async (req, res) => {
             message: 'Necesidad específica creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear necesidad específica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR NECESIDAD ESPECÍFICA
 // ======================================================
-const actualizarNecesidadEspecifica = async (req, res) => {
+const actualizarNecesidadEspecifica = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { Nombre } = req.body;
+        const { nombre } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -106,7 +94,7 @@ const actualizarNecesidadEspecifica = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Nombre !== undefined) datosActualizar.Nombre = Nombre.trim();
+        if (nombre !== undefined) datosActualizar.nombre = nombre.trim();
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -123,18 +111,14 @@ const actualizarNecesidadEspecifica = async (req, res) => {
             message: 'Necesidad específica actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar necesidad específica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR NECESIDAD ESPECÍFICA
 // ======================================================
-const eliminarNecesidadEspecifica = async (req, res) => {
+const eliminarNecesidadEspecifica = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -152,18 +136,14 @@ const eliminarNecesidadEspecifica = async (req, res) => {
             message: 'Necesidad específica eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar necesidad específica',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR NECESIDADES POR NOMBRE
 // ======================================================
-const buscarNecesidadesPorNombre = async (req, res) => {
+const buscarNecesidadesPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.query;
 
@@ -182,11 +162,7 @@ const buscarNecesidadesPorNombre = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar necesidades específicas',
-            error: error.message
-        });
+        next(error);
     }
 };
 

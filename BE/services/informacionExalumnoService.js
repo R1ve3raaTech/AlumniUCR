@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'informacion_exalumno';
 
@@ -13,9 +14,7 @@ const obtenerInformacionExalumnos = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerInformacionExalumnoPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario)
-        .single();
+        .eq('id_usuario', idUsuario)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,36 +45,35 @@ const obtenerInformacionExalumnoPorUsuario = async (idUsuario) => {
 const crearInformacionExalumno = async (infoData) => {
 
     const nuevaInformacion = {
-        IdUsuario: infoData.IdUsuario,
-        FotoPerfil: infoData.FotoPerfil,
-        Pais: infoData.Pais,
-        Ciudad: infoData.Ciudad,
-        URLLinkedIn: infoData.URLLinkedIn,
-        Biografia: infoData.Biografia,
-        Empresa: infoData.Empresa,
-        Cargo: infoData.Cargo,
-        AnosExperiencia: infoData.AnosExperiencia,
-        OfreceMentoria: infoData.OfreceMentoria,
-        HorasDisponiblesMes: infoData.HorasDisponiblesMes,
-        OfreceEmpleo: infoData.OfreceEmpleo,
-        OfrecePasantia: infoData.OfrecePasantia,
-        OfreceColaboracion: infoData.OfreceColaboracion,
-        OfreceDonacion: infoData.OfreceDonacion,
-        Estado: infoData.Estado,
-        MontoMaximoDonacion: infoData.MontoMaximoDonacion,
-        Moneda: infoData.Moneda
+        id_usuario: infoData.id_usuario,
+        foto_perfil: infoData.foto_perfil,
+        pais: infoData.pais,
+        ciudad: infoData.ciudad,
+        url_linkedin: infoData.url_linkedin,
+        biografia: infoData.biografia,
+        empresa: infoData.empresa,
+        cargo: infoData.cargo,
+        anos_experiencia: infoData.anos_experiencia,
+        ofrece_mentoria: infoData.ofrece_mentoria,
+        horas_disponibles_mes: infoData.horas_disponibles_mes,
+        ofrece_empleo: infoData.ofrece_empleo,
+        ofrece_pasantia: infoData.ofrece_pasantia,
+        ofrece_colaboracion: infoData.ofrece_colaboracion,
+        ofrece_donacion: infoData.ofrece_donacion,
+        estado: infoData.estado,
+        monto_maximo_donacion: infoData.monto_maximo_donacion,
+        moneda: infoData.moneda
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaInformacion])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -87,22 +83,18 @@ const crearInformacionExalumno = async (infoData) => {
 
 const actualizarInformacionExalumno = async (idUsuario, infoData) => {
 
-    const datosActualizar = {
-        ...infoData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, infoData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('IdUsuario', idUsuario)
-        .select();
+        .eq('id_usuario', idUsuario)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -115,11 +107,9 @@ const eliminarInformacionExalumno = async (idUsuario) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('IdUsuario', idUsuario);
+        .eq('id_usuario', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Información del exalumno eliminada correctamente'
@@ -136,11 +126,9 @@ const obtenerExalumnosMentores = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('OfreceMentoria', true);
+        .eq('ofrece_mentoria', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -155,11 +143,9 @@ const obtenerExalumnosOfrecenEmpleo = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('OfreceEmpleo', true);
+        .eq('ofrece_empleo', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -174,11 +160,9 @@ const obtenerExalumnosOfrecenPasantia = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('OfrecePasantia', true);
+        .eq('ofrece_pasantia', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -193,11 +177,9 @@ const obtenerExalumnosOfrecenDonacion = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('OfreceDonacion', true);
+        .eq('ofrece_donacion', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

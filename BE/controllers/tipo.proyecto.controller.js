@@ -4,17 +4,14 @@ const tipoProyectoService = require('../services/tipoProyectoService');
 // OBTENER TODOS LOS TIPOS DE PROYECTO
 // ======================================================
 
-const obtenerTiposProyecto = async (req, res) => {
+const obtenerTiposProyecto = async (req, res, next) => {
     try {
         const tiposProyecto =
             await tipoProyectoService.obtenerTiposProyecto();
 
         res.status(200).json(tiposProyecto);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los tipos de proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -22,19 +19,22 @@ const obtenerTiposProyecto = async (req, res) => {
 // OBTENER TIPO DE PROYECTO POR ID
 // ======================================================
 
-const obtenerTipoProyectoPorId = async (req, res) => {
+const obtenerTipoProyectoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const tipoProyecto =
             await tipoProyectoService.obtenerTipoProyectoPorId(id);
 
+        if (!tipoProyecto) {
+            return res.status(404).json({
+                mensaje: 'Tipo de proyecto no encontrado'
+            });
+        }
+
         res.status(200).json(tipoProyecto);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el tipo de proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -42,20 +42,27 @@ const obtenerTipoProyectoPorId = async (req, res) => {
 // CREAR TIPO DE PROYECTO
 // ======================================================
 
-const crearTipoProyecto = async (req, res) => {
+const crearTipoProyecto = async (req, res, next) => {
     try {
+        const { nombre } = req.body;
+
+        if (!nombre) {
+            return res.status(400).json({
+                mensaje: 'El nombre es requerido'
+            });
+        }
+
         const nuevoTipoProyecto =
-            await tipoProyectoService.crearTipoProyecto(req.body);
+            await tipoProyectoService.crearTipoProyecto({
+                nombre: nombre.trim()
+            });
 
         res.status(201).json({
             mensaje: 'Tipo de proyecto creado correctamente',
             data: nuevoTipoProyecto
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear el tipo de proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,25 +70,35 @@ const crearTipoProyecto = async (req, res) => {
 // ACTUALIZAR TIPO DE PROYECTO
 // ======================================================
 
-const actualizarTipoProyecto = async (req, res) => {
+const actualizarTipoProyecto = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { nombre } = req.body;
+
+        if (!nombre) {
+            return res.status(400).json({
+                mensaje: 'El nombre es requerido'
+            });
+        }
 
         const tipoProyectoActualizado =
             await tipoProyectoService.actualizarTipoProyecto(
                 id,
-                req.body
+                { nombre: nombre.trim() }
             );
+
+        if (!tipoProyectoActualizado) {
+            return res.status(404).json({
+                mensaje: 'Tipo de proyecto no encontrado'
+            });
+        }
 
         res.status(200).json({
             mensaje: 'Tipo de proyecto actualizado correctamente',
             data: tipoProyectoActualizado
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar el tipo de proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,7 +106,7 @@ const actualizarTipoProyecto = async (req, res) => {
 // ELIMINAR TIPO DE PROYECTO
 // ======================================================
 
-const eliminarTipoProyecto = async (req, res) => {
+const eliminarTipoProyecto = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -98,10 +115,7 @@ const eliminarTipoProyecto = async (req, res) => {
 
         res.status(200).json(resultado);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar el tipo de proyecto',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -109,7 +123,7 @@ const eliminarTipoProyecto = async (req, res) => {
 // BUSCAR TIPOS DE PROYECTO POR NOMBRE
 // ======================================================
 
-const buscarTiposProyectoPorNombre = async (req, res) => {
+const buscarTiposProyectoPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.params;
 
@@ -120,10 +134,7 @@ const buscarTiposProyectoPorNombre = async (req, res) => {
 
         res.status(200).json(tiposProyecto);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar tipos de proyecto por nombre',
-            error: error.message
-        });
+        next(error);
     }
 };
 

@@ -3,7 +3,7 @@ const informacionEstudianteService = require('../services/informacionEstudianteS
 // ======================================================
 // GET - OBTENER TODA LA INFORMACIÓN DE ESTUDIANTES
 // ======================================================
-const obtenerInformacionEstudiantes = async (req, res) => {
+const obtenerInformacionEstudiantes = async (req, res, next) => {
     try {
         const informacion = await informacionEstudianteService.obtenerInformacionEstudiantes();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerInformacionEstudiantes = async (req, res) => {
             message: 'Información de estudiantes obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener información de estudiantes',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER INFORMACIÓN POR ID USUARIO
 // ======================================================
-const obtenerInformacionPorUsuario = async (req, res) => {
+const obtenerInformacionPorUsuario = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -49,80 +45,76 @@ const obtenerInformacionPorUsuario = async (req, res) => {
             message: 'Información del estudiante obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener información del estudiante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR INFORMACIÓN DE ESTUDIANTE
 // ======================================================
-const crearInformacionEstudiante = async (req, res) => {
+const crearInformacionEstudiante = async (req, res, next) => {
     try {
         const {
-            IdUsuario,
-            Carne,
-            AnoIngreso,
-            IdNivelAcademico,
-            PromedioPonderado,
-            IdBeca,
-            BuscaFinanciamiento,
-            BuscaMentoria,
-            BuscaEmpleo,
-            BuscaPasantia,
-            Habilidades,
-            PerfilCompleto,
-            Pausado,
-            CursosRelevantes
+            id_usuario,
+            carne,
+            ano_ingreso,
+            id_nivel_academico,
+            promedio_ponderado,
+            id_beca,
+            busca_financiamiento,
+            busca_mentoria,
+            busca_empleo,
+            busca_pasantia,
+            habilidades,
+            perfil_completo,
+            pausado,
+            cursos_relevantes
         } = req.body;
 
         // Validaciones
-        if (!IdUsuario) {
+        if (!id_usuario) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdUsuario es requerido'
+                message: 'El id_usuario es requerido'
             });
         }
 
-        if (!Carne) {
+        if (!carne) {
             return res.status(400).json({
                 success: false,
                 message: 'El carné es requerido'
             });
         }
 
-        if (!AnoIngreso) {
+        if (!ano_ingreso) {
             return res.status(400).json({
                 success: false,
                 message: 'El año de ingreso es requerido'
             });
         }
 
-        if (!IdNivelAcademico) {
+        if (!id_nivel_academico) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdNivelAcademico es requerido'
+                message: 'El id_nivel_academico es requerido'
             });
         }
 
         const nuevaInformacion = await informacionEstudianteService.crearInformacionEstudiante({
-            IdUsuario,
-            Carne: Carne.trim(),
-            AnoIngreso,
-            IdNivelAcademico,
-            PromedioPonderado: PromedioPonderado || null,
-            IdBeca: IdBeca || null,
-            BuscaFinanciamiento: BuscaFinanciamiento || false,
-            BuscaMentoria: BuscaMentoria || false,
-            BuscaEmpleo: BuscaEmpleo || false,
-            BuscaPasantia: BuscaPasantia || false,
-            Habilidades: Habilidades ? Habilidades.trim() : null,
-            PerfilCompleto: PerfilCompleto || false,
-            Pausado: Pausado || false,
-            CursosRelevantes: CursosRelevantes ? CursosRelevantes.trim() : null
+            id_usuario,
+            carne: carne.trim(),
+            ano_ingreso,
+            id_nivel_academico,
+            promedio_ponderado: promedio_ponderado || null,
+            id_beca: id_beca || null,
+            busca_financiamiento: busca_financiamiento || false,
+            busca_mentoria: busca_mentoria || false,
+            busca_empleo: busca_empleo || false,
+            busca_pasantia: busca_pasantia || false,
+            habilidades: habilidades ? habilidades.trim() : null,
+            perfil_completo: perfil_completo || false,
+            pausado: pausado || false,
+            cursos_relevantes: cursos_relevantes ? cursos_relevantes.trim() : null
         });
 
         res.status(201).json({
@@ -131,34 +123,30 @@ const crearInformacionEstudiante = async (req, res) => {
             message: 'Información del estudiante creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear información del estudiante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR INFORMACIÓN DE ESTUDIANTE
 // ======================================================
-const actualizarInformacionEstudiante = async (req, res) => {
+const actualizarInformacionEstudiante = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
         const {
-            Carne,
-            AnoIngreso,
-            IdNivelAcademico,
-            PromedioPonderado,
-            IdBeca,
-            BuscaFinanciamiento,
-            BuscaMentoria,
-            BuscaEmpleo,
-            BuscaPasantia,
-            Habilidades,
-            PerfilCompleto,
-            Pausado,
-            CursosRelevantes
+            carne,
+            ano_ingreso,
+            id_nivel_academico,
+            promedio_ponderado,
+            id_beca,
+            busca_financiamiento,
+            busca_mentoria,
+            busca_empleo,
+            busca_pasantia,
+            habilidades,
+            perfil_completo,
+            pausado,
+            cursos_relevantes
         } = req.body;
 
         if (!idUsuario) {
@@ -169,19 +157,19 @@ const actualizarInformacionEstudiante = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Carne !== undefined) datosActualizar.Carne = Carne.trim();
-        if (AnoIngreso !== undefined) datosActualizar.AnoIngreso = AnoIngreso;
-        if (IdNivelAcademico !== undefined) datosActualizar.IdNivelAcademico = IdNivelAcademico;
-        if (PromedioPonderado !== undefined) datosActualizar.PromedioPonderado = PromedioPonderado;
-        if (IdBeca !== undefined) datosActualizar.IdBeca = IdBeca;
-        if (BuscaFinanciamiento !== undefined) datosActualizar.BuscaFinanciamiento = BuscaFinanciamiento;
-        if (BuscaMentoria !== undefined) datosActualizar.BuscaMentoria = BuscaMentoria;
-        if (BuscaEmpleo !== undefined) datosActualizar.BuscaEmpleo = BuscaEmpleo;
-        if (BuscaPasantia !== undefined) datosActualizar.BuscaPasantia = BuscaPasantia;
-        if (Habilidades !== undefined) datosActualizar.Habilidades = Habilidades ? Habilidades.trim() : null;
-        if (PerfilCompleto !== undefined) datosActualizar.PerfilCompleto = PerfilCompleto;
-        if (Pausado !== undefined) datosActualizar.Pausado = Pausado;
-        if (CursosRelevantes !== undefined) datosActualizar.CursosRelevantes = CursosRelevantes ? CursosRelevantes.trim() : null;
+        if (carne !== undefined) datosActualizar.carne = carne.trim();
+        if (ano_ingreso !== undefined) datosActualizar.ano_ingreso = ano_ingreso;
+        if (id_nivel_academico !== undefined) datosActualizar.id_nivel_academico = id_nivel_academico;
+        if (promedio_ponderado !== undefined) datosActualizar.promedio_ponderado = promedio_ponderado;
+        if (id_beca !== undefined) datosActualizar.id_beca = id_beca;
+        if (busca_financiamiento !== undefined) datosActualizar.busca_financiamiento = busca_financiamiento;
+        if (busca_mentoria !== undefined) datosActualizar.busca_mentoria = busca_mentoria;
+        if (busca_empleo !== undefined) datosActualizar.busca_empleo = busca_empleo;
+        if (busca_pasantia !== undefined) datosActualizar.busca_pasantia = busca_pasantia;
+        if (habilidades !== undefined) datosActualizar.habilidades = habilidades ? habilidades.trim() : null;
+        if (perfil_completo !== undefined) datosActualizar.perfil_completo = perfil_completo;
+        if (pausado !== undefined) datosActualizar.pausado = pausado;
+        if (cursos_relevantes !== undefined) datosActualizar.cursos_relevantes = cursos_relevantes ? cursos_relevantes.trim() : null;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -198,18 +186,14 @@ const actualizarInformacionEstudiante = async (req, res) => {
             message: 'Información del estudiante actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar información del estudiante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR INFORMACIÓN DE ESTUDIANTE
 // ======================================================
-const eliminarInformacionEstudiante = async (req, res) => {
+const eliminarInformacionEstudiante = async (req, res, next) => {
     try {
         const { idUsuario } = req.params;
 
@@ -227,18 +211,14 @@ const eliminarInformacionEstudiante = async (req, res) => {
             message: 'Información del estudiante eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar información del estudiante',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER ESTUDIANTES QUE BUSCAN EMPLEO
 // ======================================================
-const obtenerEstudiantesBuscanEmpleo = async (req, res) => {
+const obtenerEstudiantesBuscanEmpleo = async (req, res, next) => {
     try {
         const estudiantes = await informacionEstudianteService.obtenerEstudiantesBuscanEmpleo();
         res.status(200).json({
@@ -247,18 +227,14 @@ const obtenerEstudiantesBuscanEmpleo = async (req, res) => {
             message: 'Estudiantes que buscan empleo obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener estudiantes que buscan empleo',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER ESTUDIANTES QUE BUSCAN PASANTÍA
 // ======================================================
-const obtenerEstudiantesBuscanPasantia = async (req, res) => {
+const obtenerEstudiantesBuscanPasantia = async (req, res, next) => {
     try {
         const estudiantes = await informacionEstudianteService.obtenerEstudiantesBuscanPasantia();
         res.status(200).json({
@@ -267,18 +243,14 @@ const obtenerEstudiantesBuscanPasantia = async (req, res) => {
             message: 'Estudiantes que buscan pasantía obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener estudiantes que buscan pasantía',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER ESTUDIANTES QUE BUSCAN MENTORÍA
 // ======================================================
-const obtenerEstudiantesBuscanMentoria = async (req, res) => {
+const obtenerEstudiantesBuscanMentoria = async (req, res, next) => {
     try {
         const estudiantes = await informacionEstudianteService.obtenerEstudiantesBuscanMentoria();
         res.status(200).json({
@@ -287,11 +259,7 @@ const obtenerEstudiantesBuscanMentoria = async (req, res) => {
             message: 'Estudiantes que buscan mentoría obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener estudiantes que buscan mentoría',
-            error: error.message
-        });
+        next(error);
     }
 };
 

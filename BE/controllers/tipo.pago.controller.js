@@ -4,16 +4,17 @@ const tipoPagoService = require('../services/tipoPagoService');
 // OBTENER TODOS LOS TIPOS DE PAGO
 // ======================================================
 
-const obtenerTiposPago = async (req, res) => {
+const obtenerTiposPago = async (req, res, next) => {
     try {
         const tiposPago = await tipoPagoService.obtenerTiposPago();
 
-        res.status(200).json(tiposPago);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los tipos de pago',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: tiposPago,
+            message: 'Tipos de pago obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -21,19 +22,27 @@ const obtenerTiposPago = async (req, res) => {
 // OBTENER TIPO DE PAGO POR ID
 // ======================================================
 
-const obtenerTipoPagoPorId = async (req, res) => {
+const obtenerTipoPagoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const tipoPago =
             await tipoPagoService.obtenerTipoPagoPorId(id);
 
-        res.status(200).json(tipoPago);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el tipo de pago',
-            error: error.message
+        if (!tipoPago) {
+            return res.status(404).json({
+                success: false,
+                message: 'Tipo de pago no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: tipoPago,
+            message: 'Tipo de pago obtenido correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -41,20 +50,28 @@ const obtenerTipoPagoPorId = async (req, res) => {
 // CREAR TIPO DE PAGO
 // ======================================================
 
-const crearTipoPago = async (req, res) => {
+const crearTipoPago = async (req, res, next) => {
     try {
-        const nuevoTipoPago =
-            await tipoPagoService.crearTipoPago(req.body);
+        const { descripcion } = req.body;
+
+        if (!descripcion) {
+            return res.status(400).json({
+                success: false,
+                message: 'La descripción es requerida'
+            });
+        }
+
+        const nuevoTipoPago = await tipoPagoService.crearTipoPago({
+            descripcion: descripcion.trim()
+        });
 
         res.status(201).json({
-            mensaje: 'Tipo de pago creado correctamente',
-            data: nuevoTipoPago
+            success: true,
+            data: nuevoTipoPago,
+            message: 'Tipo de pago creado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear el tipo de pago',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -62,25 +79,30 @@ const crearTipoPago = async (req, res) => {
 // ACTUALIZAR TIPO DE PAGO
 // ======================================================
 
-const actualizarTipoPago = async (req, res) => {
+const actualizarTipoPago = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { descripcion } = req.body;
+
+        if (!descripcion) {
+            return res.status(400).json({
+                success: false,
+                message: 'La descripción es requerida'
+            });
+        }
 
         const tipoPagoActualizado =
-            await tipoPagoService.actualizarTipoPago(
-                id,
-                req.body
-            );
+            await tipoPagoService.actualizarTipoPago(id, {
+                descripcion: descripcion.trim()
+            });
 
         res.status(200).json({
-            mensaje: 'Tipo de pago actualizado correctamente',
-            data: tipoPagoActualizado
+            success: true,
+            data: tipoPagoActualizado,
+            message: 'Tipo de pago actualizado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar el tipo de pago',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -88,19 +110,20 @@ const actualizarTipoPago = async (req, res) => {
 // ELIMINAR TIPO DE PAGO
 // ======================================================
 
-const eliminarTipoPago = async (req, res) => {
+const eliminarTipoPago = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const resultado =
             await tipoPagoService.eliminarTipoPago(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar el tipo de pago',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Tipo de pago eliminado correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -108,7 +131,7 @@ const eliminarTipoPago = async (req, res) => {
 // BUSCAR TIPOS DE PAGO POR DESCRIPCIÓN
 // ======================================================
 
-const buscarTiposPagoPorDescripcion = async (req, res) => {
+const buscarTiposPagoPorDescripcion = async (req, res, next) => {
     try {
         const { descripcion } = req.params;
 
@@ -117,12 +140,13 @@ const buscarTiposPagoPorDescripcion = async (req, res) => {
                 descripcion
             );
 
-        res.status(200).json(tiposPago);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar tipos de pago por descripción',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: tiposPago,
+            message: 'Tipos de pago obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 

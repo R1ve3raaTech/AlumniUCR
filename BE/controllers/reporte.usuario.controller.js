@@ -4,17 +4,17 @@ const reporteUsuarioService = require('../services/reporteUsuarioService');
 // OBTENER TODOS LOS REPORTES
 // ======================================================
 
-const obtenerReportesUsuarios = async (req, res) => {
+const obtenerReportesUsuarios = async (req, res, next) => {
     try {
-        const reportes =
-            await reporteUsuarioService.obtenerReportesUsuarios();
+        const reportes = await reporteUsuarioService.obtenerReportesUsuarios();
 
-        res.status(200).json(reportes);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los reportes',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: reportes,
+            message: 'Reportes obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -22,19 +22,26 @@ const obtenerReportesUsuarios = async (req, res) => {
 // OBTENER REPORTE POR ID
 // ======================================================
 
-const obtenerReportePorId = async (req, res) => {
+const obtenerReportePorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const reporte =
-            await reporteUsuarioService.obtenerReportePorId(id);
+        const reporte = await reporteUsuarioService.obtenerReportePorId(id);
 
-        res.status(200).json(reporte);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener el reporte',
-            error: error.message
+        if (!reporte) {
+            return res.status(404).json({
+                success: false,
+                message: 'Reporte no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: reporte,
+            message: 'Reporte obtenido correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -42,20 +49,45 @@ const obtenerReportePorId = async (req, res) => {
 // CREAR REPORTE
 // ======================================================
 
-const crearReporteUsuario = async (req, res) => {
+const crearReporteUsuario = async (req, res, next) => {
     try {
-        const nuevoReporte =
-            await reporteUsuarioService.crearReporteUsuario(req.body);
+        const { id_usuario_reportado, id_usuario_emisor, motivo, descripcion } = req.body;
+
+        if (!id_usuario_reportado) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_usuario_reportado es requerido'
+            });
+        }
+
+        if (!id_usuario_emisor) {
+            return res.status(400).json({
+                success: false,
+                message: 'El id_usuario_emisor es requerido'
+            });
+        }
+
+        if (!motivo) {
+            return res.status(400).json({
+                success: false,
+                message: 'El motivo es requerido'
+            });
+        }
+
+        const nuevoReporte = await reporteUsuarioService.crearReporteUsuario({
+            id_usuario_reportado,
+            id_usuario_emisor,
+            motivo,
+            descripcion
+        });
 
         res.status(201).json({
-            mensaje: 'Reporte creado correctamente',
-            data: nuevoReporte
+            success: true,
+            data: nuevoReporte,
+            message: 'Reporte creado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear el reporte',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,25 +95,34 @@ const crearReporteUsuario = async (req, res) => {
 // ACTUALIZAR REPORTE
 // ======================================================
 
-const actualizarReporteUsuario = async (req, res) => {
+const actualizarReporteUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { id_usuario_reportado, id_usuario_emisor, motivo, descripcion, resuelto } = req.body;
 
-        const reporteActualizado =
-            await reporteUsuarioService.actualizarReporteUsuario(
-                id,
-                req.body
-            );
+        const datosActualizar = {};
+        if (id_usuario_reportado !== undefined) datosActualizar.id_usuario_reportado = id_usuario_reportado;
+        if (id_usuario_emisor !== undefined) datosActualizar.id_usuario_emisor = id_usuario_emisor;
+        if (motivo !== undefined) datosActualizar.motivo = motivo;
+        if (descripcion !== undefined) datosActualizar.descripcion = descripcion;
+        if (resuelto !== undefined) datosActualizar.resuelto = resuelto;
+
+        if (Object.keys(datosActualizar).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe proporcionar al menos un campo para actualizar'
+            });
+        }
+
+        const reporteActualizado = await reporteUsuarioService.actualizarReporteUsuario(id, datosActualizar);
 
         res.status(200).json({
-            mensaje: 'Reporte actualizado correctamente',
-            data: reporteActualizado
+            success: true,
+            data: reporteActualizado,
+            message: 'Reporte actualizado correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar el reporte',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,19 +130,19 @@ const actualizarReporteUsuario = async (req, res) => {
 // ELIMINAR REPORTE
 // ======================================================
 
-const eliminarReporteUsuario = async (req, res) => {
+const eliminarReporteUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const resultado =
-            await reporteUsuarioService.eliminarReporteUsuario(id);
+        const resultado = await reporteUsuarioService.eliminarReporteUsuario(id);
 
-        res.status(200).json(resultado);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar el reporte',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: 'Reporte eliminado correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -109,21 +150,19 @@ const eliminarReporteUsuario = async (req, res) => {
 // OBTENER REPORTES POR USUARIO REPORTADO
 // ======================================================
 
-const obtenerReportesPorUsuarioReportado = async (req, res) => {
+const obtenerReportesPorUsuarioReportado = async (req, res, next) => {
     try {
         const { idUsuarioReportado } = req.params;
 
-        const reportes =
-            await reporteUsuarioService.obtenerReportesPorUsuarioReportado(
-                idUsuarioReportado
-            );
+        const reportes = await reporteUsuarioService.obtenerReportesPorUsuarioReportado(idUsuarioReportado);
 
-        res.status(200).json(reportes);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los reportes del usuario reportado',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: reportes,
+            message: 'Reportes del usuario reportado obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -131,21 +170,19 @@ const obtenerReportesPorUsuarioReportado = async (req, res) => {
 // OBTENER REPORTES POR USUARIO EMISOR
 // ======================================================
 
-const obtenerReportesPorUsuarioEmisor = async (req, res) => {
+const obtenerReportesPorUsuarioEmisor = async (req, res, next) => {
     try {
         const { idUsuarioEmisor } = req.params;
 
-        const reportes =
-            await reporteUsuarioService.obtenerReportesPorUsuarioEmisor(
-                idUsuarioEmisor
-            );
+        const reportes = await reporteUsuarioService.obtenerReportesPorUsuarioEmisor(idUsuarioEmisor);
 
-        res.status(200).json(reportes);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener los reportes del usuario emisor',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: reportes,
+            message: 'Reportes del usuario emisor obtenidos correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -153,19 +190,19 @@ const obtenerReportesPorUsuarioEmisor = async (req, res) => {
 // BUSCAR REPORTES POR MOTIVO
 // ======================================================
 
-const buscarReportesPorMotivo = async (req, res) => {
+const buscarReportesPorMotivo = async (req, res, next) => {
     try {
         const { motivo } = req.params;
 
-        const reportes =
-            await reporteUsuarioService.buscarReportesPorMotivo(motivo);
+        const reportes = await reporteUsuarioService.buscarReportesPorMotivo(motivo);
 
-        res.status(200).json(reportes);
-    } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar reportes por motivo',
-            error: error.message
+        res.status(200).json({
+            success: true,
+            data: reportes,
+            message: 'Búsqueda realizada correctamente'
         });
+    } catch (error) {
+        next(error);
     }
 };
 

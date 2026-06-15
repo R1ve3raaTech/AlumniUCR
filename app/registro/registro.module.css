@@ -1,0 +1,83 @@
+/* Estilos específicos del registro: el selector de rol (estudiante / exalumno).
+   El resto reutiliza components/auth/auth.module.css y el tema de globals.css. */
+
+.roleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.roleLabel {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+.roleOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.roleButton {
+  padding: 0.7rem 1rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: hsl(var(--muted-foreground));
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.roleButton:hover {
+  color: hsl(var(--foreground));
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.roleButtonActive {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  box-shadow: 0 4px 16px -6px hsla(250, 85%, 65%, 0.6);
+}
+
+.success {
+  font-size: 0.85rem;
+  color: hsl(var(--secondary));
+  background: hsla(195, 90%, 50%, 0.08);
+  border: 1px solid hsla(195, 90%, 50%, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+}
+
+/* Aviso "revisa tu correo" tras enviar el magic link */
+.aviso {
+  font-size: 0.95rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  line-height: 1.6;
+}
+
+.aviso strong {
+  color: hsl(var(--foreground));
+}
+
+/* Enlace en línea con apariencia de texto, no de botón */
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: hsl(var(--secondary));
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.linkButton:hover {
+  color: hsl(var(--primary));
+}

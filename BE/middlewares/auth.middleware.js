@@ -22,7 +22,7 @@ const autenticarUsuario = async (req, res, next) => {
         if (partes.length === 2 && partes[0].toLowerCase() === 'bearer') {
             token = partes[1];
         } else {
-            token = partes[0]; // Soporte para token plano
+            token = partes[0];
         }
 
         if (!token) {
@@ -43,23 +43,22 @@ const autenticarUsuario = async (req, res, next) => {
             });
         }
 
-        // 2. Obtener el perfil del usuario en la tabla 'users' de la base de datos
-        // Se usa maybeSingle para evitar excepciones si el perfil aún no se ha creado (ej. flujo de registro)
+        // 2. Obtener el perfil del usuario incluyendo el nombre del rol
         const { data: perfil, error: perfilError } = await supabase
             .from('usuarios')
-            .select('*')
+            .select('*, roles(nombre)')
             .eq('id', user.id)
             .maybeSingle();
 
         if (perfilError) {
-            const error = new Error('Error al obtener el perfil del usuario en la base de datos.');
-            error.statusCode = 500;
-            error.originalError = perfilError;
-            return next(error);
+            const err = new Error('Error al obtener el perfil del usuario en la base de datos.');
+            err.statusCode = 500;
+            err.originalError = perfilError;
+            return next(err);
         }
 
         // 3. Si el perfil existe, validar si el usuario está activo
-        if (perfil && perfil.activo === false) {
+        if (perfil && perfil.estado === 'suspendido') {
             return res.status(403).json({
                 success: false,
                 mensaje: 'Acceso denegado. Su cuenta ha sido suspendida por la administración.'
@@ -68,11 +67,10 @@ const autenticarUsuario = async (req, res, next) => {
 
         // 4. Inyectar datos de usuario y perfil en el objeto request
         req.user = user;
-        req.user.profile = perfil || null; // Será null si es un usuario recién creado en Auth pero no registrado en la BD
+        req.user.profile = perfil || null;
 
         next();
     } catch (err) {
-        // Enviar al middleware centralizado de errores
         next(err);
     }
 };

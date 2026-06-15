@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'certificaciones_estudiante';
 
@@ -13,9 +14,7 @@ const obtenerCertificacionesEstudiante = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerCertificacionPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,23 +45,22 @@ const obtenerCertificacionPorId = async (id) => {
 const crearCertificacion = async (certificacionData) => {
 
     const nuevaCertificacion = {
-        IdUsuario: certificacionData.IdUsuario,
-        Nombre: certificacionData.Nombre,
-        Institucion: certificacionData.Institucion,
-        Fecha: certificacionData.Fecha,
-        URLVerificacion: certificacionData.URLVerificacion
+        id_usuario: certificacionData.id_usuario,
+        nombre: certificacionData.nombre,
+        institucion: certificacionData.institucion,
+        fecha: certificacionData.fecha,
+        url_verificacion: certificacionData.url_verificacion
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaCertificacion])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -74,22 +70,18 @@ const crearCertificacion = async (certificacionData) => {
 
 const actualizarCertificacion = async (id, certificacionData) => {
 
-    const datosActualizar = {
-        ...certificacionData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, certificacionData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -102,11 +94,9 @@ const eliminarCertificacion = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Certificación eliminada correctamente'
@@ -123,11 +113,9 @@ const obtenerCertificacionesPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario);
+        .eq('id_usuario', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -142,11 +130,9 @@ const buscarCertificacionesPorNombre = async (nombre) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .ilike('nombre', `%${nombre}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'responsabilidades_empleo';
 
@@ -13,9 +14,7 @@ const obtenerResponsabilidadesEmpleo = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerResponsabilidadEmpleoPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,20 +45,19 @@ const obtenerResponsabilidadEmpleoPorId = async (id) => {
 const crearResponsabilidadEmpleo = async (relacionData) => {
 
     const nuevaRelacion = {
-        IdEmpleo: relacionData.IdEmpleo,
-        IdResponsabilidad: relacionData.IdResponsabilidad
+        id_empleo: relacionData.id_empleo,
+        id_responsabilidad: relacionData.id_responsabilidad
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaRelacion])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -71,22 +67,18 @@ const crearResponsabilidadEmpleo = async (relacionData) => {
 
 const actualizarResponsabilidadEmpleo = async (id, relacionData) => {
 
-    const datosActualizar = {
-        ...relacionData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, relacionData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -99,11 +91,9 @@ const eliminarResponsabilidadEmpleo = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Relación eliminada correctamente'
@@ -120,11 +110,9 @@ const obtenerResponsabilidadesPorEmpleo = async (idEmpleo) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdEmpleo', idEmpleo);
+        .eq('id_empleo', idEmpleo);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -139,11 +127,9 @@ const obtenerEmpleosPorResponsabilidad = async (idResponsabilidad) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdResponsabilidad', idResponsabilidad);
+        .eq('id_responsabilidad', idResponsabilidad);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
