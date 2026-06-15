@@ -1,13 +1,42 @@
 const supabase = require('../config/supabase');
 const supabaseAuth = require('../config/supabaseAuth');
 const { mapDbError } = require('../utils/dbError');
+const { generarToken, verificarToken } = require('../utils/aprobacionToken');
+const {
+  enviarCorreoAprobacion,
+  enviarCorreoRecuperacion,
+  enviarCorreoConfirmacionExalumno,
+} = require('./email.service');
 
 // Mapa de rol (string del endpoint) -> id_rol en la tabla 'roles'
 // (1 = Estudiante, 2 = Exalumno).
 const ROLES = { estudiante: 1, exalumno: 2 };
 
+// Nombre legible del rol para los correos de aprobación.
+const NOMBRE_ROL = { estudiante: 'Estudiante', exalumno: 'Exalumno' };
+
 // URL del frontend a la que apunta el magic link (ruta que procesa el token_hash).
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+// URL pública del backend, base de los enlaces de aprobar/rechazar del correo.
+const BACKEND_URL = process.env.APP_BACKEND_URL || 'http://localhost:5000';
+
+/**
+ * Envía al correo aprobador los enlaces para aprobar o rechazar una cuenta
+ * recién registrada. No interrumpe el registro si el correo falla.
+ */
+const notificarAprobacion = async (perfil, rol) => {
+  const token = generarToken(perfil.id);
+  const aprobarUrl = `${BACKEND_URL}/api/auth/aprobar/${perfil.id}?token=${token}`;
+  const rechazarUrl = `${BACKEND_URL}/api/auth/rechazar/${perfil.id}?token=${token}`;
+  await enviarCorreoAprobacion({
+    nombre: perfil.nombre,
+    correo: perfil.correo_electronico,
+    rol: NOMBRE_ROL[rol] || 'Usuario',
+    aprobarUrl,
+    rechazarUrl,
+  });
+};
 
 const registerUser = async (correo, contrasena, rol) => {
   // 1. Registrar en Supabase Auth
@@ -33,13 +62,109 @@ const registerUser = async (correo, contrasena, rol) => {
         nombre: correo.split('@')[0],
         correo_electronico: correo,
         id_rol: ROLES[rol] ?? ROLES.estudiante,
+        // La cuenta nace pendiente: requiere aprobación desde el correo.
+        confirmado: false,
+        estado: 'pendiente',
       },
     ])
     .select()
     .single();
   if (userError) throw mapDbError(userError);
 
+  // 3. Notificar al aprobador (no bloquea el registro si el correo falla).
+  await notificarAprobacion(userData, rol);
+
   return { auth: authData.user, perfil: userData };
+};
+
+/**
+ * Registro de exalumno por autodeclaración (RF). Crea la cuenta con correo +
+ * contraseña y guarda los datos académicos autodeclarados en el user_metadata
+ * de Auth (carreras, escuela/facultad, año de graduación). La cuenta queda
+ * PENDIENTE y NO CONFIRMADA: requiere confirmar el correo para activarse.
+ */
+const registrarExalumnoAutodeclaracion = async ({
+  correo,
+  contrasena,
+  nombre,
+  carreras,
+  facultad,
+  anioGraduacion,
+}) => {
+  // 1. Crear el usuario en Supabase Auth con los datos autodeclarados.
+  const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
+    email: correo,
+    password: contrasena,
+    options: {
+      data: {
+        rol: 'exalumno',
+        nombre,
+        carreras,
+        escuela_facultad: facultad,
+        anio_graduacion: anioGraduacion,
+      },
+    },
+  });
+  if (authError) {
+    authError.statusCode = authError.message?.includes('already') ? 409 : 400;
+    throw authError;
+  }
+
+  // 2. Crear el perfil en 'usuarios'. Nace pendiente y sin confirmar: no podrá
+  //    iniciar sesión ni aparecer en el directorio hasta confirmar el correo.
+  const { data: perfil, error: perfilError } = await supabase
+    .from('usuarios')
+    .upsert(
+      {
+        id: authData.user.id,
+        nombre: nombre.trim(),
+        correo_electronico: correo,
+        id_rol: ROLES.exalumno,
+        confirmado: false,
+        estado: 'pendiente',
+      },
+      { onConflict: 'id' },
+    )
+    .select()
+    .single();
+  if (perfilError) throw mapDbError(perfilError);
+
+  // 3. Enviar el correo de confirmación con un enlace firmado (scope 'confirm').
+  //    No se hace await: el envío no debe bloquear ni demorar la respuesta del
+  //    registro (la función captura sus propios errores y registra el enlace).
+  const token = generarToken(perfil.id, 'confirm');
+  const url = `${BACKEND_URL}/api/auth/confirmar-exalumno/${perfil.id}?token=${token}`;
+  enviarCorreoConfirmacionExalumno({ nombre: nombre.trim(), correo, url }).catch(() => {});
+
+  // Se devuelve la URL de confirmación; el controlador decide si exponerla
+  // (solo en desarrollo, como respaldo cuando el correo no se entrega).
+  return { perfil, confirmUrl: url };
+};
+
+/**
+ * Confirma la cuenta de un exalumno desde el enlace del correo: valida el token
+ * firmado y marca el perfil como confirmado y activo.
+ */
+const confirmarExalumno = async (userId, token) => {
+  if (!verificarToken(userId, token, 'confirm')) {
+    const err = new Error('Enlace de confirmación inválido o expirado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { data: perfil, error } = await supabase
+    .from('usuarios')
+    .update({ confirmado: true, estado: 'activo' })
+    .eq('id', userId)
+    .select('nombre, correo_electronico')
+    .maybeSingle();
+  if (error) throw error;
+  if (!perfil) {
+    const err = new Error('La cuenta indicada no existe.');
+    err.statusCode = 404;
+    throw err;
+  }
+  return perfil;
 };
 
 const loginUser = async (correo, contrasena) => {
@@ -50,6 +175,24 @@ const loginUser = async (correo, contrasena) => {
   if (error) {
     error.statusCode = 401;
     throw error;
+  }
+
+  // Bloquear el acceso si la cuenta aún no fue aprobada por la administración.
+  const { data: perfil } = await supabase
+    .from('usuarios')
+    .select('estado')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (perfil && perfil.estado !== 'activo') {
+    const mensajes = {
+      pendiente: 'Tu cuenta está pendiente de aprobación. Te avisaremos cuando sea aprobada.',
+      rechazado: 'Tu solicitud de cuenta fue rechazada. Contacta a la administración.',
+      suspendido: 'Tu cuenta ha sido suspendida por la administración.',
+    };
+    const err = new Error(mensajes[perfil.estado] || 'Tu cuenta no está activa.');
+    err.statusCode = 403;
+    throw err;
   }
 
   return {
@@ -114,7 +257,10 @@ const completarPerfil = async (token, nombre, contrasena) => {
   if (passError) throw passError;
 
   // Crear o actualizar el perfil con las columnas reales de la tabla.
+  // La cuenta queda PENDIENTE: no podrá iniciar sesión hasta que la
+  // administración la apruebe desde el correo de verificación.
   const rol = user.user_metadata?.rol;
+  const rolNormalizado = rol === 'exalumno' ? 'exalumno' : 'estudiante';
   const { data: perfil, error: perfilError } = await supabase
     .from('usuarios')
     .upsert(
@@ -122,8 +268,9 @@ const completarPerfil = async (token, nombre, contrasena) => {
         id: user.id,
         nombre: nombre.trim(),
         correo_electronico: user.email,
-        id_rol: ROLES[rol] ?? ROLES.estudiante,
-        confirmado: true,
+        id_rol: ROLES[rolNormalizado],
+        confirmado: false,
+        estado: 'pendiente',
       },
       { onConflict: 'id' },
     )
@@ -131,13 +278,123 @@ const completarPerfil = async (token, nombre, contrasena) => {
     .single();
   if (perfilError) throw perfilError;
 
+  // Notificar al aprobador con los enlaces de aprobar/rechazar.
+  await notificarAprobacion(perfil, rolNormalizado);
+
   return { perfil };
+};
+
+// ─── Aprobación de cuentas (método de verificación) ──────────────────────
+
+/**
+ * Aprueba una cuenta pendiente: valida el token firmado del enlace y marca el
+ * perfil como activo y confirmado. Idempotente: aprobar dos veces no falla.
+ */
+const aprobarCuenta = async (userId, token) => {
+  if (!verificarToken(userId, token)) {
+    const err = new Error('Enlace de aprobación inválido o alterado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { data: perfil, error } = await supabase
+    .from('usuarios')
+    .update({ estado: 'activo', confirmado: true })
+    .eq('id', userId)
+    .select('nombre, correo_electronico')
+    .maybeSingle();
+  if (error) throw error;
+  if (!perfil) {
+    const err = new Error('La cuenta indicada no existe.');
+    err.statusCode = 404;
+    throw err;
+  }
+  return perfil;
+};
+
+/**
+ * Rechaza una cuenta pendiente: valida el token y marca el perfil como rechazado
+ * (el usuario no podrá iniciar sesión).
+ */
+const rechazarCuenta = async (userId, token) => {
+  if (!verificarToken(userId, token)) {
+    const err = new Error('Enlace de rechazo inválido o alterado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { data: perfil, error } = await supabase
+    .from('usuarios')
+    .update({ estado: 'rechazado', confirmado: false })
+    .eq('id', userId)
+    .select('nombre, correo_electronico')
+    .maybeSingle();
+  if (error) throw error;
+  if (!perfil) {
+    const err = new Error('La cuenta indicada no existe.');
+    err.statusCode = 404;
+    throw err;
+  }
+  return perfil;
+};
+
+// ─── Recuperación de contraseña ──────────────────────────────────────────
+
+/**
+ * Etapa 1: el usuario pide restablecer su contraseña desde su correo.
+ * Genera un token firmado (scope 'reset') y envía el enlace a /restablecer.
+ * Por seguridad NO revela si el correo existe: responde igual en ambos casos.
+ */
+const solicitarRecuperacion = async (correo) => {
+  const { data: perfil } = await supabase
+    .from('usuarios')
+    .select('id, correo_electronico')
+    .eq('correo_electronico', correo)
+    .maybeSingle();
+
+  // Si la cuenta existe, se envía el enlace; si no, se ignora en silencio
+  // (respuesta uniforme para no filtrar qué correos están registrados).
+  if (perfil) {
+    const token = generarToken(perfil.id, 'reset');
+    const url = `${FRONTEND_URL}/restablecer?uid=${perfil.id}&token=${token}`;
+    await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, url });
+  }
+
+  return { enviado: true };
+};
+
+/**
+ * Etapa 2: valida el token firmado (scope 'reset') y define la nueva
+ * contraseña usando la service_role key.
+ */
+const restablecerContrasena = async (uid, token, contrasena) => {
+  if (!verificarToken(uid, token, 'reset')) {
+    const err = new Error('Enlace de restablecimiento inválido o expirado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { error } = await supabase.auth.admin.updateUserById(uid, {
+    password: contrasena,
+  });
+  if (error) {
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { actualizado: true };
 };
 
 module.exports = {
   registerUser,
+  registrarExalumnoAutodeclaracion,
+  confirmarExalumno,
   loginUser,
   solicitarMagicLink,
   verificarMagicLink,
   completarPerfil,
+  aprobarCuenta,
+  rechazarCuenta,
+  solicitarRecuperacion,
+  restablecerContrasena,
 };

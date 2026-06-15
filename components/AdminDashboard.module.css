@@ -1,0 +1,419 @@
+/* ════════════════════════════════════════════════════════════════════
+   Dashboard del administrador. Misma identidad del landing: paleta
+   --ucr-/--brand-, Barlow Condensed, textura tech-grid y estetica
+   editorial. Responsive para web y movil.
+   ════════════════════════════════════════════════════════════════════ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ucr-surface);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
+  background-image:
+    linear-gradient(rgba(0, 76, 99, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 76, 99, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow-x: hidden;
+}
+
+/* ─── Cabecera ────────────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--brand-blanco);
+  border-bottom: 1px solid var(--ucr-outline-variant);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 1rem clamp(1rem, 4vw, 64px);
+}
+
+.brand { display: block; }
+
+.navLinks {
+  display: flex;
+  gap: 1.75rem;
+  margin-left: auto;
+  margin-right: 1.75rem;
+}
+
+.navLink {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ucr-outline);
+  transition: color 0.2s ease;
+}
+
+.navLink:hover { color: var(--brand-esmeralda); }
+
+.logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--ucr-outline-variant);
+  color: var(--ucr-on-surface-variant);
+  font-family: var(--font-brand-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout svg { width: 18px; height: 18px; }
+.logout:hover { border-color: var(--brand-naranja); color: var(--brand-naranja); }
+
+/* ─── Bienvenida ──────────────────────────────────────────────────── */
+.main { flex-grow: 1; width: 100%; }
+
+.welcome {
+  position: relative;
+  background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda));
+  color: var(--brand-blanco);
+  overflow: hidden;
+}
+
+.welcomeTexture {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: 0.6;
+}
+
+.welcomeContent {
+  position: relative;
+  z-index: 1;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 1.5rem + 4vw, 4rem) clamp(1rem, 4vw, 64px);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--brand-naranja);
+  color: var(--brand-blanco);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.3rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.welcomeTitle {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1;
+  font-size: clamp(2.2rem, 1.6rem + 3vw, 3.5rem);
+  color: var(--brand-blanco);
+  margin: 0 0 0.75rem;
+}
+
+.welcomeText {
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 44rem;
+}
+
+.welcomeText strong { color: var(--ucr-secondary-container); }
+
+/* ─── Contenedor ──────────────────────────────────────────────────── */
+.container {
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem) clamp(1rem, 4vw, 64px) 3rem;
+}
+
+/* ─── Resumen ─────────────────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  padding: 1.5rem;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.statCard:hover { border-color: var(--brand-esmeralda); transform: translateY(-3px); }
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(0, 76, 99, 0.08);
+  color: var(--brand-esmeralda);
+}
+
+.statIcon svg { width: 1.5rem; height: 1.5rem; }
+
+.statValor {
+  display: block;
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--ucr-primary);
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ucr-outline);
+  margin-top: 0.25rem;
+}
+
+/* ─── Bloques ─────────────────────────────────────────────────────── */
+.bloque { margin-bottom: 3rem; }
+
+.bloqueHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ucr-outline-variant);
+}
+
+.bloqueTitulo {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.9rem);
+  color: var(--ucr-primary);
+  margin: 0;
+}
+
+.bloqueHint {
+  font-size: 0.8rem;
+  color: var(--ucr-outline);
+}
+
+.vacio {
+  color: var(--ucr-on-surface-variant);
+  background: var(--brand-blanco);
+  border: 1px dashed var(--ucr-outline-variant);
+  padding: 1.5rem;
+  border-radius: 0.25rem;
+}
+
+/* ─── Matching ────────────────────────────────────────────────────── */
+.matchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.matchCard {
+  display: flex;
+  flex-direction: column;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  transition: border-color 0.3s ease;
+}
+
+.matchCard:hover { border-color: var(--brand-esmeralda); }
+
+.matchTop {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--ucr-outline-variant);
+}
+
+.matchTitulo {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.05;
+  font-size: 1.35rem;
+  color: var(--ucr-primary);
+  margin: 0 0 0.75rem;
+}
+
+.estudiante {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ucr-on-surface-variant);
+  margin-bottom: 0.85rem;
+}
+
+.estudiante em { font-style: normal; color: var(--ucr-outline); }
+
+.estudianteIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--ucr-surface-container);
+  color: var(--brand-azul);
+}
+
+.estudianteIcon svg { width: 1rem; height: 1rem; }
+
+.areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.areaChip {
+  background: rgba(0, 106, 211, 0.1);
+  color: var(--brand-azul);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.18rem 0.6rem;
+}
+
+.barra {
+  height: 4px;
+  width: 100%;
+  background: var(--ucr-surface-container);
+  overflow: hidden;
+}
+
+.barraFill { display: block; height: 100%; background: var(--brand-esmeralda); }
+
+.avanceTxt {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ucr-outline);
+}
+
+.mentores {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.mentoresLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ucr-secondary);
+}
+
+.sinMentores { font-size: 0.85rem; color: var(--ucr-outline); }
+
+.mentor {
+  border-left: 3px solid var(--ucr-surface-variant);
+  padding-left: 0.85rem;
+}
+
+.mentorHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  color: var(--ucr-on-surface);
+  font-size: 0.95rem;
+}
+
+.interBadge {
+  background: var(--brand-naranja);
+  color: var(--brand-blanco);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.12rem 0.5rem;
+}
+
+.mentorSub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ucr-on-surface-variant);
+  margin: 0.15rem 0 0.4rem;
+}
+
+.areasComunes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.comunChip {
+  background: rgba(0, 125, 103, 0.1);
+  color: var(--ucr-esmeralda);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────── */
+.footer {
+  margin-top: auto;
+  background: var(--brand-blanco);
+  border-top: 1px solid var(--ucr-outline-variant);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 1560px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  padding: 1.5rem clamp(1rem, 4vw, 64px);
+}
+
+.footerCopy { font-size: 0.8rem; color: var(--ucr-outline); }
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .navLinks { display: none; }
+}
+
+@media (max-width: 600px) {
+  .stats { grid-template-columns: 1fr; }
+  .matchGrid { grid-template-columns: 1fr; }
+}

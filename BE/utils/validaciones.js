@@ -19,6 +19,26 @@ function validarCorreoUCR(correo) {
   return null;
 }
 
+/** Valida el formato del correo sin exigir un dominio específico. */
+function validarCorreo(correo) {
+  if (!correo || typeof correo !== 'string') {
+    return 'El correo electrónico es obligatorio.';
+  }
+  const formato = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!formato.test(correo)) {
+    return 'El formato del correo no es válido.';
+  }
+  return null;
+}
+
+/**
+ * Valida el correo según el rol: el estudiante debe usar @ucr.ac.cr; el
+ * exalumno puede usar cualquier correo válido.
+ */
+function validarCorreoPorRol(correo, rol) {
+  return rol === 'exalumno' ? validarCorreo(correo) : validarCorreoUCR(correo);
+}
+
 /** El nombre completo es obligatorio, con al menos 3 caracteres. */
 function validarNombre(nombre) {
   if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 3) {
@@ -44,4 +64,10 @@ function validarContrasena(contrasena) {
   return null;
 }
 
-module.exports = { validarCorreoUCR, validarNombre, validarContrasena };
+module.exports = {
+  validarCorreoUCR,
+  validarCorreo,
+  validarCorreoPorRol,
+  validarNombre,
+  validarContrasena,
+};

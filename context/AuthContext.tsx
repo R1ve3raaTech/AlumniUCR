@@ -15,6 +15,7 @@ import {
   register as registerRequest,
   logout as logoutRequest,
   verificarMagicLink as verificarMagicLinkRequest,
+  establecerSesionConToken,
   getStoredSession,
 } from '@/lib/auth';
 
@@ -36,6 +37,7 @@ interface AuthContextValue {
   signIn: (correo: string, contrasena: string) => Promise<void>;
   signUp: (rol: Rol, correo: string, contrasena: string) => Promise<void>;
   verificarCorreo: (tokenHash: string) => Promise<void>;
+  establecerSesion: (accessToken: string) => void;
   signOut: () => void;
 }
 
@@ -78,6 +80,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(session.token);
   }, []);
 
+  // Establece la sesión a partir de un access_token recibido en el fragmento de
+  // la URL (flujo implícito del magic link con la plantilla por defecto).
+  const establecerSesion = useCallback((accessToken: string) => {
+    const session = establecerSesionConToken(accessToken);
+    setUser(session.user);
+    setToken(session.token);
+  }, []);
+
   const signOut = useCallback(() => {
     logoutRequest();
     setUser(null);
@@ -86,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, signIn, signUp, verificarCorreo, signOut }}
+      value={{ user, token, loading, signIn, signUp, verificarCorreo, establecerSesion, signOut }}
     >
       {children}
     </AuthContext.Provider>
