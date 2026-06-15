@@ -44,7 +44,8 @@
 .navLeft {
   display: flex;
   align-items: center;
-  gap: clamp(1.5rem, 3vw, 3rem);
+  flex: 1;
+  justify-content: flex-start;
 }
 
 .brand {
@@ -58,12 +59,13 @@
 
 .navLinks {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
+  justify-content: center;
 }
 
 .navLink {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ucr-outline);
@@ -84,7 +86,9 @@
 .navRight {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.75rem;
+  flex: 1;
 }
 
 .searchBox {

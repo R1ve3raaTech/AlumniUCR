@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
+import { useAuth } from '@/context/AuthContext';
 import styles from './proyectos.module.css';
 
 // ─── Íconos SVG inline (heredan currentColor) ─────────────────────────────
@@ -80,31 +82,11 @@ const PROYECTOS: Proyecto[] = [
 
 export default function ProyectosPage() {
   const [areaActiva, setAreaActiva] = useState(0);
+  const { user } = useAuth();
 
   return (
     <div className={styles.page}>
-      {/* Cabecera */}
-      <header className={styles.header}>
-        <nav className={styles.nav}>
-          <div className={styles.navLeft}>
-            <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={40} /></Link>
-            <div className={styles.navLinks}>
-              <Link href="/" className={styles.navLink}>Inicio</Link>
-              <span className={`${styles.navLink} ${styles.navLinkActive}`}>Proyectos</span>
-              <Link href="/#impacto" className={styles.navLink}>Impacto</Link>
-              <Link href="/#historias" className={styles.navLink}>Historias</Link>
-            </div>
-          </div>
-          <div className={styles.navRight}>
-            <div className={styles.searchBox}>
-              <span className={styles.searchIcon}><ISearch /></span>
-              <input className={styles.searchInput} type="text" placeholder="BUSCAR PROYECTOS..." aria-label="Buscar proyectos" />
-            </div>
-            <Link href="/ayuda" className={styles.iconBtn} aria-label="Notificaciones"><IBell /></Link>
-            <Link href="/dashboard" className={styles.avatar} aria-label="Mi perfil">AU</Link>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <main className={styles.main}>
         {/* Hero diagonal */}
