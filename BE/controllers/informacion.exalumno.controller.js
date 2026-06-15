@@ -113,7 +113,7 @@ const crearInformacionExalumno = async (req, res, next) => {
             ofrece_pasantia: ofrece_pasantia || false,
             ofrece_colaboracion: ofrece_colaboracion || false,
             ofrece_donacion: ofrece_donacion || false,
-            estado: estado !== undefined ? estado : true,
+            estado: estado !== undefined ? estado : false,
             monto_maximo_donacion: monto_maximo_donacion || null,
             moneda: moneda || null
         });
@@ -288,6 +288,24 @@ const obtenerExalumnosOfrecenDonacion = async (req, res, next) => {
     }
 };
 
+
+// ======================================================
+// GET - DIRECTORIO DE EXALUMNOS (RF-04)
+// Solo perfiles con estado = true (= "perfil_completo")
+// ======================================================
+const obtenerExalumnosDirectorio = async (req, res, next) => {
+    try {
+        const exalumnos = await informacionExalumnoService.obtenerExalumnosDirectorio();
+        res.status(200).json({
+            success: true,
+            data: exalumnos,
+            message: 'Directorio de exalumnos obtenido correctamente'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // ======================================================
 // EXPORTAR CONTROLADOR
 // ======================================================
@@ -300,5 +318,6 @@ module.exports = {
     obtenerExalumnosMentores,
     obtenerExalumnosOfrecenEmpleo,
     obtenerExalumnosOfrecenPasantia,
-    obtenerExalumnosOfrecenDonacion
+    obtenerExalumnosOfrecenDonacion,
+    obtenerExalumnosDirectorio
 };
