@@ -51,7 +51,7 @@ export default function SolicitudesContacto() {
   }
 
   return (
-    <section id="solicitudes" className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-12">
+    <section id="solicitudes" className="rounded-3xl bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center gap-3">
         <span className="material-symbols-outlined text-ucr-secondary">mail</span>
         <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
