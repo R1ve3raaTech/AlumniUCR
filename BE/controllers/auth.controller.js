@@ -1,6 +1,7 @@
 const authService = require('../services/auth.service');
 const {
   validarCorreoUCR,
+  validarCorreoPorRol,
   validarNombre,
   validarContrasena,
 } = require('../utils/validaciones');
@@ -14,15 +15,16 @@ const errorValidacion = (mensaje) => {
 
 // ─── Flujo de verificación por Magic Link ────────────────────────────────
 
-// Etapa 1: el estudiante/exalumno ingresa su correo @ucr.ac.cr.
+// Etapa 1: el estudiante (correo @ucr.ac.cr) o exalumno (cualquier correo)
+// ingresa su correo para recibir el enlace de verificación.
 const solicitarMagicLink = async (req, res, next) => {
   try {
     const { correo, rol } = req.body;
 
-    const errorCorreo = validarCorreoUCR(correo);
+    const rolNormalizado = rol === 'exalumno' ? 'exalumno' : 'estudiante';
+    const errorCorreo = validarCorreoPorRol(correo, rolNormalizado);
     if (errorCorreo) throw errorValidacion(errorCorreo);
 
-    const rolNormalizado = rol === 'exalumno' ? 'exalumno' : 'estudiante';
     await authService.solicitarMagicLink(correo.trim(), rolNormalizado);
 
     res.status(200).json({

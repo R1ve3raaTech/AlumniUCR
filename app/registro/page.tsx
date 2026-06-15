@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { solicitarMagicLink } from '@/lib/auth';
-import { validarCorreoUCR } from '@/lib/validaciones';
+import { validarCorreoPorRol } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import AlumniLogo from '@/components/AlumniLogo';
 import styles from './registro.module.css';
@@ -38,6 +38,12 @@ const IMailRead = () => (
 const ISchedule = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 );
+const IHandshake = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></svg>
+);
+const IChevronRight = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+);
 
 const ROLES: { value: Rol; titulo: string; desc: string; icon: React.ReactNode }[] = [
   { value: 'estudiante', titulo: 'Soy Estudiante', desc: 'Activo en carrera académica.', icon: <ISchool /> },
@@ -70,7 +76,8 @@ export default function RegistroPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const err = validarCorreoUCR(correo);
+    // El estudiante debe usar @ucr.ac.cr; el exalumno acepta cualquier correo.
+    const err = validarCorreoPorRol(correo, rol);
     setErrorCorreo(err);
     if (err) return;
     enviarEnlace();
@@ -175,6 +182,17 @@ export default function RegistroPage() {
                       </label>
                     ))}
                   </div>
+
+                  {/* Opción secundaria (menor prioridad): voluntarios/colaboradores.
+                      Lleva a un formulario aparte; no usa el flujo de magic link. */}
+                  <Link href="/registro/otros" className={styles.roleOtros}>
+                    <span className={styles.roleOtrosIcon}><IHandshake /></span>
+                    <span className={styles.roleOtrosText}>
+                      <strong>Otros</strong>
+                      <small>¿Quieres colaborar como voluntario? Postúlate aquí.</small>
+                    </span>
+                    <span className={styles.roleOtrosArrow}><IChevronRight /></span>
+                  </Link>
                 </div>
 
                 {/* Paso 2: información */}
@@ -220,7 +238,7 @@ export default function RegistroPage() {
                           id="correo"
                           className={styles.input}
                           type="email"
-                          placeholder="usuario@ucr.ac.cr"
+                          placeholder={rol === 'exalumno' ? 'tucorreo@dominio.com' : 'usuario@ucr.ac.cr'}
                           value={correo}
                           onChange={(e) => {
                             setCorreo(e.target.value);
