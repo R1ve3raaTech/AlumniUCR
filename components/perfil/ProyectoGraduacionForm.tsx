@@ -259,6 +259,7 @@ export default function ProyectoGraduacionForm() {
           placeholder="Ej. Sistema de gestión de prácticas profesionales"
           required
         />
+        <span className={styles.contador}>{titulo.length}/200</span>
         {errores.titulo && <span className={styles.fieldError}>{errores.titulo}</span>}
       </div>
 
@@ -308,7 +309,7 @@ export default function ProyectoGraduacionForm() {
       </div>
 
       <div className={styles.field}>
-        <span className={styles.label}>Áreas de interés del proyecto</span>
+        <span className={styles.label}>Área temática (Áreas de interés del proyecto)</span>
         <span className={styles.ayuda}>
           Selecciona todas las áreas relacionadas con tu proyecto (mínimo 1). Esto permite
           encontrar colaboradores de otras disciplinas.
