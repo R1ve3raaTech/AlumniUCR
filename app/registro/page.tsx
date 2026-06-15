@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { solicitarMagicLink } from '@/lib/auth';
-import { validarCorreoUCR } from '@/lib/validaciones';
+import { validarCorreoPorRol } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import AlumniLogo from '@/components/AlumniLogo';
 import styles from './registro.module.css';
@@ -76,7 +76,8 @@ export default function RegistroPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const err = validarCorreoUCR(correo);
+    // El estudiante debe usar @ucr.ac.cr; el exalumno acepta cualquier correo.
+    const err = validarCorreoPorRol(correo, rol);
     setErrorCorreo(err);
     if (err) return;
     enviarEnlace();
@@ -237,7 +238,7 @@ export default function RegistroPage() {
                           id="correo"
                           className={styles.input}
                           type="email"
-                          placeholder="usuario@ucr.ac.cr"
+                          placeholder={rol === 'exalumno' ? 'tucorreo@dominio.com' : 'usuario@ucr.ac.cr'}
                           value={correo}
                           onChange={(e) => {
                             setCorreo(e.target.value);
