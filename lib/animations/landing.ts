@@ -16,17 +16,24 @@ const q = (scope: HTMLElement, sel: string) =>
 
 /** Entrada del hero: el texto aparece en secuencia y la imagen se desliza. */
 function animateHero(scope: HTMLElement) {
-  const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
+  const tl = gsap.timeline({ defaults: { ease: 'power4.out', duration: 1.2 } });
 
   tl.from(q(scope, '[data-anim="hero-text"] > *'), {
-    y: 28,
+    y: 40,
     opacity: 0,
-    stagger: 0.12,
+    scale: 0.95,
+    filter: 'blur(8px)',
+    stagger: 0.15,
   });
 
-  const image = q(scope, '[data-anim="hero-image"]');
-  if (image.length) {
-    tl.from(image, { x: 60, opacity: 0, duration: 1 }, '-=0.5');
+  const bgVideo = q(scope, '[data-anim="hero-bg-video"]');
+  if (bgVideo.length) {
+    tl.from(bgVideo, { 
+      opacity: 0, 
+      scale: 1.05,
+      duration: 2,
+      ease: 'power2.out'
+    }, 0);
   }
 }
 

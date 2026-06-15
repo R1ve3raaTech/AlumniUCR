@@ -10,20 +10,20 @@ const PROYECTOS = [
     titulo: 'Sistema Eco-Data',
     texto:
       'Optimización de recursos energéticos mediante IA para pymes locales, reduciendo costos operativos en un 30%.',
-    img: '/images/ecosistema-ucr.png',
+    img: '/images/ecodata.jpg',
   },
   {
     tag: 'Salud Digital',
     titulo: 'Med-Link UCR',
     texto:
       'Plataforma de telemedicina para comunidades rurales, conectando especialistas con pacientes remotos.',
-    img: '/images/campus.png',
+    img: '/images/MEDLINK.png',
   },
   {
     tag: 'Finanzas',
     titulo: 'Fin-Connect',
     texto: 'Herramienta de educación financiera gamificada para jóvenes adultos.',
-    img: '/images/descarga-1.jpg',
+    img: '/images/finconnect.jpg',
   },
 ];
 
