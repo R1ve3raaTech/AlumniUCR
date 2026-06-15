@@ -61,6 +61,7 @@ const tipoProyectoRoutes = require('./routes/tipo.proyecto.routes');
 const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
 const voluntariosRoutes = require('./routes/voluntarios.routes');
+const matchingRoutes = require('./routes/matching.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
@@ -94,6 +95,7 @@ app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/voluntarios', voluntariosRoutes);
+app.use('/api/matching', matchingRoutes);
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {

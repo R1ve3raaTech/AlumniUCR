@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import AlumniLogo from '@/components/AlumniLogo';
-import AdminSolicitudes from '@/components/AdminSolicitudes';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
+import AdminDashboard from '@/components/AdminDashboard';
 import styles from './dashboard.module.css';
 
 interface Perfil {
@@ -68,6 +68,11 @@ export default function DashboardPage() {
     return <ExalumnoDashboard perfil={perfil} correo={correo} onSignOut={handleSignOut} />;
   }
 
+  // Panel del administrador (identidad del landing) con matching interdisciplinario.
+  if (rol === 'admin') {
+    return <AdminDashboard correo={correo} onSignOut={handleSignOut} />;
+  }
+
   return (
     <div className={styles.page}>
       <header className={`glass-card ${styles.topbar}`}>
@@ -101,9 +106,6 @@ export default function DashboardPage() {
             <span>{id}</span>
           </div>
         </section>
-
-        {/* Panel solo visible para administradores (se autodetecta por el rol). */}
-        {token && <AdminSolicitudes token={token} />}
       </main>
     </div>
   );
