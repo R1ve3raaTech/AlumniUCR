@@ -263,6 +263,24 @@ const obtenerEstudiantesBuscanMentoria = async (req, res, next) => {
     }
 };
 
+
+// ======================================================
+// GET - DIRECTORIO DE ESTUDIANTES (RF-05)
+// Solo perfiles con perfil_completo = true y pausado = false
+// ======================================================
+const obtenerEstudiantesDirectorio = async (req, res, next) => {
+    try {
+        const estudiantes = await informacionEstudianteService.obtenerEstudiantesDirectorio();
+        res.status(200).json({
+            success: true,
+            data: estudiantes,
+            message: 'Directorio de estudiantes obtenido correctamente'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // ======================================================
 // EXPORTAR CONTROLADOR
 // ======================================================
@@ -274,5 +292,6 @@ module.exports = {
     eliminarInformacionEstudiante,
     obtenerEstudiantesBuscanEmpleo,
     obtenerEstudiantesBuscanPasantia,
-    obtenerEstudiantesBuscanMentoria
+    obtenerEstudiantesBuscanMentoria,
+    obtenerEstudiantesDirectorio
 };
