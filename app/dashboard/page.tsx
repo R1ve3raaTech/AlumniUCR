@@ -1,16 +1,27 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { obtenerPerfil } from '@/lib/auth';
 import AlumniLogo from '@/components/AlumniLogo';
 import AdminSolicitudes from '@/components/AdminSolicitudes';
+import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import styles from './dashboard.module.css';
+
+interface Perfil {
+  nombre?: string;
+  correo_electronico?: string;
+  estado?: string;
+  roles?: { nombre?: string } | null;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token, loading, signOut } = useAuth();
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [perfilCargando, setPerfilCargando] = useState(true);
 
   // Protección client-side: si no hay sesión una vez hidratado, redirige al login.
   useEffect(() => {
@@ -19,18 +30,43 @@ export default function DashboardPage() {
     }
   }, [loading, token, router]);
 
+  // Carga el perfil (con rol) para mostrar el panel correspondiente.
+  useEffect(() => {
+    if (!token) return;
+    let activo = true;
+    (async () => {
+      try {
+        const res = await obtenerPerfil(token);
+        if (activo) setPerfil(res?.data ?? null);
+      } catch {
+        if (activo) setPerfil(null);
+      } finally {
+        if (activo) setPerfilCargando(false);
+      }
+    })();
+    return () => {
+      activo = false;
+    };
+  }, [token]);
+
   function handleSignOut() {
     signOut();
     router.replace('/login');
   }
 
   // Evita parpadeo de contenido protegido mientras se hidrata o se redirige.
-  if (loading || !token) {
+  if (loading || !token || perfilCargando) {
     return <div className={styles.loading}>Cargando…</div>;
   }
 
-  const correo = user?.email ?? '—';
+  const correo = user?.email ?? perfil?.correo_electronico ?? '—';
   const id = user?.id ?? '—';
+  const rol = perfil?.roles?.nombre?.toLowerCase().trim();
+
+  // Panel dedicado del exalumno (identidad de marca).
+  if (rol === 'exalumno') {
+    return <ExalumnoDashboard perfil={perfil} correo={correo} onSignOut={handleSignOut} />;
+  }
 
   return (
     <div className={styles.page}>
