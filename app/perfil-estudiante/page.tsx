@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -9,6 +9,8 @@ import InformacionAcademicaForm from '@/components/perfil/InformacionAcademicaFo
 import ProyectoGraduacionForm from '@/components/perfil/ProyectoGraduacionForm';
 import HabilidadesForm from '@/components/perfil/HabilidadesForm';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
+import { obtenerProyectoDelEstudiante } from '@/lib/proyectoGraduacion';
+import { obtenerHabilidadesDelEstudiante } from '@/lib/habilidades';
 import perfilStyles from '@/components/perfil/perfil.module.css';
 
 // Página del perfil de estudiante (RF-03). Incluye la Sección 1 (Información
@@ -22,6 +24,9 @@ export default function PerfilEstudiantePage() {
 
   const [verificandoPerfil, setVerificandoPerfil] = useState(true);
   const [perfilAcademicoListo, setPerfilAcademicoListo] = useState(false);
+  // Estado real por sección (RF-03), para el indicador de progreso y la regla
+  // "el perfil incompleto no aparece en el directorio".
+  const [estado, setEstado] = useState({ academica: false, proyecto: false, habilidades: false });
 
   useEffect(() => {
     if (!loading && !token) {
@@ -29,20 +34,32 @@ export default function PerfilEstudiantePage() {
     }
   }, [loading, token, router]);
 
-  useEffect(() => {
+  const refrescarEstado = useCallback(async () => {
     if (!token || !user?.id) return;
-    let activo = true;
-
-    obtenerInformacionEstudiante(token, user.id).then((informacion) => {
-      if (!activo) return;
-      setPerfilAcademicoListo(Boolean(informacion));
-      setVerificandoPerfil(false);
-    });
-
-    return () => {
-      activo = false;
-    };
+    const [info, proyecto, habilidades] = await Promise.all([
+      obtenerInformacionEstudiante(token, user.id).catch(() => null),
+      obtenerProyectoDelEstudiante(token, user.id).catch(() => null),
+      obtenerHabilidadesDelEstudiante(token, user.id).catch(() => null),
+    ]);
+    const academica = Boolean(info);
+    const proyectoOk = Boolean(proyecto && (proyecto.titulo_proyecto || proyecto.id));
+    const habilidadesOk = Array.isArray(habilidades)
+      ? habilidades.length > 0
+      : Boolean(habilidades && (habilidades.tecnicas || habilidades.id));
+    setEstado({ academica, proyecto: proyectoOk, habilidades: habilidadesOk });
+    setPerfilAcademicoListo(academica);
+    setVerificandoPerfil(false);
   }, [token, user?.id]);
+
+  useEffect(() => {
+    let activo = true;
+    if (token && user?.id) refrescarEstado().finally(() => { if (!activo) return; });
+    return () => { activo = false; };
+  }, [token, user?.id, refrescarEstado]);
+
+  // % de completitud del perfil (3 secciones obligatorias del RF-03).
+  const completadas = [estado.academica, estado.proyecto, estado.habilidades].filter(Boolean).length;
+  const progreso = Math.round((completadas / 3) * 100);
 
   function handleSignOut() {
     signOut();
@@ -160,7 +177,7 @@ export default function PerfilEstudiantePage() {
               Completa tu información académica y socioeconómica para que el resto de tu perfil
               pueda guardarse correctamente.
             </p>
-            <InformacionAcademicaForm onGuardado={() => setPerfilAcademicoListo(true)} />
+            <InformacionAcademicaForm onGuardado={refrescarEstado} />
           </section>
 
           <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-4">
@@ -170,27 +187,42 @@ export default function PerfilEstudiantePage() {
                 Estado del perfil
               </h2>
             </div>
+            {/* Indicador de progreso (RF-03) */}
+            <div className="mb-4">
+              <div className="mb-1 flex items-baseline justify-between text-xs font-semibold uppercase tracking-wide text-ucr-outline">
+                <span>Progreso del perfil</span>
+                <span className="font-ucr-display text-2xl text-ucr-esmeralda">{progreso}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-ucr-surface-container">
+                <span
+                  className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda transition-all"
+                  style={{ width: `${progreso}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-ucr-on-surface-variant">
+                {progreso === 100
+                  ? '✓ Perfil completo: ya puede aparecer en el directorio.'
+                  : 'Completa las 3 secciones para llegar al 100% y aparecer en el directorio.'}
+              </p>
+            </div>
+
             <ul className="flex flex-col gap-3 text-sm">
-              <li className="flex items-center gap-2">
-                <span
-                  className={`material-symbols-outlined ${
-                    perfilAcademicoListo ? 'text-ucr-esmeralda' : 'text-ucr-outline'
-                  }`}
-                >
-                  {perfilAcademicoListo ? 'check_circle' : 'radio_button_unchecked'}
-                </span>
-                Información académica
-              </li>
-              <li className="flex items-center gap-2">
-                <span
-                  className={`material-symbols-outlined ${
-                    perfilAcademicoListo ? 'text-ucr-esmeralda' : 'text-ucr-outline'
-                  }`}
-                >
-                  {perfilAcademicoListo ? 'check_circle' : 'radio_button_unchecked'}
-                </span>
-                Proyecto de graduación
-              </li>
+              {[
+                { ok: estado.academica, label: 'Información académica' },
+                { ok: estado.proyecto, label: 'Proyecto de graduación' },
+                { ok: estado.habilidades, label: 'Habilidades' },
+              ].map((s) => (
+                <li key={s.label} className="flex items-center gap-2">
+                  <span
+                    className={`material-symbols-outlined ${
+                      s.ok ? 'text-ucr-esmeralda' : 'text-ucr-outline'
+                    }`}
+                  >
+                    {s.ok ? 'check_circle' : 'radio_button_unchecked'}
+                  </span>
+                  {s.label}
+                </li>
+              ))}
               {!perfilAcademicoListo && !verificandoPerfil && (
                 <li className={perfilStyles.aviso}>
                   Completa la información académica para habilitar el proyecto de graduación.
@@ -216,7 +248,7 @@ export default function PerfilEstudiantePage() {
             {verificandoPerfil ? (
               <p className={perfilStyles.cargando}>Cargando…</p>
             ) : perfilAcademicoListo ? (
-              <ProyectoGraduacionForm />
+              <ProyectoGraduacionForm onGuardado={refrescarEstado} />
             ) : (
               <p className={perfilStyles.aviso}>
                 Primero completa y guarda tu información académica para poder registrar tu
@@ -239,7 +271,7 @@ export default function PerfilEstudiantePage() {
               Agrega tus habilidades técnicas (opcional) para mejorar las coincidencias con tu
               perfil.
             </p>
-            <HabilidadesForm />
+            <HabilidadesForm onGuardado={refrescarEstado} />
           </section>
         </div>
       </main>
