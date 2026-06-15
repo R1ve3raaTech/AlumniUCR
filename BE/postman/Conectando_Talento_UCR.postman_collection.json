@@ -1,0 +1,1698 @@
+{
+  "info": {
+    "_postman_id": "b1820b72-f81d-4de6-9ab5-7d4efb794123",
+    "name": "Conectando Talento UCR - API Backend",
+    "description": "Colección definitiva de pruebas para el backend de Conectando Talento UCR. Incluye pruebas automatizadas y aserciones para validar la persistencia de datos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Autenticación (Auth)",
+      "item": [
+        {
+          "name": "Registrar Estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Registro Estudiante - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Registro Estudiante - Estructura de respuesta correcta\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.data).to.have.property(\"auth\");",
+                  "    pm.expect(responseJson.data).to.have.property(\"perfil\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"estudiante_completo@ucr.ac.cr\",\n  \"contrasena\": \"ClaveSegura123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/auth/register/estudiante",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register",
+                "estudiante"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra un nuevo estudiante en el sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Exalumno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Registro Exalumno - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Registro Exalumno - Estructura de respuesta correcta\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.data).to.have.property(\"auth\");",
+                  "    pm.expect(responseJson.data).to.have.property(\"perfil\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"exalumno_completo@ucr.ac.cr\",\n  \"contrasena\": \"ClaveSegura123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/auth/register/exalumno",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register",
+                "exalumno"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra un nuevo exalumno en el sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar Sesión (Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Inicio de sesión exitoso - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Inicio de sesión - Retorna token de Supabase Auth\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.token).to.be.a('string');",
+                  "    pm.expect(responseJson.user).to.have.property(\"id\");",
+                  "    pm.expect(responseJson.user).to.have.property(\"email\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.success && responseJson.token) {",
+                  "    pm.environment.set(\"token\", responseJson.token);",
+                  "    pm.environment.set(\"userId\", responseJson.user.id);",
+                  "    console.log(\"Token y userId guardados en el entorno automáticamente.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"estudiante_completo@ucr.ac.cr\",\n  \"contrasena\": \"ClaveSegura123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/auth/login",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Inicia sesión y actualiza el token JWT y el userId automáticamente en el entorno."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Usuarios (Users)",
+      "item": [
+        {
+          "name": "Obtener Todos los Usuarios (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Obtener Usuarios - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Obtener Usuarios - Retorna un arreglo de datos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/users",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Obtiene la lista de todos los usuarios registrados. Solo administradores."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Obtener Usuario por ID - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Obtener Usuario por ID - Los datos coinciden con el usuario solicitado\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.Id).to.equal(pm.environment.get(\"userId\"));",
+                  "    pm.expect(responseJson.CorreoElectronico).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/users/{{userId}}",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Obtiene los detalles del perfil de un usuario."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Actualizar Usuario - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Actualizar Usuario - El nombre ha cambiado correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.mensaje).to.equal(\"Usuario actualizado correctamente\");",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Usuario Completo de Pruebas\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Usuario Completo de Pruebas\",\n  \"Estado\": \"activo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/users/{{userId}}",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Actualiza datos generales del usuario."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Usuarios por Nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Buscar Usuarios - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Buscar Usuarios - Retorna una lista con coincidencias\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/users/buscar/Completo",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "users",
+                "buscar",
+                "Completo"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Filtra usuarios por su nombre."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Sedes UCR",
+      "item": [
+        {
+          "name": "Obtener Todas las Sedes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Obtener Sedes - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Obtener Sedes - Formato de arreglo correcto\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/sedes-ucr",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "sedes-ucr"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Lista todas las sedes de la UCR."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Sede (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Sede - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Sede - Nombre de la sede guardado correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.mensaje).to.equal(\"Sede UCR creada correctamente\");",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Sede Rodrigo Facio\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"sedeId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Sede Rodrigo Facio\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/sedes-ucr",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "sedes-ucr"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una nueva sede y almacena su ID en `sedeId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Sede por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Obtener Sede por ID - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Obtener Sede por ID - El ID coincide con el entorno\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.Id).to.equal(pm.environment.get(\"sedeId\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/sedes-ucr/{{sedeId}}",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "sedes-ucr",
+                "{{sedeId}}"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Obtiene los detalles de una sede."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Facultades y Carreras",
+      "item": [
+        {
+          "name": "Obtener Todas las Facultades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Obtener Facultades - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/facultades",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "facultades"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Obtiene la lista de facultades."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Facultad (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Facultad - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Facultad - Datos de respuesta correctos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Facultad de Ciencias Sociales\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"facultadId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Facultad de Ciencias Sociales\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/facultades",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "facultades"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una facultad y guarda su ID en `facultadId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Carrera (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Carrera - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Carrera - La carrera contiene el Id de Facultad asignado\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Licenciatura en Psicología\");",
+                  "    pm.expect(responseJson.data.IdFacultad).to.equal(Number(pm.environment.get(\"facultadId\")));",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"carreraId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Licenciatura en Psicología\",\n  \"IdFacultad\": {{facultadId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/carreras",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "carreras"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una carrera y guarda su ID en `carreraId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Vincular Usuario con Carrera y Sede",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Vincular Carrera Usuario - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Vincular Carrera Usuario - Relaciones almacenadas correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.IdUsuario).to.equal(pm.environment.get(\"userId\"));",
+                  "    pm.expect(responseJson.data.IdCarrera).to.equal(Number(pm.environment.get(\"carreraId\")));",
+                  "    pm.expect(responseJson.data.IdSede).to.equal(Number(pm.environment.get(\"sedeId\")));",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"carreraUsuarioId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"IdCarrera\": {{carreraId}},\n  \"IdSede\": {{sedeId}},\n  \"AnoInicio\": 2021,\n  \"AnoFin\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/carreras-usuarios",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "carreras-usuarios"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Asocia un usuario con una carrera profesional y una sede en la que la cursa."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05. Ficha Académica del Estudiante",
+      "item": [
+        {
+          "name": "Crear Información Académica (Onboarding)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Info Académica - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Info Académica - Persistencia de datos académicos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Carne).to.equal(\"C19999\");",
+                  "    pm.expect(responseJson.data.PromedioPonderado).to.equal(8.9);",
+                  "    pm.expect(responseJson.data.IdUsuario).to.equal(pm.environment.get(\"userId\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"Carne\": \"C19999\",\n  \"AnoIngreso\": 2021,\n  \"IdNivelAcademico\": 2,\n  \"PromedioPonderado\": 8.9,\n  \"BuscaFinanciamiento\": true,\n  \"BuscaMentoria\": true,\n  \"BuscaEmpleo\": true,\n  \"BuscaPasantia\": false,\n  \"Habilidades\": [\"PostgreSQL\", \"Express\", \"Postman\"],\n  \"PerfilCompleto\": true,\n  \"Pausado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/informacion-estudiantes",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "informacion-estudiantes"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea el perfil académico extendido del estudiante."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Ficha del Estudiante por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Obtener Info Estudiante - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Obtener Info Estudiante - Carné correcto en base de datos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.Carne).to.equal(\"C19999\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/informacion-estudiantes/{{userId}}",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "informacion-estudiantes",
+                "{{userId}}"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Consulta la ficha del estudiante usando su userId."
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar Certificación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Agregar Certificación - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Agregar Certificación - Almacenamiento correcto del título y URL\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Certificado en Desarrollo Web Backend\");",
+                  "    pm.expect(responseJson.data.URLVerificacion).to.equal(\"https://verificacion.ucr.ac.cr/certs/12345\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"certificacionId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"Nombre\": \"Certificado en Desarrollo Web Backend\",\n  \"Institucion\": \"UCR - Centro de Informática\",\n  \"Fecha\": \"2025-12-01\",\n  \"URLVerificacion\": \"https://verificacion.ucr.ac.cr/certs/12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/certificaciones",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "certificaciones"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra una certificación o curso externo completado por el estudiante."
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar Experiencia Estudiantil o Laboral",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Agregar Experiencia - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Agregar Experiencia - Datos organizacionales correctos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Puesto).to.equal(\"Asistente de Desarrollo\");",
+                  "    pm.expect(responseJson.data.Organizacion).to.equal(\"Universidad de Costa Rica\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"experienciaId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"Puesto\": \"Asistente de Desarrollo\",\n  \"Organizacion\": \"Universidad de Costa Rica\",\n  \"FechaInicio\": \"2023-03-01\",\n  \"FechaFin\": \"2024-11-30\",\n  \"Descripcion\": \"Apoyo en mantenimiento de bases de datos y desarrollo backend con Node.js.\",\n  \"TipoExperiencia\": \"asistencia\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/experiencias",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "experiencias"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Agrega un registro de experiencia previa (asistencia, pasantía, voluntariado, empleo)."
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar Habilidad de Estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Agregar Habilidad - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Agregar Habilidad - Nombre y nivel correctos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Habilidad).to.equal(\"Node.js\");",
+                  "    pm.expect(responseJson.data.Nivel).to.equal(\"avanzado\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"habilidadId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"Habilidad\": \"Node.js\",\n  \"Nivel\": \"avanzado\",\n  \"Tipo\": \"tecnica\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/habilidades",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "habilidades"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra una habilidad específica del estudiante."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06. Puestos de Empleo y Aplicantes",
+      "item": [
+        {
+          "name": "Crear Puesto de Empleo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Empleo - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Empleo - Título y salario almacenados correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Titulo).to.equal(\"Ingeniero de Software Backend\");",
+                  "    pm.expect(responseJson.data.Salario).to.equal(1200000);",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"puestoId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Titulo\": \"Ingeniero de Software Backend\",\n  \"Descripcion\": \"Se requiere programador Node.js para mantenimiento de APIs REST.\",\n  \"Requisitos\": \"Graduado universitario, 2 años de experiencia en Express y Git.\",\n  \"Ubicacion\": \"San José, Costa Rica (Híbrido)\",\n  \"Salario\": 1200000,\n  \"Activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/puestos-empleo",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "puestos-empleo"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Publica una nueva oferta de empleo."
+          },
+          "response": []
+        },
+        {
+          "name": "Aplicar a Puesto de Empleo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Aplicar a Empleo - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Aplicar a Empleo - Relaciones vinculadas correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.IdPuestoEmpleo).to.equal(Number(pm.environment.get(\"puestoId\")));",
+                  "    pm.expect(responseJson.data.IdUsuario).to.equal(pm.environment.get(\"userId\"));",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"aplicanteId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdPuestoEmpleo\": {{puestoId}},\n  \"IdUsuario\": \"{{userId}}\",\n  \"Comentarios\": \"Adjunto mi perfil académico enfocado en APIs REST.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/aplicantes",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "aplicantes"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Envía una aplicación de empleo para el estudiante autenticado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07. Donaciones",
+      "item": [
+        {
+          "name": "Crear Donación (Exalumno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Donación - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Donación - Datos y estado pendiente almacenados\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Monto).to.equal(50000);",
+                  "    pm.expect(responseJson.data.Moneda).to.equal(\"CRC\");",
+                  "    pm.expect(responseJson.data.Estado).to.equal(\"pendiente\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"donacionId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuarioExalumno\": \"{{userId}}\",\n  \"IdTipoPago\": 2,\n  \"Monto\": 50000,\n  \"IdProyecto\": 1,\n  \"Moneda\": \"CRC\",\n  \"NumeroReferencia\": \"REF-112233\",\n  \"Comprobante\": \"https://transferencias.ucr.ac.cr/comprobante1.jpg\",\n  \"Mensaje\": \"Apoyo a becados del TCU.\",\n  \"Estado\": \"pendiente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/donaciones",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "donaciones"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra una nueva donación en estado pendiente."
+          },
+          "response": []
+        },
+        {
+          "name": "Aprobar Donación (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Aprobar Donación - Código de estado es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Aprobar Donación - Estado actualizado a aprobado en BD\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Estado).to.equal(\"aprobado\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Estado\": \"aprobado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/donaciones/{{donacionId}}",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "donaciones",
+                "{{donacionId}}"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Actualiza el estado de la donación a aprobado. Solo administradores."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08. Proyectos de Graduación",
+      "item": [
+        {
+          "name": "Crear Proyecto de Graduación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Proyecto - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Proyecto - Título e info correctos\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.TituloProyecto).to.equal(\"Asistente Virtual para Orientación de Estudiantes\");",
+                  "    pm.expect(responseJson.data.AreaTematica).to.equal(\"Inteligencia Artificial\");",
+                  "    pm.expect(responseJson.data.ProyectoFinalizado).to.be.false;",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"proyectoId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"TituloProyecto\": \"Asistente Virtual para Orientación de Estudiantes\",\n  \"Descripcion\": \"Creación de un bot interactivo de ayuda.\",\n  \"IdTipoProyecto\": 2,\n  \"AreaTematica\": \"Inteligencia Artificial\",\n  \"PorcentajeAvance\": 10,\n  \"ProyectoFinalizado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/proyectos-graduacion",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "proyectos-graduacion"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra un nuevo proyecto de tesis o graduación."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09. Áreas de Interés",
+      "item": [
+        {
+          "name": "Crear Área de Interés (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Área de Interés - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Área de Interés - Datos registrados\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Ciencia de Datos\");",
+                  "    pm.expect(responseJson.data.Descripcion).to.be.a('string');",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"areaId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Ciencia de Datos\",\n  \"Descripcion\": \"Machine learning, análisis de datos masivos y estadística.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/areas-interes",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "areas-interes"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una nueva área temática en el catálogo global."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Información de Exalumnos",
+      "item": [
+        {
+          "name": "Crear Información de Exalumno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Info Exalumno - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Info Exalumno - Datos guardados correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Pais).to.equal(\"Costa Rica\");",
+                  "    pm.expect(responseJson.data.Cargo).to.equal(\"Desarrollador Backend Senior\");",
+                  "    pm.expect(responseJson.data.OfreceMentoria).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuario\": \"{{userId}}\",\n  \"Pais\": \"Costa Rica\",\n  \"Ciudad\": \"Cartago\",\n  \"URLLinkedIn\": \"https://linkedin.com/in/exalumno_completo\",\n  \"Biografia\": \"Profesional enfocado en desarrollo de software y mentorías universitarias.\",\n  \"Empresa\": \"Tecnología Avanzada S.A.\",\n  \"Cargo\": \"Desarrollador Backend Senior\",\n  \"AnosExperiencia\": 5,\n  \"OfreceMentoria\": true,\n  \"HorasDisponiblesMes\": 4,\n  \"OfreceEmpleo\": true,\n  \"OfrecePasantia\": true,\n  \"OfreceColaboracion\": true,\n  \"OfreceDonacion\": true,\n  \"Estado\": \"activo\",\n  \"MontoMaximoDonacion\": 100000,\n  \"Moneda\": \"CRC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/informacion-exalumnos",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "informacion-exalumnos"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea el perfil extendido y catálogo de colaboración del exalumno."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11. Catálogos del Sistema (Config)",
+      "item": [
+        {
+          "name": "Crear Rol (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Rol - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Rol - Rol correcto\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Administrador Auxiliar\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"rolId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Administrador Auxiliar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/roles",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "roles"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra un nuevo rol administrativo. Guarda el ID en `rolId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Beca Socioeconómica (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Beca - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Beca - Nombre de beca correcto\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Beca 5 (Completa UCR)\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"becaId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Beca 5 (Completa UCR)\",\n  \"Descripcion\": \"Cubre el 100% de matrícula y un subsidio de alimentación y transporte.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/becas-socioeconomicas",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "becas-socioeconomicas"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una nueva categoría de beca. Guarda el ID resultante en `becaId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Tipo de Pago (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Tipo Pago - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Tipo Pago - Descripción correcta\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Descripcion).to.equal(\"Transferencia SINPE Móvil\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"tipoPagoId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Descripcion\": \"Transferencia SINPE Móvil\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/tipos-pago",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "tipos-pago"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Registra un método de pago. Guarda el ID en `tipoPagoId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Sector (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Sector - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Sector - Nombre guardado correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Tecnologías de la Información\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"sectorId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Tecnologías de la Información\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/sectores",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "sectores"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea un nuevo sector y guarda el ID resultante en `sectorId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Necesidad Específica (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Necesidad - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Necesidad - Nombre registrado correctamente\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Nombre).to.equal(\"Adecuación de Acceso de Silla de Ruedas\");",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"necesidadId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Nombre\": \"Adecuación de Acceso de Silla de Ruedas\",\n  \"Descripcion\": \"Requerimiento de rampas y ascensores adaptados.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/necesidades-especificas",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "necesidades-especificas"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una categoría de necesidad de accesibilidad. Guarda el ID en `necesidadId`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12. Reportes de Usuarios",
+      "item": [
+        {
+          "name": "Crear Reporte de Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Crear Reporte - Código de estado es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Crear Reporte - Datos de denuncia guardados en BD\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.Motivo).to.equal(\"Spam comercial en mensajes del foro\");",
+                  "    pm.expect(responseJson.data.IdUsuarioEmisor).to.equal(pm.environment.get(\"userId\"));",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.Id) {",
+                  "    pm.environment.set(\"reporteId\", responseJson.data.Id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"IdUsuarioEmisor\": \"{{userId}}\",\n  \"IdUsuarioReportado\": \"{{userId}}\",\n  \"Motivo\": \"Spam comercial en mensajes del foro\",\n  \"Detalle\": \"El usuario está publicando repetidamente enlaces a cursos externos pagados.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/reportes-usuarios",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "reportes-usuarios"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Crea una denuncia contra otro usuario. Almacena el ID del reporte en `reporteId`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "13. General y Salud",
+      "item": [
+        {
+          "name": "Health Check (Salud del Servidor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Salud del Servidor - Servidor activo con estado 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Salud del Servidor - Respuesta contiene éxito\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "    pm.expect(responseJson.message).to.equal(\"Backend corriendo 🟢\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/health",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "health"
+              ],
+              "protocol": "http",
+              "port": "5000"
+            },
+            "description": "Comprueba el estado de ejecución y conexión de la API."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

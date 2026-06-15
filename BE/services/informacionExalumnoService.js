@@ -186,6 +186,26 @@ const obtenerExalumnosOfrecenDonacion = async () => {
 
 
 // ======================================================
+// OBTENER EXALUMNOS PARA EL DIRECTORIO (RF-04)
+// Solo perfiles con estado = true (= "perfil_completo", ver nota
+// en informacion.exalumno.controller.js).
+// ⚠️ NO incluir monto_maximo_donacion ni moneda (RF-02: visible
+// solo para el propio exalumno y el admin).
+// ======================================================
+const obtenerExalumnosDirectorio = async () => {
+
+    const { data, error } = await supabase
+        .from(TABLA)
+        .select('id_usuario, foto_perfil, pais, ciudad, url_linkedin, biografia, empresa, cargo, anos_experiencia, ofrece_mentoria, horas_disponibles_mes, ofrece_empleo, ofrece_pasantia, ofrece_colaboracion, ofrece_donacion')
+        .eq('estado', true);
+
+    if (error) throw mapDbError(error);
+
+    return data;
+};
+
+
+// ======================================================
 // EXPORTAR SERVICES
 // ======================================================
 
@@ -198,5 +218,6 @@ module.exports = {
     obtenerExalumnosMentores,
     obtenerExalumnosOfrecenEmpleo,
     obtenerExalumnosOfrecenPasantia,
-    obtenerExalumnosOfrecenDonacion
+    obtenerExalumnosOfrecenDonacion,
+    obtenerExalumnosDirectorio
 };

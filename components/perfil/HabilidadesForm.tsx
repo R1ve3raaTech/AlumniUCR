@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { obtenerHabilidadesDelEstudiante, guardarHabilidades } from '@/lib/habilidades';
 import styles from './perfil.module.css';
 
-export default function HabilidadesForm() {
+export default function HabilidadesForm({ onGuardado }: { onGuardado?: () => void }) {
   const { token, user } = useAuth();
 
   const [cargando, setCargando] = useState(true);
@@ -102,6 +102,7 @@ export default function HabilidadesForm() {
       setTags(tagsFinales);
       setEntrada('');
       setExito(true);
+      onGuardado?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar tus habilidades.');
     } finally {
