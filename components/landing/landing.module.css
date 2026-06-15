@@ -232,6 +232,60 @@
   border-radius: 2px;
 }
 
+.navSearchForm {
+  display: flex;
+  align-items: center;
+  background: var(--ucr-surface-container);
+  border-radius: 2rem;
+  padding: 0.2rem 0.5rem 0.2rem 1rem;
+  border: 1px solid var(--ucr-outline-variant);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navSearchForm:focus-within {
+  border-color: var(--ucr-celeste);
+  box-shadow: 0 0 0 2px rgba(84, 188, 235, 0.2);
+}
+
+.navSearchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-brand-body);
+  font-size: 0.95rem;
+  color: var(--ucr-on-surface);
+  width: 180px;
+  transition: width 0.3s ease;
+}
+
+.navSearchInput::placeholder {
+  color: var(--ucr-on-surface-variant);
+}
+
+.navSearchBtn {
+  background: var(--ucr-celeste);
+  color: var(--brand-blanco);
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.navSearchBtn:hover {
+  transform: scale(1.05);
+  background: var(--ucr-secondary);
+}
+
+.navSearchBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* ─── Logo ────────────────────────────────────────────────────────── */
 .brandLogo {
   display: inline-flex;
@@ -762,13 +816,13 @@
 .testiTitle {
   text-align: center;
   color: var(--brand-blanco);
-  margin-bottom: 4rem;
+  margin-bottom: 5rem;
 }
 
 .testiGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 3rem;
+  gap: 5rem;
 }
 
 .testiCard {
@@ -1053,6 +1107,7 @@
 
   .testiGrid {
     grid-template-columns: 1fr;
+    gap: 3rem;
   }
 
   .slide {

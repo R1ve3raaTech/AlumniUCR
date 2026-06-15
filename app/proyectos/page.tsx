@@ -80,9 +80,41 @@ const PROYECTOS: Proyecto[] = [
   },
 ];
 
+import { useSearchParams } from 'next/navigation';
+
 export default function ProyectosPage() {
+  return (
+    <React.Suspense fallback={<div className={styles.page}>Cargando...</div>}>
+      <ProyectosContent />
+    </React.Suspense>
+  );
+}
+
+function ProyectosContent() {
   const [areaActiva, setAreaActiva] = useState(0);
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q') || '';
+
+  const areaSeleccionada = AREAS[areaActiva];
+
+  const proyectosFiltrados = PROYECTOS.filter((p) => {
+    // Filtrar por área
+    if (areaSeleccionada !== 'Todas las áreas' && p.area !== areaSeleccionada) {
+      return false;
+    }
+    // Filtrar por texto de búsqueda
+    if (query) {
+      const q = query.toLowerCase();
+      const matchTitulo = p.titulo.toLowerCase().includes(q);
+      const matchArea = p.area.toLowerCase().includes(q);
+      const matchAutor = p.autor.nombre.toLowerCase().includes(q);
+      if (!matchTitulo && !matchArea && !matchAutor) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <div className={styles.page}>
@@ -132,12 +164,15 @@ export default function ProyectosPage() {
 
           {/* Grilla de proyectos */}
           <div className={styles.grid}>
-            {PROYECTOS.map((p) => (
-              <article key={p.titulo} className={styles.card}>
-                <div className={styles.cardMedia}>
-                  <img className={styles.cardImg} src={p.img} alt={p.titulo} />
-                  <span className={styles.afinidad}>{p.afinidad}</span>
-                </div>
+            {proyectosFiltrados.length === 0 ? (
+              <div className={styles.noResults}>No se encontraron proyectos.</div>
+            ) : (
+              proyectosFiltrados.map((p) => (
+                <article key={p.titulo} className={styles.card}>
+                  <div className={styles.cardMedia}>
+                    <img className={styles.cardImg} src={p.img} alt={p.titulo} />
+                    <span className={styles.afinidad}>{p.afinidad}</span>
+                  </div>
                 <div className={styles.cardBody}>
                   <p className={styles.cardArea}>{p.area}</p>
                   <h3 className={styles.cardTitle}>{p.titulo}</h3>
@@ -177,7 +212,7 @@ export default function ProyectosPage() {
                   </div>
                 </div>
               </article>
-            ))}
+            )))}
           </div>
 
           {/* Paginación */}
