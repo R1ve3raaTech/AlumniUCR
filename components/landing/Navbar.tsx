@@ -2,64 +2,62 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
 
-// Navegación pública: anclas a las secciones del landing. "Proyectos" lleva a
-// la página dedicada /proyectos (ruta interna, no ancla).
+// Navegación pública
 const LINKS = [
-  { label: 'Inicio', href: '#inicio' },
+  { label: 'Inicio', href: '/' },
   { label: 'Proyectos', href: '/proyectos' },
   { label: 'Mentorías', href: '/mentorias' },
-  { label: 'Directorio', href: '/directorio' },
-  { label: 'Impacto', href: '#impacto' },
-  { label: 'Historias', href: '#historias' },
 ];
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
   const [abierto, setAbierto] = useState(false);
+  const pathname = usePathname();
 
   const cerrar = () => setAbierto(false);
 
   return (
     <nav className={styles.navbar}>
       <div className={`${styles.container} ${styles.navInner}`}>
-        <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrar}>
-          <BrandLogo />
-        </Link>
+        <div className={styles.navLeft}>
+          <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrar}>
+            <BrandLogo />
+          </Link>
+        </div>
 
         <div className={`${styles.navLinks} ${abierto ? styles.navLinksOpen : ''}`}>
-          {LINKS.map((l, i) =>
-            l.href.startsWith('/') ? (
+          {LINKS.map((l) => {
+            const isActive = pathname === l.href;
+            return (
               <Link
                 key={l.href}
                 href={l.href}
-                className={styles.navLink}
+                className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}
                 onClick={cerrar}
               >
                 {l.label}
               </Link>
-            ) : (
-              <a
-                key={l.href}
-                href={l.href}
-                className={`${styles.navLink} ${i === 0 ? styles.navLinkActive : ''}`}
-                onClick={cerrar}
-              >
-                {l.label}
-              </a>
-            ),
-          )}
+            );
+          })}
 
-          <Link href="/ayuda" className={styles.navLink} onClick={cerrar}>
+          <Link 
+            href="/ayuda" 
+            className={`${styles.navLink} ${pathname === '/ayuda' ? styles.navLinkActive : ''}`} 
+            onClick={cerrar}
+          >
             Ayuda
           </Link>
+        </div>
 
+        <div className={styles.navRight}>
           {user ? (
             <>
-              <Link href="/dashboard" className={styles.navLink} onClick={cerrar}>
+              <Link href="/dashboard" className={styles.navCta} onClick={cerrar}>
                 Dashboard
               </Link>
               <button
@@ -75,7 +73,7 @@ export default function Navbar() {
             </>
           ) : (
             <Link href="/registro" className={styles.navCta} onClick={cerrar}>
-              Unirse
+              Unete
             </Link>
           )}
         </div>

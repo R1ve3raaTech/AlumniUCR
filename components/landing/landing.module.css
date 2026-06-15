@@ -144,20 +144,34 @@
   align-items: center;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  gap: 1rem;
   position: relative;
+}
+
+.navLeft {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.navRight {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
 }
 
 .navLinks {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
 }
 
 .navLink {
   font-family: var(--font-brand-body);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   letter-spacing: 0.04em;
   color: var(--ucr-on-surface-variant);
   background: none;
