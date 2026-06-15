@@ -4,6 +4,106 @@
    Flujo: selección de rol + datos → magic link al correo institucional.
    ════════════════════════════════════════════════════════════════════ */
 
+/* ─── Campos del exalumno (autodeclaración) ───────────────────────────── */
+
+/* Botón mostrar/ocultar contraseña dentro del input. */
+.toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ucr-outline);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.toggle:hover {
+  color: var(--ucr-secondary);
+}
+
+/* Texto de ayuda bajo un campo. */
+.hint {
+  font-size: 0.75rem;
+  color: var(--ucr-outline);
+}
+
+/* Caja con scroll para la selección múltiple de carreras. */
+.carrerasBox {
+  max-height: 12rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--ucr-surface-variant);
+  border-radius: 0.5rem;
+  background: var(--brand-blanco);
+}
+
+.carreraItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ucr-on-surface);
+  cursor: pointer;
+  user-select: none;
+}
+
+.carreraItem input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--ucr-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Aviso cuando un exalumno usa correo @ucr.ac.cr. */
+.ucrPrompt {
+  background: var(--ucr-surface-container);
+  border: 1px solid var(--ucr-outline-variant);
+  border-left: 4px solid var(--ucr-secondary);
+  border-radius: 0.5rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--ucr-on-surface-variant);
+}
+
+.ucrPromptActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.ucrPromptOk {
+  font-weight: 600;
+  color: var(--ucr-esmeralda);
+  font-size: 0.85rem;
+}
+
+.ucrPromptActions button {
+  background: none;
+  border: none;
+  color: var(--ucr-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+  .carrerasBox {
+    grid-template-columns: 1fr;
+  }
+}
+
 .page {
   position: relative;
   min-height: 100vh;

@@ -121,4 +121,59 @@ const enviarCorreoRecuperacion = async ({ correo, url }) => {
   }
 };
 
-module.exports = { enviarCorreoAprobacion, enviarCorreoRecuperacion, CORREO_APROBADOR };
+/**
+ * Envía al exalumno el enlace para confirmar su cuenta (registro por
+ * autodeclaración). Hasta confirmar, la cuenta queda pendiente.
+ * @param {object} params
+ * @param {string} params.nombre
+ * @param {string} params.correo  Destinatario.
+ * @param {string} params.url     Enlace de confirmación (con token).
+ * @returns {Promise<boolean>}
+ */
+const enviarCorreoConfirmacionExalumno = async ({ nombre, correo, url }) => {
+  if (!resend) {
+    console.warn(
+      '⚠️  RESEND_API_KEY no configurada: no se envió el correo de confirmación. ' +
+        `Confirmar manualmente: ${url}`,
+    );
+    return false;
+  }
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
+      <h2 style="color:#004C63">Confirma tu cuenta de exalumno</h2>
+      <p>Hola ${nombre || ''}, gracias por unirte a la red Alumni UCR.</p>
+      <p>Confirma tu correo para activar tu cuenta:</p>
+      <p style="margin:24px 0">
+        <a href="${url}" style="background:#F34B26;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Confirmar mi cuenta</a>
+      </p>
+      <p style="font-size:13px;color:#666">Si no creaste esta cuenta, ignora este correo.</p>
+    </div>`;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: REMITENTE,
+      to: correo,
+      subject: 'Confirma tu cuenta — Alumni UCR',
+      html,
+    });
+    if (error) {
+      console.error('🔴 Error al enviar el correo de confirmación:', error.message || error);
+      console.warn(`🔗 Enlace de confirmación: ${url}`);
+      return false;
+    }
+    console.log(`📧 Correo de confirmación enviado a ${correo}.`);
+    return true;
+  } catch (err) {
+    console.error('🔴 Excepción al enviar el correo de confirmación:', err.message);
+    console.warn(`🔗 Enlace de confirmación: ${url}`);
+    return false;
+  }
+};
+
+module.exports = {
+  enviarCorreoAprobacion,
+  enviarCorreoRecuperacion,
+  enviarCorreoConfirmacionExalumno,
+  CORREO_APROBADOR,
+};

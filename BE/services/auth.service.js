@@ -2,7 +2,11 @@ const supabase = require('../config/supabase');
 const supabaseAuth = require('../config/supabaseAuth');
 const { mapDbError } = require('../utils/dbError');
 const { generarToken, verificarToken } = require('../utils/aprobacionToken');
-const { enviarCorreoAprobacion, enviarCorreoRecuperacion } = require('./email.service');
+const {
+  enviarCorreoAprobacion,
+  enviarCorreoRecuperacion,
+  enviarCorreoConfirmacionExalumno,
+} = require('./email.service');
 
 // Mapa de rol (string del endpoint) -> id_rol en la tabla 'roles'
 // (1 = Estudiante, 2 = Exalumno).
@@ -71,6 +75,94 @@ const registerUser = async (correo, contrasena, rol) => {
   await notificarAprobacion(userData, rol);
 
   return { auth: authData.user, perfil: userData };
+};
+
+/**
+ * Registro de exalumno por autodeclaración (RF). Crea la cuenta con correo +
+ * contraseña y guarda los datos académicos autodeclarados en el user_metadata
+ * de Auth (carreras, escuela/facultad, año de graduación). La cuenta queda
+ * PENDIENTE y NO CONFIRMADA: requiere confirmar el correo para activarse.
+ */
+const registrarExalumnoAutodeclaracion = async ({
+  correo,
+  contrasena,
+  nombre,
+  carreras,
+  facultad,
+  anioGraduacion,
+}) => {
+  // 1. Crear el usuario en Supabase Auth con los datos autodeclarados.
+  const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
+    email: correo,
+    password: contrasena,
+    options: {
+      data: {
+        rol: 'exalumno',
+        nombre,
+        carreras,
+        escuela_facultad: facultad,
+        anio_graduacion: anioGraduacion,
+      },
+    },
+  });
+  if (authError) {
+    authError.statusCode = authError.message?.includes('already') ? 409 : 400;
+    throw authError;
+  }
+
+  // 2. Crear el perfil en 'usuarios'. Nace pendiente y sin confirmar: no podrá
+  //    iniciar sesión ni aparecer en el directorio hasta confirmar el correo.
+  const { data: perfil, error: perfilError } = await supabase
+    .from('usuarios')
+    .upsert(
+      {
+        id: authData.user.id,
+        nombre: nombre.trim(),
+        correo_electronico: correo,
+        id_rol: ROLES.exalumno,
+        confirmado: false,
+        estado: 'pendiente',
+      },
+      { onConflict: 'id' },
+    )
+    .select()
+    .single();
+  if (perfilError) throw mapDbError(perfilError);
+
+  // 3. Enviar el correo de confirmación con un enlace firmado (scope 'confirm').
+  //    No se hace await: el envío no debe bloquear ni demorar la respuesta del
+  //    registro (la función captura sus propios errores y registra el enlace).
+  const token = generarToken(perfil.id, 'confirm');
+  const url = `${BACKEND_URL}/api/auth/confirmar-exalumno/${perfil.id}?token=${token}`;
+  enviarCorreoConfirmacionExalumno({ nombre: nombre.trim(), correo, url }).catch(() => {});
+
+  return { perfil };
+};
+
+/**
+ * Confirma la cuenta de un exalumno desde el enlace del correo: valida el token
+ * firmado y marca el perfil como confirmado y activo.
+ */
+const confirmarExalumno = async (userId, token) => {
+  if (!verificarToken(userId, token, 'confirm')) {
+    const err = new Error('Enlace de confirmación inválido o expirado.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { data: perfil, error } = await supabase
+    .from('usuarios')
+    .update({ confirmado: true, estado: 'activo' })
+    .eq('id', userId)
+    .select('nombre, correo_electronico')
+    .maybeSingle();
+  if (error) throw error;
+  if (!perfil) {
+    const err = new Error('La cuenta indicada no existe.');
+    err.statusCode = 404;
+    throw err;
+  }
+  return perfil;
 };
 
 const loginUser = async (correo, contrasena) => {
@@ -293,6 +385,8 @@ const restablecerContrasena = async (uid, token, contrasena) => {
 
 module.exports = {
   registerUser,
+  registrarExalumnoAutodeclaracion,
+  confirmarExalumno,
   loginUser,
   solicitarMagicLink,
   verificarMagicLink,

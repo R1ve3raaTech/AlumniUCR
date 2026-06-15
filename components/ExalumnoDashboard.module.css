@@ -343,6 +343,25 @@
   word-break: break-word;
 }
 
+.datoFull {
+  grid-column: 1 / -1;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  background: rgba(0, 76, 99, 0.08);
+  color: var(--brand-esmeralda);
+  border: 1px solid rgba(0, 76, 99, 0.15);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+}
+
 .estado {
   width: fit-content;
   font-size: 0.75rem;
