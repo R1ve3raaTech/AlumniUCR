@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('../controllers/auth.controller');
+const autenticarUsuario = require('../middlewares/auth.middleware');
+
+// Perfil del usuario autenticado (incluye su rol).
+router.get('/perfil', autenticarUsuario, authController.obtenerPerfil);
 
 router.post('/register/estudiante', authController.registerEstudiante);
 router.post('/register/exalumno', authController.registerExalumno);

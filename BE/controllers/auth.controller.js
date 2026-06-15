@@ -223,6 +223,15 @@ const restablecerContrasena = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────
+//  PERFIL DEL USUARIO ACTUAL
+// ─────────────────────────────────────────────
+// Devuelve el perfil (con su rol) del usuario autenticado. El middleware de
+// autenticación ya carga req.user.profile con el join a roles(nombre).
+const obtenerPerfil = async (req, res) => {
+  res.status(200).json({ success: true, data: req.user.profile });
+};
+
+// ─────────────────────────────────────────────
 //  LOGIN
 // ─────────────────────────────────────────────
 const login = async (req, res, next) => {
@@ -246,4 +255,5 @@ module.exports = {
   rechazarCuenta,
   solicitarRecuperacion,
   restablecerContrasena,
+  obtenerPerfil,
 };
