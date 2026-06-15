@@ -4,7 +4,7 @@ const carrerasUsuarioController = require('../controllers/carreras.usuario.contr
 const autenticarUsuario = require('../middlewares/auth.middleware');
 const exigirRol = require('../middlewares/role.middleware');
 
-router.get('/', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), carrerasUsuarioController.obtenerCarrerasUsuario);
+router.get('/', carrerasUsuarioController.obtenerCarrerasUsuario);
 router.get('/usuario/:idUsuario', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), carrerasUsuarioController.obtenerCarrerasPorUsuario);
 router.get('/carrera/:idCarrera', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), carrerasUsuarioController.obtenerUsuariosPorCarrera);
 router.get('/sede/:idSede', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), carrerasUsuarioController.obtenerUsuariosPorSede);
