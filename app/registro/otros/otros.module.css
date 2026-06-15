@@ -1,0 +1,302 @@
+/* ════════════════════════════════════════════════════════════════════
+   Formulario de colaborador/voluntario (opción "Otros" del registro).
+   Coherente con la pantalla de registro. Tokens de marca --ucr- y --brand-.
+   ════════════════════════════════════════════════════════════════════ */
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ucr-surface);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
+  overflow-x: hidden;
+}
+
+/* Fondo decorativo */
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bgCircle {
+  position: absolute;
+  top: -120px;
+  right: -100px;
+  width: 22rem;
+  height: 22rem;
+  border: 2px dashed rgba(0, 102, 135, 0.15);
+  border-radius: 50%;
+}
+
+.bgBlock {
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 20rem;
+  height: 20rem;
+  background: var(--ucr-secondary-container);
+  opacity: 0.08;
+  transform: skewX(-18deg);
+}
+
+/* ─── Cabecera ────────────────────────────────────────────────────── */
+.header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 1rem clamp(1rem, 4vw, 64px);
+}
+
+.brand {
+  display: block;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ucr-on-surface-variant);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: opacity 0.2s ease;
+}
+
+.backLink svg {
+  width: 18px;
+  height: 18px;
+}
+
+.backLink:hover {
+  opacity: 0.75;
+}
+
+/* ─── Contenido ───────────────────────────────────────────────────── */
+.main {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: clamp(1.5rem, 1rem + 2vw, 3rem) clamp(1rem, 4vw, 2rem);
+}
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-surface-variant);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px -20px rgba(0, 52, 69, 0.25);
+  padding: clamp(1.5rem, 1rem + 3vw, 3rem);
+}
+
+.intro {
+  margin-bottom: 2rem;
+}
+
+.tag {
+  display: inline-block;
+  background: var(--ucr-surface-container);
+  color: var(--ucr-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.4rem);
+  color: var(--ucr-primary);
+  margin: 0 0 0.5rem;
+  line-height: 1.1;
+}
+
+.subtitle {
+  color: var(--ucr-on-surface-variant);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ─── Formulario ──────────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--ucr-primary);
+}
+
+.input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--ucr-surface-variant);
+  border-radius: 0.5rem;
+  font-family: var(--font-brand-body);
+  font-size: 1rem;
+  color: var(--ucr-on-surface);
+  background: var(--brand-blanco);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--ucr-outline);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ucr-secondary);
+  box-shadow: 0 0 0 4px rgba(0, 102, 135, 0.1);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.submit {
+  width: 100%;
+  background: var(--ucr-naranja);
+  color: var(--brand-blanco);
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px -8px rgba(243, 75, 38, 0.5);
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.submit:hover {
+  filter: brightness(1.05);
+}
+
+.submit:active {
+  transform: scale(0.99);
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.formError {
+  background: #ffdad6;
+  color: #93000a;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ─── Vista de éxito ──────────────────────────────────────────────── */
+.success {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: rgba(0, 125, 103, 0.12);
+  color: var(--ucr-esmeralda);
+  margin-bottom: 1.5rem;
+}
+
+.successIcon svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.successText {
+  color: var(--ucr-on-surface-variant);
+  line-height: 1.6;
+  max-width: 30rem;
+  margin: 0 0 2rem;
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────── */
+.footer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 64px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.footerCopy {
+  font-size: 0.8rem;
+  color: var(--ucr-outline);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}
