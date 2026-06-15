@@ -45,6 +45,7 @@ interface ErroresFormulario {
   nivelAcademico?: string;
   promedio?: string;
   anoGraduacion?: string;
+  apoyo?: string;
 }
 
 interface InformacionAcademicaFormProps {
@@ -184,6 +185,10 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
       nivelAcademico: idNivelAcademico ? undefined : 'Selecciona tu nivel académico.',
       promedio: validarPromedioPonderado(promedioPonderado) ?? undefined,
       anoGraduacion: validarAnoGraduacion(anoGraduacion) ?? undefined,
+      apoyo:
+        buscaFinanciamiento || buscaMentoria || buscaEmpleo || buscaPasantia
+          ? undefined
+          : 'Selecciona al menos un tipo de apoyo buscado.',
     };
     setErrores(nuevosErrores);
     if (Object.values(nuevosErrores).some(Boolean)) return;
@@ -453,12 +458,16 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
 
       <div className={styles.field}>
         <span className={styles.label}>Tipo de apoyo buscado</span>
+        <span className={styles.ayuda}>Selecciona al menos una opción.</span>
         <div className={styles.checkboxGrid}>
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
               checked={buscaFinanciamiento}
-              onChange={(e) => setBuscaFinanciamiento(e.target.checked)}
+              onChange={(e) => {
+                setBuscaFinanciamiento(e.target.checked);
+                if (errores.apoyo) setErrores((er) => ({ ...er, apoyo: undefined }));
+              }}
             />
             Financiamiento económico
           </label>
@@ -466,7 +475,10 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
             <input
               type="checkbox"
               checked={buscaMentoria}
-              onChange={(e) => setBuscaMentoria(e.target.checked)}
+              onChange={(e) => {
+                setBuscaMentoria(e.target.checked);
+                if (errores.apoyo) setErrores((er) => ({ ...er, apoyo: undefined }));
+              }}
             />
             Mentoría técnica
           </label>
@@ -474,7 +486,10 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
             <input
               type="checkbox"
               checked={buscaEmpleo}
-              onChange={(e) => setBuscaEmpleo(e.target.checked)}
+              onChange={(e) => {
+                setBuscaEmpleo(e.target.checked);
+                if (errores.apoyo) setErrores((er) => ({ ...er, apoyo: undefined }));
+              }}
             />
             Empleo mientras estudia
           </label>
@@ -482,11 +497,15 @@ export default function InformacionAcademicaForm({ onGuardado }: InformacionAcad
             <input
               type="checkbox"
               checked={buscaPasantia}
-              onChange={(e) => setBuscaPasantia(e.target.checked)}
+              onChange={(e) => {
+                setBuscaPasantia(e.target.checked);
+                if (errores.apoyo) setErrores((er) => ({ ...er, apoyo: undefined }));
+              }}
             />
             Pasantía relacionada
           </label>
         </div>
+        {errores.apoyo && <span className={styles.fieldError}>{errores.apoyo}</span>}
       </div>
 
       <div className={styles.field}>

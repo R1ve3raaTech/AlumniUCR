@@ -102,6 +102,16 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        <section className={`glass-card ${styles.panel}`}>
+          <h2 className={styles.panelTitle}>Mi perfil</h2>
+          <p className={styles.welcomeText}>
+            Completa y actualiza tu información académica, proyecto de graduación y habilidades.
+          </p>
+          <Link href="/perfil-estudiante" className="btn-primary">
+            Ir a mi perfil
+          </Link>
+        </section>
+
         {/* Panel solo visible para administradores (se autodetecta por el rol). */}
         {token && <AdminSolicitudes token={token} />}
       </main>

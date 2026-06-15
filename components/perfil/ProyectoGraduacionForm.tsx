@@ -259,6 +259,7 @@ export default function ProyectoGraduacionForm() {
           placeholder="Ej. Sistema de gestión de prácticas profesionales"
           required
         />
+        <span className={styles.contador}>{titulo.length}/200</span>
         {errores.titulo && <span className={styles.fieldError}>{errores.titulo}</span>}
       </div>
 
