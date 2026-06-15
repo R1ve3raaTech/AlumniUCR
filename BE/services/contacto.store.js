@@ -27,13 +27,27 @@ const guardarTodo = async (lista) => {
 
 const listar = () => leerTodo();
 
-/** Crea una solicitud (evita duplicar una pendiente/aceptada del mismo par). */
+/** Crea una solicitud (evita duplicar el mismo par; reactiva una rechazada). */
 const crear = async ({ id_estudiante, id_exalumno, nombre_exalumno, mensaje }) => {
   const lista = await leerTodo();
-  const existente = lista.find(
-    (s) => s.id_estudiante === id_estudiante && s.id_exalumno === id_exalumno && s.estado !== 'rechazada',
+  const i = lista.findIndex(
+    (s) => s.id_estudiante === id_estudiante && s.id_exalumno === id_exalumno,
   );
-  if (existente) return existente;
+  if (i !== -1) {
+    // Si ya existe una pendiente/aceptada, se reutiliza. Si estaba rechazada,
+    // se reactiva a 'pendiente' en lugar de crear un duplicado huérfano.
+    if (lista[i].estado === 'rechazada') {
+      lista[i] = {
+        ...lista[i],
+        estado: 'pendiente',
+        nombre_exalumno,
+        mensaje: mensaje || '',
+        updated_at: new Date().toISOString(),
+      };
+      await guardarTodo(lista);
+    }
+    return lista[i];
+  }
 
   const ahora = new Date().toISOString();
   const solicitud = {

@@ -84,7 +84,13 @@ const obtenerDirectorioParaExalumno = async (idExalumno) => {
     .map((u) => {
       const card = tarjetaEstudiante(u, d);
       if (!card) return null;
-      const sol = solicitudes.find((s) => s.id_estudiante === u.id && s.id_exalumno === idExalumno);
+      // Puede haber más de una solicitud por par (p. ej. rechazada y luego
+      // re-solicitada): se prioriza la aceptada y, en su defecto, la más
+      // reciente, en vez de la primera en orden de inserción.
+      const delPar = solicitudes.filter((s) => s.id_estudiante === u.id && s.id_exalumno === idExalumno);
+      const sol =
+        delPar.find((s) => s.estado === 'aceptada') ||
+        delPar.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))[0];
       const estadoSolicitud = sol ? sol.estado : null;
       const aceptada = estadoSolicitud === 'aceptada';
       const info = d.infoPorUsuario.get(u.id);
