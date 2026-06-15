@@ -3,16 +3,30 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
-import InformacionAcademicaForm from '@/components/perfil/InformacionAcademicaForm';
-import ProyectoGraduacionForm from '@/components/perfil/ProyectoGraduacionForm';
-import HabilidadesForm from '@/components/perfil/HabilidadesForm';
-import SolicitudesContacto from '@/components/perfil/SolicitudesContacto';
+import perfilStyles from '@/components/perfil/perfil.module.css';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
 import { obtenerProyectoDelEstudiante } from '@/lib/proyectoGraduacion';
 import { obtenerHabilidadesDelEstudiante } from '@/lib/habilidades';
-import perfilStyles from '@/components/perfil/perfil.module.css';
+
+// Carga diferida de los formularios (cada uno trae sus propios catálogos y
+// estado): reduce el JS inicial de /perfil-estudiante y el costo de
+// montar/desmontar la página al navegar hacia/desde el dashboard.
+const cargando = <p className={perfilStyles.cargando}>Cargando…</p>;
+const InformacionAcademicaForm = dynamic(() => import('@/components/perfil/InformacionAcademicaForm'), {
+  loading: () => cargando,
+});
+const ProyectoGraduacionForm = dynamic(() => import('@/components/perfil/ProyectoGraduacionForm'), {
+  loading: () => cargando,
+});
+const HabilidadesForm = dynamic(() => import('@/components/perfil/HabilidadesForm'), {
+  loading: () => cargando,
+});
+const SolicitudesContacto = dynamic(() => import('@/components/perfil/SolicitudesContacto'), {
+  loading: () => cargando,
+});
 
 // Página del perfil de estudiante (RF-03). Incluye la Sección 1 (Información
 // Académica / Situación Socioeconómica), la Sección 3 (Proyecto de
