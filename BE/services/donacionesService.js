@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'donaciones';
 
@@ -13,9 +14,7 @@ const obtenerDonaciones = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerDonacionPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,28 +45,27 @@ const obtenerDonacionPorId = async (id) => {
 const crearDonacion = async (donacionData) => {
 
     const nuevaDonacion = {
-        IdUsuarioExalumno: donacionData.IdUsuarioExalumno,
-        IdTipoPago: donacionData.IdTipoPago,
-        Monto: donacionData.Monto,
-        IdProyecto: donacionData.IdProyecto,
-        Moneda: donacionData.Moneda,
-        FechaHoraTransferencia: donacionData.FechaHoraTransferencia,
-        NumeroReferencia: donacionData.NumeroReferencia,
-        Comprobante: donacionData.Comprobante,
-        Mensaje: donacionData.Mensaje,
-        Estado: donacionData.Estado
+        id_usuario_exalumno: donacionData.id_usuario_exalumno,
+        id_tipo_pago: donacionData.id_tipo_pago,
+        monto: donacionData.monto,
+        id_proyecto: donacionData.id_proyecto,
+        moneda: donacionData.moneda,
+        fecha_hora_transferencia: donacionData.fecha_hora_transferencia,
+        numero_referencia: donacionData.numero_referencia,
+        comprobante: donacionData.comprobante,
+        mensaje: donacionData.mensaje,
+        estado: donacionData.estado
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaDonacion])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -79,22 +75,18 @@ const crearDonacion = async (donacionData) => {
 
 const actualizarDonacion = async (id, donacionData) => {
 
-    const datosActualizar = {
-        ...donacionData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, donacionData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -107,11 +99,9 @@ const eliminarDonacion = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Donación eliminada correctamente'
@@ -128,11 +118,9 @@ const obtenerDonacionesPorUsuario = async (idUsuarioExalumno) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuarioExalumno', idUsuarioExalumno);
+        .eq('id_usuario_exalumno', idUsuarioExalumno);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -147,11 +135,9 @@ const obtenerDonacionesPorProyecto = async (idProyecto) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdProyecto', idProyecto);
+        .eq('id_proyecto', idProyecto);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -166,11 +152,9 @@ const obtenerDonacionesPorEstado = async (estado) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Estado', estado);
+        .eq('estado', estado);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

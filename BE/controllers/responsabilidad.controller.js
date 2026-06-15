@@ -4,17 +4,14 @@ const responsabilidadService = require('../services/responsabilidadService');
 // OBTENER TODAS LAS RESPONSABILIDADES
 // ======================================================
 
-const obtenerResponsabilidades = async (req, res) => {
+const obtenerResponsabilidades = async (req, res, next) => {
     try {
         const responsabilidades =
             await responsabilidadService.obtenerResponsabilidades();
 
         res.status(200).json(responsabilidades);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener las responsabilidades',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -22,19 +19,22 @@ const obtenerResponsabilidades = async (req, res) => {
 // OBTENER RESPONSABILIDAD POR ID
 // ======================================================
 
-const obtenerResponsabilidadPorId = async (req, res) => {
+const obtenerResponsabilidadPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
         const responsabilidad =
             await responsabilidadService.obtenerResponsabilidadPorId(id);
 
+        if (!responsabilidad) {
+            return res.status(404).json({
+                mensaje: 'Responsabilidad no encontrada'
+            });
+        }
+
         res.status(200).json(responsabilidad);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al obtener la responsabilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -42,20 +42,27 @@ const obtenerResponsabilidadPorId = async (req, res) => {
 // CREAR RESPONSABILIDAD
 // ======================================================
 
-const crearResponsabilidad = async (req, res) => {
+const crearResponsabilidad = async (req, res, next) => {
     try {
+        const { nombre } = req.body;
+
+        if (!nombre) {
+            return res.status(400).json({
+                mensaje: 'El nombre es requerido'
+            });
+        }
+
         const nuevaResponsabilidad =
-            await responsabilidadService.crearResponsabilidad(req.body);
+            await responsabilidadService.crearResponsabilidad({
+                nombre: nombre.trim()
+            });
 
         res.status(201).json({
             mensaje: 'Responsabilidad creada correctamente',
             data: nuevaResponsabilidad
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al crear la responsabilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -63,25 +70,22 @@ const crearResponsabilidad = async (req, res) => {
 // ACTUALIZAR RESPONSABILIDAD
 // ======================================================
 
-const actualizarResponsabilidad = async (req, res) => {
+const actualizarResponsabilidad = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { nombre } = req.body;
 
         const responsabilidadActualizada =
-            await responsabilidadService.actualizarResponsabilidad(
-                id,
-                req.body
-            );
+            await responsabilidadService.actualizarResponsabilidad(id, {
+                nombre
+            });
 
         res.status(200).json({
             mensaje: 'Responsabilidad actualizada correctamente',
             data: responsabilidadActualizada
         });
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al actualizar la responsabilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -89,7 +93,7 @@ const actualizarResponsabilidad = async (req, res) => {
 // ELIMINAR RESPONSABILIDAD
 // ======================================================
 
-const eliminarResponsabilidad = async (req, res) => {
+const eliminarResponsabilidad = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -98,10 +102,7 @@ const eliminarResponsabilidad = async (req, res) => {
 
         res.status(200).json(resultado);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al eliminar la responsabilidad',
-            error: error.message
-        });
+        next(error);
     }
 };
 
@@ -109,7 +110,7 @@ const eliminarResponsabilidad = async (req, res) => {
 // BUSCAR RESPONSABILIDADES POR NOMBRE
 // ======================================================
 
-const buscarResponsabilidadesPorNombre = async (req, res) => {
+const buscarResponsabilidadesPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.params;
 
@@ -120,10 +121,7 @@ const buscarResponsabilidadesPorNombre = async (req, res) => {
 
         res.status(200).json(responsabilidades);
     } catch (error) {
-        res.status(500).json({
-            mensaje: 'Error al buscar responsabilidades por nombre',
-            error: error.message
-        });
+        next(error);
     }
 };
 

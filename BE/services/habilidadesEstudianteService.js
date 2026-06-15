@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'habilidades_estudiante';
 
@@ -13,9 +14,7 @@ const obtenerHabilidadesEstudiante = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerHabilidadPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,22 +45,21 @@ const obtenerHabilidadPorId = async (id) => {
 const crearHabilidad = async (habilidadData) => {
 
     const nuevaHabilidad = {
-        IdUsuario: habilidadData.IdUsuario,
-        Tecnicas: habilidadData.Tecnicas,
-        Blandas: habilidadData.Blandas,
-        Idiomas: habilidadData.Idiomas
+        id_usuario: habilidadData.id_usuario,
+        tecnicas: habilidadData.tecnicas,
+        blandas: habilidadData.blandas,
+        idiomas: habilidadData.idiomas
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaHabilidad])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -73,22 +69,18 @@ const crearHabilidad = async (habilidadData) => {
 
 const actualizarHabilidad = async (id, habilidadData) => {
 
-    const datosActualizar = {
-        ...habilidadData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, habilidadData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -101,11 +93,9 @@ const eliminarHabilidad = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Habilidad eliminada correctamente'
@@ -122,11 +112,9 @@ const obtenerHabilidadesPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario);
+        .eq('id_usuario', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -141,11 +129,9 @@ const buscarHabilidadesTecnicas = async (tecnica) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Tecnicas', `%${tecnica}%`);
+        .ilike('tecnicas', `%${tecnica}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -160,11 +146,9 @@ const buscarIdiomas = async (idioma) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .ilike('Idiomas', `%${idioma}%`);
+        .ilike('idiomas', `%${idioma}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

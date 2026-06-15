@@ -3,7 +3,7 @@ const areasInteresExalumnoService = require('../services/areasInteresExalumnoSer
 // ======================================================
 // GET - OBTENER TODAS LAS RELACIONES
 // ======================================================
-const obtenerAreasInteresExalumno = async (req, res) => {
+const obtenerAreasInteresExalumno = async (req, res, next) => {
     try {
         const relaciones = await areasInteresExalumnoService.obtenerAreasInteresExalumno();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerAreasInteresExalumno = async (req, res) => {
             message: 'Relaciones obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener relaciones',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER RELACIÓN POR ID
 // ======================================================
-const obtenerAreaInteresExalumnoPorId = async (req, res) => {
+const obtenerAreaInteresExalumnoPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,39 +45,35 @@ const obtenerAreaInteresExalumnoPorId = async (req, res) => {
             message: 'Relación obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR RELACIÓN
 // ======================================================
-const crearAreaInteresExalumno = async (req, res) => {
+const crearAreaInteresExalumno = async (req, res, next) => {
     try {
-        const { IdExalumno, IdAreaTematica } = req.body;
+        const { id_exalumno, id_area_tematica } = req.body;
 
         // Validaciones
-        if (!IdExalumno) {
+        if (!id_exalumno) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdExalumno es requerido'
+                message: 'El id_exalumno es requerido'
             });
         }
 
-        if (!IdAreaTematica) {
+        if (!id_area_tematica) {
             return res.status(400).json({
                 success: false,
-                message: 'El IdAreaTematica es requerido'
+                message: 'El id_area_tematica es requerido'
             });
         }
 
         const nuevaRelacion = await areasInteresExalumnoService.crearAreaInteresExalumno({
-            IdExalumno,
-            IdAreaTematica
+            id_exalumno,
+            id_area_tematica
         });
 
         res.status(201).json({
@@ -90,21 +82,17 @@ const crearAreaInteresExalumno = async (req, res) => {
             message: 'Relación creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR RELACIÓN
 // ======================================================
-const actualizarAreaInteresExalumno = async (req, res) => {
+const actualizarAreaInteresExalumno = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { IdExalumno, IdAreaTematica } = req.body;
+        const { id_exalumno, id_area_tematica } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -114,8 +102,8 @@ const actualizarAreaInteresExalumno = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (IdExalumno !== undefined) datosActualizar.IdExalumno = IdExalumno;
-        if (IdAreaTematica !== undefined) datosActualizar.IdAreaTematica = IdAreaTematica;
+        if (id_exalumno !== undefined) datosActualizar.id_exalumno = id_exalumno;
+        if (id_area_tematica !== undefined) datosActualizar.id_area_tematica = id_area_tematica;
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -132,18 +120,14 @@ const actualizarAreaInteresExalumno = async (req, res) => {
             message: 'Relación actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR RELACIÓN
 // ======================================================
-const eliminarAreaInteresExalumno = async (req, res) => {
+const eliminarAreaInteresExalumno = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -161,18 +145,14 @@ const eliminarAreaInteresExalumno = async (req, res) => {
             message: 'Relación eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar relación',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER ÁREAS POR EXALUMNO
 // ======================================================
-const obtenerAreasPorExalumno = async (req, res) => {
+const obtenerAreasPorExalumno = async (req, res, next) => {
     try {
         const { idExalumno } = req.params;
 
@@ -191,18 +171,14 @@ const obtenerAreasPorExalumno = async (req, res) => {
             message: 'Áreas obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener áreas por exalumno',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER EXALUMNOS POR ÁREA TEMÁTICA
 // ======================================================
-const obtenerExalumnosPorArea = async (req, res) => {
+const obtenerExalumnosPorArea = async (req, res, next) => {
     try {
         const { idAreaTematica } = req.params;
 
@@ -221,11 +197,7 @@ const obtenerExalumnosPorArea = async (req, res) => {
             message: 'Exalumnos obtenidos correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener exalumnos por área',
-            error: error.message
-        });
+        next(error);
     }
 };
 

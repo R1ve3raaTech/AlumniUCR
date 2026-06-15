@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'proyecto_graduacion';
 
@@ -13,9 +14,7 @@ const obtenerProyectosGraduacion = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerProyectoGraduacionPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,25 +45,23 @@ const obtenerProyectoGraduacionPorId = async (id) => {
 const crearProyectoGraduacion = async (proyectoData) => {
 
     const nuevoProyecto = {
-        IdUsuario: proyectoData.IdUsuario,
-        TituloProyecto: proyectoData.TituloProyecto,
-        Descripcion: proyectoData.Descripcion,
-        IdTipoProyecto: proyectoData.IdTipoProyecto,
-        AreaTematica: proyectoData.AreaTematica,
-        PorcentajeAvance: proyectoData.PorcentajeAvance,
-        ProyectoFinalizado: proyectoData.ProyectoFinalizado
+        id_estudiante: proyectoData.id_estudiante,
+        titulo_proyecto: proyectoData.titulo_proyecto,
+        descripcion: proyectoData.descripcion,
+        id_tipo_proyecto: proyectoData.id_tipo_proyecto,
+        porcentaje_avance: proyectoData.porcentaje_avance,
+        proyecto_finalizado: proyectoData.proyecto_finalizado
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoProyecto])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -76,22 +71,18 @@ const crearProyectoGraduacion = async (proyectoData) => {
 
 const actualizarProyectoGraduacion = async (id, proyectoData) => {
 
-    const datosActualizar = {
-        ...proyectoData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, proyectoData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -104,11 +95,9 @@ const eliminarProyectoGraduacion = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Proyecto de graduación eliminado correctamente'
@@ -125,11 +114,9 @@ const obtenerProyectosPorUsuario = async (idUsuario) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdUsuario', idUsuario);
+        .eq('id_estudiante', idUsuario);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -144,11 +131,9 @@ const obtenerProyectosFinalizados = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('ProyectoFinalizado', true);
+        .eq('proyecto_finalizado', true);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -162,12 +147,10 @@ const buscarProyectosPorArea = async (areaTematica) => {
 
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
-        .ilike('AreaTematica', `%${areaTematica}%`);
+        .select('*, areas_interes_proyecto!inner(id_area_tematica)')
+        .eq('areas_interes_proyecto.id_area_tematica', areaTematica);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };

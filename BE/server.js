@@ -4,10 +4,27 @@ const cors = require('cors');
 const app = express();
 
 // CORS
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+// El frontend (Next.js) puede arrancar en distintos puertos locales (3000, 3001,
+// 3002…) si el 3000 está ocupado. Para que el backend SIEMPRE conecte con el
+// frontend, se acepta cualquier origen localhost/127.0.0.1 en desarrollo, además
+// del FRONTEND_URL configurado (útil en producción).
+const origenPermitido = (origin) => {
+  // Peticiones sin origin (curl, Postman, health checks) se permiten.
+  if (!origin) return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return true;
+  return false;
+};
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (origenPermitido(origin)) return callback(null, true);
+      callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
@@ -28,6 +45,7 @@ const habilidadesRoutes = require('./routes/habilidades.estudiante.routes');
 const informacionEstudianteRoutes = require('./routes/informacion.estudiante.routes');
 const informacionExalumnoRoutes = require('./routes/informacion.exalumno.routes');
 const necesidadesEspecificasRoutes = require('./routes/necesidades.especificas.routes');
+const nivelAcademicoRoutes = require('./routes/nivel.academico.routes');
 const proyectoGraduacionRoutes = require('./routes/proyecto.graduacion.routes');
 const proyectoNecesidadRoutes = require('./routes/proyecto.necesidad.routes');
 const puestoEmpleoRoutes = require('./routes/puesto.empleo.routes');
@@ -43,6 +61,8 @@ const tipoPagoRoutes = require('./routes/tipo.pago.routes');
 const tipoProyectoRoutes = require('./routes/tipo.proyecto.routes');
 const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
+const voluntariosRoutes = require('./routes/voluntarios.routes');
+const matchingRoutes = require('./routes/matching.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
@@ -60,6 +80,7 @@ app.use('/api/habilidades', habilidadesRoutes);
 app.use('/api/informacion-estudiantes', informacionEstudianteRoutes);
 app.use('/api/informacion-exalumnos', informacionExalumnoRoutes);
 app.use('/api/necesidades-especificas', necesidadesEspecificasRoutes);
+app.use('/api/niveles-academicos', nivelAcademicoRoutes);
 app.use('/api/proyectos-graduacion', proyectoGraduacionRoutes);
 app.use('/api/proyectos-necesidades', proyectoNecesidadRoutes);
 app.use('/api/puestos-empleo', puestoEmpleoRoutes);
@@ -75,6 +96,8 @@ app.use('/api/tipos-pago', tipoPagoRoutes);
 app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
+app.use('/api/voluntarios', voluntariosRoutes);
+app.use('/api/matching', matchingRoutes);
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {

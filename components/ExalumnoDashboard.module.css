@@ -1,0 +1,467 @@
+/* ════════════════════════════════════════════════════════════════════
+   Dashboard del exalumno. Mantiene la identidad de la plataforma: paleta
+   --ucr-/--brand-, tipografia Barlow Condensed, textura tech-grid y la
+   estetica editorial (bordes rectos, acentos esmeralda/naranja/azul).
+   Responsive para web y movil.
+   ════════════════════════════════════════════════════════════════════ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ucr-surface);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
+  /* Rejilla tecnica de fondo (igual que /proyectos). */
+  background-image:
+    linear-gradient(rgba(0, 76, 99, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 76, 99, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow-x: hidden;
+}
+
+/* ─── Cabecera ────────────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--brand-blanco);
+  border-bottom: 1px solid var(--ucr-outline-variant);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 1rem clamp(1rem, 4vw, 64px);
+}
+
+.brand {
+  display: block;
+}
+
+.navLinks {
+  display: flex;
+  gap: 1.75rem;
+  margin-left: auto;
+  margin-right: 1.75rem;
+}
+
+.navLink {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ucr-outline);
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--brand-esmeralda);
+}
+
+.logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--ucr-outline-variant);
+  color: var(--ucr-on-surface-variant);
+  font-family: var(--font-brand-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout svg {
+  width: 18px;
+  height: 18px;
+}
+
+.logout:hover {
+  border-color: var(--brand-naranja);
+  color: var(--brand-naranja);
+}
+
+/* ─── Bienvenida ──────────────────────────────────────────────────── */
+.main {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.welcome {
+  position: relative;
+  background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda));
+  color: var(--brand-blanco);
+  overflow: hidden;
+}
+
+/* Textura de puntos sutil sobre el banner. */
+.welcomeTexture {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: 0.6;
+}
+
+.welcomeContent {
+  position: relative;
+  z-index: 1;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 1.5rem + 4vw, 4rem) clamp(1rem, 4vw, 64px);
+}
+
+.badge {
+  display: inline-block;
+  background: var(--brand-naranja);
+  color: var(--brand-blanco);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.3rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.welcomeTitle {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1;
+  font-size: clamp(2.2rem, 1.6rem + 3vw, 3.5rem);
+  color: var(--brand-blanco);
+  margin: 0 0 0.75rem;
+}
+
+.welcomeText {
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 40rem;
+}
+
+/* ─── Contenedor ──────────────────────────────────────────────────── */
+.container {
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem) clamp(1rem, 4vw, 64px) 3rem;
+}
+
+/* ─── Estadísticas ────────────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  padding: 1.5rem;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.statCard:hover {
+  border-color: var(--brand-esmeralda);
+  transform: translateY(-3px);
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(0, 76, 99, 0.08);
+  color: var(--brand-esmeralda);
+}
+
+.statIcon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.statValor {
+  display: block;
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--ucr-primary);
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ucr-outline);
+  margin-top: 0.25rem;
+}
+
+/* ─── Bloques ─────────────────────────────────────────────────────── */
+.bloque {
+  margin-bottom: 3rem;
+}
+
+.bloqueTitulo {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.8rem);
+  color: var(--ucr-primary);
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ucr-outline-variant);
+}
+
+/* ─── Acciones rápidas ────────────────────────────────────────────── */
+.acciones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.accionCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.accionCard:hover {
+  border-color: var(--brand-esmeralda);
+  transform: translateY(-4px);
+}
+
+.accionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: rgba(243, 75, 38, 0.1);
+  color: var(--brand-naranja);
+}
+
+.accionIcon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.accionTitulo {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  color: var(--ucr-primary);
+  margin: 0 0 0.5rem;
+}
+
+.accionDesc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ucr-on-surface-variant);
+  margin: 0 0 1.5rem;
+}
+
+.accionArrow {
+  margin-top: auto;
+  color: var(--brand-esmeralda);
+  transition: transform 0.2s ease;
+}
+
+.accionArrow svg {
+  width: 22px;
+  height: 22px;
+}
+
+.accionCard:hover .accionArrow {
+  transform: translateX(6px);
+}
+
+/* ─── Tu cuenta ───────────────────────────────────────────────────── */
+.cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  padding: 1.75rem;
+}
+
+.cuentaInfo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 1.25rem 2.5rem;
+  flex: 1;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.datoKey {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ucr-outline);
+}
+
+.datoValor {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ucr-on-surface);
+  word-break: break-word;
+}
+
+.datoFull {
+  grid-column: 1 / -1;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  background: rgba(0, 76, 99, 0.08);
+  color: var(--brand-esmeralda);
+  border: 1px solid rgba(0, 76, 99, 0.15);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+}
+
+.estado {
+  width: fit-content;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.7rem;
+  border-radius: 9999px;
+  background: var(--ucr-surface-variant);
+  color: var(--ucr-on-surface-variant);
+}
+
+.estado_activo {
+  background: rgba(0, 125, 103, 0.15);
+  color: var(--ucr-esmeralda);
+}
+
+.estado_pendiente {
+  background: rgba(255, 155, 24, 0.18);
+  color: #b06a00;
+}
+
+.editar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--brand-esmeralda);
+  color: var(--brand-blanco);
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.editar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.editar:hover {
+  background: var(--ucr-secondary);
+}
+
+.editar:active {
+  transform: scale(0.98);
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────── */
+.footer {
+  margin-top: auto;
+  background: var(--brand-blanco);
+  border-top: 1px solid var(--ucr-outline-variant);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 1560px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  padding: 1.5rem clamp(1rem, 4vw, 64px);
+}
+
+.footerCopy {
+  font-size: 0.8rem;
+  color: var(--ucr-outline);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .stats,
+  .acciones {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .navLinks {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats,
+  .acciones {
+    grid-template-columns: 1fr;
+  }
+
+  .cuentaInfo {
+    grid-template-columns: 1fr;
+  }
+
+  .editar {
+    width: 100%;
+    justify-content: center;
+  }
+}

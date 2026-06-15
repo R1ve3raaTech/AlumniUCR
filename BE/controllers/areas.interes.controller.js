@@ -3,7 +3,7 @@ const areasInteresService = require('../services/areasInteresService');
 // ======================================================
 // GET - OBTENER TODAS LAS ÁREAS DE INTERÉS
 // ======================================================
-const obtenerAreasInteres = async (req, res) => {
+const obtenerAreasInteres = async (req, res, next) => {
     try {
         const areas = await areasInteresService.obtenerAreasInteres();
         res.status(200).json({
@@ -12,18 +12,14 @@ const obtenerAreasInteres = async (req, res) => {
             message: 'Áreas de interés obtenidas correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener áreas de interés',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - OBTENER ÁREA DE INTERÉS POR ID
 // ======================================================
-const obtenerAreaInteresPorId = async (req, res) => {
+const obtenerAreaInteresPorId = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -49,30 +45,26 @@ const obtenerAreaInteresPorId = async (req, res) => {
             message: 'Área de interés obtenida correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener área de interés',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // POST - CREAR ÁREA DE INTERÉS
 // ======================================================
-const crearAreaInteres = async (req, res) => {
+const crearAreaInteres = async (req, res, next) => {
     try {
-        const { Nombre, Descripcion } = req.body;
+        const { nombre, descripcion } = req.body;
 
         // Validaciones
-        if (!Nombre) {
+        if (!nombre) {
             return res.status(400).json({
                 success: false,
                 message: 'El nombre es requerido'
             });
         }
 
-        if (!Descripcion) {
+        if (!descripcion) {
             return res.status(400).json({
                 success: false,
                 message: 'La descripción es requerida'
@@ -80,8 +72,8 @@ const crearAreaInteres = async (req, res) => {
         }
 
         const nuevaArea = await areasInteresService.crearAreaInteres({
-            Nombre: Nombre.trim(),
-            Descripcion: Descripcion.trim()
+            nombre: nombre.trim(),
+            descripcion: descripcion.trim()
         });
 
         res.status(201).json({
@@ -90,21 +82,17 @@ const crearAreaInteres = async (req, res) => {
             message: 'Área de interés creada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear área de interés',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // PUT - ACTUALIZAR ÁREA DE INTERÉS
 // ======================================================
-const actualizarAreaInteres = async (req, res) => {
+const actualizarAreaInteres = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { Nombre, Descripcion } = req.body;
+        const { nombre, descripcion } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -114,8 +102,8 @@ const actualizarAreaInteres = async (req, res) => {
         }
 
         const datosActualizar = {};
-        if (Nombre !== undefined) datosActualizar.Nombre = Nombre.trim();
-        if (Descripcion !== undefined) datosActualizar.Descripcion = Descripcion.trim();
+        if (nombre !== undefined) datosActualizar.nombre = nombre.trim();
+        if (descripcion !== undefined) datosActualizar.descripcion = descripcion.trim();
 
         if (Object.keys(datosActualizar).length === 0) {
             return res.status(400).json({
@@ -132,18 +120,14 @@ const actualizarAreaInteres = async (req, res) => {
             message: 'Área de interés actualizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar área de interés',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // DELETE - ELIMINAR ÁREA DE INTERÉS
 // ======================================================
-const eliminarAreaInteres = async (req, res) => {
+const eliminarAreaInteres = async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -161,18 +145,14 @@ const eliminarAreaInteres = async (req, res) => {
             message: 'Área de interés eliminada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar área de interés',
-            error: error.message
-        });
+        next(error);
     }
 };
 
 // ======================================================
 // GET - BUSCAR ÁREAS POR NOMBRE
 // ======================================================
-const buscarAreasPorNombre = async (req, res) => {
+const buscarAreasPorNombre = async (req, res, next) => {
     try {
         const { nombre } = req.query;
 
@@ -191,11 +171,7 @@ const buscarAreasPorNombre = async (req, res) => {
             message: 'Búsqueda realizada correctamente'
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al buscar áreas de interés',
-            error: error.message
-        });
+        next(error);
     }
 };
 

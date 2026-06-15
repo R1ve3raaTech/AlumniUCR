@@ -1,158 +1,119 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'usuarios';
-
 
 // ======================================================
 // OBTENER TODOS LOS USUARIOS
 // ======================================================
 
 const obtenerUsuarios = async () => {
-
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*');
+        .select('*, roles(nombre)');
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
+    if (error) throw mapDbError(error);
     return data;
 };
-
 
 // ======================================================
 // OBTENER USUARIO POR ID
 // ======================================================
 
 const obtenerUsuarioPorId = async (id) => {
-
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
-        .eq('Id', id)
-        .single();
+        .select('*, roles(nombre)')
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return data;
+    if (error) throw mapDbError(error);
+    return data; // null si no existe -> el controller responde 404
 };
-
 
 // ======================================================
 // CREAR USUARIO
 // ======================================================
 
 const crearUsuario = async (usuarioData) => {
-
     const nuevoUsuario = {
-        Nombre: usuarioData.Nombre,
-        IdRol: usuarioData.IdRol,
-        CorreoElectronico: usuarioData.CorreoElectronico,
-        Contrasena: usuarioData.Contrasena,
-        Confirmado: usuarioData.Confirmado,
-        Estado: usuarioData.Estado
+        nombre:              usuarioData.nombre,
+        id_rol:              usuarioData.id_rol,
+        correo_electronico:  usuarioData.correo_electronico,
+        confirmado:          usuarioData.confirmado || false,
+        estado:              usuarioData.estado || 'activo'
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevoUsuario])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return data[0];
+    if (error) throw mapDbError(error);
+    return data;
 };
-
 
 // ======================================================
 // ACTUALIZAR USUARIO
 // ======================================================
 
 const actualizarUsuario = async (id, usuarioData) => {
-
-    const datosActualizar = {
-        ...usuarioData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = { ...usuarioData, updated_at: new Date() };
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return data[0];
+    if (error) throw mapDbError(error);
+    return data;
 };
-
 
 // ======================================================
 // ELIMINAR USUARIO
 // ======================================================
 
 const eliminarUsuario = async (id) => {
-
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return {
-        mensaje: 'Usuario eliminado correctamente'
-    };
+    if (error) throw mapDbError(error);
+    return { mensaje: 'Usuario eliminado correctamente' };
 };
-
 
 // ======================================================
 // BUSCAR USUARIOS POR NOMBRE
 // ======================================================
 
 const buscarUsuariosPorNombre = async (nombre) => {
-
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
-        .ilike('Nombre', `%${nombre}%`);
+        .select('*, roles(nombre)')
+        .ilike('nombre', `%${nombre}%`);
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
+    if (error) throw mapDbError(error);
     return data;
 };
-
 
 // ======================================================
 // BUSCAR USUARIO POR CORREO
 // ======================================================
 
 const obtenerUsuarioPorCorreo = async (correoElectronico) => {
-
     const { data, error } = await supabase
         .from(TABLA)
-        .select('*')
-        .eq('CorreoElectronico', correoElectronico)
-        .single();
+        .select('*, roles(nombre)')
+        .eq('correo_electronico', correoElectronico)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return data;
+    if (error) throw mapDbError(error);
+    return data; // null si no existe -> el controller responde 404
 };
-
 
 // ======================================================
 // EXPORTAR SERVICES

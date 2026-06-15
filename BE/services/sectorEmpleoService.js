@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
 const TABLA = 'sectores_empleo';
 
@@ -13,9 +14,7 @@ const obtenerSectoresEmpleo = async () => {
         .from(TABLA)
         .select('*');
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -30,12 +29,10 @@ const obtenerSectorEmpleoPorId = async (id) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('Id', id)
-        .single();
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -48,20 +45,19 @@ const obtenerSectorEmpleoPorId = async (id) => {
 const crearSectorEmpleo = async (relacionData) => {
 
     const nuevaRelacion = {
-        IdEmpleo: relacionData.IdEmpleo,
-        IdSector: relacionData.IdSector
+        id_empleo: relacionData.id_empleo,
+        id_sector: relacionData.id_sector
     };
 
     const { data, error } = await supabase
         .from(TABLA)
         .insert([nuevaRelacion])
-        .select();
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -71,22 +67,18 @@ const crearSectorEmpleo = async (relacionData) => {
 
 const actualizarSectorEmpleo = async (id, relacionData) => {
 
-    const datosActualizar = {
-        ...relacionData,
-        UpdatedAt: new Date()
-    };
+    const datosActualizar = Object.assign({}, relacionData, { updated_at: new Date() });
 
     const { data, error } = await supabase
         .from(TABLA)
         .update(datosActualizar)
-        .eq('Id', id)
-        .select();
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
-    return data[0];
+    return data;
 };
 
 
@@ -99,11 +91,9 @@ const eliminarSectorEmpleo = async (id) => {
     const { error } = await supabase
         .from(TABLA)
         .delete()
-        .eq('Id', id);
+        .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return {
         mensaje: 'Relación eliminada correctamente'
@@ -120,11 +110,9 @@ const obtenerSectoresPorEmpleo = async (idEmpleo) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdEmpleo', idEmpleo);
+        .eq('id_empleo', idEmpleo);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
@@ -139,11 +127,9 @@ const obtenerEmpleosPorSector = async (idSector) => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('IdSector', idSector);
+        .eq('id_sector', idSector);
 
-    if (error) {
-        throw new Error(error.message);
-    }
+    if (error) throw mapDbError(error);
 
     return data;
 };
