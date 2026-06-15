@@ -8,6 +8,7 @@ import AlumniLogo from '@/components/AlumniLogo';
 import InformacionAcademicaForm from '@/components/perfil/InformacionAcademicaForm';
 import ProyectoGraduacionForm from '@/components/perfil/ProyectoGraduacionForm';
 import HabilidadesForm from '@/components/perfil/HabilidadesForm';
+import SolicitudesContacto from '@/components/perfil/SolicitudesContacto';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
 import { obtenerProyectoDelEstudiante } from '@/lib/proyectoGraduacion';
 import { obtenerHabilidadesDelEstudiante } from '@/lib/habilidades';
@@ -273,6 +274,8 @@ export default function PerfilEstudiantePage() {
             </p>
             <HabilidadesForm onGuardado={refrescarEstado} />
           </section>
+
+          <SolicitudesContacto />
         </div>
       </main>
     </div>
