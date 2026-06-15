@@ -172,9 +172,9 @@ export default function ExalumnoDashboard({
                   )}
                 </div>
               </div>
-              <button type="button" className={styles.editar}>
+              <Link href="/perfil-exalumno" className={styles.editar}>
                 <IEdit /> Editar perfil
-              </button>
+              </Link>
             </div>
           </section>
         </div>
