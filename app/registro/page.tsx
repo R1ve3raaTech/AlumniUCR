@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { solicitarMagicLink } from '@/lib/auth';
-import { validarCorreoPorRol } from '@/lib/validaciones';
+import { solicitarMagicLink, registrarExalumno } from '@/lib/auth';
+import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import AlumniLogo from '@/components/AlumniLogo';
+import { FACULTADES_UCR, CARRERAS_UCR } from '@/lib/catalogoUCR';
 import styles from './registro.module.css';
 
 type Rol = 'estudiante' | 'exalumno';
@@ -44,6 +45,12 @@ const IHandshake = () => (
 const IChevronRight = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
 );
+const ILock = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+);
+const ICalendar = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+);
 
 const ROLES: { value: Rol; titulo: string; desc: string; icon: React.ReactNode }[] = [
   { value: 'estudiante', titulo: 'Soy Estudiante', desc: 'Activo en carrera académica.', icon: <ISchool /> },
@@ -53,31 +60,81 @@ const ROLES: { value: Rol; titulo: string; desc: string; icon: React.ReactNode }
 export default function RegistroPage() {
   const { error, loading, run } = useAuthForm();
 
+  const ANIO_ACTUAL = new Date().getFullYear();
+
   const [rol, setRol] = useState<Rol>('estudiante');
   const [nombre, setNombre] = useState('');
   const [carne, setCarne] = useState('');
   const [correo, setCorreo] = useState('');
   const [errorCorreo, setErrorCorreo] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
+  // 'magiclink' (estudiante) | 'exalumno' (autodeclaración)
+  const [modoExito, setModoExito] = useState<'magiclink' | 'exalumno'>('magiclink');
+
+  // Campos exclusivos del exalumno (autodeclaración).
+  const [contrasena, setContrasena] = useState('');
+  const [verPass, setVerPass] = useState(false);
+  const [carreras, setCarreras] = useState<string[]>([]);
+  const [facultad, setFacultad] = useState('');
+  const [anioGraduacion, setAnioGraduacion] = useState('');
+  const [errorForm, setErrorForm] = useState<string | null>(null);
+
+  const esUCR = correo.trim().toLowerCase().endsWith('@ucr.ac.cr');
+
+  const toggleCarrera = (c: string) =>
+    setCarreras((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
   function enviarEnlace() {
     run(async () => {
-      await solicitarMagicLink(rol, correo.trim());
+      await solicitarMagicLink('estudiante', correo.trim());
       // Guarda el nombre/carné para precargar el paso "completar perfil".
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           'ct_registro_datos',
-          JSON.stringify({ nombre: nombre.trim(), carne: carne.trim(), rol }),
+          JSON.stringify({ nombre: nombre.trim(), carne: carne.trim(), rol: 'estudiante' }),
         );
       }
+      setModoExito('magiclink');
+      setEnviado(true);
+    });
+  }
+
+  function registrarComoExalumno() {
+    setErrorForm(null);
+    const errCorreo = validarCorreo(correo);
+    if (errCorreo) return setErrorForm(errCorreo);
+    if (nombre.trim().length < 3) return setErrorForm('El nombre completo debe tener al menos 3 caracteres.');
+    const errPass = validarContrasena(contrasena);
+    if (errPass) return setErrorForm(errPass);
+    if (carreras.length < 1) return setErrorForm('Selecciona al menos una carrera cursada en la UCR.');
+    if (!facultad) return setErrorForm('Selecciona tu escuela o facultad.');
+    const anio = Number(anioGraduacion);
+    if (!Number.isInteger(anio) || anio < 1940 || anio > ANIO_ACTUAL) {
+      return setErrorForm(`El año de graduación debe estar entre 1940 y ${ANIO_ACTUAL}.`);
+    }
+
+    run(async () => {
+      await registrarExalumno({
+        correo: correo.trim(),
+        contrasena,
+        nombre: nombre.trim(),
+        carreras,
+        facultad,
+        anioGraduacion: anio,
+      });
+      setModoExito('exalumno');
       setEnviado(true);
     });
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // El estudiante debe usar @ucr.ac.cr; el exalumno acepta cualquier correo.
-    const err = validarCorreoPorRol(correo, rol);
+    if (rol === 'exalumno') {
+      registrarComoExalumno();
+      return;
+    }
+    // Estudiante: debe usar @ucr.ac.cr y sigue el flujo de magic link.
+    const err = validarCorreoPorRol(correo, 'estudiante');
     setErrorCorreo(err);
     if (err) return;
     enviarEnlace();
@@ -109,7 +166,31 @@ export default function RegistroPage() {
 
       <main className={styles.main}>
         <div className={styles.panel}>
-          {enviado ? (
+          {enviado && modoExito === 'exalumno' ? (
+            <div className={styles.success}>
+              <div>
+                <div className={styles.successIcon}>
+                  <IMailRead />
+                </div>
+                <h1 className={styles.title}>¡Cuenta creada!</h1>
+                <p className={styles.successText}>
+                  Enviamos un correo de confirmación a{' '}
+                  <strong style={{ color: 'var(--ucr-primary)' }}>{correo}</strong>. Tu cuenta
+                  quedará <strong>pendiente</strong> hasta que confirmes tu correo. Solo entonces
+                  podrás iniciar sesión y aparecer en el directorio.
+                </p>
+              </div>
+
+              <div className={styles.successActions}>
+                <button type="button" className={styles.submit} onClick={abrirCorreo}>
+                  Abrir mi correo
+                </button>
+                <div className={styles.resendHint}>
+                  <Link href="/login" className={styles.resendBtn}>Ir a iniciar sesión</Link>
+                </div>
+              </div>
+            </div>
+          ) : enviado ? (
             <div className={styles.success}>
               <div>
                 <div className={styles.successIcon}>
@@ -195,12 +276,32 @@ export default function RegistroPage() {
                   </Link>
                 </div>
 
+                {/* Aviso para correos @ucr.ac.cr al elegir exalumno */}
+                {rol === 'exalumno' && esUCR && (
+                  <div className={styles.ucrPrompt}>
+                    <p>
+                      Detectamos un correo <strong>@ucr.ac.cr</strong>. ¿Ya te graduaste?
+                    </p>
+                    <div className={styles.ucrPromptActions}>
+                      <span className={styles.ucrPromptOk}>Sí, continúa como exalumno</span>
+                      <button type="button" onClick={() => setRol('estudiante')}>
+                        No, soy estudiante
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Paso 2: información */}
                 <div className={styles.step2}>
-                  <h2 className={styles.stepTitle}>Paso 2: Información Personal</h2>
+                  <h2 className={styles.stepTitle}>
+                    Paso 2: {rol === 'exalumno' ? 'Datos de autodeclaración' : 'Información Personal'}
+                  </h2>
+
+                  {errorForm && <div className={styles.formError}>{errorForm}</div>}
+
                   <div className={styles.fields}>
                     <div className={styles.field}>
-                      <label className={styles.label} htmlFor="nombre">Nombre Completo</label>
+                      <label className={styles.label} htmlFor="nombre">Nombre completo</label>
                       <div className={styles.inputWrap}>
                         <span className={styles.inputIcon}><IPerson /></span>
                         <input
@@ -215,23 +316,25 @@ export default function RegistroPage() {
                       </div>
                     </div>
 
-                    <div className={styles.field}>
-                      <label className={styles.label} htmlFor="carne">Carné / Cédula</label>
-                      <div className={styles.inputWrap}>
-                        <span className={styles.inputIcon}><IBadge /></span>
-                        <input
-                          id="carne"
-                          className={styles.input}
-                          type="text"
-                          placeholder="Ej: B12345"
-                          value={carne}
-                          onChange={(e) => setCarne(e.target.value)}
-                        />
+                    {rol === 'estudiante' && (
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor="carne">Carné / Cédula</label>
+                        <div className={styles.inputWrap}>
+                          <span className={styles.inputIcon}><IBadge /></span>
+                          <input
+                            id="carne"
+                            className={styles.input}
+                            type="text"
+                            placeholder="Ej: B12345"
+                            value={carne}
+                            onChange={(e) => setCarne(e.target.value)}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className={`${styles.field} ${styles.fieldFull}`}>
-                      <label className={styles.label} htmlFor="correo">Correo Electrónico</label>
+                    <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
+                      <label className={styles.label} htmlFor="correo">Correo electrónico</label>
                       <div className={styles.inputWrap}>
                         <span className={styles.inputIcon}><IMail /></span>
                         <input
@@ -249,6 +352,92 @@ export default function RegistroPage() {
                       </div>
                       {errorCorreo && <span className={styles.formError}>{errorCorreo}</span>}
                     </div>
+
+                    {rol === 'exalumno' && (
+                      <>
+                        <div className={styles.field}>
+                          <label className={styles.label} htmlFor="contrasena">Contraseña</label>
+                          <div className={styles.inputWrap}>
+                            <span className={styles.inputIcon}><ILock /></span>
+                            <input
+                              id="contrasena"
+                              className={styles.input}
+                              type={verPass ? 'text' : 'password'}
+                              placeholder="••••••••"
+                              autoComplete="new-password"
+                              value={contrasena}
+                              onChange={(e) => setContrasena(e.target.value)}
+                              required
+                            />
+                            <button
+                              type="button"
+                              className={styles.toggle}
+                              onClick={() => setVerPass((v) => !v)}
+                              aria-label={verPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                            >
+                              {verPass ? 'Ocultar' : 'Mostrar'}
+                            </button>
+                          </div>
+                          <span className={styles.hint}>Mín. 8 caracteres, 1 mayúscula y 1 número.</span>
+                        </div>
+
+                        <div className={styles.field}>
+                          <label className={styles.label} htmlFor="anio">Año de graduación</label>
+                          <div className={styles.inputWrap}>
+                            <span className={styles.inputIcon}><ICalendar /></span>
+                            <input
+                              id="anio"
+                              className={styles.input}
+                              type="number"
+                              min={1940}
+                              max={ANIO_ACTUAL}
+                              placeholder={`1940 – ${ANIO_ACTUAL}`}
+                              value={anioGraduacion}
+                              onChange={(e) => setAnioGraduacion(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className={`${styles.field} ${styles.fieldFull}`}>
+                          <label className={styles.label} htmlFor="facultad">Escuela o Facultad</label>
+                          <div className={styles.inputWrap}>
+                            <span className={styles.inputIcon}><ISchool /></span>
+                            <select
+                              id="facultad"
+                              className={styles.input}
+                              value={facultad}
+                              onChange={(e) => setFacultad(e.target.value)}
+                              required
+                            >
+                              <option value="" disabled>Selecciona tu facultad…</option>
+                              {FACULTADES_UCR.map((f) => (
+                                <option key={f} value={f}>{f}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className={`${styles.field} ${styles.fieldFull}`}>
+                          <label className={styles.label}>Carrera(s) cursada(s) en la UCR</label>
+                          <div className={styles.carrerasBox}>
+                            {CARRERAS_UCR.map((c) => (
+                              <label key={c} className={styles.carreraItem}>
+                                <input
+                                  type="checkbox"
+                                  checked={carreras.includes(c)}
+                                  onChange={() => toggleCarrera(c)}
+                                />
+                                <span>{c}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <span className={styles.hint}>
+                            {carreras.length} seleccionada(s) · selecciona al menos una.
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -259,6 +448,8 @@ export default function RegistroPage() {
                       <>
                         <ISpinner className={styles.spinner} /> Procesando…
                       </>
+                    ) : rol === 'exalumno' ? (
+                      'Crear cuenta'
                     ) : (
                       'Registrarse'
                     )}

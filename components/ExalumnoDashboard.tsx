@@ -15,6 +15,11 @@ interface Perfil {
   correo_electronico?: string;
   estado?: string;
   roles?: { nombre?: string } | null;
+  metadata?: {
+    carreras?: string[];
+    escuela_facultad?: string;
+    anio_graduacion?: number | string;
+  } | null;
 }
 
 const base = {
@@ -60,6 +65,10 @@ export default function ExalumnoDashboard({
   const rol = perfil?.roles?.nombre || 'Exalumno';
   const estado = perfil?.estado || 'activo';
   const primerNombre = nombre.split(' ')[0];
+
+  const carreras = perfil?.metadata?.carreras ?? [];
+  const facultad = perfil?.metadata?.escuela_facultad || '—';
+  const anioGraduacion = perfil?.metadata?.anio_graduacion || '—';
 
   return (
     <div className={styles.page}>
@@ -141,6 +150,26 @@ export default function ExalumnoDashboard({
                 <div className={styles.dato}>
                   <span className={styles.datoKey}>Estado</span>
                   <span className={`${styles.estado} ${styles[`estado_${estado}`] ?? ''}`}>{estado}</span>
+                </div>
+                <div className={styles.dato}>
+                  <span className={styles.datoKey}>Escuela o Facultad</span>
+                  <span className={styles.datoValor}>{facultad}</span>
+                </div>
+                <div className={styles.dato}>
+                  <span className={styles.datoKey}>Año de graduación</span>
+                  <span className={styles.datoValor}>{anioGraduacion}</span>
+                </div>
+                <div className={`${styles.dato} ${styles.datoFull}`}>
+                  <span className={styles.datoKey}>Carrera(s) cursada(s)</span>
+                  {carreras.length > 0 ? (
+                    <div className={styles.chips}>
+                      {carreras.map((c) => (
+                        <span key={c} className={styles.chip}>{c}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className={styles.datoValor}>—</span>
+                  )}
                 </div>
               </div>
               <button type="button" className={styles.editar}>
