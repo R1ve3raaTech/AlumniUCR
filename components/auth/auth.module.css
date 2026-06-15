@@ -86,6 +86,45 @@
   box-shadow: 0 0 0 3px hsla(250, 85%, 65%, 0.25);
 }
 
+/* Contenedor del campo de contraseña: posiciona el botón ver/ocultar
+   superpuesto sobre el extremo derecho del input. */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Deja espacio a la derecha para que el texto no quede bajo el botón. */
+.inputWithToggle {
+  padding-right: 4.5rem;
+}
+
+.toggleVisibility {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: hsl(var(--secondary));
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.toggleVisibility:hover {
+  color: hsl(var(--primary));
+}
+
+.toggleVisibility:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .inputError {
   border-color: hsl(var(--accent));
 }

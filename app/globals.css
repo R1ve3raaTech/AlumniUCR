@@ -1,4 +1,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow+Semi+Condensed:wght@600;700;800&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ───────────────────────────────────────────────────────────────
+     Identidad de marca Alumni UCR (usada solo en el landing público).
+     Tokens nuevos en HEX para no interferir con el tema HSL existente
+     del que dependen login/registro/dashboard.
+     ─────────────────────────────────────────────────────────────── */
+  --brand-esmeralda: #004C63;
+  --brand-celeste: #54BCEB;
+  --brand-naranja: #F34B26;
+  --brand-amarillo: #FF9B18;
+  --brand-azul: #006AD3;
+  --brand-negro: #141414;
+  --brand-blanco: #FFFFFF;
+
+  /* Colores disminuidos (fondos suaves) */
+  --brand-celeste-claro: #BCDCF6;
+  --brand-beige: #FCE8CC;
+  --brand-rosa: #FBD5CE;
+  --brand-gris: #F4F6F7;
+
+  /* ───────────────────────────────────────────────────────────────
+     Paleta del landing (diseño Stitch). Editable desde un solo lugar.
+     ─────────────────────────────────────────────────────────────── */
+  --ucr-primary: #003445;            /* esmeralda profundo (fondos oscuros) */
+  --ucr-celeste: #54BCEB;            /* acento principal */
+  --ucr-naranja: #F34B26;            /* acento secundario */
+  --ucr-secondary: #006687;
+  --ucr-secondary-container: #6acfff; /* acentos suaves (íconos, chips) */
+  --ucr-esmeralda: #007D67;          /* acento de selección (rol activo) */
+  --ucr-surface: #fcf9f8;            /* fondo claro */
+  --ucr-surface-container: #f0edec;
+  --ucr-surface-variant: #e5e2e1;
+  --ucr-on-surface: #1c1b1b;         /* texto sobre claro */
+  --ucr-on-surface-variant: #40484c;
+  --ucr-outline: #70787d;
+  --ucr-outline-variant: #c0c8cd;
+
+  --font-brand-heading: 'Barlow Semi Condensed', sans-serif;
+  --font-brand-body: 'Work Sans', sans-serif;
+  --font-ucr-display: 'Barlow Condensed', sans-serif;  /* titulares del landing */
+}
 
 :root {
   /* Premium Dark Theme Color Palette */
@@ -152,6 +200,23 @@ a {
 .stat-card:hover {
   transform: translateY(-5px);
   border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Iconos Material Symbols (usados en el rediseño de /perfil-estudiante) */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
 
 

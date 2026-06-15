@@ -1,0 +1,180 @@
+/* Estilos compartidos de los formularios del perfil de estudiante (RF-03).
+   Tema claro "UCR Design System" (variables ucr y brand de app/globals.css),
+   usado por el rediseño de la pagina perfil-estudiante. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.row .field {
+  flex: 1 1 220px;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font-brand-body);
+  color: var(--ucr-on-surface-variant);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-brand-body);
+  font-size: 0.95rem;
+  color: var(--ucr-on-surface);
+  background: var(--ucr-surface-container);
+  border: 1px solid var(--ucr-outline-variant);
+  border-radius: 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 8rem;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--ucr-outline);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--ucr-celeste);
+  box-shadow: 0 0 0 3px rgba(84, 188, 235, 0.25);
+}
+
+.input:disabled,
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inputError {
+  border-color: var(--brand-naranja);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: var(--brand-naranja);
+}
+
+.ayuda {
+  font-size: 0.78rem;
+  color: var(--ucr-on-surface-variant);
+}
+
+.contador {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: var(--ucr-outline);
+}
+
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem;
+}
+
+.checkboxOption {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  color: var(--ucr-on-surface);
+  background: var(--ucr-surface-container);
+  border: 1px solid var(--ucr-outline-variant);
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+
+.checkboxOption input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--ucr-secondary);
+}
+
+.formError {
+  font-size: 0.85rem;
+  color: var(--brand-naranja);
+  background: rgba(243, 75, 38, 0.08);
+  border: 1px solid rgba(243, 75, 38, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+}
+
+.formExito {
+  font-size: 0.85rem;
+  color: var(--ucr-esmeralda);
+  background: rgba(0, 125, 103, 0.08);
+  border: 1px solid rgba(0, 125, 103, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+}
+
+.submit {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.4rem;
+}
+
+:global(.btn-primary).submit {
+  background: linear-gradient(135deg, var(--ucr-primary) 0%, var(--ucr-secondary) 100%);
+  color: #ffffff;
+  font-family: var(--font-brand-heading);
+  box-shadow: none;
+}
+
+:global(.btn-primary).submit:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 8px 20px -8px var(--ucr-secondary);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cargando {
+  text-align: center;
+  color: var(--ucr-on-surface-variant);
+  padding: 2rem 0;
+}
+
+.aviso {
+  font-size: 0.9rem;
+  color: var(--ucr-on-surface-variant);
+  background: var(--ucr-surface-container);
+  border: 1px solid var(--ucr-outline-variant);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  text-align: center;
+}

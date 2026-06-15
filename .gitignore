@@ -14,3 +14,5 @@ out/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+# Datos en tiempo de ejecución (store de voluntarios)
+BE/data/
