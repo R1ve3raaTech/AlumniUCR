@@ -136,7 +136,9 @@ const registrarExalumnoAutodeclaracion = async ({
   const url = `${BACKEND_URL}/api/auth/confirmar-exalumno/${perfil.id}?token=${token}`;
   enviarCorreoConfirmacionExalumno({ nombre: nombre.trim(), correo, url }).catch(() => {});
 
-  return { perfil };
+  // Se devuelve la URL de confirmación; el controlador decide si exponerla
+  // (solo en desarrollo, como respaldo cuando el correo no se entrega).
+  return { perfil, confirmUrl: url };
 };
 
 /**

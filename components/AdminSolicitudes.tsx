@@ -96,11 +96,8 @@ export default function AdminSolicitudes({ token }: { token: string }) {
   };
 
   return (
-    <section className={`glass-card ${styles.panel}`}>
-      <div className={styles.head}>
-        <h2 className={styles.title}>Solicitudes de colaboración</h2>
-        <span className={styles.count}>{solicitudes.length}</span>
-      </div>
+    <div className={styles.wrap}>
+      <span className={styles.count}>{solicitudes.length} solicitud(es)</span>
 
       {solicitudes.length === 0 ? (
         <p className={styles.empty}>Aún no hay solicitudes de colaboradores.</p>
@@ -158,6 +155,6 @@ export default function AdminSolicitudes({ token }: { token: string }) {
           ))}
         </div>
       )}
-    </section>
+    </div>
   );
 }
