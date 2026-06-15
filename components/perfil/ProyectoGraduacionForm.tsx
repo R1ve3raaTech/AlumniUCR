@@ -40,7 +40,7 @@ interface ErroresFormulario {
   necesidades?: string;
 }
 
-export default function ProyectoGraduacionForm() {
+export default function ProyectoGraduacionForm({ onGuardado }: { onGuardado?: () => void }) {
   const { token, user } = useAuth();
 
   const [cargando, setCargando] = useState(true);
@@ -227,6 +227,7 @@ export default function ProyectoGraduacionForm() {
       setNecesidadesGuardadas(new Set(necesidadesSeleccionadas));
 
       setExito(true);
+      onGuardado?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el proyecto.');
     } finally {

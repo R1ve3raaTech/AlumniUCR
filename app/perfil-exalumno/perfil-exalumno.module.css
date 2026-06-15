@@ -1,0 +1,387 @@
+/* ════════════════════════════════════════════════════════════════════
+   Perfil de Exalumno (RF-02). Identidad de marca (--ucr-/--brand-,
+   Barlow Condensed, textura tech-grid). Responsive y con CSS separado.
+   ════════════════════════════════════════════════════════════════════ */
+
+.cargando {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ucr-surface);
+  color: var(--ucr-on-surface-variant);
+  font-family: var(--font-brand-body);
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ucr-surface);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
+  background-image:
+    linear-gradient(rgba(0, 76, 99, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 76, 99, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ─── Cabecera ────────────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--brand-blanco);
+  border-bottom: 1px solid var(--ucr-outline-variant);
+  padding: 1rem clamp(1rem, 4vw, 64px);
+}
+
+.brand { display: block; }
+
+.back {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ucr-secondary);
+}
+
+.back:hover { text-decoration: underline; }
+
+/* ─── Contenido ───────────────────────────────────────────────────── */
+.main {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem) clamp(1rem, 4vw, 2rem) 3rem;
+}
+
+.intro { margin-bottom: 2rem; }
+
+.tag {
+  display: inline-block;
+  background: var(--ucr-surface-container);
+  color: var(--ucr-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.3rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(2rem, 1.6rem + 2vw, 2.8rem);
+  color: var(--ucr-primary);
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  color: var(--ucr-on-surface-variant);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Progreso ────────────────────────────────────────────────────── */
+.progresoWrap {
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+}
+
+.progresoHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ucr-outline);
+  margin-bottom: 0.5rem;
+}
+
+.progresoHead strong {
+  font-family: var(--font-ucr-display);
+  font-size: 1.6rem;
+  color: var(--brand-esmeralda);
+}
+
+.progresoBar {
+  height: 8px;
+  width: 100%;
+  background: var(--ucr-surface-container);
+  overflow: hidden;
+}
+
+.progresoFill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ucr-secondary), var(--brand-esmeralda));
+  transition: width 0.3s ease;
+}
+
+.progresoNota {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--ucr-on-surface-variant);
+}
+
+/* ─── Formulario / secciones ──────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formError {
+  background: #ffdad6;
+  color: #93000a;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+}
+
+.formOk {
+  background: rgba(0, 125, 103, 0.12);
+  color: var(--ucr-esmeralda);
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.seccion {
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  padding: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+}
+
+.seccionTitulo {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1.35rem;
+  color: var(--ucr-primary);
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--brand-esmeralda);
+}
+
+.seccionNota {
+  font-size: 0.85rem;
+  color: var(--ucr-on-surface-variant);
+  margin: -0.75rem 0 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.full { grid-column: 1 / -1; }
+
+.label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ucr-primary);
+}
+
+.opcional {
+  font-weight: 400;
+  color: var(--ucr-outline);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--ucr-surface-variant);
+  border-radius: 0.4rem;
+  font-family: var(--font-brand-body);
+  font-size: 1rem;
+  color: var(--ucr-on-surface);
+  background: var(--brand-blanco);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ucr-secondary);
+  box-shadow: 0 0 0 4px rgba(0, 102, 135, 0.1);
+}
+
+.textarea { resize: vertical; min-height: 5.5rem; }
+
+.hint { font-size: 0.75rem; color: var(--ucr-outline); }
+
+/* Foto */
+.fotoRow { display: flex; align-items: center; gap: 1rem; }
+
+.fotoPrev,
+.fotoPlaceholder {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--ucr-outline-variant);
+}
+
+.fotoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ucr-surface-container);
+  color: var(--ucr-outline);
+}
+
+.file { font-size: 0.85rem; color: var(--ucr-on-surface-variant); }
+
+/* Cajas de selección múltiple (carreras, sectores) */
+.checkBox {
+  max-height: 13rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--ucr-surface-variant);
+  border-radius: 0.4rem;
+  background: var(--brand-blanco);
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkItem input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--ucr-secondary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Chips (áreas de interés) */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.chip {
+  background: var(--ucr-surface-container);
+  color: var(--ucr-on-surface-variant);
+  border: 1px solid var(--ucr-outline-variant);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip:hover { border-color: var(--ucr-secondary); }
+
+.chipOn {
+  background: var(--brand-esmeralda);
+  color: var(--brand-blanco);
+  border-color: var(--brand-esmeralda);
+}
+
+/* Tipo de apoyo */
+.apoyoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.apoyoItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ucr-on-surface);
+  cursor: pointer;
+  user-select: none;
+}
+
+.apoyoItem input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--brand-esmeralda);
+  cursor: pointer;
+}
+
+.condicional {
+  margin: -0.25rem 0 0.5rem 1.75rem;
+  padding: 1rem;
+  border-left: 3px solid var(--brand-esmeralda);
+  background: rgba(0, 76, 99, 0.04);
+}
+
+/* Acciones */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.guardar {
+  background: var(--ucr-naranja);
+  color: var(--brand-blanco);
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.8rem 2.5rem;
+  border: none;
+  border-radius: 0.4rem;
+  box-shadow: 0 10px 25px -8px rgba(243, 75, 38, 0.5);
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.1s ease;
+}
+
+.guardar:hover { filter: brightness(1.05); }
+.guardar:active { transform: scale(0.99); }
+.guardar:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.verDirectorio {
+  color: var(--ucr-secondary);
+  font-weight: 600;
+}
+
+.verDirectorio:hover { text-decoration: underline; }
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .grid, .grid2, .checkBox { grid-template-columns: 1fr; }
+}
