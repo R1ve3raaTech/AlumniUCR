@@ -131,10 +131,16 @@ const registerExalumno = async (req, res, next) => {
       anioGraduacion: anio,
     });
 
+    // En desarrollo se expone el enlace de confirmación como respaldo (el correo
+    // de Resend solo entrega al dueño de la cuenta sin un dominio verificado).
+    const esProduccion = process.env.NODE_ENV === 'production';
+    const data = { id: result.perfil.id };
+    if (!esProduccion) data.confirmUrl = result.confirmUrl;
+
     res.status(201).json({
       success: true,
       mensaje: 'Cuenta creada. Revisa tu correo para confirmar y activar tu cuenta.',
-      data: { id: result.perfil.id },
+      data,
     });
   } catch (error) {
     next(error);

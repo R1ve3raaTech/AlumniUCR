@@ -78,6 +78,8 @@ export default function RegistroPage() {
   const [facultad, setFacultad] = useState('');
   const [anioGraduacion, setAnioGraduacion] = useState('');
   const [errorForm, setErrorForm] = useState<string | null>(null);
+  // Respaldo de desarrollo: enlace de confirmación directo si el correo no llega.
+  const [confirmUrl, setConfirmUrl] = useState<string | null>(null);
 
   const esUCR = correo.trim().toLowerCase().endsWith('@ucr.ac.cr');
 
@@ -114,7 +116,7 @@ export default function RegistroPage() {
     }
 
     run(async () => {
-      await registrarExalumno({
+      const res = await registrarExalumno({
         correo: correo.trim(),
         contrasena,
         nombre: nombre.trim(),
@@ -122,6 +124,7 @@ export default function RegistroPage() {
         facultad,
         anioGraduacion: anio,
       });
+      setConfirmUrl(res?.data?.confirmUrl ?? null);
       setModoExito('exalumno');
       setEnviado(true);
     });
@@ -182,10 +185,21 @@ export default function RegistroPage() {
               </div>
 
               <div className={styles.successActions}>
-                <button type="button" className={styles.submit} onClick={abrirCorreo}>
-                  Abrir mi correo
-                </button>
+                {confirmUrl ? (
+                  <a href={confirmUrl} className={styles.submit} target="_blank" rel="noopener noreferrer">
+                    Confirmar mi cuenta ahora
+                  </a>
+                ) : (
+                  <button type="button" className={styles.submit} onClick={abrirCorreo}>
+                    Abrir mi correo
+                  </button>
+                )}
                 <div className={styles.resendHint}>
+                  {confirmUrl && (
+                    <p className={styles.expiry}>
+                      Modo desarrollo: como el correo puede no llegar, confirma con el botón de arriba.
+                    </p>
+                  )}
                   <Link href="/login" className={styles.resendBtn}>Ir a iniciar sesión</Link>
                 </div>
               </div>
