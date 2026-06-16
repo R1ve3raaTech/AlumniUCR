@@ -2,6 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY;
 
 // Validar que las variables de entorno estén presentes y no sean placeholders
 const esValido = supabaseUrl &&
@@ -25,7 +26,6 @@ const supabase = createClient(
             autoRefreshToken: false // No es necesario refrescar tokens en backend stateless
         }
     }
-  }
 );
 console.log("SUPABASE URL:", supabaseUrl);
 console.log("KEY USADA:", supabaseKey);
