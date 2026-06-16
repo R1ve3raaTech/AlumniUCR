@@ -6,9 +6,9 @@ const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_ANON
 
 // Validar que las variables de entorno estén presentes y no sean placeholders
 const esValido = supabaseUrl &&
-  supabaseKey &&
-  !supabaseUrl.includes('your-project') &&
-  !supabaseKey.includes('your-anon-key');
+    supabaseKey &&
+    !supabaseUrl.includes('your-project') &&
+    !supabaseKey.includes('your-anon-key');
 
 if (!esValido) {
   console.warn(
@@ -18,14 +18,15 @@ if (!esValido) {
 }
 
 const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseKey || 'placeholder-key',
-  {
-    auth: {
-      persistSession: false, // El backend debe ser sin estado, no persistir sesiones locales
-      autoRefreshToken: false // No es necesario refrescar tokens en backend stateless
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseKey || 'placeholder-key',
+    {
+        auth: {
+            persistSession: false, // El backend debe ser sin estado, no persistir sesiones locales
+            autoRefreshToken: false // No es necesario refrescar tokens en backend stateless
+        }
     }
-  }
 );
-
+console.log("SUPABASE URL:", supabaseUrl);
+console.log("KEY USADA:", supabaseKey);
 module.exports = supabase;

@@ -82,6 +82,8 @@ export default function AyudaPage() {
   const [busqueda, setBusqueda] = useState('');
   const [abierto, setAbierto] = useState<number | null>(0);
 
+
+
   // Filtra las preguntas frecuentes según la búsqueda (cliente).
   const faqsFiltradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -176,9 +178,9 @@ export default function AyudaPage() {
                   Nuestro equipo de soporte está en línea de lunes a viernes de 8:00 AM a 5:00 PM.
                 </p>
               </div>
-              <a className={styles.chatBtn} href={`mailto:${SOPORTE_CORREO}?subject=Chat%20de%20soporte%20—%20UCR%20Connect`}>
+              <button className={styles.chatBtn} onClick={() => window.dispatchEvent(new CustomEvent('open-global-chatbot'))}>
                 <IChat /> Iniciar chat en vivo
-              </a>
+              </button>
             </div>
 
             <div className={styles.ticketCard}>
