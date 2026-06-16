@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import GlobalChatbot from "@/components/GlobalChatbot";
 
 export const metadata: Metadata = {
   title: "Conectando Talento",
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <GlobalChatbot />
+        </AuthProvider>
       </body>
     </html>
   );
