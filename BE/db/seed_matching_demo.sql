@@ -67,6 +67,17 @@ insert into areas_interes_exalumno (id_exalumno, id_area_tematica) values
   ('7160123f-8141-4254-9641-0e370f08e925',12),('7160123f-8141-4254-9641-0e370f08e925',5),('7160123f-8141-4254-9641-0e370f08e925',1),
   ('999f1d6d-e27e-420e-8f23-d55702b5dae3',2),('999f1d6d-e27e-420e-8f23-d55702b5dae3',14);
 
+-- ── Ficha de estudiante (requerida por el FK de proyecto_graduacion) ────
+-- nivel_academico 1 = Bachillerato. id_usuario es PK → idempotente.
+insert into informacion_estudiante
+  (id_usuario, carne, ano_ingreso, id_nivel_academico, promedio_ponderado,
+   busca_financiamiento, busca_mentoria, busca_empleo, busca_pasantia, perfil_completo, pausado)
+values
+  ('1b6f6a87-af9e-4f6d-ab8e-5075b563677b','B12345',2019,1,8.6,true,true,false,true,true,false),
+  ('c1c06412-2679-4c80-a4ad-442fcf34e34d','C23456',2020,1,9.1,false,true,true,false,true,false),
+  ('f1bd6728-8ced-48ab-a94f-54fee58ebe22','D34567',2018,1,8.9,true,true,true,true,true,false)
+on conflict (id_usuario) do nothing;
+
 -- ── Proyectos de graduación de los estudiantes ──────────────────────────
 insert into proyecto_graduacion
   (id_estudiante, titulo_proyecto, descripcion, id_tipo_proyecto, porcentaje_avance, proyecto_finalizado)

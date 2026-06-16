@@ -165,6 +165,25 @@ const obtenerEstudiantesBuscanMentoria = async () => {
 
 
 // ======================================================
+// OBTENER ESTUDIANTES PARA EL DIRECTORIO (RF-05)
+// Solo perfiles 100% completos y no pausados.
+// ⚠️ NO incluir id_beca ni promedio_ponderado (RF-03: "NUNCA visible").
+// ======================================================
+const obtenerEstudiantesDirectorio = async () => {
+
+    const { data, error } = await supabase
+        .from(TABLA)
+        .select('id_usuario, carne, ano_ingreso, id_nivel_academico, busca_financiamiento, busca_mentoria, busca_empleo, busca_pasantia, habilidades, cursos_relevantes')
+        .eq('perfil_completo', true)
+        .eq('pausado', false);
+
+    if (error) throw mapDbError(error);
+
+    return data;
+};
+
+
+// ======================================================
 // EXPORTAR SERVICES
 // ======================================================
 
@@ -176,5 +195,6 @@ module.exports = {
     eliminarInformacionEstudiante,
     obtenerEstudiantesBuscanEmpleo,
     obtenerEstudiantesBuscanPasantia,
-    obtenerEstudiantesBuscanMentoria
+    obtenerEstudiantesBuscanMentoria,
+    obtenerEstudiantesDirectorio
 };

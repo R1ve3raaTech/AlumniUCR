@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import styles from './ayuda.module.css';
 
@@ -96,14 +97,7 @@ export default function AyudaPage() {
 
   return (
     <div className={styles.page}>
-      {/* Cabecera */}
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={36} /></Link>
-        <nav className={styles.headerNav}>
-          <Link href="/login" className={styles.back}><IArrowLeft /> Volver</Link>
-          <span className={styles.headerHelp} aria-hidden><IHelp /></span>
-        </nav>
-      </header>
+      <Navbar />
 
       <main>
         {/* Hero con buscador */}

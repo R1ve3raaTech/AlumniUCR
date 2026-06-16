@@ -1,6 +1,8 @@
 require('dotenv').config({ path: '.env.local' });
+
 const express = require('express');
 const cors = require('cors');
+
 const app = express();
 
 // CORS
@@ -28,7 +30,10 @@ app.use(
 
 app.use(express.json());
 
-// Rutas
+// ======================================================
+// ROUTES
+// ======================================================
+
 const authRoutes = require('./routes/auth.routes');
 const aplicantesEmpleoRoutes = require('./routes/aplicantes.empleo.routes');
 const areasInteresRoutes = require('./routes/areas.interes.routes');
@@ -64,6 +69,8 @@ const cvRoutes = require('./routes/cv.routes');
 const voluntariosRoutes = require('./routes/voluntarios.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const geminiRoutes = require('./routes/gemini.routes');
+const perfilExalumnoRoutes = require('./routes/perfilExalumno.routes');
+const directorioEstudiantesRoutes = require('./routes/directorioEstudiantes.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
@@ -100,6 +107,8 @@ app.use('/api/cv', cvRoutes);
 app.use('/api/voluntarios', voluntariosRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/gemini', geminiRoutes);
+app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
+app.use('/api/estudiantes', directorioEstudiantesRoutes);
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
@@ -110,7 +119,12 @@ app.get('/api/health', (req, res) => {
 const errorMiddleware = require('./middlewares/error.middleware');
 app.use(errorMiddleware);
 
+// ======================================================
+// SERVER
+// ======================================================
+
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

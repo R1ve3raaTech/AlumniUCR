@@ -6,14 +6,14 @@ const TESTIMONIOS = [
   {
     nombre: 'Dra. Rodríguez',
     rol: 'Mentora en Medicina',
-    avatar: '/images/descarga-1.jpg',
+    avatar: '/images/TANIA_RODRIGUEZ01-pq2.png',
     texto:
       'Poder retribuir a mi alma máter guiando a la nueva generación de médicos ha sido una de las experiencias más gratificantes de mi carrera. UCR Connect facilita este puente de manera excepcional.',
   },
   {
     nombre: 'Mateo Rivera',
     rol: 'Emprendedor Tech',
-    avatar: '/images/campus.png',
+    avatar: '/images/image.png',
     texto:
       'Gracias al algoritmo de matching encontré al inversor perfecto para mi startup. No solo compartimos la misma carrera, sino la misma visión de impacto social para el país.',
   },
