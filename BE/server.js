@@ -1,6 +1,8 @@
 require('dotenv').config({ path: '.env.local' });
+
 const express = require('express');
 const cors = require('cors');
+
 const app = express();
 
 // CORS
@@ -28,7 +30,10 @@ app.use(
 
 app.use(express.json());
 
-// Rutas
+// ======================================================
+// ROUTES
+// ======================================================
+
 const authRoutes = require('./routes/auth.routes');
 const aplicantesEmpleoRoutes = require('./routes/aplicantes.empleo.routes');
 const areasInteresRoutes = require('./routes/areas.interes.routes');
@@ -112,7 +117,12 @@ app.get('/api/health', (req, res) => {
 const errorMiddleware = require('./middlewares/error.middleware');
 app.use(errorMiddleware);
 
+// ======================================================
+// SERVER
+// ======================================================
+
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
