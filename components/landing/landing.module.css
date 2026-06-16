@@ -144,20 +144,34 @@
   align-items: center;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  gap: 1rem;
   position: relative;
+}
+
+.navLeft {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.navRight {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
 }
 
 .navLinks {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
 }
 
 .navLink {
   font-family: var(--font-brand-body);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   letter-spacing: 0.04em;
   color: var(--ucr-on-surface-variant);
   background: none;
@@ -216,6 +230,60 @@
   height: 2px;
   background: var(--ucr-primary);
   border-radius: 2px;
+}
+
+.navSearchForm {
+  display: flex;
+  align-items: center;
+  background: var(--ucr-surface-container);
+  border-radius: 2rem;
+  padding: 0.2rem 0.5rem 0.2rem 1rem;
+  border: 1px solid var(--ucr-outline-variant);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navSearchForm:focus-within {
+  border-color: var(--ucr-celeste);
+  box-shadow: 0 0 0 2px rgba(84, 188, 235, 0.2);
+}
+
+.navSearchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-brand-body);
+  font-size: 0.95rem;
+  color: var(--ucr-on-surface);
+  width: 180px;
+  transition: width 0.3s ease;
+}
+
+.navSearchInput::placeholder {
+  color: var(--ucr-on-surface-variant);
+}
+
+.navSearchBtn {
+  background: var(--ucr-celeste);
+  color: var(--brand-blanco);
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.navSearchBtn:hover {
+  transform: scale(1.05);
+  background: var(--ucr-secondary);
+}
+
+.navSearchBtn svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ─── Logo ────────────────────────────────────────────────────────── */
@@ -369,6 +437,7 @@
 
 .heroTitleHighlight {
   background: linear-gradient(90deg, var(--ucr-celeste) 0%, #ffffff 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
@@ -745,16 +814,21 @@
 }
 
 /* ─── Historias de éxito (testimonios) ────────────────────────────── */
+.testiSection {
+  padding-top: clamp(2rem, 1rem + 2vw, 3rem);
+  padding-bottom: 8rem;
+}
+
 .testiTitle {
   text-align: center;
   color: var(--brand-blanco);
-  margin-bottom: 4rem;
 }
 
 .testiGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 3rem;
+  gap: 8rem;
+  margin-top: 6rem;
 }
 
 .testiCard {
@@ -1039,6 +1113,7 @@
 
   .testiGrid {
     grid-template-columns: 1fr;
+    gap: 3rem;
   }
 
   .slide {

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import styles from './mentorias.module.css';
 
@@ -63,22 +64,7 @@ const MENTORES: Mentor[] = [
 export default function MentoriasPage() {
   return (
     <div className={styles.page}>
-      {/* Cabecera */}
-      <header className={styles.header}>
-        <div className={styles.nav}>
-          <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={40} /></Link>
-          <nav className={styles.navLinks}>
-            <Link href="/" className={styles.navLink}>Inicio</Link>
-            <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
-            <span className={`${styles.navLink} ${styles.navLinkActive}`}>Mentorías</span>
-            <Link href="/#impacto" className={styles.navLink}>Impacto</Link>
-          </nav>
-          <div className={styles.navRight}>
-            <Link href="/ayuda" className={styles.iconBtn} aria-label="Notificaciones"><IBell /></Link>
-            <Link href="/dashboard" className={styles.iconBtn} aria-label="Mi perfil"><IUser /></Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className={styles.main}>
         {/* Hero diagonal */}
