@@ -437,6 +437,7 @@
 
 .heroTitleHighlight {
   background: linear-gradient(90deg, var(--ucr-celeste) 0%, #ffffff 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
@@ -813,16 +814,21 @@
 }
 
 /* ─── Historias de éxito (testimonios) ────────────────────────────── */
+.testiSection {
+  padding-top: clamp(2rem, 1rem + 2vw, 3rem);
+  padding-bottom: 8rem;
+}
+
 .testiTitle {
   text-align: center;
   color: var(--brand-blanco);
-  margin-bottom: 5rem;
 }
 
 .testiGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 5rem;
+  gap: 8rem;
+  margin-top: 6rem;
 }
 
 .testiCard {
