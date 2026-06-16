@@ -21,7 +21,7 @@ const TESTIMONIOS = [
 
 export default function Testimonios() {
   return (
-    <section id="historias" className={`${styles.section} ${styles.sectionDark}`}>
+    <section id="historias" className={`${styles.section} ${styles.sectionDark} ${styles.testiSection}`}>
       <div className={styles.container}>
         <h2 className={`${styles.testiTitle} ${styles.headlineLg}`}>
           Historias de <span style={{ color: 'var(--ucr-celeste)' }}>Éxito</span>

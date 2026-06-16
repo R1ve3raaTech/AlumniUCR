@@ -45,9 +45,9 @@ export default function Navbar() {
             );
           })}
 
-          <Link 
-            href="/ayuda" 
-            className={`${styles.navLink} ${pathname === '/ayuda' ? styles.navLinkActive : ''}`} 
+          <Link
+            href="/ayuda"
+            className={`${styles.navLink} ${pathname === '/ayuda' ? styles.navLinkActive : ''}`}
             onClick={cerrar}
           >
             Ayuda
@@ -63,10 +63,7 @@ export default function Navbar() {
               <button
                 type="button"
                 className={styles.navCta}
-                onClick={() => {
-                  signOut();
-                  cerrar();
-                }}
+                onClick={() => { signOut(); cerrar(); }}
               >
                 Salir
               </button>
