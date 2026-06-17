@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
-import AlumniLogo from '@/components/AlumniLogo';
+import StudentNav from '@/components/StudentNav';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
@@ -35,17 +34,15 @@ interface ExalumnoDir {
   sectores: string[];
   areas: string[];
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; colaboracion: boolean; donacion: boolean };
+  correo?: string | null;
 }
 interface SolicitudRecibida {
   id: string;
   nombre_exalumno: string;
   mensaje: string;
   estado: 'pendiente' | 'aceptada' | 'rechazada';
+  correo_exalumno?: string | null;
 }
-
-const ESTADO_LABEL: Record<string, string> = {
-  sugerido: 'Sugerido', contactado: 'Conexion enviada', activo: 'Conexion activa', rechazada: 'No aceptada',
-};
 
 export default function MisMatchesPage() {
   const router = useRouter();
@@ -129,37 +126,15 @@ export default function MisMatchesPage() {
 
   const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
-  return (
-    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
-      {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-        <Link href="/" aria-label="Alumni UCR inicio" className="mb-10 block">
-          <AlumniLogo height={32} />
-        </Link>
-        <nav className="flex flex-1 flex-col gap-1">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">Paneles</p>
-          <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-            <span className="material-symbols-outlined">dashboard</span>Dashboard
-          </Link>
-          <Link href={rol === 'estudiante' ? '/perfil-estudiante' : '/perfil-exalumno'} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-            <span className="material-symbols-outlined">person</span>Mi perfil
-          </Link>
-          <span className="flex items-center gap-3 rounded-xl bg-ucr-secondary-container/30 px-3 py-2 text-sm font-semibold text-ucr-primary">
-            <span className="material-symbols-outlined">handshake</span>Mis matches
-          </span>
-          {rol === 'estudiante' && (
-            <Link href="/estudiantes?rol=estudiante" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-              <span className="material-symbols-outlined">groups</span>Directorio
-            </Link>
-          )}
-        </nav>
-        <button type="button" onClick={handleSignOut} className="mt-6 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-          <span className="material-symbols-outlined">logout</span>Cerrar sesion
-        </button>
-      </aside>
+  const pendientes = recibidas.filter((s) => s.estado === 'pendiente');
+  const respondidas = recibidas.filter((s) => s.estado !== 'pendiente');
 
-      {/* Contenido principal */}
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+  return (
+    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <StudentNav onSignOut={handleSignOut} />
+
+      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        {/* Hero */}
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
           <h1 className="font-ucr-display text-3xl font-bold tracking-tight sm:text-4xl">Mis Matches</h1>
           <p className="mt-2 text-sm text-white/80">
@@ -172,45 +147,91 @@ export default function MisMatchesPage() {
         <div className="mt-6">
           {cargando ? (
             <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Calculando tus matches...</p>
+
+          /* ── VISTA ESTUDIANTE ── */
           ) : rol === 'estudiante' ? (
             recibidas.length === 0 ? (
               <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Todavia no recibiste solicitudes de conexion.</p>
             ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {recibidas.map((s) => (
-                  <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm">
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                        {iniciales(s.nombre_exalumno)}
-                      </div>
-                      <div>
-                        <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
-                        <span className="text-xs text-ucr-on-surface-variant">Exalumno</span>
-                      </div>
+              <div className="flex flex-col gap-8">
+                {/* Pendientes */}
+                {pendientes.length > 0 && (
+                  <div>
+                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">
+                      Pendientes de respuesta
+                      <span className="ml-2 rounded-full bg-ucr-secondary px-2.5 py-0.5 text-xs font-semibold text-white">{pendientes.length}</span>
+                    </h2>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {pendientes.map((s) => (
+                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-2 ring-ucr-secondary/20">
+                          <div className="mb-3 flex items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                              {iniciales(s.nombre_exalumno)}
+                            </div>
+                            <div>
+                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
+                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
+                            </div>
+                          </div>
+                          {s.mensaje && <p className="mb-4 text-sm italic text-ucr-on-surface-variant">"{s.mensaje}"</p>}
+                          <div className="mt-auto flex gap-2">
+                            <button onClick={() => responder(s.id, true)} disabled={enviando === s.id}
+                              className="flex-1 rounded-2xl bg-ucr-secondary py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
+                              {enviando === s.id ? 'Guardando...' : 'Aceptar'}
+                            </button>
+                            <button onClick={() => responder(s.id, false)} disabled={enviando === s.id}
+                              className="flex-1 rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface-variant transition hover:bg-ucr-surface-container disabled:opacity-60">
+                              Rechazar
+                            </button>
+                          </div>
+                        </article>
+                      ))}
                     </div>
-                    {s.mensaje && <p className="mb-3 text-sm italic text-ucr-on-surface-variant">"{s.mensaje}"</p>}
-                    <div className="mt-auto">
-                      {s.estado === 'pendiente' ? (
-                        <div className="flex gap-2">
-                          <button onClick={() => responder(s.id, true)} disabled={enviando === s.id}
-                            className="flex-1 rounded-2xl bg-ucr-secondary py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
-                            Aceptar
-                          </button>
-                          <button onClick={() => responder(s.id, false)} disabled={enviando === s.id}
-                            className="flex-1 rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface-variant transition hover:bg-ucr-surface-container disabled:opacity-60">
-                            Rechazar
-                          </button>
-                        </div>
-                      ) : (
-                        <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${s.estado === 'aceptada' ? 'bg-ucr-esmeralda/10 text-ucr-esmeralda' : 'bg-ucr-surface-container text-ucr-outline'}`}>
-                          {s.estado === 'aceptada' ? 'Conexion activa' : 'Rechazada'}
-                        </span>
-                      )}
+                  </div>
+                )}
+
+                {/* Respondidas */}
+                {respondidas.length > 0 && (
+                  <div>
+                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">Historial</h2>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {respondidas.map((s) => (
+                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm opacity-90">
+                          <div className="mb-3 flex items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                              {iniciales(s.nombre_exalumno)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
+                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
+                            </div>
+                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              s.estado === 'aceptada'
+                                ? 'bg-ucr-esmeralda/10 text-ucr-esmeralda'
+                                : 'bg-ucr-surface-container text-ucr-outline'
+                            }`}>
+                              {s.estado === 'aceptada' ? 'Activa' : 'Rechazada'}
+                            </span>
+                          </div>
+                          {s.estado === 'aceptada' && s.correo_exalumno && (
+                            <a href={`mailto:${s.correo_exalumno}`}
+                              className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
+                              <span className="material-symbols-outlined text-base">mail</span>
+                              {s.correo_exalumno}
+                            </a>
+                          )}
+                          {s.estado === 'aceptada' && !s.correo_exalumno && (
+                            <p className="mt-1 text-xs text-ucr-on-surface-variant">Conexion activa — contacto disponible pronto.</p>
+                          )}
+                        </article>
+                      ))}
                     </div>
-                  </article>
-                ))}
+                  </div>
+                )}
               </div>
             )
+
+          /* ── VISTA EXALUMNO ── */
           ) : rol === 'exalumno' ? (
             !miPerfilExa ? (
               <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Completa tu perfil de exalumno para generar tus matches.</p>
@@ -221,7 +242,8 @@ export default function MisMatchesPage() {
                 {ranking.map(({ est, score, comunes, interdisciplinario }) => {
                   const estado = estadoMatch(est.solicitud);
                   return (
-                    <article key={est.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm">
+                    <article key={est.id} className={`flex flex-col rounded-3xl bg-white p-5 shadow-sm ${estado === 'activo' ? 'ring-2 ring-ucr-esmeralda/30' : ''}`}>
+                      {/* Cabecera */}
                       <div className="mb-3 flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3">
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
@@ -232,37 +254,68 @@ export default function MisMatchesPage() {
                             <span className="text-xs text-ucr-on-surface-variant">{est.carreras[0] || '?'}{est.facultades[0] ? ` - ${est.facultades[0]}` : ''}</span>
                           </div>
                         </div>
-                        <span className="shrink-0 rounded-full bg-ucr-secondary px-2.5 py-1 text-xs font-bold text-white">{score}/100</span>
+                        {/* Score badge */}
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white ${
+                          score >= 70 ? 'bg-ucr-esmeralda' : score >= 40 ? 'bg-ucr-secondary' : 'bg-ucr-outline'
+                        }`}>{score}/100</span>
                       </div>
 
-                      <p className="mb-2 text-sm text-ucr-on-surface"><span className="font-semibold">Proyecto:</span> {est.proyecto?.titulo}</p>
+                      {/* Proyecto */}
+                      <p className="mb-2 text-sm text-ucr-on-surface">
+                        <span className="font-semibold">Proyecto:</span> {est.proyecto?.titulo}
+                      </p>
 
-                      {interdisciplinario && (
-                        <span className="mb-2 inline-block rounded-full bg-ucr-celeste/10 px-2.5 py-0.5 text-xs font-semibold text-ucr-secondary">Interdisciplinario</span>
-                      )}
-
-                      {comunes.length > 0 && (
-                        <div className="mb-3 flex flex-wrap gap-1.5">
-                          {comunes.map((a: string) => (
-                            <span key={a} className="rounded-full bg-ucr-surface-container px-2.5 py-0.5 text-xs text-ucr-on-surface-variant">#{a}</span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-ucr-surface-container">
-                        <span className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda" style={{ width: `${score}%` }} />
+                      {/* Tags */}
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        {interdisciplinario && (
+                          <span className="rounded-full bg-ucr-celeste/10 px-2.5 py-0.5 text-xs font-semibold text-ucr-secondary">Interdisciplinario</span>
+                        )}
+                        {comunes.map((a: string) => (
+                          <span key={a} className="rounded-full bg-ucr-surface-container px-2.5 py-0.5 text-xs text-ucr-on-surface-variant">#{a}</span>
+                        ))}
                       </div>
 
+                      {/* Barra de compatibilidad */}
+                      <div className="mb-1 flex items-center justify-between text-xs text-ucr-on-surface-variant">
+                        <span>Compatibilidad</span>
+                        <span className="font-semibold">{score}%</span>
+                      </div>
+                      <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-ucr-surface-container">
+                        <span className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda transition-all" style={{ width: `${score}%` }} />
+                      </div>
+
+                      {/* Accion segun estado */}
                       <div className="mt-auto">
-                        {estado === 'activo' && est.correo ? (
-                          <a href={`mailto:${est.correo}`} className="text-sm font-semibold text-ucr-secondary underline">{est.correo}</a>
-                        ) : estado === 'sugerido' ? (
+                        {estado === 'activo' ? (
+                          <div className="rounded-2xl bg-ucr-esmeralda/10 p-3">
+                            <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ucr-esmeralda">
+                              <span className="material-symbols-outlined text-base">check_circle</span>
+                              Conexion activa
+                            </p>
+                            {est.correo ? (
+                              <a href={`mailto:${est.correo}`} className="flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
+                                <span className="material-symbols-outlined text-base">mail</span>
+                                {est.correo}
+                              </a>
+                            ) : (
+                              <p className="text-xs text-ucr-on-surface-variant">Contacto disponible pronto.</p>
+                            )}
+                          </div>
+                        ) : estado === 'contactado' ? (
+                          <div className="flex items-center gap-2 rounded-2xl bg-ucr-surface-container px-4 py-2.5">
+                            <span className="material-symbols-outlined text-base text-ucr-outline">schedule</span>
+                            <span className="text-sm text-ucr-on-surface-variant">Solicitud enviada — esperando respuesta</span>
+                          </div>
+                        ) : estado === 'rechazada' ? (
+                          <div className="flex items-center gap-2 rounded-2xl bg-ucr-surface-container px-4 py-2.5">
+                            <span className="material-symbols-outlined text-base text-ucr-outline">block</span>
+                            <span className="text-sm text-ucr-outline">No aceptada</span>
+                          </div>
+                        ) : (
                           <button onClick={() => conectar(est.id)} disabled={enviando === est.id}
                             className="w-full rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface transition hover:border-ucr-secondary hover:text-ucr-secondary disabled:opacity-60">
                             {enviando === est.id ? 'Enviando...' : 'Solicitar conexion'}
                           </button>
-                        ) : (
-                          <span className="text-xs text-ucr-outline">{ESTADO_LABEL[estado]}</span>
                         )}
                       </div>
                     </article>

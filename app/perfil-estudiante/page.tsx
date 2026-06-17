@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
+import StudentNav from '@/components/StudentNav';
 import perfilStyles from '@/components/perfil/perfil.module.css';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
 import { obtenerProyectoDelEstudiante } from '@/lib/proyectoGraduacion';
@@ -89,81 +89,10 @@ export default function PerfilEstudiantePage() {
   const inicial = correo.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
-      {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-        <Link href="/" aria-label="Alumni UCR — inicio" className="mb-10 block">
-          <AlumniLogo height={32} />
-        </Link>
+    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <StudentNav onSignOut={handleSignOut} />
 
-        <nav className="flex flex-1 flex-col gap-1">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
-            Paneles
-          </p>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            Dashboard
-          </Link>
-          <span className="flex items-center gap-3 rounded-xl bg-ucr-secondary-container/30 px-3 py-2 text-sm font-semibold text-ucr-primary">
-            <span className="material-symbols-outlined">person</span>
-            Mi perfil
-          </span>
-          <Link
-            href="/mis-matches"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">handshake</span>
-            Mis matches
-          </Link>
-          <Link
-            href="/estudiantes?rol=estudiante"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">groups</span>
-            Directorio
-          </Link>
-
-          <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
-            Secciones
-          </p>
-          <a
-            href="#academico"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">school</span>
-            Información académica
-          </a>
-          <a
-            href="#proyecto"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">assignment</span>
-            Proyecto de graduación
-          </a>
-          <a
-            href="#habilidades"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">workspace_premium</span>
-            Habilidades
-          </a>
-        </nav>
-
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="mt-6 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-        >
-          <span className="material-symbols-outlined">logout</span>
-          Cerrar sesión
-        </button>
-      </aside>
-
-      {/* Contenido principal */}
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         {/* Hero header */}
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
           <div className="flex flex-wrap items-center gap-5">
