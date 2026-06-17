@@ -108,7 +108,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
       {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
         <Link href="/" aria-label="Alumni UCR — inicio" className="mb-10 block">
           <AlumniLogo height={32} />
         </Link>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
           >
             <span className="material-symbols-outlined">groups</span>
             Directorio
-          </span>
+          </Link>
 
           <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
             Secciones
