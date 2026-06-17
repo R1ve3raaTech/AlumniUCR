@@ -24,7 +24,7 @@ const TESTIMONIOS = [
 
 export default function Testimonios() {
   return (
-    <section id="historias" className={`${styles.section} ${styles.sectionDark}`}>
+    <section id="historias" className={`${styles.section} ${styles.sectionDark} ${styles.testiSection}`}>
       <div className={styles.container}>
         <motion.h2
           className={`${styles.testiTitle} ${styles.headlineLg}`}
