@@ -318,6 +318,9 @@ export default function EstudiantesPage() {
           <Link href={rol === 'estudiante' ? '/perfil-estudiante' : '/perfil-exalumno'} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
             <span className="material-symbols-outlined">person</span>Mi perfil
           </Link>
+          <Link href="/mis-matches" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
+            <span className="material-symbols-outlined">handshake</span>Mis matches
+          </Link>
           <span className="flex items-center gap-3 rounded-xl bg-ucr-secondary-container/30 px-3 py-2 text-sm font-semibold text-ucr-primary">
             <span className="material-symbols-outlined">groups</span>Directorio
           </span>

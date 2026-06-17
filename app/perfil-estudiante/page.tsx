@@ -112,6 +112,13 @@ export default function PerfilEstudiantePage() {
             Mi perfil
           </span>
           <Link
+            href="/mis-matches"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
+          >
+            <span className="material-symbols-outlined">handshake</span>
+            Mis matches
+          </Link>
+          <Link
             href="/estudiantes?rol=estudiante"
             className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
           >
