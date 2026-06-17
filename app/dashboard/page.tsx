@@ -142,7 +142,7 @@ export default function DashboardPage() {
           >
             <span className="material-symbols-outlined">groups</span>
             Directorio
-          </Link>
+          </span>
 
           <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
             Secciones
