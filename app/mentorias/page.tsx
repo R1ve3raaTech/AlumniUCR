@@ -247,7 +247,7 @@ function MentoriasContent() {
       });
     }, gridRef);
     return () => ctx.revert();
-  }, [mentoresVisibles]);
+  }, [query, facultad, experticia, experiencia, isExpanded]);
 
   // ─── GSAP: CTA — blur reveal + magnetic button (Core Motion Mechanics) ────
   useEffect(() => {
