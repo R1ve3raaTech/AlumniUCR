@@ -18,13 +18,10 @@ const q = (scope: HTMLElement, sel: string) =>
 function animateHero(scope: HTMLElement) {
   const tl = gsap.timeline({ defaults: { ease: 'power4.out', duration: 1.2 } });
 
-  tl.from(q(scope, '[data-anim="hero-text"] > *'), {
-    y: 40,
-    opacity: 0,
-    scale: 0.95,
-    filter: 'blur(8px)',
-    stagger: 0.15,
-  });
+  tl.fromTo(q(scope, '[data-anim="hero-text"] > *'),
+    { y: 40, opacity: 0, scale: 0.95, filter: 'blur(8px)' },
+    { y: 0, opacity: 1, scale: 1, filter: 'blur(0px)', stagger: 0.15 }
+  );
 
   const bgVideo = q(scope, '[data-anim="hero-bg-video"]');
   if (bgVideo.length) {

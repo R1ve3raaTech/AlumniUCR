@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
@@ -24,9 +25,6 @@ export default function Navbar() {
   return (
     <motion.nav
       className={styles.navbar}
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
     >
       <div className={`${styles.container} ${styles.navInner}`}>
         <div className={styles.navLeft}>
