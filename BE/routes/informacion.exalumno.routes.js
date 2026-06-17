@@ -8,6 +8,7 @@ router.get('/mentores', autenticarUsuario, exigirRol(['admin', 'estudiante', 'ex
 router.get('/ofrecen-empleo', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionExalumnoController.obtenerExalumnosOfrecenEmpleo);
 router.get('/ofrecen-pasantia', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionExalumnoController.obtenerExalumnosOfrecenPasantia);
 router.get('/ofrecen-donacion', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionExalumnoController.obtenerExalumnosOfrecenDonacion);
+router.get('/directorio', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionExalumnoController.obtenerExalumnosDirectorio);
 router.get('/usuario/:idUsuario', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionExalumnoController.obtenerInformacionExalumnoPorUsuario);
 router.get('/', autenticarUsuario, exigirRol('admin'), informacionExalumnoController.obtenerInformacionExalumnos);
 router.post('/', autenticarUsuario, exigirRol(['admin', 'exalumno']), informacionExalumnoController.crearInformacionExalumno);

@@ -1,0 +1,60 @@
+/* Dashboard de Impacto del admin (RF-08.3). Usa los tokens --ucr-* globales. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body); }
+
+.header { display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px; background: var(--ucr-primary); }
+.headerLinks { display: flex; gap: 18px; }
+.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display);
+  font-size: .95rem; opacity: .9; }
+.back:hover { opacity: 1; text-decoration: underline; }
+
+.hero { padding: 32px 32px 8px; max-width: 1280px; margin: 0 auto; }
+.heroTop { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.heroTitle { font-family: var(--font-ucr-display); color: var(--ucr-primary); font-size: 2.2rem; font-weight: 800; }
+.heroText { color: var(--ucr-on-surface-variant); }
+.controles { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.controles label { font-size: .8rem; color: var(--ucr-on-surface-variant); display: flex; flex-direction: column; gap: 4px; }
+.controles input { padding: 6px 8px; border: 1px solid var(--ucr-surface-variant); border-radius: 8px; font-family: inherit; }
+.btnGhost, .btnPdf { font-family: var(--font-ucr-display); padding: 9px 16px; border-radius: 8px; border: none; cursor: pointer; }
+.btnGhost { background: var(--ucr-surface-container); color: var(--ucr-primary); }
+.btnPdf { background: var(--ucr-celeste); color: var(--ucr-primary); font-weight: 600; }
+.actualizado { display: inline-block; margin-top: 10px; font-size: .82rem; color: var(--ucr-on-surface-variant); }
+
+.main { max-width: 1280px; margin: 0 auto; padding: 18px 32px 60px; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi { background: #fff; border: 1px solid var(--ucr-surface-variant); border-radius: 14px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.kpiVal { font-family: var(--font-ucr-display); font-size: 1.8rem; font-weight: 800; color: var(--ucr-primary); }
+.kpiLab { font-size: .85rem; color: var(--ucr-on-surface-variant); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.card { background: #fff; border: 1px solid var(--ucr-surface-variant); border-radius: 14px; padding: 20px; }
+.cardWide { grid-column: 1 / -1; }
+.cardTitle { font-family: var(--font-ucr-display); color: var(--ucr-primary); font-size: 1.1rem; margin-bottom: 14px; }
+
+.barras { display: flex; flex-direction: column; gap: 10px; }
+.barraRow { display: grid; grid-template-columns: 160px 1fr auto; align-items: center; gap: 10px; }
+.barraLabel { font-size: .85rem; color: var(--ucr-on-surface-variant); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; text-transform: capitalize; }
+.barraTrack { background: var(--ucr-surface-variant); border-radius: 999px; height: 14px; overflow: hidden; }
+.barraFill { display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--ucr-celeste), #2f97c9); }
+.barraValor { font-size: .85rem; font-weight: 600; color: var(--ucr-primary); min-width: 40px; text-align: right; }
+.sinDatos { color: var(--ucr-on-surface-variant); font-size: .9rem; }
+
+.notaBE { margin-top: 22px; padding: 12px 16px; background: #fff8e6; border: 1px solid #f0e0a8;
+  border-radius: 10px; color: #6b5800; font-size: .85rem; }
+
+/* Exportación a PDF: se imprime solo el contenido del dashboard. */
+@media print {
+  .noPrint { display: none !important; }
+  .page { background: #fff; }
+  .card, .kpi { break-inside: avoid; border-color: #ccc; }
+  .main { padding: 0; }
+}
+
+@media (max-width: 640px) {
+  .barraRow { grid-template-columns: 110px 1fr auto; }
+}

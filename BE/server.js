@@ -1,4 +1,6 @@
-require('dotenv').config({ path: '.env.local' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -68,6 +70,7 @@ const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
 const voluntariosRoutes = require('./routes/voluntarios.routes');
 const matchingRoutes = require('./routes/matching.routes');
+const claudeRoutes = require('./routes/claude.routes');
 const perfilExalumnoRoutes = require('./routes/perfilExalumno.routes');
 const directorioEstudiantesRoutes = require('./routes/directorioEstudiantes.routes');
 
@@ -105,6 +108,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/voluntarios', voluntariosRoutes);
 app.use('/api/matching', matchingRoutes);
+app.use('/api/claude', claudeRoutes);
 app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
 app.use('/api/estudiantes', directorioEstudiantesRoutes);
 
