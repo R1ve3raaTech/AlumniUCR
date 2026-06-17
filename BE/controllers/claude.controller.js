@@ -1,11 +1,11 @@
 /**
- * Controlador para las interacciones con el Asistente de IA (Gemini).
+ * Controlador para las interacciones con el Asistente de IA (Claude).
  */
-const geminiService = require('../services/gemini.service');
+const claudeService = require('../services/claude.service');
 
 /**
- * Endpoint para interactuar con el Chatbot de Soporte Adaptativo.
- * POST /api/gemini/chat
+ * Endpoint para interactuar con el Chatbot de Soporte Adaptativo de Claude.
+ * POST /api/claude/chat
  */
 const chatSoporte = async (req, res, next) => {
   try {
@@ -25,7 +25,7 @@ const chatSoporte = async (req, res, next) => {
     }
 
     // Llamar al servicio pasándole el historial y el contexto de navegación/rol
-    const respuesta = await geminiService.generarRespuestaSoporte(historial, contexto);
+    const respuesta = await claudeService.generarRespuestaSoporte(historial, contexto);
 
     return res.status(200).json({
       success: true,
