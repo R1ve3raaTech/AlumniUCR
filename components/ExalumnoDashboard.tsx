@@ -1,12 +1,8 @@
 'use client';
 
-// Panel del exalumno. Reutiliza la identidad visual de la plataforma (paleta
-// --ucr-/--brand-, tipografía condensada y textura tech-grid) y enlaza a las
-// secciones reales (proyectos, mentorías). Se construye sobre el perfil real
-// del exalumno autenticado.
-
 import React from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import styles from './ExalumnoDashboard.module.css';
 
@@ -52,6 +48,15 @@ const ACCIONES = [
   { icon: <IHub />, titulo: 'Centro de ayuda', desc: '¿Dudas? Encuentra respuestas y contacto de soporte.', href: '/ayuda' },
 ];
 
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+const fadeItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+};
+
 export default function ExalumnoDashboard({
   perfil,
   correo,
@@ -73,10 +78,17 @@ export default function ExalumnoDashboard({
   return (
     <div className={styles.page}>
       {/* Cabecera */}
-      <header className={styles.header}>
+      <motion.header
+        className={styles.header}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <div className={styles.nav}>
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
           <nav className={styles.navLinks}>
+            <Link href="/mis-matches" className={styles.navLink}>Mis matches</Link>
+            <Link href="/estudiantes" className={styles.navLink}>Estudiantes</Link>
             <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
             <Link href="/mentorias" className={styles.navLink}>Mentorías</Link>
             <Link href="/ayuda" className={styles.navLink}>Ayuda</Link>
@@ -85,53 +97,96 @@ export default function ExalumnoDashboard({
             <ILogout /> Cerrar sesión
           </button>
         </div>
-      </header>
+      </motion.header>
 
       <main className={styles.main}>
         {/* Bienvenida */}
-        <section className={styles.welcome}>
+        <motion.section
+          className={styles.welcome}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
           <span className={styles.welcomeTexture} aria-hidden />
-          <div className={styles.welcomeContent}>
+          <motion.div
+            className={styles.welcomeContent}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
             <span className={styles.badge}>{rol}</span>
             <h1 className={styles.welcomeTitle}>Hola de nuevo, {primerNombre}</h1>
             <p className={styles.welcomeText}>
               Este es tu espacio para conectar con la UCR: apoya proyectos, comparte tu
               experiencia como mentor y haz crecer la red Alumni.
             </p>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         <div className={styles.container}>
           {/* Estadísticas */}
-          <section className={styles.stats}>
+          <motion.section
+            className={styles.stats}
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {STATS.map((s) => (
-              <article key={s.label} className={styles.statCard}>
+              <motion.article
+                key={s.label}
+                className={styles.statCard}
+                variants={fadeItem}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
                 <span className={styles.statIcon}>{s.icon}</span>
                 <div>
                   <span className={styles.statValor}>{s.valor}</span>
                   <span className={styles.statLabel}>{s.label}</span>
                 </div>
-              </article>
+              </motion.article>
             ))}
-          </section>
+          </motion.section>
 
           {/* Acciones rápidas */}
           <section className={styles.bloque}>
-            <h2 className={styles.bloqueTitulo}>Acciones rápidas</h2>
-            <div className={styles.acciones}>
+            <motion.h2
+              className={styles.bloqueTitulo}
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+            >
+              Acciones rápidas
+            </motion.h2>
+            <motion.div
+              className={styles.acciones}
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-40px' }}
+            >
               {ACCIONES.map((a) => (
-                <Link key={a.titulo} href={a.href} className={styles.accionCard}>
-                  <span className={styles.accionIcon}>{a.icon}</span>
-                  <h3 className={styles.accionTitulo}>{a.titulo}</h3>
-                  <p className={styles.accionDesc}>{a.desc}</p>
-                  <span className={styles.accionArrow}><IArrowRight /></span>
-                </Link>
+                <motion.div key={a.titulo} variants={fadeItem} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                  <Link href={a.href} className={styles.accionCard}>
+                    <span className={styles.accionIcon}>{a.icon}</span>
+                    <h3 className={styles.accionTitulo}>{a.titulo}</h3>
+                    <p className={styles.accionDesc}>{a.desc}</p>
+                    <span className={styles.accionArrow}><IArrowRight /></span>
+                  </Link>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
 
           {/* Tu cuenta */}
-          <section className={styles.bloque}>
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
             <h2 className={styles.bloqueTitulo}>Tu cuenta</h2>
             <div className={styles.cuenta}>
               <div className={styles.cuentaInfo}>
@@ -172,11 +227,13 @@ export default function ExalumnoDashboard({
                   )}
                 </div>
               </div>
-              <Link href="/perfil-exalumno" className={styles.editar}>
-                <IEdit /> Editar perfil
-              </Link>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Link href="/perfil-exalumno" className={styles.editar}>
+                  <IEdit /> Editar perfil
+                </Link>
+              </motion.div>
             </div>
-          </section>
+          </motion.section>
         </div>
       </main>
 

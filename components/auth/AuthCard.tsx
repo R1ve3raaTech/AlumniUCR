@@ -1,9 +1,7 @@
 'use client';
 
-// Contenedor visual compartido por login y registro: tarjeta glass centrada
-// con la marca, un título y un subtítulo. El contenido (formulario) va como children.
-
 import React from 'react';
+import { motion } from 'framer-motion';
 import styles from './auth.module.css';
 
 interface AuthCardProps {
@@ -15,14 +13,31 @@ interface AuthCardProps {
 export default function AuthCard({ title, subtitle, children }: AuthCardProps) {
   return (
     <div className={styles.page}>
-      <div className={`glass-card ${styles.card}`}>
-        <div className={styles.header}>
-          <div className={styles.brand}>CT</div>
+      <motion.div
+        className={`glass-card ${styles.card}`}
+        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+      >
+        <motion.div
+          className={styles.header}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.4 }}
+        >
+          <motion.div
+            className={styles.brand}
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.45, type: 'spring', stiffness: 220, damping: 15 }}
+          >
+            CT
+          </motion.div>
           <h1 className={styles.title}>{title}</h1>
           {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
-        </div>
+        </motion.div>
         {children}
-      </div>
+      </motion.div>
     </div>
   );
 }

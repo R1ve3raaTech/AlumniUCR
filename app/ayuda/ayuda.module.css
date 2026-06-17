@@ -331,13 +331,8 @@
 }
 
 .accordionContent {
-  max-height: 0;
+  height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out;
-}
-
-.accordionActive .accordionContent {
-  max-height: 500px;
 }
 
 .accordionA {
