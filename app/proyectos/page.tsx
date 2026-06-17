@@ -7,7 +7,11 @@ import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './proyectos.module.css';
+
+if (typeof window !== 'undefined') { gsap.registerPlugin(ScrollTrigger); }
 
 // ─── Íconos SVG inline ─────────────────────────────────────────────────────
 const base = {
@@ -166,29 +170,99 @@ function ProyectosContent() {
   }, [user, token]);
 
   // ─── Modal GSAP ──────────────────────────────────────────────────────
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const boxRef     = useRef<HTMLDivElement>(null);
+  const overlayRef  = useRef<HTMLDivElement>(null);
+  const boxRef      = useRef<HTMLDivElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const abrirModal = useCallback(async () => {
+  // ─── Refs para animaciones ─────────────────────────────────────────────
+  const heroRef     = useRef<HTMLElement>(null);
+  const filtersRef  = useRef<HTMLElement>(null);
+  const gridAnimRef = useRef<HTMLDivElement>(null);
+
+  // ─── GSAP: Hero Entrance — clip-path + blur reveal ────────────────────
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        const tl: gsap.core.Timeline = gsap.timeline({ delay: 0.15 });
+        tl.fromTo(`.${styles.badge}`,
+          { clipPath: 'inset(0 100% 0 0)', opacity: 0 },
+          { clipPath: 'inset(0 0% 0 0)', opacity: 1, duration: 0.7, ease: 'power3.inOut' }
+        )
+        .fromTo(`.${styles.heroTitle}`,
+          { y: 70, opacity: 0, filter: 'blur(10px)', rotateX: -12 },
+          { y: 0, opacity: 1, filter: 'blur(0px)', rotateX: 0, duration: 1.1, ease: 'power4.out' },
+          '-=0.3'
+        )
+        .fromTo(`.${styles.heroText}`,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: 'power2.out' },
+          '-=0.6'
+        );
+      });
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set([`.${styles.badge}`, `.${styles.heroTitle}`, `.${styles.heroText}`], { opacity: 1 });
+      });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  // ─── GSAP: Filters slide-down (ScrollTrigger) ─────────────────────────
+  useEffect(() => {
+    if (!filtersRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      gsap.fromTo(filtersRef.current,
+        { y: -25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.55, ease: 'power2.out',
+          scrollTrigger: { trigger: filtersRef.current, start: 'top 92%' } }
+      );
+    }, filtersRef);
+    return () => ctx.revert();
+  }, []);
+
+  // ─── GSAP: Cards 3D stagger + progress bars (Scroll Dynamics) ─────────
+  useEffect(() => {
+    if (!gridAnimRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo('.prj-card',
+          { y: 60, opacity: 0, rotateY: 10, transformPerspective: 900, scale: 0.94 },
+          { y: 0, opacity: 1, rotateY: 0, scale: 1,
+            duration: 0.75, stagger: 0.13, ease: 'back.out(1.5)',
+            scrollTrigger: { trigger: gridAnimRef.current, start: 'top 85%' } }
+        );
+        // Progress bars fill on scroll
+        gridAnimRef.current!.querySelectorAll<HTMLSpanElement>('.prj-bar').forEach((bar) => {
+          const w = bar.style.width;
+          gsap.from(bar, { width: '0%', duration: 1.3, ease: 'power2.out',
+            scrollTrigger: { trigger: bar, start: 'top 90%' } });
+        });
+      });
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('.prj-card', { opacity: 1 });
+      });
+    }, gridAnimRef);
+    return () => ctx.revert();
+  }, [pagina, areaActiva, orden, query]);
+
+  const abrirModal = useCallback(() => {
     setModalOpen(true);
-    const gsap = (await import('gsap')).gsap;
     gsap.to(overlayRef.current, { opacity: 1, visibility: 'visible', pointerEvents: 'all', duration: 0.3, ease: 'power2.out' });
     gsap.fromTo(boxRef.current,
       { y: 28, scale: 0.96, opacity: 0 },
-      { y: 0,  scale: 1,    opacity: 1, duration: 0.4, ease: 'back.out(1.4)', delay: 0.05 }
+      { y: 0, scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.4)', delay: 0.05 }
     );
   }, []);
 
-  const cerrarModal = useCallback(async () => {
-    const gsap = (await import('gsap')).gsap;
-    gsap.to(boxRef.current,     { y: 16, scale: 0.97, opacity: 0, duration: 0.25, ease: 'power2.in' });
+  const cerrarModal = useCallback(() => {
+    gsap.to(boxRef.current, { y: 16, scale: 0.97, opacity: 0, duration: 0.25, ease: 'power2.in' });
     gsap.to(overlayRef.current, { opacity: 0, duration: 0.3, ease: 'power2.in', delay: 0.1,
       onComplete: () => { setModalOpen(false); gsap.set(overlayRef.current, { visibility: 'hidden', pointerEvents: 'none' }); }
     });
   }, []);
 
-  // Cerrar con Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && modalOpen) cerrarModal(); };
     window.addEventListener('keydown', onKey);
@@ -234,7 +308,7 @@ function ProyectosContent() {
 
       <main className={styles.main}>
         {/* Hero diagonal */}
-        <section className={styles.hero}>
+        <section className={styles.hero} ref={heroRef}>
           <div className={styles.heroInner}>
             <div className={styles.heroContent}>
               <span className={styles.badge}>
@@ -251,7 +325,7 @@ function ProyectosContent() {
 
         <div className={styles.container}>
           {/* Filtros */}
-          <section className={styles.filters}>
+          <section className={styles.filters} ref={filtersRef}>
             <div className={styles.areaBtns}>
               {AREAS.map((a, i) => (
                 <button
@@ -301,12 +375,12 @@ function ProyectosContent() {
           </section>
 
           {/* Grilla de proyectos */}
-          <div className={styles.grid}>
+          <div className={styles.grid} ref={gridAnimRef}>
             {proyectosPag.length === 0 ? (
               <div className={styles.noResults}>No se encontraron proyectos.</div>
             ) : (
               proyectosPag.map((p) => (
-                <article key={p.titulo} className={styles.card}>
+                <article key={p.titulo} className={`${styles.card} prj-card`}>
                   <div className={styles.cardMedia}>
                     <img className={styles.cardImg} src={p.img} alt={p.titulo} />
                     <span className={styles.afinidad}>{p.afinidad}% Afinidad</span>
@@ -332,7 +406,7 @@ function ProyectosContent() {
                             <span className={styles.metaValor}>{p.meta}</span>
                           </div>
                           <div className={styles.barra}>
-                            <span className={styles.barraFill} style={{ width: `${p.progreso}%` }} />
+                            <span className={`${styles.barraFill} prj-bar`} style={{ width: `${p.progreso}%` }} />
                           </div>
                         </>
                       ) : (

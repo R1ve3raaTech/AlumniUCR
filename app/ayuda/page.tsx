@@ -2,9 +2,16 @@
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import styles from './ayuda.module.css';
+
+// Registro de plugins GSAP
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 // ─── Íconos SVG inline ───────────────────────────────────────────────────
 const base = {
@@ -53,6 +60,8 @@ export default function AyudaPage() {
 
   const categoriasRef = useRef<HTMLElement>(null);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const contactoRef = useRef<HTMLElement>(null);
+  const noResultsRef = useRef<HTMLDivElement>(null);
 
   // ─── Filtrado Predictivo ──────────────────────────────────────────────
   const faqsFiltradas = useMemo(() => {
@@ -73,8 +82,8 @@ export default function AyudaPage() {
 
   // ─── Animación GSAP: Ocultar/Mostrar Categorías al Buscar ─────────────
   useEffect(() => {
-    import('gsap').then(({ gsap }) => {
-      if (!categoriasRef.current) return;
+    if (!categoriasRef.current) return;
+    const ctx = gsap.context(() => {
       if (busqueda.trim() !== '') {
         // Ocultar categorías
         gsap.to(categoriasRef.current, {
@@ -88,7 +97,6 @@ export default function AyudaPage() {
           duration: 0.4,
           ease: 'power2.inOut',
         });
-        // Si el usuario escribe, limpiamos el filtro por categoría para buscar en todo
         if (categoriaActiva) setCategoriaActiva(null);
       } else {
         // Mostrar categorías
@@ -105,12 +113,90 @@ export default function AyudaPage() {
         });
       }
     });
+    return () => ctx.revert();
   }, [busqueda, categoriaActiva]);
 
-  // ─── Animación GSAP: Acordeón ────────────────────────────────────────
-  const toggle = async (idx: number) => {
-    const { gsap } = await import('gsap');
+  // ─── Animación GSAP: Contacto (Core Motion Mechanics & Scroll Dynamics) ──
+  useEffect(() => {
+    if (!contactoRef.current) return;
     
+    // Tipado estricto para el contexto y el matchMedia
+    let ctx: gsap.Context = gsap.context(() => {
+      // Implementación de accesibilidad (prefers-reduced-motion)
+      let mm: gsap.MatchMedia = gsap.matchMedia();
+      
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Animaciones complejas de layout y staggers
+        const tl: gsap.core.Timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: contactoRef.current,
+            start: 'top 75%',
+          }
+        });
+        
+        // Animación continua optimizada (Kinetic)
+        gsap.to('.contact-blob-1', {
+          y: 50, x: 30, rotation: 10, duration: 8, ease: 'sine.inOut', yoyo: true, repeat: -1
+        });
+        gsap.to('.contact-blob-2', {
+          y: -60, x: -40, rotation: -15, duration: 10, ease: 'sine.inOut', yoyo: true, repeat: -1
+        });
+        
+        // Revelado de texto cinético
+        tl.fromTo('.contact-line > span', 
+          { y: '100%', rotate: 2 },
+          { y: '0%', rotate: 0, duration: 0.9, stagger: 0.15, ease: 'power4.out' }
+        )
+        .fromTo('.contact-desc', 
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
+          "-=0.5"
+        )
+        // Stagger y snapping visual de tarjetas
+        .to('.contact-item', {
+          x: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.2,
+          ease: 'back.out(1.2)'
+        }, "-=0.6");
+      });
+      
+      // Fallback estático para accesibilidad
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set(['.contact-line > span', '.contact-desc', '.contact-item'], {
+          opacity: 1, y: 0, x: 0, rotate: 0
+        });
+      });
+      
+    }, contactoRef);
+    
+    // Clean-up impecable del ciclo de vida
+    return () => {
+      ctx.revert();
+    };
+  }, []);
+
+  // ─── Animación GSAP: Empty State (State Transitions) ──────────────────
+  useEffect(() => {
+    if (faqsFiltradas.length === 0 && noResultsRef.current) {
+      let ctx: gsap.Context = gsap.context(() => {
+        gsap.fromTo(noResultsRef.current, 
+          { opacity: 0, y: -10, scale: 0.98 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power2.out' }
+        );
+        
+        gsap.fromTo('.no-results-alert-icon',
+          { scale: 0.5, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.5, delay: 0.2, ease: 'back.out(2)' }
+        );
+      });
+      return () => ctx.revert();
+    }
+  }, [faqsFiltradas.length]);
+
+  // ─── Animación GSAP: Acordeón ────────────────────────────────────────
+  const toggle = (idx: number) => {
     // Si ya estaba abierto, ciérralo
     if (abierto === idx) {
       gsap.to(contentRefs.current[idx], { height: 0, duration: 0.35, ease: 'power2.inOut' });
@@ -206,15 +292,23 @@ export default function AyudaPage() {
 
             <div className={styles.faqList}>
               {faqsFiltradas.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'var(--brand-blanco)', borderRadius: '0.5rem', border: '1px dashed var(--ucr-outline)' }}>
-                  <IMessageSquare style={{ width: 48, height: 48, color: 'var(--brand-naranja)', marginBottom: '1rem' }} />
-                  <h3 style={{ fontFamily: 'var(--font-ucr-display)', fontSize: '1.4rem', color: 'var(--ucr-primary)', marginBottom: '0.5rem' }}>No encontramos una respuesta exacta</h3>
-                  <p style={{ color: 'var(--ucr-on-surface-variant)', marginBottom: '1.5rem' }}>Parece que tu consulta "{busqueda}" es muy específica. ¿Te gustaría hablar con soporte?</p>
+                <div ref={noResultsRef} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', background: 'var(--ucr-surface)', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.5rem', padding: '1rem 1.5rem', marginTop: '1rem', boxShadow: '0 4px 15px -5px rgba(0,0,0,0.05)', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className="no-results-alert-icon" style={{ background: 'rgba(243, 75, 38, 0.1)', color: 'var(--brand-naranja)', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
+                      <ISearch />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--ucr-primary)', fontFamily: 'var(--font-ucr-display)' }}>No hay resultados para "{busqueda}"</h4>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--ucr-on-surface-variant)' }}>¿Quieres que nuestro asistente virtual lo resuelva por ti?</p>
+                    </div>
+                  </div>
                   <button 
                     onClick={() => window.dispatchEvent(new CustomEvent('open-global-chatbot', { detail: { query: busqueda } }))}
-                    style={{ background: 'var(--brand-esmeralda)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+                    style={{ background: 'var(--brand-esmeralda)', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.375rem', fontSize: '0.9rem', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--brand-esmeralda-dark, #00A664)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--brand-esmeralda)'}
                   >
-                    Iniciar Chat en Vivo
+                    <IChat /> Consultar Asistente
                   </button>
                 </div>
               ) : (
@@ -255,49 +349,50 @@ export default function AyudaPage() {
           </div>
         </section>
 
-        {/* Call to Action Final */}
-        <section className={styles.contacto}>
-          <div style={{
-            maxWidth: '56rem',
-            margin: '0 auto',
-            background: 'var(--brand-blanco)',
-            border: '1px solid var(--ucr-outline-variant)',
-            borderRadius: '0.75rem',
-            padding: '3rem 2rem',
-            textAlign: 'center',
-            boxShadow: '0 12px 30px -10px rgba(0, 102, 135, 0.1)'
-          }}>
-            <h2 style={{ fontFamily: 'var(--font-ucr-display)', fontSize: '2rem', color: 'var(--ucr-primary)', marginBottom: '1rem', textTransform: 'uppercase' }}>
-              ¿Aún tienes dudas?
-            </h2>
-            <p style={{ color: 'var(--ucr-on-surface-variant)', fontSize: '1.1rem', marginBottom: '2rem', maxWidth: '40rem', margin: '0 auto' }}>
-              Si no encontraste lo que buscabas en nuestras preguntas frecuentes, nuestro asistente de Inteligencia Artificial está entrenado con todos los lineamientos de la UCR para ayudarte al instante.
-            </p>
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('open-global-chatbot'))}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                background: 'var(--brand-naranja)',
-                color: 'white',
-                padding: '1rem 2.5rem',
-                borderRadius: '0.5rem',
-                fontFamily: 'var(--font-ucr-display)',
-                fontWeight: 700,
-                fontSize: '1.2rem',
-                border: 'none',
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px -6px rgba(243, 75, 38, 0.5)',
-                transition: 'transform 0.2s, filter 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}
-              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
-              onMouseUp={(e) => e.currentTarget.style.transform = 'none'}
-            >
-              <IChat /> Iniciar Asistente UCR
-            </button>
+        {/* Call to Action Final - Informativo (Sin Contenedor) */}
+        <section className={styles.contacto} ref={contactoRef} style={{ padding: '6rem 2rem', position: 'relative', overflow: 'hidden', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          {/* Decorative floating blobs */}
+          <div className="contact-blob-1" style={{ position: 'absolute', top: '10%', left: '-5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(0, 192, 243, 0.15) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(40px)', zIndex: 0 }} />
+          <div className="contact-blob-2" style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(243, 75, 38, 0.1) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(50px)', zIndex: 0 }} />
+          
+          <div style={{ maxWidth: '70rem', margin: '0 auto', position: 'relative', zIndex: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4rem' }}>
+            
+            {/* Left side: Striking Text */}
+            <div className="contact-text-wrap" style={{ flex: '1 1 400px' }}>
+              <h2 style={{ fontFamily: 'var(--font-ucr-display)', fontSize: '3rem', color: 'var(--brand-azul)', lineHeight: 1.1, marginBottom: '1.5rem', letterSpacing: '-0.03em' }}>
+                <span className="contact-line" style={{ display: 'block', overflow: 'hidden' }}><span style={{ display: 'block' }}>Canales de</span></span>
+                <span className="contact-line" style={{ display: 'block', overflow: 'hidden' }}><span style={{ display: 'block', color: 'var(--brand-esmeralda)' }}>Atención Oficiales</span></span>
+              </h2>
+              <p className="contact-desc" style={{ color: 'var(--ucr-on-surface-variant)', fontSize: '1.2rem', lineHeight: 1.6, maxWidth: '30rem' }}>
+                Si no encontraste la respuesta que buscabas, nuestro equipo de soporte está disponible para brindarte asistencia técnica y administrativa.
+              </p>
+            </div>
+            
+            {/* Right side: Floating Contact Cards */}
+            <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* Email Card */}
+              <div className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.8)', padding: '1.5rem 2rem', borderRadius: '1rem', boxShadow: '0 20px 40px -20px rgba(0, 76, 99, 0.1)', transform: 'translateX(50px)', opacity: 0 }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--brand-celeste) 0%, var(--brand-azul) 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', flexShrink: 0, boxShadow: '0 10px 20px -5px rgba(0, 76, 99, 0.3)' }}>
+                  <IMessageSquare style={{ width: 28, height: 28 }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.3rem', color: 'var(--brand-azul)', margin: '0 0 0.25rem 0', fontFamily: 'var(--font-ucr-display)' }}>Correo Institucional</h3>
+                  <p style={{ color: 'var(--ucr-on-surface-variant)', margin: 0, fontSize: '1rem' }}>soporte@ucrconnect.cr</p>
+                </div>
+              </div>
+              
+              {/* Ticket Card */}
+              <div className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.8)', padding: '1.5rem 2rem', borderRadius: '1rem', boxShadow: '0 20px 40px -20px rgba(0, 76, 99, 0.1)', transform: 'translateX(50px)', opacity: 0, marginLeft: '2rem' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, #FF8A65 0%, var(--brand-naranja) 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', flexShrink: 0, boxShadow: '0 10px 20px -5px rgba(243, 75, 38, 0.3)' }}>
+                  <ITicket style={{ width: 28, height: 28 }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.3rem', color: 'var(--brand-azul)', margin: '0 0 0.25rem 0', fontFamily: 'var(--font-ucr-display)' }}>Sistema de Tickets</h3>
+                  <p style={{ color: 'var(--ucr-on-surface-variant)', margin: 0, fontSize: '1rem' }}>Atención en 24-48 horas</p>
+                </div>
+              </div>
+            </div>
+            
           </div>
         </section>
       </main>

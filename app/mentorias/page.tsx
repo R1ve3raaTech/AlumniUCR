@@ -7,7 +7,11 @@ import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './mentorias.module.css';
+
+if (typeof window !== 'undefined') { gsap.registerPlugin(ScrollTrigger); }
 
 // ─── Íconos SVG inline (heredan currentColor) ─────────────────────────────
 const base = {
@@ -131,6 +135,10 @@ function MentoriasContent() {
   const [isAnimating, setIsAnimating] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  // ─── Refs de animación ──────────────────────────────────────────────
+  const heroRef = useRef<HTMLElement>(null);
+  const ctaRef  = useRef<HTMLElement>(null);
+
   // ─── Estado de Rol y Acceso ─────────────────────────────────────────
   const [rolUsuario, setRolUsuario] = useState<string | null>(null);
   useEffect(() => {
@@ -150,9 +158,8 @@ function MentoriasContent() {
   const boxRef = useRef<HTMLDivElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const abrirModal = useCallback(async () => {
+  const abrirModal = useCallback(() => {
     setModalOpen(true);
-    const gsap = (await import('gsap')).gsap;
     gsap.to(overlayRef.current, { opacity: 1, visibility: 'visible', pointerEvents: 'all', duration: 0.3, ease: 'power2.out' });
     gsap.fromTo(boxRef.current,
       { y: 28, scale: 0.96, opacity: 0 },
@@ -160,8 +167,7 @@ function MentoriasContent() {
     );
   }, []);
 
-  const cerrarModal = useCallback(async () => {
-    const gsap = (await import('gsap')).gsap;
+  const cerrarModal = useCallback(() => {
     gsap.to(boxRef.current, { y: 16, scale: 0.97, opacity: 0, duration: 0.25, ease: 'power2.in' });
     gsap.to(overlayRef.current, {
       opacity: 0, duration: 0.3, ease: 'power2.in', delay: 0.1,
@@ -174,6 +180,123 @@ function MentoriasContent() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [modalOpen, cerrarModal]);
+
+  // ─── GSAP: Hero — masked title + image sweep from right ───────────────
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        const tl: gsap.core.Timeline = gsap.timeline({ delay: 0.1 });
+        // Title mask reveal from bottom (clip-path)
+        tl.fromTo(`.${styles.heroTitle}`,
+          { clipPath: 'inset(100% 0 0 0)', y: 30 },
+          { clipPath: 'inset(0% 0 0 0)', y: 0, duration: 0.95, ease: 'expo.out' }
+        )
+        .fromTo(`.${styles.heroText}`,
+          { x: -40, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.75, ease: 'power3.out' },
+          '-=0.5'
+        )
+        .fromTo(`.${styles.heroActions} > *`,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.55, stagger: 0.15, ease: 'back.out(1.6)' },
+          '-=0.4'
+        )
+        // Image sweeps in from right with clip-path
+        .fromTo(`.${styles.heroFrame}`,
+          { clipPath: 'inset(0 100% 0 0)', opacity: 0, x: 50 },
+          { clipPath: 'inset(0 0% 0 0)', opacity: 1, x: 0, duration: 1.1, ease: 'power4.inOut' },
+          0
+        )
+        // Decorative corners pop in
+        .fromTo([`.${styles.frameTL}`, `.${styles.frameBR}`],
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.45, stagger: 0.12, ease: 'back.out(2.5)' },
+          0.9
+        );
+      });
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set([`.${styles.heroTitle}`, `.${styles.heroText}`, `.${styles.heroFrame}`],
+          { clipPath: 'none', opacity: 1, x: 0, y: 0 });
+      });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  // ─── GSAP: Cards — alternating left/right reveal (Scroll Dynamics) ──────
+  useEffect(() => {
+    if (!gridRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        const cards = Array.from(
+          gridRef.current!.querySelectorAll<HTMLElement>(`.${styles.card}`)
+        );
+        cards.forEach((card: HTMLElement, i: number) => {
+          const fromX: number = i % 2 === 0 ? -70 : 70;
+          gsap.fromTo(card,
+            { x: fromX, opacity: 0, scale: 0.93 },
+            { x: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out',
+              scrollTrigger: { trigger: card, start: 'top 88%' } }
+          );
+        });
+      });
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set(`.${styles.card}`, { opacity: 1 });
+      });
+    }, gridRef);
+    return () => ctx.revert();
+  }, [mentoresVisibles]);
+
+  // ─── GSAP: CTA — blur reveal + magnetic button (Core Motion Mechanics) ────
+  useEffect(() => {
+    if (!ctaRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        const tl: gsap.core.Timeline = gsap.timeline({
+          scrollTrigger: { trigger: ctaRef.current, start: 'top 78%' }
+        });
+        tl.fromTo(`.${styles.ctaTitle}`,
+          { y: 50, opacity: 0, filter: 'blur(10px)' },
+          { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, ease: 'power4.out' }
+        )
+        .fromTo(`.${styles.ctaText}`,
+          { y: 25, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: 'power2.out' },
+          '-=0.5'
+        )
+        .fromTo(`.${styles.ctaBtn}`,
+          { scale: 0.75, opacity: 0, y: 15 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'back.out(2.2)' },
+          '-=0.4'
+        );
+
+        // Magnetic hover effect on CTA button
+        const btn = ctaRef.current!.querySelector<HTMLAnchorElement>(`.${styles.ctaBtn}`);
+        if (btn) {
+          const onMove = (e: MouseEvent): void => {
+            const r = btn.getBoundingClientRect();
+            const dx: number = (e.clientX - (r.left + r.width  / 2)) * 0.3;
+            const dy: number = (e.clientY - (r.top  + r.height / 2)) * 0.3;
+            gsap.to(btn, { x: dx, y: dy, duration: 0.4, ease: 'power2.out' });
+          };
+          const onLeave = (): void => {
+            gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.45)' });
+          };
+          btn.addEventListener('mousemove', onMove);
+          btn.addEventListener('mouseleave', onLeave);
+          // Return cleanup
+          return () => {
+            btn.removeEventListener('mousemove', onMove);
+            btn.removeEventListener('mouseleave', onLeave);
+          };
+        }
+      });
+    }, ctaRef);
+    return () => ctx.revert();
+  }, []);
 
   // ─── GSAP: Animar expansión de mentores ─────────────────────────────
   const toggleMentores = async () => {
@@ -265,7 +388,7 @@ function MentoriasContent() {
 
       <main className={styles.main}>
         {/* Hero diagonal */}
-        <section className={styles.hero}>
+        <section className={styles.hero} ref={heroRef}>
           <div className={styles.heroTexture} aria-hidden />
           <span className={styles.heroBlock} aria-hidden />
           <div className={styles.heroInner}>
@@ -399,7 +522,7 @@ function MentoriasContent() {
         </section>
 
         {/* CTA: ser mentor */}
-        <section id="postular" className={styles.cta}>
+        <section id="postular" className={styles.cta} ref={ctaRef}>
           <div className={styles.ctaTexture} aria-hidden />
           <div className={styles.ctaInner}>
             <h2 className={styles.ctaTitle}>¿Listo para ser un mentor?</h2>
