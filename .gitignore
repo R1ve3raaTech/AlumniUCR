@@ -16,3 +16,6 @@ out/
 Thumbs.db
 # Datos en tiempo de ejecución (store de voluntarios)
 BE/data/
+
+# Configuración local del agente/editor
+.claude/

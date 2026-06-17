@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { solicitarMagicLink, registrarExalumno } from '@/lib/auth';
 import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
@@ -11,7 +12,6 @@ import styles from './registro.module.css';
 
 type Rol = 'estudiante' | 'exalumno';
 
-// ─── Íconos SVG inline (sin dependencia de fuente de íconos) ──────────
 const IArrowBack = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7 7-7-7 7-7" /></svg>
 );
@@ -57,10 +57,16 @@ const ROLES: { value: Rol; titulo: string; desc: string; icon: React.ReactNode }
   { value: 'exalumno', titulo: 'Soy Exalumno', desc: 'Graduado y profesional.', icon: <IPremium /> },
 ];
 
+// Curvas de easing estándar (design system: ease-out entrar, ease-in salir)
+const EASE_OUT: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
+const EASE_IN: [number, number, number, number] = [0.55, 0.055, 0.675, 0.19];
+
 export default function RegistroPage() {
   const { error, loading, run } = useAuthForm();
+  const reduced = useReducedMotion();
 
   const ANIO_ACTUAL = new Date().getFullYear();
+  const dur = reduced ? 0.01 : 0.22;
 
   const [rol, setRol] = useState<Rol>('estudiante');
   const [nombre, setNombre] = useState('');
@@ -68,17 +74,14 @@ export default function RegistroPage() {
   const [correo, setCorreo] = useState('');
   const [errorCorreo, setErrorCorreo] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
-  // 'magiclink' (estudiante) | 'exalumno' (autodeclaración)
   const [modoExito, setModoExito] = useState<'magiclink' | 'exalumno'>('magiclink');
 
-  // Campos exclusivos del exalumno (autodeclaración).
   const [contrasena, setContrasena] = useState('');
   const [verPass, setVerPass] = useState(false);
   const [carreras, setCarreras] = useState<string[]>([]);
   const [facultad, setFacultad] = useState('');
   const [anioGraduacion, setAnioGraduacion] = useState('');
   const [errorForm, setErrorForm] = useState<string | null>(null);
-  // Respaldo de desarrollo: enlace de confirmación directo si el correo no llega.
   const [confirmUrl, setConfirmUrl] = useState<string | null>(null);
 
   const esUCR = correo.trim().toLowerCase().endsWith('@ucr.ac.cr');
@@ -89,7 +92,6 @@ export default function RegistroPage() {
   function enviarEnlace() {
     run(async () => {
       await solicitarMagicLink('estudiante', correo.trim());
-      // Guarda el nombre/carné para precargar el paso "completar perfil".
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           'ct_registro_datos',
@@ -114,15 +116,10 @@ export default function RegistroPage() {
     if (!Number.isInteger(anio) || anio < 1940 || anio > ANIO_ACTUAL) {
       return setErrorForm(`El año de graduación debe estar entre 1940 y ${ANIO_ACTUAL}.`);
     }
-
     run(async () => {
       const res = await registrarExalumno({
-        correo: correo.trim(),
-        contrasena,
-        nombre: nombre.trim(),
-        carreras,
-        facultad,
-        anioGraduacion: anio,
+        correo: correo.trim(), contrasena, nombre: nombre.trim(),
+        carreras, facultad, anioGraduacion: anio,
       });
       setConfirmUrl(res?.data?.confirmUrl ?? null);
       setModoExito('exalumno');
@@ -132,11 +129,7 @@ export default function RegistroPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (rol === 'exalumno') {
-      registrarComoExalumno();
-      return;
-    }
-    // Estudiante: debe usar @ucr.ac.cr y sigue el flujo de magic link.
+    if (rol === 'exalumno') { registrarComoExalumno(); return; }
     const err = validarCorreoPorRol(correo, 'estudiante');
     setErrorCorreo(err);
     if (err) return;
@@ -144,339 +137,435 @@ export default function RegistroPage() {
   }
 
   function abrirCorreo() {
-    if (typeof window !== 'undefined') {
-      window.open('https://mail.google.com', '_blank', 'noopener');
-    }
+    if (typeof window !== 'undefined') window.open('https://mail.google.com', '_blank', 'noopener');
   }
+
+  // Variante reutilizable para campo de formulario
+  const fieldFade = {
+    hidden: { opacity: 0, y: reduced ? 0 : 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: dur, ease: EASE_OUT } },
+  };
+
+  // Transición entre formulario y pantalla de éxito (elemento clave)
+  const pageVariants = {
+    initial: { opacity: 0, y: reduced ? 0 : 16 },
+    animate: { opacity: 1, y: 0, transition: { duration: reduced ? 0.01 : 0.25, ease: EASE_OUT } },
+    exit: { opacity: 0, y: reduced ? 0 : -12, transition: { duration: reduced ? 0.01 : 0.18, ease: EASE_IN } },
+  };
 
   return (
     <div className={styles.page}>
-      {/* Fondo decorativo */}
       <div className={styles.bg} aria-hidden>
         <span className={styles.bgCircle} />
         <span className={styles.bgBlock} />
       </div>
 
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
+      <motion.header
+        className={styles.header}
+        initial={{ opacity: 0, y: reduced ? 0 : -14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: dur, ease: EASE_OUT }}
+      >
+        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio">
+          <AlumniLogo height={38} />
+        </Link>
         <div className={styles.headerActions}>
           <Link href="/ayuda" className={styles.backLink}>Ayuda</Link>
           <Link href="/login" className={styles.backLink}>
             <IArrowBack /> Volver al Login
           </Link>
         </div>
-      </header>
+      </motion.header>
 
       <main className={styles.main}>
-        <div className={styles.panel}>
-          {enviado && modoExito === 'exalumno' ? (
-            <div className={styles.success}>
-              <div>
-                <div className={styles.successIcon}>
-                  <IMailRead />
-                </div>
-                <h1 className={styles.title}>¡Cuenta creada!</h1>
-                <p className={styles.successText}>
-                  Enviamos un correo de confirmación a{' '}
-                  <strong style={{ color: 'var(--ucr-primary)' }}>{correo}</strong>. Tu cuenta
-                  quedará <strong>pendiente</strong> hasta que confirmes tu correo. Solo entonces
-                  podrás iniciar sesión y aparecer en el directorio.
-                </p>
-              </div>
-
-              <div className={styles.successActions}>
-                {confirmUrl ? (
-                  <a href={confirmUrl} className={styles.submit} target="_blank" rel="noopener noreferrer">
-                    Confirmar mi cuenta ahora
-                  </a>
-                ) : (
-                  <button type="button" className={styles.submit} onClick={abrirCorreo}>
-                    Abrir mi correo
-                  </button>
-                )}
-                <div className={styles.resendHint}>
-                  {confirmUrl && (
-                    <p className={styles.expiry}>
-                      Modo desarrollo: como el correo puede no llegar, confirma con el botón de arriba.
-                    </p>
-                  )}
-                  <Link href="/login" className={styles.resendBtn}>Ir a iniciar sesión</Link>
-                </div>
-              </div>
-            </div>
-          ) : enviado ? (
-            <div className={styles.success}>
-              <div>
-                <div className={styles.successIcon}>
-                  <IMailRead />
-                </div>
-                <h1 className={styles.title}>¡Casi listo!</h1>
-                <p className={styles.successText}>
-                  Hemos enviado un enlace de acceso seguro (Magic Link) a tu correo
-                  institucional: <strong style={{ color: 'var(--ucr-primary)' }}>{correo}</strong>.
-                </p>
-              </div>
-
-              <div className={styles.successActions}>
-                <button type="button" className={styles.submit} onClick={abrirCorreo}>
-                  Abrir mi correo
-                </button>
-                <div className={styles.resendHint}>
-                  <button
-                    type="button"
-                    className={styles.resendBtn}
-                    onClick={enviarEnlace}
-                    disabled={loading}
-                  >
-                    {loading ? 'Reenviando…' : '¿No recibiste el correo? Volver a enviar'}
-                  </button>
-                  <p className={styles.expiry}>
-                    <ISchedule /> Por tu seguridad, el enlace expirará en 15 minutos.
-                  </p>
-                  <button
-                    type="button"
-                    className={styles.resendBtn}
-                    onClick={() => setEnviado(false)}
-                  >
-                    Usar otro correo
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className={styles.intro}>
-                <h1 className={styles.title}>Únete a la Red</h1>
-                <p className={styles.subtitle}>Completa tus datos para empezar a conectar.</p>
-              </div>
-
-              <form className={styles.form} onSubmit={handleSubmit} noValidate>
-                {error && <div className={styles.formError}>{error}</div>}
-
-                {/* Paso 1: rol */}
+        {/* Panel principal — el elemento clave de la página */}
+        <motion.div
+          className={styles.panel}
+          initial={{ opacity: 0, y: reduced ? 0 : 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduced ? 0.01 : 0.28, ease: EASE_OUT, delay: 0.06 }}
+        >
+          {/* AnimatePresence mode="wait": transición limpia formulario ↔ éxito */}
+          <AnimatePresence mode="wait">
+            {enviado ? (
+              /* ── Pantalla de éxito ── */
+              <motion.div
+                key="success"
+                className={styles.success}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
                 <div>
-                  <h2 className={styles.stepTitle}>Paso 1: ¿Cuál es tu rol?</h2>
-                  <div className={styles.roles}>
-                    {ROLES.map((r) => (
-                      <label key={r.value}>
-                        <input
-                          className={styles.roleInput}
-                          type="radio"
-                          name="rol"
-                          value={r.value}
-                          checked={rol === r.value}
-                          onChange={() => setRol(r.value)}
-                        />
-                        <div
-                          className={`${styles.roleCard} ${rol === r.value ? styles.roleCardActive : ''}`}
-                        >
-                          <span className={styles.roleIcon}>{r.icon}</span>
-                          <h3 className={styles.roleTitle}>{r.titulo}</h3>
-                          <p className={styles.roleDesc}>{r.desc}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  {/* Ícono con spring — único elemento que usa física (justificado por el contexto celebratorio) */}
+                  <motion.div
+                    className={styles.successIcon}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={reduced
+                      ? { duration: 0.01 }
+                      : { type: 'spring', stiffness: 300, damping: 20, delay: 0.15 }
+                    }
+                  >
+                    <IMailRead />
+                  </motion.div>
 
-                  {/* Opción secundaria (menor prioridad): voluntarios/colaboradores.
-                      Lleva a un formulario aparte; no usa el flujo de magic link. */}
-                  <Link href="/registro/otros" className={styles.roleOtros}>
-                    <span className={styles.roleOtrosIcon}><IHandshake /></span>
-                    <span className={styles.roleOtrosText}>
-                      <strong>Otros</strong>
-                      <small>¿Quieres colaborar como voluntario? Postúlate aquí.</small>
-                    </span>
-                    <span className={styles.roleOtrosArrow}><IChevronRight /></span>
-                  </Link>
-                </div>
+                  <motion.h1
+                    className={styles.title}
+                    initial={{ opacity: 0, y: reduced ? 0 : 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: dur, ease: EASE_OUT, delay: 0.25 }}
+                  >
+                    {modoExito === 'exalumno' ? '¡Cuenta creada!' : '¡Casi listo!'}
+                  </motion.h1>
 
-                {/* Aviso para correos @ucr.ac.cr al elegir exalumno */}
-                {rol === 'exalumno' && esUCR && (
-                  <div className={styles.ucrPrompt}>
-                    <p>
-                      Detectamos un correo <strong>@ucr.ac.cr</strong>. ¿Ya te graduaste?
-                    </p>
-                    <div className={styles.ucrPromptActions}>
-                      <span className={styles.ucrPromptOk}>Sí, continúa como exalumno</span>
-                      <button type="button" onClick={() => setRol('estudiante')}>
-                        No, soy estudiante
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Paso 2: información */}
-                <div className={styles.step2}>
-                  <h2 className={styles.stepTitle}>
-                    Paso 2: {rol === 'exalumno' ? 'Datos de autodeclaración' : 'Información Personal'}
-                  </h2>
-
-                  {errorForm && <div className={styles.formError}>{errorForm}</div>}
-
-                  <div className={styles.fields}>
-                    <div className={styles.field}>
-                      <label className={styles.label} htmlFor="nombre">Nombre completo</label>
-                      <div className={styles.inputWrap}>
-                        <span className={styles.inputIcon}><IPerson /></span>
-                        <input
-                          id="nombre"
-                          className={styles.input}
-                          type="text"
-                          placeholder="Ej: Juan Pérez"
-                          value={nombre}
-                          onChange={(e) => setNombre(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {rol === 'estudiante' && (
-                      <div className={styles.field}>
-                        <label className={styles.label} htmlFor="carne">Carné / Cédula</label>
-                        <div className={styles.inputWrap}>
-                          <span className={styles.inputIcon}><IBadge /></span>
-                          <input
-                            id="carne"
-                            className={styles.input}
-                            type="text"
-                            placeholder="Ej: B12345"
-                            value={carne}
-                            onChange={(e) => setCarne(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
-                      <label className={styles.label} htmlFor="correo">Correo electrónico</label>
-                      <div className={styles.inputWrap}>
-                        <span className={styles.inputIcon}><IMail /></span>
-                        <input
-                          id="correo"
-                          className={styles.input}
-                          type="email"
-                          placeholder={rol === 'exalumno' ? 'tucorreo@dominio.com' : 'usuario@ucr.ac.cr'}
-                          value={correo}
-                          onChange={(e) => {
-                            setCorreo(e.target.value);
-                            if (errorCorreo) setErrorCorreo(null);
-                          }}
-                          required
-                        />
-                      </div>
-                      {errorCorreo && <span className={styles.formError}>{errorCorreo}</span>}
-                    </div>
-
-                    {rol === 'exalumno' && (
+                  <motion.p
+                    className={styles.successText}
+                    initial={{ opacity: 0, y: reduced ? 0 : 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: dur, ease: EASE_OUT, delay: 0.32 }}
+                  >
+                    {modoExito === 'exalumno' ? (
                       <>
-                        <div className={styles.field}>
-                          <label className={styles.label} htmlFor="contrasena">Contraseña</label>
-                          <div className={styles.inputWrap}>
-                            <span className={styles.inputIcon}><ILock /></span>
-                            <input
-                              id="contrasena"
-                              className={styles.input}
-                              type={verPass ? 'text' : 'password'}
-                              placeholder="••••••••"
-                              autoComplete="new-password"
-                              value={contrasena}
-                              onChange={(e) => setContrasena(e.target.value)}
-                              required
-                            />
-                            <button
-                              type="button"
-                              className={styles.toggle}
-                              onClick={() => setVerPass((v) => !v)}
-                              aria-label={verPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                            >
-                              {verPass ? 'Ocultar' : 'Mostrar'}
-                            </button>
-                          </div>
-                          <span className={styles.hint}>Mín. 8 caracteres, 1 mayúscula y 1 número.</span>
-                        </div>
-
-                        <div className={styles.field}>
-                          <label className={styles.label} htmlFor="anio">Año de graduación</label>
-                          <div className={styles.inputWrap}>
-                            <span className={styles.inputIcon}><ICalendar /></span>
-                            <input
-                              id="anio"
-                              className={styles.input}
-                              type="number"
-                              min={1940}
-                              max={ANIO_ACTUAL}
-                              placeholder={`1940 – ${ANIO_ACTUAL}`}
-                              value={anioGraduacion}
-                              onChange={(e) => setAnioGraduacion(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className={`${styles.field} ${styles.fieldFull}`}>
-                          <label className={styles.label} htmlFor="facultad">Escuela o Facultad</label>
-                          <div className={styles.inputWrap}>
-                            <span className={styles.inputIcon}><ISchool /></span>
-                            <select
-                              id="facultad"
-                              className={styles.input}
-                              value={facultad}
-                              onChange={(e) => setFacultad(e.target.value)}
-                              required
-                            >
-                              <option value="" disabled>Selecciona tu facultad…</option>
-                              {FACULTADES_UCR.map((f) => (
-                                <option key={f} value={f}>{f}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className={`${styles.field} ${styles.fieldFull}`}>
-                          <label className={styles.label}>Carrera(s) cursada(s) en la UCR</label>
-                          <div className={styles.carrerasBox}>
-                            {CARRERAS_UCR.map((c) => (
-                              <label key={c} className={styles.carreraItem}>
-                                <input
-                                  type="checkbox"
-                                  checked={carreras.includes(c)}
-                                  onChange={() => toggleCarrera(c)}
-                                />
-                                <span>{c}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <span className={styles.hint}>
-                            {carreras.length} seleccionada(s) · selecciona al menos una.
-                          </span>
-                        </div>
+                        Enviamos un correo de confirmación a{' '}
+                        <strong style={{ color: 'var(--ucr-primary)' }}>{correo}</strong>. Tu cuenta
+                        quedará <strong>pendiente</strong> hasta que confirmes tu correo.
                       </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Acciones */}
-                <div className={styles.actions}>
-                  <button type="submit" className={styles.submit} disabled={loading}>
-                    {loading ? (
-                      <>
-                        <ISpinner className={styles.spinner} /> Procesando…
-                      </>
-                    ) : rol === 'exalumno' ? (
-                      'Crear cuenta'
                     ) : (
-                      'Registrarse'
+                      <>
+                        Hemos enviado un enlace de acceso seguro (Magic Link) a{' '}
+                        <strong style={{ color: 'var(--ucr-primary)' }}>{correo}</strong>.
+                      </>
                     )}
-                  </button>
-                  <p className={styles.terms}>
-                    Al registrarte, aceptas nuestros{' '}
-                    <a href="#">Términos y Condiciones</a>.
-                  </p>
+                  </motion.p>
                 </div>
-              </form>
-            </>
-          )}
-        </div>
+
+                <motion.div
+                  className={styles.successActions}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: dur, ease: EASE_OUT, delay: 0.4 }}
+                >
+                  {modoExito === 'exalumno' ? (
+                    <>
+                      {confirmUrl ? (
+                        <motion.a
+                          href={confirmUrl}
+                          className={styles.submit}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={!reduced ? { scale: 1.015 } : {}}
+                          whileTap={!reduced ? { scale: 0.98 } : {}}
+                          transition={{ duration: 0.15, ease: EASE_OUT }}
+                        >
+                          Confirmar mi cuenta ahora
+                        </motion.a>
+                      ) : (
+                        <motion.button
+                          type="button"
+                          className={styles.submit}
+                          onClick={abrirCorreo}
+                          whileHover={!reduced ? { scale: 1.015 } : {}}
+                          whileTap={!reduced ? { scale: 0.98 } : {}}
+                          transition={{ duration: 0.15, ease: EASE_OUT }}
+                        >
+                          Abrir mi correo
+                        </motion.button>
+                      )}
+                      <div className={styles.resendHint}>
+                        {confirmUrl && (
+                          <p className={styles.expiry}>
+                            Modo desarrollo: confirma con el botón de arriba.
+                          </p>
+                        )}
+                        <Link href="/login" className={styles.resendBtn}>Ir a iniciar sesión</Link>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <motion.button
+                        type="button"
+                        className={styles.submit}
+                        onClick={abrirCorreo}
+                        whileHover={!reduced ? { scale: 1.015 } : {}}
+                        whileTap={!reduced ? { scale: 0.98 } : {}}
+                        transition={{ duration: 0.15, ease: EASE_OUT }}
+                      >
+                        Abrir mi correo
+                      </motion.button>
+                      <div className={styles.resendHint}>
+                        <button type="button" className={styles.resendBtn} onClick={enviarEnlace} disabled={loading}>
+                          {loading ? 'Reenviando…' : '¿No recibiste el correo? Volver a enviar'}
+                        </button>
+                        <p className={styles.expiry}>
+                          <ISchedule /> El enlace expirará en 15 minutos.
+                        </p>
+                        <button type="button" className={styles.resendBtn} onClick={() => setEnviado(false)}>
+                          Usar otro correo
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </motion.div>
+            ) : (
+              /* ── Formulario ── */
+              <motion.div
+                key="form"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <motion.div
+                  className={styles.intro}
+                  initial={{ opacity: 0, y: reduced ? 0 : 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: dur, ease: EASE_OUT, delay: 0.12 }}
+                >
+                  <h1 className={styles.title}>Únete a la Red</h1>
+                  <p className={styles.subtitle}>Completa tus datos para empezar a conectar.</p>
+                </motion.div>
+
+                <motion.form
+                  className={styles.form}
+                  onSubmit={handleSubmit}
+                  noValidate
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
+                  }}
+                >
+                  {/* Error global */}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        className={styles.formError}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.18, ease: EASE_IN }}
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Paso 1: Rol */}
+                  <motion.div variants={fieldFade}>
+                    <h2 className={styles.stepTitle}>Paso 1: ¿Cuál es tu rol?</h2>
+                    <div className={styles.roles}>
+                      {ROLES.map((r) => (
+                        <label key={r.value} style={{ cursor: 'pointer' }}>
+                          <input
+                            className={styles.roleInput}
+                            type="radio"
+                            name="rol"
+                            value={r.value}
+                            checked={rol === r.value}
+                            onChange={() => setRol(r.value)}
+                          />
+                          {/* Role card: solo escala al hacer hover/tap, no con la selección */}
+                          <motion.div
+                            className={`${styles.roleCard} ${rol === r.value ? styles.roleCardActive : ''}`}
+                            whileHover={!reduced ? { scale: 1.02 } : {}}
+                            whileTap={!reduced ? { scale: 0.98 } : {}}
+                            transition={{ duration: 0.15, ease: EASE_OUT }}
+                          >
+                            <span className={styles.roleIcon}>{r.icon}</span>
+                            <h3 className={styles.roleTitle}>{r.titulo}</h3>
+                            <p className={styles.roleDesc}>{r.desc}</p>
+                          </motion.div>
+                        </label>
+                      ))}
+                    </div>
+
+                    <Link href="/registro/otros" className={styles.roleOtros}>
+                      <span className={styles.roleOtrosIcon}><IHandshake /></span>
+                      <span className={styles.roleOtrosText}>
+                        <strong>Otros</strong>
+                        <small>¿Quieres colaborar como voluntario? Postúlate aquí.</small>
+                      </span>
+                      <span className={styles.roleOtrosArrow}><IChevronRight /></span>
+                    </Link>
+                  </motion.div>
+
+                  {/* Aviso correo UCR — aparece/desaparece con height */}
+                  <AnimatePresence>
+                    {rol === 'exalumno' && esUCR && (
+                      <motion.div
+                        className={styles.ucrPrompt}
+                        initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2, ease: EASE_OUT }}
+                      >
+                        <p>Detectamos un correo <strong>@ucr.ac.cr</strong>. ¿Ya te graduaste?</p>
+                        <div className={styles.ucrPromptActions}>
+                          <span className={styles.ucrPromptOk}>Sí, continúa como exalumno</span>
+                          <button type="button" onClick={() => setRol('estudiante')}>No, soy estudiante</button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Paso 2: Información */}
+                  <motion.div className={styles.step2} variants={fieldFade}>
+                    <h2 className={styles.stepTitle}>
+                      Paso 2: {rol === 'exalumno' ? 'Datos de autodeclaración' : 'Información Personal'}
+                    </h2>
+
+                    <AnimatePresence>
+                      {errorForm && (
+                        <motion.div
+                          className={styles.formError}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.18, ease: EASE_IN }}
+                        >
+                          {errorForm}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className={styles.fields}>
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor="nombre">Nombre completo</label>
+                        <div className={styles.inputWrap}>
+                          <span className={styles.inputIcon}><IPerson /></span>
+                          <input id="nombre" className={styles.input} type="text" placeholder="Ej: Juan Pérez"
+                            value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                        </div>
+                      </div>
+
+                      <AnimatePresence>
+                        {rol === 'estudiante' && (
+                          <motion.div
+                            className={styles.field}
+                            initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                            animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+                            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                            transition={{ duration: 0.2, ease: EASE_OUT }}
+                          >
+                            <label className={styles.label} htmlFor="carne">Carné / Cédula</label>
+                            <div className={styles.inputWrap}>
+                              <span className={styles.inputIcon}><IBadge /></span>
+                              <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
+                                value={carne} onChange={(e) => setCarne(e.target.value)} />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
+                        <label className={styles.label} htmlFor="correo">Correo electrónico</label>
+                        <div className={styles.inputWrap}>
+                          <span className={styles.inputIcon}><IMail /></span>
+                          <input id="correo" className={styles.input} type="email"
+                            placeholder={rol === 'exalumno' ? 'tucorreo@dominio.com' : 'usuario@ucr.ac.cr'}
+                            value={correo}
+                            onChange={(e) => { setCorreo(e.target.value); if (errorCorreo) setErrorCorreo(null); }}
+                            required />
+                        </div>
+                        {errorCorreo && <span className={styles.formError}>{errorCorreo}</span>}
+                      </div>
+
+                      {/* Campos exclusivos exalumno — fade in/out según rol */}
+                      <AnimatePresence>
+                        {rol === 'exalumno' && (
+                          <motion.div
+                            style={{ display: 'contents' }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: EASE_OUT }}
+                          >
+                            <div className={styles.field}>
+                              <label className={styles.label} htmlFor="contrasena">Contraseña</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><ILock /></span>
+                                <input id="contrasena" className={styles.input}
+                                  type={verPass ? 'text' : 'password'} placeholder="••••••••"
+                                  autoComplete="new-password" value={contrasena}
+                                  onChange={(e) => setContrasena(e.target.value)} required />
+                                <button type="button" className={styles.toggle}
+                                  onClick={() => setVerPass((v) => !v)}
+                                  aria-label={verPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+                                  {verPass ? 'Ocultar' : 'Mostrar'}
+                                </button>
+                              </div>
+                              <span className={styles.hint}>Mín. 8 caracteres, 1 mayúscula y 1 número.</span>
+                            </div>
+
+                            <div className={styles.field}>
+                              <label className={styles.label} htmlFor="anio">Año de graduación</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><ICalendar /></span>
+                                <input id="anio" className={styles.input} type="number"
+                                  min={1940} max={ANIO_ACTUAL} placeholder={`1940 – ${ANIO_ACTUAL}`}
+                                  value={anioGraduacion} onChange={(e) => setAnioGraduacion(e.target.value)} required />
+                              </div>
+                            </div>
+
+                            <div className={`${styles.field} ${styles.fieldFull}`}>
+                              <label className={styles.label} htmlFor="facultad">Escuela o Facultad</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><ISchool /></span>
+                                <select id="facultad" className={styles.input} value={facultad}
+                                  onChange={(e) => setFacultad(e.target.value)} required>
+                                  <option value="" disabled>Selecciona tu facultad…</option>
+                                  {FACULTADES_UCR.map((f) => <option key={f} value={f}>{f}</option>)}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className={`${styles.field} ${styles.fieldFull}`}>
+                              <label className={styles.label}>Carrera(s) cursada(s) en la UCR</label>
+                              <div className={styles.carrerasBox}>
+                                {CARRERAS_UCR.map((c) => (
+                                  <label key={c} className={styles.carreraItem}>
+                                    <input type="checkbox" checked={carreras.includes(c)} onChange={() => toggleCarrera(c)} />
+                                    <span>{c}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <span className={styles.hint}>
+                                {carreras.length} seleccionada(s) · selecciona al menos una.
+                              </span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+
+                  {/* Acciones */}
+                  <motion.div className={styles.actions} variants={fieldFade}>
+                    <motion.button
+                      type="submit"
+                      className={styles.submit}
+                      disabled={loading}
+                      whileHover={!loading && !reduced ? { scale: 1.015 } : {}}
+                      whileTap={!loading && !reduced ? { scale: 0.98 } : {}}
+                      transition={{ duration: 0.15, ease: EASE_OUT }}
+                    >
+                      {loading
+                        ? <><ISpinner className={styles.spinner} /> Procesando…</>
+                        : rol === 'exalumno' ? 'Crear cuenta' : 'Registrarse'}
+                    </motion.button>
+                    <p className={styles.terms}>
+                      Al registrarte, aceptas nuestros <a href="#">Términos y Condiciones</a>.
+                    </p>
+                  </motion.div>
+                </motion.form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </main>
 
       <footer className={styles.footer}>

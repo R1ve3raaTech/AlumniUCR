@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import styles from './landing.module.css';
 
-/**
- * Hero del landing. Combina:
- *  - la malla 3D animada en canvas (efecto del diseño),
- *  - el contenido (badge, título, texto, acciones) y una imagen lateral.
- * El canvas se monta solo en cliente y se limpia al desmontar.
- */
+const MotionLink = motion(Link);
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 },
+};
+
 export default function Hero() {
   return (
     <section id="inicio" className={styles.hero}>
@@ -28,24 +30,54 @@ export default function Hero() {
 
       <div className={styles.container}>
         <div className={styles.heroContent}>
-          <div data-anim="hero-text" className={styles.heroTextContent}>
-            <h1 className={`${styles.heroTitle} ${styles.headlineLg}`}>
+          <motion.div
+            data-anim="hero-text"
+            className={styles.heroTextContent}
+            initial="hidden"
+            animate="visible"
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.2 } } }}
+          >
+            <motion.h1
+              className={`${styles.heroTitle} ${styles.headlineLg}`}
+              variants={fadeUp}
+              transition={{ duration: 0.65, ease: 'easeOut' }}
+            >
               Conectando <span className={styles.heroTitleHighlight}>Talento</span> con Experiencia
-            </h1>
-            <p className={styles.heroText}>
+            </motion.h1>
+
+            <motion.p
+              className={styles.heroText}
+              variants={fadeUp}
+              transition={{ duration: 0.65, ease: 'easeOut' }}
+            >
               La plataforma definitiva para la comunidad Alumni UCR. Potenciamos tu
               crecimiento profesional mediante conexiones estratégicas: empleo,
               mentorías y proyectos con impacto.
-            </p>
-            <div className={styles.heroActions}>
-              <Link href="/registro" className={`${styles.btn} ${styles.btnPrimary}`}>
+            </motion.p>
+
+            <motion.div
+              className={styles.heroActions}
+              variants={fadeUp}
+              transition={{ duration: 0.65, ease: 'easeOut' }}
+            >
+              <MotionLink
+                href="/registro"
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 Empezar ahora
-              </Link>
-              <a href="#proyectos" className={`${styles.btn} ${styles.btnOutline}`}>
+              </MotionLink>
+              <motion.a
+                href="#proyectos"
+                className={`${styles.btn} ${styles.btnOutline}`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 Ver proyectos
-              </a>
-            </div>
-          </div>
+              </motion.a>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </section>
