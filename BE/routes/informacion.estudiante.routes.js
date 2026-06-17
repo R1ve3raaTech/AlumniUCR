@@ -7,6 +7,7 @@ const exigirRol = require('../middlewares/role.middleware');
 router.get('/buscan-empleo', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionEstudianteController.obtenerEstudiantesBuscanEmpleo);
 router.get('/buscan-pasantia', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionEstudianteController.obtenerEstudiantesBuscanPasantia);
 router.get('/buscan-mentoria', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionEstudianteController.obtenerEstudiantesBuscanMentoria);
+router.get('/directorio', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionEstudianteController.obtenerEstudiantesDirectorio);
 router.get('/usuario/:idUsuario', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), informacionEstudianteController.obtenerInformacionPorUsuario);
 router.get('/', autenticarUsuario, exigirRol('admin'), informacionEstudianteController.obtenerInformacionEstudiantes);
 router.post('/', autenticarUsuario, exigirRol(['admin', 'estudiante']), informacionEstudianteController.crearInformacionEstudiante);
