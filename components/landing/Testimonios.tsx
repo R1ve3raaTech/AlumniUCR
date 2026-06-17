@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Quote } from './icons';
 import styles from './landing.module.css';
 
@@ -23,13 +26,27 @@ export default function Testimonios() {
   return (
     <section id="historias" className={`${styles.section} ${styles.sectionDark}`}>
       <div className={styles.container}>
-        <h2 className={`${styles.testiTitle} ${styles.headlineLg}`}>
+        <motion.h2
+          className={`${styles.testiTitle} ${styles.headlineLg}`}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
           Historias de <span style={{ color: 'var(--ucr-celeste)' }}>Éxito</span>
-        </h2>
+        </motion.h2>
 
         <div className={styles.testiGrid} data-anim="reveal">
-          {TESTIMONIOS.map((t) => (
-            <article key={t.nombre} className={`${styles.testiCard} ${styles.animItem}`}>
+          {TESTIMONIOS.map((t, i) => (
+            <motion.article
+              key={t.nombre}
+              className={`${styles.testiCard} ${styles.animItem}`}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: i * 0.15, ease: 'easeOut' }}
+              whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            >
               <Quote className={styles.testiQuote} />
               <div className={styles.testiHead}>
                 <div className={styles.testiAvatarWrap}>
@@ -42,7 +59,7 @@ export default function Testimonios() {
                 </div>
               </div>
               <p className={styles.testiText}>&ldquo;{t.texto}&rdquo;</p>
-            </article>
+            </motion.article>
           ))}
         </div>
       </div>

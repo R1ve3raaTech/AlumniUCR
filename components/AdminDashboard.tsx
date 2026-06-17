@@ -1,12 +1,8 @@
 'use client';
 
-// Dashboard del administrador con la identidad del landing (paleta --ucr-/
-// --brand-, Barlow Condensed, textura tech-grid). Muestra el resumen, el
-// Matching Interdisciplinario (proyectos ↔ estudiantes ↔ mentores) y la
-// gestión de solicitudes de colaboración.
-
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import AdminSolicitudes from './AdminSolicitudes';
 import { obtenerMatching } from '@/lib/matching';
@@ -52,6 +48,15 @@ interface MatchingData {
   proyectos: Proyecto[];
 }
 
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+const fadeItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+};
+
 export default function AdminDashboard({
   correo,
   onSignOut,
@@ -64,7 +69,6 @@ export default function AdminDashboard({
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    // El token se lee aquí para no acoplar el componente al contexto.
     let activo = true;
     (async () => {
       try {
@@ -80,9 +84,7 @@ export default function AdminDashboard({
         if (activo) setCargando(false);
       }
     })();
-    return () => {
-      activo = false;
-    };
+    return () => { activo = false; };
   }, []);
 
   const r = matching?.resumen;
@@ -95,7 +97,12 @@ export default function AdminDashboard({
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <motion.header
+        className={styles.header}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <div className={styles.nav}>
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
           <nav className={styles.navLinks}>
@@ -107,43 +114,70 @@ export default function AdminDashboard({
             <ILogout /> Cerrar sesión
           </button>
         </div>
-      </header>
+      </motion.header>
 
       <main className={styles.main}>
-        <section className={styles.welcome}>
+        <motion.section
+          className={styles.welcome}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
           <span className={styles.welcomeTexture} aria-hidden />
-          <div className={styles.welcomeContent}>
+          <motion.div
+            className={styles.welcomeContent}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
             <span className={styles.badge}>Administración</span>
             <h1 className={styles.welcomeTitle}>Panel del administrador</h1>
             <p className={styles.welcomeText}>
               Gestiona la comunidad y potencia el <strong>matching interdisciplinario</strong>:
               conecta proyectos estudiantiles con mentores de otras disciplinas.
             </p>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         <div className={styles.container}>
           {/* Resumen */}
-          <section className={styles.stats}>
+          <motion.section
+            className={styles.stats}
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {stats.map((s) => (
-              <article key={s.label} className={styles.statCard}>
+              <motion.article
+                key={s.label}
+                className={styles.statCard}
+                variants={fadeItem}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
                 <span className={styles.statIcon}>{s.icon}</span>
                 <div>
                   <span className={styles.statValor}>{s.valor}</span>
                   <span className={styles.statLabel}>{s.label}</span>
                 </div>
-              </article>
+              </motion.article>
             ))}
-          </section>
+          </motion.section>
 
           {/* Matching interdisciplinario */}
           <section className={styles.bloque}>
-            <div className={styles.bloqueHead}>
+            <motion.div
+              className={styles.bloqueHead}
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+            >
               <h2 className={styles.bloqueTitulo}>Matching Interdisciplinario</h2>
               <span className={styles.bloqueHint}>
                 Proyecto · estudiante · mentores recomendados por áreas en común
               </span>
-            </div>
+            </motion.div>
 
             {cargando ? (
               <p className={styles.vacio}>Calculando coincidencias…</p>
@@ -153,9 +187,15 @@ export default function AdminDashboard({
                 estudiantes y mentores con áreas asignadas, aquí aparecerán las coincidencias.
               </p>
             ) : (
-              <div className={styles.matchGrid}>
+              <motion.div
+                className={styles.matchGrid}
+                variants={stagger}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-40px' }}
+              >
                 {matching.proyectos.map((p) => (
-                  <article key={p.id} className={styles.matchCard}>
+                  <motion.article key={p.id} className={styles.matchCard} variants={fadeItem}>
                     <div className={styles.matchTop}>
                       <h3 className={styles.matchTitulo}>{p.titulo}</h3>
                       <div className={styles.estudiante}>
@@ -171,7 +211,13 @@ export default function AdminDashboard({
                         ))}
                       </div>
                       <div className={styles.barra}>
-                        <span className={styles.barraFill} style={{ width: `${p.avance}%` }} />
+                        <motion.span
+                          className={styles.barraFill}
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${p.avance}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.9, delay: 0.3, ease: 'easeOut' }}
+                        />
                       </div>
                       <span className={styles.avanceTxt}>{p.avance}% de avance</span>
                     </div>
@@ -206,20 +252,26 @@ export default function AdminDashboard({
                         ))
                       )}
                     </div>
-                  </article>
+                  </motion.article>
                 ))}
-              </div>
+              </motion.div>
             )}
           </section>
 
           {/* Solicitudes de colaboración */}
-          <section className={styles.bloque}>
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
             <div className={styles.bloqueHead}>
               <h2 className={styles.bloqueTitulo}>Solicitudes de colaboración</h2>
               <span className={styles.bloqueHint}>Voluntarios externos y accesos</span>
             </div>
             {token && <AdminSolicitudes token={token} />}
-          </section>
+          </motion.section>
         </div>
       </main>
 
