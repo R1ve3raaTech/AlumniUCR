@@ -135,13 +135,12 @@ export default function DashboardPage() {
             <span className="material-symbols-outlined">handshake</span>
             Mis matches
           </Link>
-          <span
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-outline opacity-60 cursor-not-allowed"
-            title="Próximamente"
-            aria-disabled="true"
+          <Link
+            href="/estudiantes?rol=estudiante"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
           >
             <span className="material-symbols-outlined">groups</span>
-            Directorio 
+            Directorio
           </Link>
 
           <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
