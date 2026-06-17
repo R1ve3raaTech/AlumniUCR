@@ -87,6 +87,8 @@ export default function ExalumnoDashboard({
         <div className={styles.nav}>
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
           <nav className={styles.navLinks}>
+            <Link href="/mis-matches" className={styles.navLink}>Mis matches</Link>
+            <Link href="/estudiantes" className={styles.navLink}>Estudiantes</Link>
             <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
             <Link href="/mentorias" className={styles.navLink}>Mentorías</Link>
             <Link href="/ayuda" className={styles.navLink}>Ayuda</Link>

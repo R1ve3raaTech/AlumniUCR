@@ -129,8 +129,16 @@ export default function DashboardPage() {
             Mi perfil
           </Link>
           <Link
-            href="/estudiantes?rol=estudiante"
+            href="/mis-matches"
             className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
+          >
+            <span className="material-symbols-outlined">handshake</span>
+            Mis matches
+          </Link>
+          <span
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-outline opacity-60 cursor-not-allowed"
+            title="Próximamente"
+            aria-disabled="true"
           >
             <span className="material-symbols-outlined">groups</span>
             Directorio

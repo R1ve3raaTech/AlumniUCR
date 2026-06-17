@@ -1,0 +1,62 @@
+/* /mis-matches (RF-06). Usa los tokens --ucr-* globales. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body); }
+
+.header { display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px; background: var(--ucr-primary); }
+.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display); opacity: .9; }
+.back:hover { opacity: 1; text-decoration: underline; }
+
+.hero { padding: 36px 32px 8px; max-width: 1200px; margin: 0 auto; }
+.heroTitle { font-family: var(--font-ucr-display); color: var(--ucr-primary); font-size: 2.2rem; font-weight: 800; }
+.heroText { color: var(--ucr-on-surface-variant); max-width: 70ch; margin-top: 6px; }
+
+.main { max-width: 1200px; margin: 0 auto; padding: 22px 32px 60px; }
+.vacio { text-align: center; color: var(--ucr-on-surface-variant); padding: 50px 0; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+
+.card { position: relative; background: #fff; border: 1px solid var(--ucr-surface-variant);
+  border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+.scoreBadge { position: absolute; top: 16px; right: 16px; background: var(--ucr-primary);
+  color: #fff; font-family: var(--font-ucr-display); font-weight: 800; font-size: 1.5rem;
+  width: 64px; height: 64px; border-radius: 50%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; line-height: 1; }
+.scoreBadge span { font-size: .7rem; font-weight: 500; opacity: .8; }
+
+.cardHead { display: flex; gap: 12px; align-items: center; padding-right: 60px; }
+.ini { width: 44px; height: 44px; border-radius: 50%; background: var(--ucr-celeste);
+  color: var(--ucr-primary); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-ucr-display); font-weight: 700; flex-shrink: 0; }
+.nombre { font-size: 1.05rem; color: var(--ucr-primary); font-family: var(--font-ucr-display); }
+.sub { font-size: .82rem; color: var(--ucr-on-surface-variant); }
+
+.proyecto { font-size: .9rem; color: var(--ucr-on-surface); }
+.inter { align-self: flex-start; background: #ede9fe; color: #5b21b6; font-size: .75rem;
+  padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+.mensaje { font-style: italic; color: var(--ucr-on-surface-variant); font-size: .9rem; }
+
+.areas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.areasLabel { font-size: .8rem; color: var(--ucr-on-surface-variant); }
+.areaChip { background: var(--ucr-surface-container); color: var(--ucr-primary);
+  font-size: .78rem; padding: 3px 10px; border-radius: 999px; }
+
+.barra { height: 8px; background: var(--ucr-surface-variant); border-radius: 999px; overflow: hidden; }
+.barraFill { display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--ucr-celeste), #2f97c9); }
+
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.estado { font-size: .78rem; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+.sugerido { background: var(--ucr-surface-container); color: var(--ucr-on-surface-variant); }
+.contactado { background: #fff3cd; color: #8a6d00; }
+.activo { background: #d8f5e3; color: #14794a; }
+.rechazada, .rech { background: #fde2e1; color: #a3261f; }
+.contacto { color: var(--ucr-celeste); font-weight: 600; font-size: .9rem; }
+
+.acciones { display: flex; gap: 8px; }
+.btnConectar, .btnOk, .btnNo { font-family: var(--font-ucr-display); padding: 8px 16px;
+  border-radius: 8px; border: none; cursor: pointer; font-size: .88rem; }
+.btnConectar, .btnOk { background: var(--ucr-celeste); color: var(--ucr-primary); }
+.btnNo { background: #fde2e1; color: #a3261f; }
+.btnConectar:disabled, .btnOk:disabled, .btnNo:disabled { opacity: .5; cursor: default; }
