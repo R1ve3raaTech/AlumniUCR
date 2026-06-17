@@ -17,17 +17,23 @@ const base = {
   strokeLinejoin: 'round' as const,
 };
 
-const IChat = () => (
-  <svg {...base}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" /></svg>
+const IBrain = () => (
+  <svg {...base} viewBox="0 0 24 24">
+    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+    <path d="M9 13a4.5 4.5 0 0 0 3-4" />
+    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+    <path d="M3.477 10.896a4 4 0 0 1 .556-6.588" />
+    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+    <path d="M15 13a4.5 4.5 0 0 1-3-4" />
+    <path d="M17.997 5.125a3 3 0 0 1-.398 1.375" />
+    <path d="M20.523 10.896a4 4 0 0 0-.556-6.588" />
+  </svg>
 );
 const IClose = () => (
   <svg {...base}><path d="M18 6 6 18M6 6l12 12" /></svg>
 );
 const ISend = () => (
   <svg {...base}><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>
-);
-const IRobot = () => (
-  <svg {...base}><rect x="3" y="11" width="18" height="10" rx="2" /><path d="M12 2v4M12 8v3M8 16h8" /></svg>
 );
 
 // Helper para conseguir saludos dinámicos basados en rol y ubicación
@@ -124,7 +130,7 @@ export default function GlobalChatbot() {
 
     try {
       // Llamar al backend pasando el historial y el contexto dinámico actual
-      const data = await apiFetch('/gemini/chat', {
+      const data = await apiFetch('/claude/chat', {
         method: 'POST',
         body: {
           historial: nuevoHistorial,
@@ -140,12 +146,13 @@ export default function GlobalChatbot() {
       } else {
         throw new Error();
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Lo siento, ha ocurrido un error al procesar tu solicitud con el asistente de IA. Por favor, vuelve a intentarlo en un momento o escribe a soporte@ucrconnect.cr.';
       setMensajes((prev) => [
         ...prev,
         {
           role: 'assistant' as const,
-          text: 'Lo siento, ha ocurrido un error al procesar tu solicitud con el asistente de IA. Por favor, vuelve a intentarlo en un momento o escribe a soporte@ucrconnect.cr.',
+          text: errorMsg,
         },
       ]);
     } finally {
@@ -184,7 +191,7 @@ export default function GlobalChatbot() {
         className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
         aria-label="Abrir chat de asistencia"
       >
-        {chatAbierto ? <IClose /> : <IChat />}
+        {chatAbierto ? <IClose /> : <IBrain />}
       </button>
 
       {/* Ventana de Chat */}
@@ -192,7 +199,7 @@ export default function GlobalChatbot() {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderTitle}>
-              <IRobot />
+              <IBrain />
               <span>Soporte Alumni UCR</span>
             </div>
             <button
