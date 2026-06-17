@@ -91,7 +91,7 @@ export default function PerfilEstudiantePage() {
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
       {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
         <Link href="/" aria-label="Alumni UCR — inicio" className="mb-10 block">
           <AlumniLogo height={32} />
         </Link>
@@ -111,14 +111,13 @@ export default function PerfilEstudiantePage() {
             <span className="material-symbols-outlined">person</span>
             Mi perfil
           </span>
-          <span
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-outline opacity-60 cursor-not-allowed"
-            title="Próximamente"
-            aria-disabled="true"
+          <Link
+            href="/estudiantes?rol=estudiante"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
           >
             <span className="material-symbols-outlined">groups</span>
             Directorio
-          </span>
+          </Link>
 
           <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
             Secciones
