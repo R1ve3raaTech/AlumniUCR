@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
+import ReportarPerfil from '@/components/ReportarPerfil';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import styles from './estudiantes.module.css';
 
@@ -157,6 +158,8 @@ export default function EstudiantesPage() {
                     </button>
                   )}
                 </div>
+
+                <div className={styles.reportarRow}><ReportarPerfil idReportado={e.id} nombre={e.nombre} /></div>
               </article>
             ))}
           </div>

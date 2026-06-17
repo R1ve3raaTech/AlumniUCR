@@ -1,0 +1,28 @@
+/* Botón + modal de "Reportar perfil" (RF-09.1). Tokens --ucr-* globales. */
+.trigger { display: inline-flex; align-items: center; gap: 5px; background: none;
+  border: none; color: var(--ucr-on-surface-variant); cursor: pointer; font-size: .8rem;
+  font-family: var(--font-brand-body); padding: 2px 4px; opacity: .75; }
+.trigger:hover { opacity: 1; color: #c0392b; }
+
+.bg { position: fixed; inset: 0; background: rgba(0,30,45,.6); display: flex;
+  align-items: center; justify-content: center; padding: 20px; z-index: 60; }
+.modal { background: #fff; border-radius: 14px; width: min(440px, 96vw); overflow: hidden; }
+.head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px;
+  background: var(--ucr-primary); color: #fff; font-family: var(--font-ucr-display); }
+.x { background: none; border: none; color: #fff; font-size: 1.1rem; cursor: pointer; }
+
+.body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: .8rem; color: var(--ucr-on-surface-variant); margin-top: 4px; }
+.select, .textarea { width: 100%; padding: 9px; border: 1px solid var(--ucr-surface-variant);
+  border-radius: 8px; font-family: inherit; font-size: .92rem; }
+.textarea { resize: vertical; }
+.nota { font-size: .78rem; color: var(--ucr-on-surface-variant); margin-top: 4px; }
+.error { color: #c0392b; font-size: .85rem; }
+.ok { color: #14794a; font-weight: 600; }
+
+.acciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+.btnPrimary, .btnGhost { font-family: var(--font-ucr-display); padding: 9px 18px;
+  border-radius: 8px; border: none; cursor: pointer; font-size: .9rem; }
+.btnPrimary { background: #e74c3c; color: #fff; }
+.btnPrimary:disabled { opacity: .5; cursor: default; }
+.btnGhost { background: var(--ucr-surface-container); color: var(--ucr-on-surface-variant); }

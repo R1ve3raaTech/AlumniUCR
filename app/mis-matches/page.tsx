@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import AlumniLogo from '@/components/AlumniLogo';
+import ReportarPerfil from '@/components/ReportarPerfil';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
@@ -228,6 +229,7 @@ export default function MisMatchesPage() {
                         </button>
                       ) : null}
                     </div>
+                    <div className={styles.reportar}><ReportarPerfil idReportado={est.id} nombre={est.nombre} /></div>
                   </article>
                 );
               })}

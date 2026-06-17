@@ -7,6 +7,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AlumniLogo from '@/components/AlumniLogo';
+import ReportarPerfil from '@/components/ReportarPerfil';
 import { obtenerDirectorio } from '@/lib/perfilExalumno';
 import styles from './directorio.module.css';
 
@@ -125,6 +126,8 @@ export default function DirectorioPage() {
                     <span key={a.clave} className={styles.apoyoChip}>{a.label}</span>
                   ))}
                 </div>
+
+                <div className={styles.reportarRow}><ReportarPerfil idReportado={e.id} nombre={e.nombre} /></div>
               </article>
             ))}
           </div>
