@@ -1,18 +1,6 @@
 'use client';
 
-// /mis-matches (RF-06) — Sugerencias de conexión ordenadas por score.
-// Role-aware:
-//   • Exalumno: estudiantes rankeados por la fórmula del documento (carrera 30 /
-//     áreas 30 / sector↔área 20 / apoyo 20). Inicia conexión (reutiliza el flujo
-//     de contacto). Estados: sugerido→contactado→activo. Al aceptar (estudiante),
-//     se revela el correo.
-//   • Estudiante: solicitudes de conexión recibidas, para aceptar o rechazar.
-//
-// Pendiente de BE (Adri): la notificación por email al iniciar/aceptar la conexión
-// y el aviso al admin de "nuevo match activo".
-
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
@@ -27,7 +15,6 @@ import {
   calcularScore,
   estadoMatch,
 } from '@/lib/misMatches';
-import styles from './mis-matches.module.css';
 
 interface Estudiante {
   id: string;
@@ -48,29 +35,25 @@ interface ExalumnoDir {
   sectores: string[];
   areas: string[];
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; colaboracion: boolean; donacion: boolean };
+  correo?: string | null;
 }
 interface SolicitudRecibida {
   id: string;
   nombre_exalumno: string;
   mensaje: string;
   estado: 'pendiente' | 'aceptada' | 'rechazada';
+  correo_exalumno?: string | null;
 }
-
-const ESTADO_LABEL: Record<string, string> = {
-  sugerido: 'Sugerido', contactado: 'Conexión enviada', activo: 'Conexión activa', rechazada: 'No aceptada',
-};
 
 export default function MisMatchesPage() {
   const router = useRouter();
-  const { token, user, loading: authLoading } = useAuth();
+  const { token, user, loading: authLoading, signOut } = useAuth();
   const [rol, setRol] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const [enviando, setEnviando] = useState<string | null>(null);
 
-  // Exalumno
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [miPerfilExa, setMiPerfilExa] = useState<ExalumnoDir | null>(null);
-  // Estudiante
   const [recibidas, setRecibidas] = useState<SolicitudRecibida[]>([]);
 
   useEffect(() => {
@@ -101,7 +84,7 @@ export default function MisMatchesPage() {
           if (activo) setRecibidas(sol?.data ?? []);
         }
       } catch {
-        /* se mantiene simple */
+        /* simple */
       } finally {
         if (activo) setCargando(false);
       }
@@ -109,7 +92,6 @@ export default function MisMatchesPage() {
     return () => { activo = false; };
   }, [token, user]);
 
-  // Ranking de estudiantes para el exalumno (excluye score 0, ordena desc).
   const ranking = useMemo(() => {
     if (!miPerfilExa) return [];
     return estudiantes
@@ -121,7 +103,7 @@ export default function MisMatchesPage() {
   async function conectar(idEstudiante: string) {
     setEnviando(idEstudiante);
     try {
-      await solicitarContacto(token as string, idEstudiante, 'Me gustaría conectar para apoyar tu proyecto.');
+      await solicitarContacto(token as string, idEstudiante, 'Me gustaria conectar para apoyar tu proyecto.');
       setEstudiantes((l) => l.map((e) => (e.id === idEstudiante ? { ...e, solicitud: 'pendiente' } : e)));
     } finally {
       setEnviando(null);
@@ -138,82 +120,160 @@ export default function MisMatchesPage() {
     }
   }
 
+  function handleSignOut() {
+    signOut();
+    router.replace('/login');
+  }
+
   const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
+  const pendientes = recibidas.filter((s) => s.estado === 'pendiente');
+  const respondidas = recibidas.filter((s) => s.estado !== 'pendiente');
+
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
-        <Link href="/dashboard" className={styles.back}>Volver al panel</Link>
-      </header>
+    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <StudentNav onSignOut={handleSignOut} />
 
-      <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>Mis Matches</h1>
-        <p className={styles.heroText}>
-          {rol === 'estudiante'
-            ? 'Solicitudes de conexión que recibiste de exalumnos. Aceptá para revelar tu contacto.'
-            : 'Estudiantes sugeridos según tu carrera, áreas de interés, sector y tipo de apoyo. Ordenados por compatibilidad.'}
-        </p>
-      </section>
+      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        {/* Hero */}
+        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
+          <h1 className="font-ucr-display text-3xl font-bold tracking-tight sm:text-4xl">Mis Matches</h1>
+          <p className="mt-2 text-sm text-white/80">
+            {rol === 'estudiante'
+              ? 'Solicitudes de conexion que recibiste de exalumnos. Acepta para revelar tu contacto.'
+              : 'Estudiantes sugeridos segun tu carrera, areas de interes, sector y tipo de apoyo. Ordenados por compatibilidad.'}
+          </p>
+        </section>
 
-      <main className={styles.main}>
-        {cargando ? (
-          <p className={styles.vacio}>Calculando tus matches…</p>
-        ) : rol === 'estudiante' ? (
-          /* ── Vista ESTUDIANTE: solicitudes recibidas ── */
-          recibidas.length === 0 ? (
-            <p className={styles.vacio}>Todavía no recibiste solicitudes de conexión.</p>
-          ) : (
-            <div className={styles.grid}>
-              {recibidas.map((s) => (
-                <article key={s.id} className={styles.card}>
-                  <div className={styles.cardHead}>
-                    <span className={styles.ini}>{iniciales(s.nombre_exalumno)}</span>
-                    <div><h3 className={styles.nombre}>{s.nombre_exalumno}</h3><span className={styles.sub}>Exalumno</span></div>
+        <div className="mt-6">
+          {cargando ? (
+            <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Calculando tus matches...</p>
+
+          /* ── VISTA ESTUDIANTE ── */
+          ) : rol === 'estudiante' ? (
+            recibidas.length === 0 ? (
+              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Todavia no recibiste solicitudes de conexion.</p>
+            ) : (
+              <div className="flex flex-col gap-8">
+                {/* Pendientes */}
+                {pendientes.length > 0 && (
+                  <div>
+                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">
+                      Pendientes de respuesta
+                      <span className="ml-2 rounded-full bg-ucr-secondary px-2.5 py-0.5 text-xs font-semibold text-white">{pendientes.length}</span>
+                    </h2>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {pendientes.map((s) => (
+                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-2 ring-ucr-secondary/20">
+                          <div className="mb-3 flex items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                              {iniciales(s.nombre_exalumno)}
+                            </div>
+                            <div>
+                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
+                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
+                            </div>
+                          </div>
+                          {s.mensaje && <p className="mb-4 text-sm italic text-ucr-on-surface-variant">"{s.mensaje}"</p>}
+                          <div className="mt-auto flex gap-2">
+                            <button onClick={() => responder(s.id, true)} disabled={enviando === s.id}
+                              className="flex-1 rounded-2xl bg-ucr-secondary py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
+                              {enviando === s.id ? 'Guardando...' : 'Aceptar'}
+                            </button>
+                            <button onClick={() => responder(s.id, false)} disabled={enviando === s.id}
+                              className="flex-1 rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface-variant transition hover:bg-ucr-surface-container disabled:opacity-60">
+                              Rechazar
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
                   </div>
-                  {s.mensaje && <p className={styles.mensaje}>“{s.mensaje}”</p>}
-                  {s.estado === 'pendiente' ? (
-                    <div className={styles.acciones}>
-                      <button className={styles.btnOk} disabled={enviando === s.id} onClick={() => responder(s.id, true)}>Aceptar</button>
-                      <button className={styles.btnNo} disabled={enviando === s.id} onClick={() => responder(s.id, false)}>Rechazar</button>
+                )}
+
+                {/* Respondidas */}
+                {respondidas.length > 0 && (
+                  <div>
+                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">Historial</h2>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {respondidas.map((s) => (
+                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm opacity-90">
+                          <div className="mb-3 flex items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                              {iniciales(s.nombre_exalumno)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
+                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
+                            </div>
+                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              s.estado === 'aceptada'
+                                ? 'bg-ucr-esmeralda/10 text-ucr-esmeralda'
+                                : 'bg-ucr-surface-container text-ucr-outline'
+                            }`}>
+                              {s.estado === 'aceptada' ? 'Activa' : 'Rechazada'}
+                            </span>
+                          </div>
+                          {s.estado === 'aceptada' && s.correo_exalumno && (
+                            <a href={`mailto:${s.correo_exalumno}`}
+                              className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
+                              <span className="material-symbols-outlined text-base">mail</span>
+                              {s.correo_exalumno}
+                            </a>
+                          )}
+                          {s.estado === 'aceptada' && !s.correo_exalumno && (
+                            <p className="mt-1 text-xs text-ucr-on-surface-variant">Conexion activa — contacto disponible pronto.</p>
+                          )}
+                        </article>
+                      ))}
                     </div>
-                  ) : (
-                    <span className={`${styles.estado} ${s.estado === 'aceptada' ? styles.activo : styles.rech}`}>
-                      {s.estado === 'aceptada' ? 'Conexión activa' : 'Rechazada'}
-                    </span>
-                  )}
-                </article>
-              ))}
-            </div>
-          )
-        ) : rol === 'exalumno' ? (
-          /* ── Vista EXALUMNO: estudiantes rankeados ── */
-          !miPerfilExa ? (
-            <p className={styles.vacio}>Completá tu perfil de exalumno para generar tus matches.</p>
-          ) : ranking.length === 0 ? (
-            <p className={styles.vacio}>No hay estudiantes compatibles por ahora.</p>
-          ) : (
-            <div className={styles.grid}>
-              {ranking.map(({ est, score, comunes, interdisciplinario }) => {
-                const estado = estadoMatch(est.solicitud);
-                return (
-                  <article key={est.id} className={styles.card}>
-                    <div className={styles.scoreBadge}>{score}<span>/100</span></div>
-                    <div className={styles.cardHead}>
-                      <span className={styles.ini}>{iniciales(est.nombre)}</span>
-                      <div>
-                        <h3 className={styles.nombre}>{est.nombre}</h3>
-                        <span className={styles.sub}>{est.carreras[0] || '—'}{est.facultades[0] ? ` · ${est.facultades[0]}` : ''}</span>
+                  </div>
+                )}
+              </div>
+            )
+
+          /* ── VISTA EXALUMNO ── */
+          ) : rol === 'exalumno' ? (
+            !miPerfilExa ? (
+              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Completa tu perfil de exalumno para generar tus matches.</p>
+            ) : ranking.length === 0 ? (
+              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">No hay estudiantes compatibles por ahora.</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {ranking.map(({ est, score, comunes, interdisciplinario }) => {
+                  const estado = estadoMatch(est.solicitud);
+                  return (
+                    <article key={est.id} className={`flex flex-col rounded-3xl bg-white p-5 shadow-sm ${estado === 'activo' ? 'ring-2 ring-ucr-esmeralda/30' : ''}`}>
+                      {/* Cabecera */}
+                      <div className="mb-3 flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                            {iniciales(est.nombre)}
+                          </div>
+                          <div>
+                            <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{est.nombre}</h3>
+                            <span className="text-xs text-ucr-on-surface-variant">{est.carreras[0] || '?'}{est.facultades[0] ? ` - ${est.facultades[0]}` : ''}</span>
+                          </div>
+                        </div>
+                        {/* Score badge */}
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white ${
+                          score >= 70 ? 'bg-ucr-esmeralda' : score >= 40 ? 'bg-ucr-secondary' : 'bg-ucr-outline'
+                        }`}>{score}/100</span>
                       </div>
-                    </div>
 
-                    <p className={styles.proyecto}><strong>Proyecto:</strong> {est.proyecto?.titulo}</p>
-                    {interdisciplinario && <span className={styles.inter}>Interdisciplinario</span>}
+                      {/* Proyecto */}
+                      <p className="mb-2 text-sm text-ucr-on-surface">
+                        <span className="font-semibold">Proyecto:</span> {est.proyecto?.titulo}
+                      </p>
 
-                    {comunes.length > 0 && (
-                      <div className={styles.areas}>
-                        <span className={styles.areasLabel}>Áreas en común:</span>
-                        {comunes.map((a) => <span key={a} className={styles.areaChip}>{a}</span>)}
+                      {/* Tags */}
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        {interdisciplinario && (
+                          <span className="rounded-full bg-ucr-celeste/10 px-2.5 py-0.5 text-xs font-semibold text-ucr-secondary">Interdisciplinario</span>
+                        )}
+                        {comunes.map((a: string) => (
+                          <span key={a} className="rounded-full bg-ucr-surface-container px-2.5 py-0.5 text-xs text-ucr-on-surface-variant">#{a}</span>
+                        ))}
                       </div>
                     )}
 

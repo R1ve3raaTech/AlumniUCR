@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
-import AlumniLogo from '@/components/AlumniLogo';
+import StudentNav from '@/components/StudentNav';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
@@ -106,12 +106,8 @@ export default function DashboardPage() {
   const inicial = correo.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
-      {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-        <Link href="/" aria-label="Alumni UCR — inicio" className="mb-10 block">
-          <AlumniLogo height={32} />
-        </Link>
+    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <StudentNav onSignOut={handleSignOut} />
 
         <nav className="flex flex-1 flex-col gap-1">
           <p className="px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
