@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
-import StudentNav from '@/components/StudentNav';
+import AlumniLogo from '@/components/AlumniLogo';
+import ReportarPerfil from '@/components/ReportarPerfil';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
@@ -274,59 +275,29 @@ export default function MisMatchesPage() {
                           <span key={a} className="rounded-full bg-ucr-surface-container px-2.5 py-0.5 text-xs text-ucr-on-surface-variant">#{a}</span>
                         ))}
                       </div>
+                    )}
 
-                      {/* Barra de compatibilidad */}
-                      <div className="mb-1 flex items-center justify-between text-xs text-ucr-on-surface-variant">
-                        <span>Compatibilidad</span>
-                        <span className="font-semibold">{score}%</span>
-                      </div>
-                      <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-ucr-surface-container">
-                        <span className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda transition-all" style={{ width: `${score}%` }} />
-                      </div>
+                    <div className={styles.barra}><span className={styles.barraFill} style={{ width: `${score}%` }} /></div>
 
-                      {/* Accion segun estado */}
-                      <div className="mt-auto">
-                        {estado === 'activo' ? (
-                          <div className="rounded-2xl bg-ucr-esmeralda/10 p-3">
-                            <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ucr-esmeralda">
-                              <span className="material-symbols-outlined text-base">check_circle</span>
-                              Conexion activa
-                            </p>
-                            {est.correo ? (
-                              <a href={`mailto:${est.correo}`} className="flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
-                                <span className="material-symbols-outlined text-base">mail</span>
-                                {est.correo}
-                              </a>
-                            ) : (
-                              <p className="text-xs text-ucr-on-surface-variant">Contacto disponible pronto.</p>
-                            )}
-                          </div>
-                        ) : estado === 'contactado' ? (
-                          <div className="flex items-center gap-2 rounded-2xl bg-ucr-surface-container px-4 py-2.5">
-                            <span className="material-symbols-outlined text-base text-ucr-outline">schedule</span>
-                            <span className="text-sm text-ucr-on-surface-variant">Solicitud enviada — esperando respuesta</span>
-                          </div>
-                        ) : estado === 'rechazada' ? (
-                          <div className="flex items-center gap-2 rounded-2xl bg-ucr-surface-container px-4 py-2.5">
-                            <span className="material-symbols-outlined text-base text-ucr-outline">block</span>
-                            <span className="text-sm text-ucr-outline">No aceptada</span>
-                          </div>
-                        ) : (
-                          <button onClick={() => conectar(est.id)} disabled={enviando === est.id}
-                            className="w-full rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface transition hover:border-ucr-secondary hover:text-ucr-secondary disabled:opacity-60">
-                            {enviando === est.id ? 'Enviando...' : 'Solicitar conexion'}
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )
-          ) : (
-            <p className="py-16 text-center text-sm text-ucr-on-surface-variant">El matching esta disponible para estudiantes y exalumnos.</p>
-          )}
-        </div>
+                    <div className={styles.footer}>
+                      <span className={`${styles.estado} ${styles[estado]}`}>{ESTADO_LABEL[estado]}</span>
+                      {estado === 'activo' && est.correo ? (
+                        <a href={`mailto:${est.correo}`} className={styles.contacto}>{est.correo}</a>
+                      ) : estado === 'sugerido' ? (
+                        <button className={styles.btnConectar} disabled={enviando === est.id} onClick={() => conectar(est.id)}>
+                          {enviando === est.id ? 'Enviando…' : 'Solicitar conexión'}
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className={styles.reportar}><ReportarPerfil idReportado={est.id} nombre={est.nombre} /></div>
+                  </article>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          <p className={styles.vacio}>El matching está disponible para estudiantes y exalumnos. El panel del admin tiene su propia vista.</p>
+        )}
       </main>
     </div>
   );

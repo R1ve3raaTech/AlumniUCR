@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import StudentNav from '@/components/StudentNav';
+import AlumniLogo from '@/components/AlumniLogo';
+import ReportarPerfil from '@/components/ReportarPerfil';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { apiFetch } from '@/lib/api';
 import { CARRERAS_UCR } from '@/lib/catalogoUCR';
@@ -421,6 +422,10 @@ export default function EstudiantesPage() {
                           {enviando === e.id ? 'Enviando…' : 'Ofrecer apoyo'}
                         </button>
                       )}
+                    </div>
+
+                    <div className="mt-3 flex justify-end border-t border-ucr-outline-variant pt-2">
+                      <ReportarPerfil idReportado={e.id} nombre={e.nombre} />
                     </div>
                   </article>
                 );

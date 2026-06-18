@@ -2,6 +2,8 @@
    Directorio público de exalumnos (RF-02). Identidad de marca.
    ════════════════════════════════════════════════════════════════════ */
 
+.reportarRow { display: flex; justify-content: flex-end; border-top: 1px solid var(--ucr-surface-variant); padding-top: 8px; margin-top: auto; }
+
 .page {
   min-height: 100vh;
   display: flex;
