@@ -106,6 +106,7 @@ export default function AdminDashboard({
         <div className={styles.nav}>
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
           <nav className={styles.navLinks}>
+            <Link href="/admin/usuarios" className={styles.navLink}>Usuarios</Link>
             <Link href="/admin/donaciones" className={styles.navLink}>Donaciones</Link>
             <Link href="/admin/reportes" className={styles.navLink}>Impacto</Link>
             <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
