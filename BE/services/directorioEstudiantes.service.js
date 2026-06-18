@@ -19,7 +19,7 @@ const cargarDatos = async () => {
     supabase.from('carreras_usuario').select('id_usuario,id_carrera,ano_graduacion'),
     supabase.from('carreras').select('id,nombre,id_facultad'),
     supabase.from('facultades').select('id,nombre'),
-    supabase.from('proyecto_graduacion').select('id,id_estudiante,titulo_proyecto,descripcion,porcentaje_avance'),
+    supabase.from('proyecto_graduacion').select('id,id_estudiante,titulo_proyecto,descripcion,porcentaje_avance,proyecto_finalizado'),
     supabase.from('areas_interes_proyecto').select('id_proyecto,id_area_tematica'),
     supabase.from('areas_interes').select('id,nombre'),
     supabase.from('habilidades_estudiante').select('id_usuario,tecnicas'),
@@ -48,6 +48,8 @@ const tarjetaEstudiante = (u, d) => {
   const info = d.infoPorUsuario.get(u.id);
   const proyecto = d.proyectoPorEstudiante.get(u.id);
   if (!perfilCompleto(info, proyecto)) return null;
+  if (info.pausado) return null;                 // RF-03: estudiante pausado no aparece (no recibe contactos)
+  if (proyecto.proyecto_finalizado) return null; // RF-05: proyecto finalizado no aparece en el directorio activo
 
   const carrerasIds = d.carrUsu.filter((c) => c.id_usuario === u.id).map((c) => c.id_carrera);
   const facultades = [...new Set(carrerasIds.map((c) => d.facultadNombre.get(d.carreraFacultad.get(c))).filter(Boolean))];
