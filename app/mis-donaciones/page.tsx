@@ -125,7 +125,7 @@ export default function MisDonacionesPage() {
                   <span className={styles.monto}>{fmtMonto(d.monto, d.moneda)}</span>
                   <span className={`${styles.chip} ${styles[d.estado] || ''}`}>{d.estado}</span>
                 </div>
-                <p className={styles.proyecto}>{proyectos[String(d.id_proyecto)] ?? 'Proyecto'}</p>
+                <p className={styles.proyecto}>{d.id_proyecto ? (proyectos[String(d.id_proyecto)] ?? 'Proyecto') : 'Fondo general'}</p>
                 <dl className={styles.detalle}>
                   <div><dt>Fecha</dt><dd>{fmtFecha(d.fecha_hora_transferencia)}</dd></div>
                   <div><dt>Método</dt><dd>{metodos[String(d.id_tipo_pago)] ?? '—'}</dd></div>
