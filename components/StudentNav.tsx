@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/perfil-estudiante', label: 'Mi perfil' },
   { href: '/mis-matches', label: 'Mis matches' },
+  { href: '/posiciones', label: 'Posiciones' },
   { href: '/estudiantes?rol=estudiante', label: 'Directorio' },
 ];
 

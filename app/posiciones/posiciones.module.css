@@ -1,0 +1,54 @@
+/* Directorio de posiciones (RF-10). Identidad de marca UCR. */
+.page { min-height: 100vh; display: flex; flex-direction: column;
+  background: var(--ucr-surface); color: var(--ucr-on-surface); font-family: var(--font-brand-body); }
+
+.header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
+  background: var(--brand-blanco); border-bottom: 1px solid var(--ucr-outline-variant); padding: 1rem clamp(1rem, 4vw, 64px); }
+.brand { display: block; }
+.nav { display: flex; gap: 1.5rem; }
+.navLink { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ucr-outline); transition: color .2s ease; }
+.navLink:hover { color: var(--brand-esmeralda); }
+
+.hero { background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda)); color: var(--brand-blanco); }
+.heroInner { max-width: 1100px; margin: 0 auto; padding: clamp(2.5rem, 1.5rem + 4vw, 4rem) clamp(1rem, 4vw, 64px); text-align: center; }
+.heroTitle { font-family: var(--font-ucr-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(2rem, 1.6rem + 3vw, 3.2rem); color: var(--brand-blanco); margin: 0 0 .75rem; }
+.heroText { color: rgba(255,255,255,.85); max-width: 40rem; margin: 0 auto 2rem; line-height: 1.6; }
+.search { width: 100%; max-width: 36rem; padding: .9rem 1.25rem; border: none; border-radius: 9999px;
+  font-family: var(--font-brand-body); font-size: 1rem; box-shadow: 0 12px 30px -10px rgba(0,31,42,.5); }
+.search:focus { outline: none; box-shadow: 0 0 0 4px var(--brand-amarillo); }
+
+.filtros { background: var(--brand-blanco); border-bottom: 1px solid var(--ucr-outline-variant); position: sticky; top: 70px; z-index: 40; }
+.filtrosInner { max-width: 1560px; margin: 0 auto; padding: .85rem clamp(1rem, 4vw, 64px); display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.filtro { appearance: none; background: var(--ucr-surface); border: 1px solid var(--ucr-outline-variant);
+  border-radius: 9999px; padding: .5rem 1rem; font-family: var(--font-brand-body); font-size: .85rem; color: var(--ucr-on-surface); cursor: pointer; }
+.filtro:focus { outline: none; border-color: var(--brand-esmeralda); box-shadow: 0 0 0 3px rgba(0,125,103,.15); }
+.limpiar { margin-left: auto; background: transparent; border: none; color: var(--brand-azul);
+  font-family: var(--font-brand-body); font-size: .82rem; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.limpiar:hover { color: var(--ucr-primary); }
+
+.main { flex-grow: 1; width: 100%; max-width: 1560px; margin: 0 auto; padding: clamp(2rem, 1.5rem + 3vw, 3rem) clamp(1rem, 4vw, 64px); }
+.contador { font-size: .85rem; color: var(--ucr-on-surface-variant); margin: 0 0 1.25rem; font-weight: 600; }
+.vacio { color: var(--ucr-on-surface-variant); background: var(--brand-blanco); border: 1px dashed var(--ucr-outline-variant); padding: 2rem; text-align: center; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.card { display: flex; flex-direction: column; gap: .7rem; background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant); box-shadow: 0 4px 20px rgba(0,76,99,.06); padding: 1.5rem;
+  transition: border-color .3s ease, transform .3s ease; }
+.card:hover { border-color: var(--brand-esmeralda); transform: translateY(-4px); }
+.cardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.titulo { font-family: var(--font-ucr-display); font-weight: 700; font-size: 1.2rem; color: var(--ucr-primary); margin: 0; line-height: 1.2; }
+.tipoChip { flex-shrink: 0; background: rgba(0,106,211,.1); color: var(--brand-azul); font-size: .7rem; font-weight: 700;
+  text-transform: uppercase; padding: .2rem .6rem; border-radius: 999px; }
+.empresa { font-size: .85rem; color: var(--ucr-on-surface-variant); margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.chip { background: rgba(0,125,103,.12); color: var(--ucr-esmeralda); font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 999px; }
+.desc { font-size: .85rem; color: var(--ucr-on-surface); margin: 0; line-height: 1.5; }
+.habilidades { font-size: .8rem; color: var(--ucr-on-surface-variant); margin: 0; }
+.habilidades strong { color: var(--ucr-on-surface); }
+.cardFoot { margin-top: auto; padding-top: .85rem; border-top: 1px solid var(--ucr-outline-variant); }
+.fecha { font-size: .8rem; color: var(--ucr-on-surface-variant); }
+.fecha strong { color: var(--ucr-primary); }
+
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } .nav { display: none; } }

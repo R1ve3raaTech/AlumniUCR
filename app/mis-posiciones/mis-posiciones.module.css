@@ -1,0 +1,48 @@
+/* Mis posiciones (RF-10) — vista del exalumno. Identidad de marca UCR. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body); display: flex; flex-direction: column; }
+
+.header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--ucr-primary); }
+.brand { display: block; }
+.headerLinks { display: flex; gap: 18px; flex-wrap: wrap; }
+.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display); font-size: .95rem; opacity: .9; }
+.back:hover { opacity: 1; text-decoration: underline; }
+
+.hero { background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda)); color: #fff;
+  padding: clamp(2rem, 1.5rem + 3vw, 3rem) 32px; text-align: center; }
+.heroTitle { font-family: var(--font-ucr-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(1.8rem, 1.4rem + 2vw, 2.6rem); margin: 0 0 .5rem; color: #fff; }
+.heroText { color: rgba(255,255,255,.85); max-width: 46rem; margin: 0 auto; line-height: 1.6; }
+
+.main { flex: 1; width: 100%; max-width: 920px; margin: 0 auto; padding: 32px; }
+.vacio { text-align: center; color: var(--ucr-on-surface-variant); padding: 50px 0; }
+.error { background: #fde2e1; color: #a3261f; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; font-size: .9rem; }
+.vacioBox { background: #fff; border: 1px dashed var(--ucr-outline-variant); border-radius: 16px; padding: 40px 28px;
+  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--ucr-on-surface-variant); }
+
+.lista { display: flex; flex-direction: column; gap: 1rem; }
+.card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: #fff; border: 1px solid var(--ucr-outline-variant); border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 4px 20px rgba(0,76,99,.06); }
+.cardMain { flex: 1 1 280px; display: flex; flex-direction: column; gap: 4px; }
+.cardHead { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.titulo { font-family: var(--font-ucr-display); font-weight: 700; font-size: 1.15rem; color: var(--ucr-primary); margin: 0; }
+.meta { font-size: .85rem; color: var(--ucr-on-surface-variant); margin: 0; }
+.fecha { font-size: .8rem; color: var(--ucr-on-surface-variant); margin: 0; }
+.fecha strong { color: var(--ucr-on-surface); }
+
+.chip { padding: 3px 12px; border-radius: 999px; font-size: .76rem; font-weight: 700; }
+.activa { background: #d8f5e3; color: #14794a; }
+.pausada { background: #fff3cd; color: #8a6d00; }
+.cerrada { background: #e6e2e1; color: #6a5f5d; }
+
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.btnOk, .btnNo, .btnWarn { font-family: var(--font-ucr-display); padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: .85rem; }
+.btnOk { background: #d8f5e3; color: #14794a; }
+.btnWarn { background: #fff3cd; color: #8a6d00; }
+.btnNo { background: #e74c3c; color: #fff; }
+.btnOk:disabled, .btnNo:disabled, .btnWarn:disabled { opacity: .5; cursor: default; }
+
+.btnPrimary { font-family: var(--font-ucr-display); font-weight: 700; padding: 12px 24px; border-radius: 10px; border: none;
+  background: var(--brand-esmeralda); color: #fff; cursor: pointer; font-size: .95rem; text-decoration: none; }
+
+@media (max-width: 560px) { .acciones { width: 100%; } }
