@@ -4,7 +4,7 @@
  */
 async function testChatEndpoint(contexto, mensajeTest, nombreContexto) {
   const PORT = process.env.PORT || 5000;
-  const url = `http://localhost:${PORT}/api/gemini/chat`;
+  const url = `http://localhost:${PORT}/api/claude/chat`;
   console.log(`\n======================================================`);
   console.log(`🔄 Probando Contexto: ${nombreContexto}`);
   console.log(`   Rol: ${contexto.rol} | Path: ${contexto.pathname}`);

@@ -1,5 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config({ path: '.env.local' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // Cliente Supabase DEDICADO exclusivamente a las operaciones de autenticación que
 // generan o cambian una sesión (signUp, signInWithPassword, signInWithOtp, verifyOtp).

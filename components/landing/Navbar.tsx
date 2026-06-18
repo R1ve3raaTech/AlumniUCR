@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
@@ -22,7 +23,12 @@ export default function Navbar() {
   const cerrar = () => setAbierto(false);
 
   return (
-    <nav className={styles.navbar}>
+    <motion.nav
+      className={styles.navbar}
+      initial={{ y: -80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
       <div className={`${styles.container} ${styles.navInner}`}>
         <div className={styles.navLeft}>
           <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrar}>
@@ -75,18 +81,19 @@ export default function Navbar() {
           )}
         </div>
 
-        <button
+        <motion.button
           type="button"
           className={styles.navToggle}
           aria-label="Abrir menú"
           aria-expanded={abierto}
           onClick={() => setAbierto((v) => !v)}
+          whileTap={{ scale: 0.85 }}
         >
           <span />
           <span />
           <span />
-        </button>
+        </motion.button>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
