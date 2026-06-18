@@ -26,6 +26,8 @@ const supabase = createClient(
         }
     }
 );
+
 console.log("SUPABASE URL:", supabaseUrl);
 console.log("KEY USADA:", supabaseKey);
+
 module.exports = supabase;
