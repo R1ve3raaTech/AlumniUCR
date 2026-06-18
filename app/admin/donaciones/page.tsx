@@ -20,6 +20,7 @@ import {
   obtenerTiposPago,
   obtenerUsuarios,
   obtenerProyectos,
+  obtenerUrlComprobante,
 } from '@/lib/donaciones';
 import styles from './donaciones.module.css';
 
@@ -155,6 +156,18 @@ export default function AdminDonacionesPage() {
     }
   }
 
+  // Resuelve el comprobante a una URL visible: rutas de Storage → signed URL;
+  // URLs antiguas (demos) se muestran tal cual.
+  async function verComprobanteResuelto(comprobante: string) {
+    if (/^https?:\/\//i.test(comprobante)) { setVerComprobante(comprobante); return; }
+    try {
+      const url = await obtenerUrlComprobante(token as string, comprobante);
+      setVerComprobante(url || comprobante);
+    } catch {
+      setVerComprobante(comprobante);
+    }
+  }
+
   async function confirmarRechazo() {
     if (!rechazando || !motivo.trim()) return;
     const d = rechazando;
@@ -240,7 +253,7 @@ export default function AdminDonacionesPage() {
                       <td>{d.numero_referencia || '—'}</td>
                       <td>
                         {d.comprobante
-                          ? <button className={styles.link} onClick={() => setVerComprobante(d.comprobante!)}>Ver</button>
+                          ? <button className={styles.link} onClick={() => verComprobanteResuelto(d.comprobante!)}>Ver</button>
                           : '—'}
                       </td>
                       <td>

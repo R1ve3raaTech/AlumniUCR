@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
-import { obtenerMisDonaciones, obtenerTiposPago, obtenerProyectos } from '@/lib/donaciones';
+import { obtenerMisDonaciones, obtenerTiposPago, obtenerProyectos, obtenerUrlComprobante } from '@/lib/donaciones';
 import styles from './mis-donaciones.module.css';
 
 interface Donacion {
@@ -70,6 +70,15 @@ export default function MisDonacionesPage() {
     })();
     return () => { activo = false; };
   }, [token, user?.id]);
+
+  // Abre el comprobante: rutas de Storage → signed URL; URLs antiguas tal cual.
+  async function verComprobante(comprobante: string) {
+    let url = comprobante;
+    if (!/^https?:\/\//i.test(comprobante)) {
+      try { url = (await obtenerUrlComprobante(token as string, comprobante)) || comprobante; } catch { /* usa la ruta */ }
+    }
+    window.open(url, '_blank', 'noopener');
+  }
 
   const ordenadas = useMemo(
     () => [...lista].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
@@ -133,9 +142,9 @@ export default function MisDonacionesPage() {
                 </dl>
                 {d.mensaje && <p className={styles.mensaje}>“{d.mensaje}”</p>}
                 {d.comprobante && (
-                  <a href={d.comprobante} target="_blank" rel="noreferrer" className={styles.comprobante}>
+                  <button type="button" onClick={() => verComprobante(d.comprobante!)} className={styles.comprobante}>
                     {esPdf(d.comprobante) ? 'Ver comprobante (PDF) ↗' : 'Ver comprobante ↗'}
-                  </a>
+                  </button>
                 )}
               </article>
             ))}

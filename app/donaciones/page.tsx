@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
-import { crearDonacion, obtenerTiposPago, obtenerProyectos } from '@/lib/donaciones';
+import { crearDonacion, obtenerTiposPago, obtenerProyectos, subirComprobante } from '@/lib/donaciones';
 import styles from './donaciones.module.css';
 
 interface Opcion { id: number | string; label: string }
@@ -42,9 +42,9 @@ export default function DonacionesPage() {
     id_proyecto: '',
     fecha_hora_transferencia: '',
     numero_referencia: '',
-    comprobante: '',
     mensaje: '',
   });
+  const [archivo, setArchivo] = useState<File | null>(null);
 
   useEffect(() => {
     if (!authLoading && !token) router.replace('/login');
@@ -70,17 +70,20 @@ export default function DonacionesPage() {
 
   const setCampo = (campo: keyof typeof form, valor: string) => setForm((f) => ({ ...f, [campo]: valor }));
 
-  // id_proyecto es opcional: vacío = "fondo general".
+  // id_proyecto es opcional: vacío = "fondo general". El comprobante (archivo) es obligatorio.
   const valido = useMemo(() =>
     Number(form.monto) > 0 && form.id_tipo_pago && form.moneda &&
-    form.fecha_hora_transferencia && form.numero_referencia.trim() && form.comprobante.trim(), [form]);
+    form.fecha_hora_transferencia && form.numero_referencia.trim() && !!archivo, [form, archivo]);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    if (!valido || !user?.id) return;
+    if (!valido || !user?.id || !archivo) return;
     setEnviando(true);
     setError('');
     try {
+      // 1) Subir el comprobante a Storage y obtener su ruta.
+      const rutaComprobante = await subirComprobante(token as string, archivo);
+      // 2) Crear la donación con esa ruta.
       await crearDonacion(token as string, {
         id_usuario_exalumno: user.id,
         id_tipo_pago: form.id_tipo_pago,
@@ -89,7 +92,7 @@ export default function DonacionesPage() {
         moneda: form.moneda,
         fecha_hora_transferencia: form.fecha_hora_transferencia,
         numero_referencia: form.numero_referencia.trim(),
-        comprobante: form.comprobante.trim() || null,
+        comprobante: rutaComprobante,
         mensaje: form.mensaje.trim() || null,
       });
       setExito(true);
@@ -133,7 +136,8 @@ export default function DonacionesPage() {
                 className={styles.btnGhost}
                 onClick={() => {
                   setExito(false);
-                  setForm({ monto: '', moneda: 'CRC', id_tipo_pago: '', id_proyecto: '', fecha_hora_transferencia: '', numero_referencia: '', comprobante: '', mensaje: '' });
+                  setForm({ monto: '', moneda: 'CRC', id_tipo_pago: '', id_proyecto: '', fecha_hora_transferencia: '', numero_referencia: '', mensaje: '' });
+                  setArchivo(null);
                 }}
               >
                 Registrar otra
@@ -194,11 +198,12 @@ export default function DonacionesPage() {
             </label>
 
             <label className={styles.campo}>
-              Comprobante (enlace) *
-              <input type="url" required placeholder="https://… (imagen o PDF del comprobante)"
-                value={form.comprobante} onChange={(e) => setCampo('comprobante', e.target.value)} />
+              Comprobante *
+              <input type="file" required accept="image/jpeg,image/png,application/pdf"
+                onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
               <span className={styles.ayuda}>
-                Pegá un enlace al comprobante (imagen o PDF). La subida de archivos estará disponible pronto.
+                Subí una imagen (JPG/PNG) o PDF del comprobante. Máximo 5MB.
+                {archivo ? ` — Seleccionado: ${archivo.name}` : ''}
               </span>
             </label>
 
