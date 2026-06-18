@@ -42,7 +42,8 @@ const STATS = [
 ];
 
 const ACCIONES = [
-  { icon: <IHeart />, titulo: 'Explorar proyectos', desc: 'Apoya iniciativas estudiantiles con tu experiencia o aporte.', href: '/proyectos' },
+  { icon: <IHeart />, titulo: 'Hacer una donación', desc: 'Apoya económicamente un proyecto de graduación.', href: '/donaciones' },
+  { icon: <IHeart />, titulo: 'Mis donaciones', desc: 'Consulta el estado de tus aportes registrados.', href: '/mis-donaciones' },
   { icon: <IUsers />, titulo: 'Ofrecer mentoría', desc: 'Guía a la próxima generación de profesionales de la UCR.', href: '/mentorias' },
   { icon: <IUsers />, titulo: 'Directorio de estudiantes', desc: 'Conoce proyectos y solicita contacto para apoyar.', href: '/estudiantes' },
   { icon: <IHub />, titulo: 'Centro de ayuda', desc: '¿Dudas? Encuentra respuestas y contacto de soporte.', href: '/ayuda' },
@@ -88,6 +89,7 @@ export default function ExalumnoDashboard({
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
           <nav className={styles.navLinks}>
             <Link href="/mis-matches" className={styles.navLink}>Mis matches</Link>
+            <Link href="/donaciones" className={styles.navLink}>Donar</Link>
             <Link href="/estudiantes" className={styles.navLink}>Estudiantes</Link>
             <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
             <Link href="/mentorias" className={styles.navLink}>Mentorías</Link>

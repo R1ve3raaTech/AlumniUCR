@@ -1,0 +1,59 @@
+/* Formulario de donación del exalumno (RF-07). Identidad de marca UCR. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body); display: flex; flex-direction: column; }
+
+.header { display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px; background: var(--ucr-primary); }
+.brand { display: block; }
+.headerLinks { display: flex; gap: 18px; flex-wrap: wrap; }
+.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display);
+  font-size: .95rem; opacity: .9; }
+.back:hover { opacity: 1; text-decoration: underline; }
+
+.hero { background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda));
+  color: #fff; padding: clamp(2rem, 1.5rem + 3vw, 3rem) 32px; text-align: center; }
+.heroTitle { font-family: var(--font-ucr-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(1.8rem, 1.4rem + 2vw, 2.6rem); margin: 0 0 .5rem; color: #fff; }
+.heroText { color: rgba(255,255,255,.85); max-width: 44rem; margin: 0 auto; line-height: 1.6; }
+
+.main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 32px; }
+.vacio { text-align: center; color: var(--ucr-on-surface-variant); padding: 50px 0; }
+
+.form { background: #fff; border: 1px solid var(--ucr-outline-variant); border-radius: 16px;
+  padding: 28px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 4px 20px rgba(0,76,99,.06); }
+.error { background: #fde2e1; color: #a3261f; padding: 12px 16px; border-radius: 10px; font-size: .9rem; margin: 0; }
+
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.campo { display: flex; flex-direction: column; gap: 6px; font-size: .88rem; font-weight: 600;
+  color: var(--ucr-on-surface); }
+.campo input, .campo select, .campo textarea {
+  padding: 11px 14px; border: 1px solid var(--ucr-outline-variant); border-radius: 10px;
+  font-family: inherit; font-size: .95rem; font-weight: 400; color: var(--ucr-on-surface); background: #fff; }
+.campo input:focus, .campo select:focus, .campo textarea:focus {
+  outline: none; border-color: var(--brand-esmeralda); box-shadow: 0 0 0 3px rgba(0,125,103,.15); }
+.campo textarea { resize: vertical; }
+.ayuda { font-size: .76rem; font-weight: 400; color: var(--ucr-outline); }
+
+.acciones { display: flex; justify-content: flex-end; gap: 12px; margin-top: 6px; }
+.btnPrimary { font-family: var(--font-ucr-display); font-weight: 700; padding: 12px 24px; border-radius: 10px;
+  border: none; background: var(--brand-esmeralda); color: #fff; cursor: pointer; font-size: .95rem;
+  text-decoration: none; display: inline-flex; align-items: center; }
+.btnPrimary:disabled { opacity: .5; cursor: default; }
+.btnGhost { font-family: var(--font-ucr-display); font-weight: 700; padding: 12px 24px; border-radius: 10px;
+  border: 1px solid var(--ucr-outline-variant); background: #fff; color: var(--ucr-on-surface-variant);
+  cursor: pointer; font-size: .95rem; text-decoration: none; display: inline-flex; align-items: center; }
+
+/* Éxito */
+.exito { background: #fff; border: 1px solid var(--ucr-outline-variant); border-radius: 16px;
+  padding: 40px 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.exitoIcon { width: 64px; height: 64px; border-radius: 50%; background: #d8f5e3; color: #14794a;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; }
+.exitoTitle { font-family: var(--font-ucr-display); color: var(--ucr-primary); font-size: 1.6rem; margin: 0; }
+.exitoText { color: var(--ucr-on-surface-variant); max-width: 38rem; line-height: 1.6; margin: 0; }
+.exitoAcciones { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+
+@media (max-width: 560px) {
+  .fila { grid-template-columns: 1fr; }
+  .acciones { flex-direction: column-reverse; }
+  .acciones a, .acciones button { width: 100%; justify-content: center; }
+}
