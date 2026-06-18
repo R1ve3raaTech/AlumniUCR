@@ -364,7 +364,7 @@ Título: ${posicion.titulo_puesto}
 Tipo: ${posicion.tipo}
 Empresa: ${posicion.empresa || 'No especificada'}
 Descripción: ${posicion.descripcion || 'No especificada'}
-Habilidades requeridas: ${posicion.habilidades ? JSON.parse(posicion.habilidades).join(', ') : 'No especificadas'}
+Habilidades requeridas: ${posicion.habilidades || 'No especificadas'}
 Responsabilidades: ${(posicion.responsabilidades || []).map(r => r.nombre).join(', ')}
 Sectores: ${(posicion.sectores || []).map(s => s.nombre).join(', ')}
 

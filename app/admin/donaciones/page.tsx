@@ -5,9 +5,9 @@
 // (imagen/PDF), confirmar/rechazar (motivo obligatorio al rechazar) y totales
 // CRC/USD por periodo. Mismo molde que app/estudiantes.
 //
-// Pendiente de BE (pedido a Adri): el email automático al confirmar/rechazar, la
-// auditoría persistente (confirmado_por, fecha) y el guardado del motivo. El FE ya
-// captura y envía el motivo para que enchufe solo cuando el BE lo acepte.
+// Usa los endpoints dedicados del BE (/:id/confirmar y /:id/rechazar), que ya
+// persisten la auditoría (confirmado_por) y el motivo_rechazo, y envían el correo
+// correspondiente al exalumno. Implementados por Adri.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -20,6 +20,7 @@ import {
   obtenerTiposPago,
   obtenerUsuarios,
   obtenerProyectos,
+  obtenerUrlComprobante,
 } from '@/lib/donaciones';
 import styles from './donaciones.module.css';
 
@@ -155,6 +156,18 @@ export default function AdminDonacionesPage() {
     }
   }
 
+  // Resuelve el comprobante a una URL visible: rutas de Storage → signed URL;
+  // URLs antiguas (demos) se muestran tal cual.
+  async function verComprobanteResuelto(comprobante: string) {
+    if (/^https?:\/\//i.test(comprobante)) { setVerComprobante(comprobante); return; }
+    try {
+      const url = await obtenerUrlComprobante(token as string, comprobante);
+      setVerComprobante(url || comprobante);
+    } catch {
+      setVerComprobante(comprobante);
+    }
+  }
+
   async function confirmarRechazo() {
     if (!rechazando || !motivo.trim()) return;
     const d = rechazando;
@@ -240,7 +253,7 @@ export default function AdminDonacionesPage() {
                       <td>{d.numero_referencia || '—'}</td>
                       <td>
                         {d.comprobante
-                          ? <button className={styles.link} onClick={() => setVerComprobante(d.comprobante!)}>Ver</button>
+                          ? <button className={styles.link} onClick={() => verComprobanteResuelto(d.comprobante!)}>Ver</button>
                           : '—'}
                       </td>
                       <td>
@@ -300,7 +313,7 @@ export default function AdminDonacionesPage() {
               <button className={styles.cerrar} onClick={() => setRechazando(null)}>✕</button>
             </div>
             <p className={styles.modalText}>
-              Indicá el motivo del rechazo. Se le notificará al donante (envío de correo pendiente del backend).
+              Indicá el motivo del rechazo. Se le notificará al donante por correo con el motivo.
             </p>
             <textarea
               className={styles.textarea}

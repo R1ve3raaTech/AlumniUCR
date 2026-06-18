@@ -12,8 +12,31 @@
 
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+const {
+    enviarCorreoNuevoContacto,
+    enviarCorreoMatchActivo,
+    enviarCorreoMatchActivoAdmin,
+} = require('./email.service');
 
 const TABLA = 'matches_mentoria';
+
+// RF-06: trae nombre/correo/rol de los dos usuarios de un match (exalumno y
+// estudiante) para las notificaciones por correo. Devuelve un mapa por id.
+async function obtenerDatosUsuarios(ids) {
+    const { data } = await supabase
+        .from('usuarios')
+        .select('id, nombre, correo_electronico, roles(nombre)')
+        .in('id', ids);
+    const mapa = {};
+    for (const u of data || []) {
+        mapa[u.id] = {
+            nombre: u.nombre || 'Usuario',
+            correo: u.correo_electronico,
+            rol: u.roles?.nombre?.toLowerCase() || '',
+        };
+    }
+    return mapa;
+}
 
 
 // ======================================================
@@ -281,6 +304,24 @@ const contactarMatch = async (id, idUsuario) => {
 
     if (error) throw mapDbError(error);
 
+    // RF-06: notificar por correo a la otra parte (no bloqueante).
+    try {
+        const usuarios = await obtenerDatosUsuarios([match.id_exalumno, match.id_estudiante]);
+        const destinatarioId = iniciado_por === 'exalumno' ? match.id_estudiante : match.id_exalumno;
+        const remitenteId = iniciado_por === 'exalumno' ? match.id_exalumno : match.id_estudiante;
+        const destinatario = usuarios[destinatarioId];
+        if (destinatario?.correo) {
+            await enviarCorreoNuevoContacto({
+                nombre_remitente: usuarios[remitenteId]?.nombre,
+                correo_destinatario: destinatario.correo,
+                nombre_destinatario: destinatario.nombre,
+                rol_remitente: iniciado_por,
+            });
+        }
+    } catch (emailErr) {
+        console.warn('⚠️ No se pudo notificar el nuevo contacto:', emailErr.message);
+    }
+
     return data;
 };
 
@@ -324,6 +365,26 @@ const aceptarMatch = async (id, idUsuario) => {
         .single();
 
     if (error) throw mapDbError(error);
+
+    // RF-06: match activo → notificar a ambas partes y al admin (no bloqueante).
+    try {
+        const usuarios = await obtenerDatosUsuarios([match.id_exalumno, match.id_estudiante]);
+        const exalumno = usuarios[match.id_exalumno];
+        const estudiante = usuarios[match.id_estudiante];
+        if (exalumno?.correo && estudiante?.correo) {
+            await enviarCorreoMatchActivo({
+                nombre_a: exalumno.nombre, correo_a: exalumno.correo,
+                nombre_b: estudiante.nombre, correo_b: estudiante.correo,
+            });
+        }
+        await enviarCorreoMatchActivoAdmin({
+            nombre_exalumno: exalumno?.nombre,
+            nombre_estudiante: estudiante?.nombre,
+            score_match: data.score_match,
+        });
+    } catch (emailErr) {
+        console.warn('⚠️ No se pudo notificar el match activo:', emailErr.message);
+    }
 
     return data;
 };

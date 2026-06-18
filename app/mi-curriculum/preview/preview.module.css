@@ -1,0 +1,39 @@
+/* Vista imprimible del CV (RF-11). Optimizada para pantalla y para PDF (print). */
+.page { min-height: 100vh; background: var(--ucr-surface-container); font-family: var(--font-brand-body); padding: 1.5rem; }
+
+.toolbar { max-width: 800px; margin: 0 auto 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.volver { font-family: var(--font-ucr-display); font-weight: 700; color: var(--ucr-primary); text-decoration: none; font-size: .9rem; }
+.volver:hover { text-decoration: underline; }
+.pdfBtn { font-family: var(--font-ucr-display); font-weight: 700; padding: 11px 24px; border-radius: 10px; border: none;
+  background: var(--ucr-primary); color: #fff; cursor: pointer; font-size: .92rem; }
+.pdfBtn:hover { filter: brightness(1.08); }
+.cargando { text-align: center; color: var(--ucr-on-surface-variant); padding: 60px 0; }
+
+/* Documento CV — proporción carta */
+.cv { max-width: 800px; margin: 0 auto; background: #fff; color: #1a1a1a; padding: 3rem 3.25rem;
+  box-shadow: 0 8px 40px rgba(0,31,42,.12); border-radius: 4px; }
+
+.cvHead { border-bottom: 3px solid var(--ucr-primary); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.cvNombre { font-family: var(--font-ucr-display); font-weight: 800; font-size: 2.1rem; color: var(--ucr-primary); margin: 0; letter-spacing: -.01em; }
+.cvContacto { font-size: .9rem; color: #555; margin: .35rem 0 0; }
+
+.cvSeccion { margin-bottom: 1.5rem; }
+.cvTitulo { font-family: var(--font-ucr-display); font-weight: 700; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ucr-primary); margin: 0 0 .6rem; border-bottom: 1px solid #e2e2e2; padding-bottom: .3rem; }
+.cvAcad { display: flex; flex-wrap: wrap; gap: .3rem 1.5rem; font-size: .9rem; color: #333; margin-bottom: .4rem; }
+.cvTexto { font-size: .9rem; color: #333; margin: .25rem 0; line-height: 1.55; }
+
+.cvItem { margin-bottom: .85rem; }
+.cvItemHead { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.cvItemTitulo { font-weight: 700; font-size: .95rem; color: #1a1a1a; }
+.cvFechas { font-size: .8rem; color: #777; white-space: nowrap; }
+.cvBullets { margin: .25rem 0 0; padding-left: 1.1rem; font-size: .87rem; color: #333; }
+.cvBullets li { margin-bottom: .12rem; }
+
+/* ── Impresión / PDF ── */
+@media print {
+  .page { background: #fff; padding: 0; }
+  .toolbar { display: none !important; }
+  .cv { box-shadow: none; border-radius: 0; max-width: none; padding: 1.5rem 1.75rem; }
+  @page { margin: 1.4cm; }
+}

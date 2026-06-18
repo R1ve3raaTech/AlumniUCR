@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
 import ReportarPerfil from '@/components/ReportarPerfil';
+import StudentNav from '@/components/StudentNav';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { apiFetch } from '@/lib/api';
 import { CARRERAS_UCR } from '@/lib/catalogoUCR';

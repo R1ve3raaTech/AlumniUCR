@@ -1,0 +1,47 @@
+/* Aplicantes de una posición (RF-13) — vista del exalumno. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface); font-family: var(--font-brand-body); }
+
+.header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--ucr-primary); }
+.brand { display: block; }
+.headerLinks { display: flex; gap: 18px; flex-wrap: wrap; }
+.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display); font-size: .95rem; opacity: .9; }
+.back:hover { opacity: 1; text-decoration: underline; }
+
+.hero { background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda)); color: #fff; padding: clamp(2rem, 1.5rem + 3vw, 3rem) 32px; text-align: center; }
+.heroTitle { font-family: var(--font-ucr-display); font-weight: 800; text-transform: uppercase; font-size: clamp(1.8rem, 1.4rem + 2vw, 2.6rem); margin: 0 0 .4rem; color: #fff; }
+.heroText { color: rgba(255,255,255,.85); margin: 0; }
+
+.main { max-width: 860px; margin: 0 auto; padding: 32px; }
+.vacio { text-align: center; color: var(--ucr-on-surface-variant); padding: 50px 0; }
+.error { background: #fde2e1; color: #a3261f; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; font-size: .9rem; }
+
+.lista { display: flex; flex-direction: column; gap: 1rem; }
+.card { background: #fff; border: 1px solid var(--ucr-outline-variant); border-radius: 14px; padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,76,99,.06); display: flex; flex-direction: column; gap: .75rem; }
+.persona { display: flex; align-items: center; gap: 1rem; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ucr-celeste); color: var(--ucr-primary); font-family: var(--font-ucr-display); font-weight: 700; }
+.nombre { font-family: var(--font-ucr-display); font-weight: 700; font-size: 1.1rem; color: var(--ucr-primary); margin: 0; }
+.correo { font-size: .82rem; color: var(--ucr-on-surface-variant); margin: 0; }
+.fecha { font-size: .76rem; color: var(--ucr-outline); margin: 0; }
+.estadoCol { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.score { font-family: var(--font-ucr-display); font-weight: 800; font-size: 1.3rem; color: var(--ucr-esmeralda); }
+.score small { font-size: .7rem; color: var(--ucr-on-surface-variant); font-weight: 600; }
+
+.mensaje { font-style: italic; color: var(--ucr-on-surface-variant); font-size: .88rem; margin: 0;
+  border-left: 3px solid var(--ucr-surface-variant); padding-left: 12px; }
+
+.chip { padding: 3px 12px; border-radius: 999px; font-size: .74rem; font-weight: 700; }
+.enviada { background: #fff3cd; color: #8a6d00; }
+.revision { background: rgba(0,106,211,.12); color: var(--brand-azul); }
+.seleccionado { background: #d8f5e3; color: #14794a; }
+.descartado { background: #e6e2e1; color: #6a5f5d; }
+
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; padding-top: .25rem; border-top: 1px solid var(--ucr-outline-variant); padding-top: .85rem; }
+.btnOk, .btnNo, .btnGhost { font-family: var(--font-ucr-display); padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: .85rem; }
+.btnOk { background: var(--brand-esmeralda); color: #fff; }
+.btnNo { background: #fde2e1; color: #a3261f; }
+.btnGhost { background: var(--ucr-surface-container); color: var(--ucr-on-surface-variant); }
+.btnOk:disabled, .btnNo:disabled, .btnGhost:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 560px) { .estadoCol { margin-left: 0; } .acciones { width: 100%; } }
