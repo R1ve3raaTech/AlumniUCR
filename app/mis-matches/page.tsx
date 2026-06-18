@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import AlumniLogo from '@/components/AlumniLogo';
+import StudentNav from '@/components/StudentNav';
 import ReportarPerfil from '@/components/ReportarPerfil';
 import {
   obtenerDirectorioEstudiantes,
@@ -275,29 +276,33 @@ export default function MisMatchesPage() {
                           <span key={a} className="rounded-full bg-ucr-surface-container px-2.5 py-0.5 text-xs text-ucr-on-surface-variant">#{a}</span>
                         ))}
                       </div>
-                    )}
 
-                    <div className={styles.barra}><span className={styles.barraFill} style={{ width: `${score}%` }} /></div>
-
-                    <div className={styles.footer}>
-                      <span className={`${styles.estado} ${styles[estado]}`}>{ESTADO_LABEL[estado]}</span>
-                      {estado === 'activo' && est.correo ? (
-                        <a href={`mailto:${est.correo}`} className={styles.contacto}>{est.correo}</a>
-                      ) : estado === 'sugerido' ? (
-                        <button className={styles.btnConectar} disabled={enviando === est.id} onClick={() => conectar(est.id)}>
-                          {enviando === est.id ? 'Enviando…' : 'Solicitar conexión'}
-                        </button>
-                      ) : null}
-                    </div>
-                    <div className={styles.reportar}><ReportarPerfil idReportado={est.id} nombre={est.nombre} /></div>
-                  </article>
+                      {/* Accion */}
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                        <span className="text-xs font-medium text-ucr-on-surface-variant">
+                          {estado === 'activo' ? 'Conexion activa' : estado === 'contactado' ? 'Conexion enviada' : estado === 'rechazada' ? 'No aceptada' : 'Sugerido'}
+                        </span>
+                        {estado === 'activo' && est.correo ? (
+                          <a href={`mailto:${est.correo}`} className="text-sm font-semibold text-ucr-secondary underline">{est.correo}</a>
+                        ) : estado === 'sugerido' ? (
+                          <button onClick={() => conectar(est.id)} disabled={enviando === est.id}
+                            className="rounded-2xl bg-ucr-secondary px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
+                            {enviando === est.id ? 'Enviando...' : 'Solicitar conexion'}
+                          </button>
+                        ) : null}
+                      </div>
+                      <div className="mt-3 flex justify-end border-t border-ucr-outline-variant pt-2">
+                        <ReportarPerfil idReportado={est.id} nombre={est.nombre} />
+                      </div>
+                    </article>
                 );
               })}
             </div>
           )
         ) : (
-          <p className={styles.vacio}>El matching está disponible para estudiantes y exalumnos. El panel del admin tiene su propia vista.</p>
+          <p className="py-16 text-center text-sm text-ucr-on-surface-variant">El matching esta disponible para estudiantes y exalumnos. El panel del admin tiene su propia vista.</p>
         )}
+        </div>
       </main>
     </div>
   );
