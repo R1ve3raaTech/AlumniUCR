@@ -181,9 +181,12 @@ export default function PosicionesPage() {
                   <div className={styles.cardFoot}>
                     <span className={styles.fecha}>Aplicar antes de: <strong>{fmtFecha(p.fecha_limite)}</strong></span>
                     {esEstudiante && (
-                      yaAplico
-                        ? <span className={styles.yaAplico}>✓ Ya aplicaste</span>
-                        : <button className={styles.aplicarBtn} onClick={() => { setAplicando(p); setMensaje(''); setError(''); }}>Aplicar</button>
+                      <div className={styles.cardAcciones}>
+                        <Link href={`/mi-curriculum/adaptar/${p.id}`} className={styles.adaptarLink}>✦ Adaptar CV</Link>
+                        {yaAplico
+                          ? <span className={styles.yaAplico}>✓ Ya aplicaste</span>
+                          : <button className={styles.aplicarBtn} onClick={() => { setAplicando(p); setMensaje(''); setError(''); }}>Aplicar</button>}
+                      </div>
                     )}
                   </div>
                 </article>

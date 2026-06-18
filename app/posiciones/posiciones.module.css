@@ -51,10 +51,13 @@
   display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
 .fecha { font-size: .8rem; color: var(--ucr-on-surface-variant); }
 .fecha strong { color: var(--ucr-primary); }
+.cardAcciones { display: flex; align-items: center; gap: .6rem; }
 .aplicarBtn { font-family: var(--font-ucr-display); font-weight: 700; padding: 8px 18px; border-radius: 8px; border: none;
   background: var(--brand-esmeralda); color: #fff; cursor: pointer; font-size: .85rem; }
 .aplicarBtn:hover { filter: brightness(1.05); }
 .yaAplico { font-size: .8rem; font-weight: 700; color: var(--ucr-esmeralda); }
+.adaptarLink { font-family: var(--font-ucr-display); font-weight: 700; font-size: .8rem; color: #4a2b8a; text-decoration: none; white-space: nowrap; }
+.adaptarLink:hover { text-decoration: underline; }
 
 /* Modal de aplicación */
 .modalBg { position: fixed; inset: 0; background: rgba(0,30,45,.6); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 60; }

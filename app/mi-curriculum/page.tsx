@@ -14,6 +14,7 @@ import {
   obtenerMiCurriculum, calcularCompletitud, parseJsonArray, toJsonString,
   crearExperiencia, actualizarExperiencia, eliminarExperiencia,
   guardarHabilidades, crearCertificacion, actualizarCertificacion, eliminarCertificacion,
+  obtenerVersionesCv, eliminarVersionCv,
 } from '@/lib/curriculum';
 import styles from './mi-curriculum.module.css';
 
@@ -54,19 +55,29 @@ export default function MiCurriculumPage() {
   const [habId, setHabId] = useState<number | string | undefined>(undefined);
   const [guardandoHab, setGuardandoHab] = useState(false);
   const [habGuardado, setHabGuardado] = useState(false);
+  const [versiones, setVersiones] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !token) router.replace('/login');
   }, [authLoading, token, router]);
 
   async function recargar() {
-    const data = await obtenerMiCurriculum(token as string);
+    const [data, vers] = await Promise.all([
+      obtenerMiCurriculum(token as string),
+      obtenerVersionesCv(token as string).catch(() => []),
+    ]);
     setCv(data);
+    setVersiones(vers || []);
     const hab = data?.seccion3_habilidades;
     setHabId(hab?.id);
     setTecnicas(parseJsonArray(hab?.tecnicas));
     setIdiomas(parseJsonArray(hab?.idiomas));
     setBlandas(hab?.blandas || '');
+  }
+
+  async function borrarVersion(id: number | string) {
+    try { await eliminarVersionCv(token as string, id); setVersiones((v) => v.filter((x) => x.id !== id)); }
+    catch (e) { setError(e instanceof Error ? e.message : 'No se pudo eliminar la versión.'); }
   }
 
   useEffect(() => {
@@ -313,6 +324,30 @@ export default function MiCurriculumPage() {
                 </div>
               )}
             </section>
+
+            {/* Versiones adaptadas con IA (RF-12) */}
+            {versiones.length > 0 && (
+              <section className={styles.seccion}>
+                <div className={styles.seccionHead}>
+                  <h2 className={styles.seccionTitulo}>Versiones adaptadas con IA</h2>
+                  <span className={styles.placeholder}>{versiones.length}/10</span>
+                </div>
+                <div className={styles.items}>
+                  {versiones.map((v) => (
+                    <div key={v.id} className={styles.item}>
+                      <div className={styles.itemMain}>
+                        <h3 className={styles.itemTitulo}>{v.nombre_version}</h3>
+                        <p className={styles.itemMeta}>{v.puestos_empleo?.titulo_puesto || 'Posición'}{v.puestos_empleo?.empresa ? ` · ${v.puestos_empleo.empresa}` : ''}</p>
+                      </div>
+                      <div className={styles.itemAcc}>
+                        {v.puestos_empleo?.id && <Link href={`/mi-curriculum/adaptar/${v.puestos_empleo.id}`} className={styles.iconBtn}>Readaptar</Link>}
+                        <button className={styles.iconBtnDel} onClick={() => borrarVersion(v.id)}>Eliminar</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
       </main>
