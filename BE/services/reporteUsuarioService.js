@@ -1,7 +1,9 @@
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+const { enviarCorreoSuspensionAutomatica } = require('./email.service');
 
 const TABLA = 'reportes_usuarios';
+const LIMITE_REPORTES_SUSPENSION = 3;
 
 
 // ======================================================
@@ -39,7 +41,8 @@ const obtenerReportePorId = async (id) => {
 
 
 // ======================================================
-// CREAR REPORTE
+// CREAR REPORTE — RF-09
+// Al llegar a 3 reportes → suspensión automática + email admin
 // ======================================================
 
 const crearReporteUsuario = async (reporteData) => {
@@ -48,12 +51,9 @@ const crearReporteUsuario = async (reporteData) => {
         id_usuario_reportado: reporteData.id_usuario_reportado,
         id_usuario_emisor: reporteData.id_usuario_emisor,
         motivo: reporteData.motivo,
-        descripcion: reporteData.descripcion
+        descripcion: reporteData.descripcion || null,
+        resuelto: false,
     };
-
-    if (reporteData.resuelto !== undefined) {
-        nuevoReporte.resuelto = reporteData.resuelto;
-    }
 
     const { data, error } = await supabase
         .from(TABLA)
@@ -63,7 +63,38 @@ const crearReporteUsuario = async (reporteData) => {
 
     if (error) throw mapDbError(error);
 
-    return data;
+    // RF-09: contar reportes activos del usuario reportado
+    const { count } = await supabase
+        .from(TABLA)
+        .select('id', { count: 'exact', head: true })
+        .eq('id_usuario_reportado', reporteData.id_usuario_reportado)
+        .eq('resuelto', false);
+
+    // Si llega a 3 → suspender automáticamente
+    if (count >= LIMITE_REPORTES_SUSPENSION) {
+        const { data: usuarioSuspendido } = await supabase
+            .from('usuarios')
+            .update({ estado: 'suspendido', updated_at: new Date() })
+            .eq('id', reporteData.id_usuario_reportado)
+            .neq('estado', 'suspendido')
+            .select('id, nombre, correo_electronico')
+            .maybeSingle();
+
+        if (usuarioSuspendido) {
+            try {
+                await enviarCorreoSuspensionAutomatica({
+                    nombre_usuario: usuarioSuspendido.nombre,
+                    correo_usuario: usuarioSuspendido.correo_electronico,
+                    id_usuario: usuarioSuspendido.id,
+                    cantidad_reportes: count,
+                });
+            } catch (emailErr) {
+                console.warn('⚠️ No se pudo notificar al admin de la suspensión:', emailErr.message);
+            }
+        }
+    }
+
+    return { ...data, total_reportes: count };
 };
 
 
@@ -170,5 +201,51 @@ module.exports = {
     eliminarReporteUsuario,
     obtenerReportesPorUsuarioReportado,
     obtenerReportesPorUsuarioEmisor,
-    buscarReportesPorMotivo
+    buscarReportesPorMotivo,
+    reactivarUsuario,
+    eliminarUsuarioPermanente,
+};
+
+// ======================================================
+// REACTIVAR PERFIL (admin) — RF-09
+// ======================================================
+
+const reactivarUsuario = async (idUsuario) => {
+    await supabase
+        .from(TABLA)
+        .update({ resuelto: true })
+        .eq('id_usuario_reportado', idUsuario)
+        .eq('resuelto', false);
+
+    const { data, error } = await supabase
+        .from('usuarios')
+        .update({ estado: 'activo', updated_at: new Date() })
+        .eq('id', idUsuario)
+        .select()
+        .single();
+
+    if (error) throw mapDbError(error);
+    return data;
+};
+
+
+// ======================================================
+// ELIMINAR PERFIL PERMANENTEMENTE (admin) — RF-09
+// ======================================================
+
+const eliminarUsuarioPermanente = async (idUsuario) => {
+    await supabase
+        .from(TABLA)
+        .update({ resuelto: true })
+        .eq('id_usuario_reportado', idUsuario);
+
+    const { data, error } = await supabase
+        .from('usuarios')
+        .update({ estado: 'rechazado', updated_at: new Date() })
+        .eq('id', idUsuario)
+        .select()
+        .single();
+
+    if (error) throw mapDbError(error);
+    return data;
 };

@@ -13,4 +13,7 @@ router.post('/', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno'
 router.put('/:id', autenticarUsuario, exigirRol('admin'), reporteUsuarioController.actualizarReporteUsuario);
 router.delete('/:id', autenticarUsuario, exigirRol('admin'), reporteUsuarioController.eliminarReporteUsuario);
 
+router.put('/usuario/:idUsuario/reactivar', autenticarUsuario, exigirRol('admin'), reporteUsuarioController.reactivarUsuario);
+router.delete('/usuario/:idUsuario/permanente', autenticarUsuario, exigirRol('admin'), reporteUsuarioController.eliminarUsuarioPermanente);
+
 module.exports = router;

@@ -218,5 +218,34 @@ module.exports = {
     eliminarReporteUsuario,
     obtenerReportesPorUsuarioReportado,
     obtenerReportesPorUsuarioEmisor,
-    buscarReportesPorMotivo
+    buscarReportesPorMotivo,
+    reactivarUsuario,
+    eliminarUsuarioPermanente,
+};
+
+// ======================================================
+// PUT - REACTIVAR PERFIL (admin) — RF-09
+// ======================================================
+
+const reactivarUsuario = async (req, res, next) => {
+    try {
+        const { idUsuario } = req.params;
+        if (!idUsuario) return res.status(400).json({ success: false, message: 'El ID del usuario es requerido' });
+        const usuario = await reporteUsuarioService.reactivarUsuario(idUsuario);
+        res.status(200).json({ success: true, data: usuario, message: 'Perfil reactivado correctamente' });
+    } catch (error) { next(error); }
+};
+
+
+// ======================================================
+// DELETE - ELIMINAR PERFIL PERMANENTEMENTE (admin) — RF-09
+// ======================================================
+
+const eliminarUsuarioPermanente = async (req, res, next) => {
+    try {
+        const { idUsuario } = req.params;
+        if (!idUsuario) return res.status(400).json({ success: false, message: 'El ID del usuario es requerido' });
+        const usuario = await reporteUsuarioService.eliminarUsuarioPermanente(idUsuario);
+        res.status(200).json({ success: true, data: usuario, message: 'Perfil eliminado permanentemente' });
+    } catch (error) { next(error); }
 };

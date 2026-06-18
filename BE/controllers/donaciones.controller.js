@@ -311,6 +311,40 @@ const obtenerDonacionesPorEstado = async (req, res, next) => {
 // ======================================================
 // EXPORTAR CONTROLADOR
 // ======================================================
+// ======================================================
+// PUT - CONFIRMAR DONACIÓN (admin) — RF-07
+// ======================================================
+
+const confirmarDonacion = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ success: false, message: 'El ID es requerido' });
+        const donacion = await donacionesService.confirmarDonacion(id, req.user.id);
+        res.status(200).json({ success: true, data: donacion, message: 'Donación confirmada correctamente' });
+    } catch (error) { next(error); }
+};
+
+
+// ======================================================
+// PUT - RECHAZAR DONACIÓN (admin) — RF-07
+// ======================================================
+
+const rechazarDonacion = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { motivo_rechazo } = req.body;
+        if (!id) return res.status(400).json({ success: false, message: 'El ID es requerido' });
+        if (!motivo_rechazo) return res.status(400).json({ success: false, message: 'El motivo de rechazo es obligatorio' });
+        const donacion = await donacionesService.rechazarDonacion(id, req.user.id, motivo_rechazo);
+        res.status(200).json({ success: true, data: donacion, message: 'Donación rechazada correctamente' });
+    } catch (error) { next(error); }
+};
+
+
+// ======================================================
+// EXPORTAR CONTROLADOR
+// ======================================================
+
 module.exports = {
     obtenerDonaciones,
     obtenerDonacionPorId,
@@ -319,5 +353,7 @@ module.exports = {
     eliminarDonacion,
     obtenerDonacionesPorUsuario,
     obtenerDonacionesPorProyecto,
-    obtenerDonacionesPorEstado
+    obtenerDonacionesPorEstado,
+    confirmarDonacion,
+    rechazarDonacion,
 };

@@ -1,5 +1,6 @@
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+const matchesPosicionesService = require('./matchesPosicionesService');
 
 const TABLA = 'puestos_empleo';
 
@@ -68,6 +69,35 @@ const crearPuestoEmpleo = async (puestoData) => {
         .single();
 
     if (error) throw mapDbError(error);
+
+    // RF-10: guardar áreas de interés si se enviaron
+    if (puestoData.areas_interes && puestoData.areas_interes.length > 0) {
+        const areasAInsertar = puestoData.areas_interes.map(idArea => ({
+            id_empleo: data.id,
+            id_area_tematica: idArea,
+        }));
+        await supabase.from('areas_interes_empleo').insert(areasAInsertar);
+    }
+
+    // RF-10: generar matches con estudiantes al publicar posición (no bloqueante)
+    try {
+        const { data: estudiantes } = await supabase
+            .from('informacion_estudiante')
+            .select('id_usuario')
+            .eq('perfil_completo', true)
+            .eq('pausado', false);
+
+        if (estudiantes?.length) {
+            await Promise.all(
+                estudiantes.map(e =>
+                    matchesPosicionesService.generarMatchesPosicionesPorEstudiante(e.id_usuario)
+                        .catch(err => console.warn(`⚠️ Match posición fallido para ${e.id_usuario}:`, err.message))
+                )
+            );
+        }
+    } catch (matchErr) {
+        console.warn('⚠️ No se pudieron generar matches al publicar posición:', matchErr.message);
+    }
 
     return data;
 };
@@ -139,9 +169,10 @@ const obtenerPuestosActivos = async () => {
     const { data, error } = await supabase
         .from(TABLA)
         .select('*')
-        .eq('estado', true)
+        .eq('estado', 'activo')
         .eq('pausada', false)
-        .eq('eliminada', false);
+        .eq('eliminada', false)
+        .or('fecha_limite.is.null,fecha_limite.gte.' + new Date().toISOString().split('T')[0]);
 
     if (error) throw mapDbError(error);
 
@@ -196,5 +227,30 @@ module.exports = {
     obtenerPuestosPorUsuario,
     obtenerPuestosActivos,
     buscarPuestosPorEmpresa,
-    buscarPuestosPorTitulo
+    buscarPuestosPorTitulo,
+    cerrarPosicionesVencidas,
+};
+
+// ======================================================
+// RF-10: CIERRE AUTOMÁTICO DE POSICIONES VENCIDAS
+// Llamar desde un endpoint admin o cron periódico
+// ======================================================
+
+const cerrarPosicionesVencidas = async () => {
+
+    const hoy = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+        .from(TABLA)
+        .update({ estado: 'cerrada', updated_at: new Date() })
+        .eq('estado', 'activo')
+        .eq('eliminada', false)
+        .lt('fecha_limite', hoy)
+        .not('fecha_limite', 'is', null)
+        .select('id, titulo_puesto, empresa, fecha_limite');
+
+    if (error) throw mapDbError(error);
+
+    console.log(`🔒 Posiciones cerradas automáticamente: ${data?.length || 0}`);
+    return { cerradas: data?.length || 0, posiciones: data || [] };
 };

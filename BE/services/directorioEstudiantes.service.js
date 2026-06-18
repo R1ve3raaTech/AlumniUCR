@@ -41,7 +41,11 @@ const cargarDatos = async () => {
   };
 };
 
-const perfilCompleto = (info, proyecto) => Boolean(info) && Boolean(proyecto);
+const perfilCompleto = (info, proyecto) =>
+  Boolean(info) &&
+  Boolean(proyecto) &&
+  info.perfil_completo === true &&
+  info.pausado === false;
 
 // Construye la tarjeta pública de un estudiante (sin beca ni correo).
 const tarjetaEstudiante = (u, d) => {

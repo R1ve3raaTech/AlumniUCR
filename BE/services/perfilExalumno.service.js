@@ -183,7 +183,7 @@ const obtenerDirectorio = async () => {
   const [usuariosRes, infoRes, carrUsuRes, carrerasRes, facultadesRes, areasCat, areasExa, sectoresCat, sectoresExa] =
     await Promise.all([
       supabase.from('usuarios').select('id,nombre,id_rol,estado').eq('id_rol', 2).eq('estado', 'activo'),
-      supabase.from('informacion_exalumno').select('*'),
+      supabase.from('informacion_exalumno').select('*').eq('estado', true),
       supabase.from('carreras_usuario').select('id_usuario,id_carrera,ano_graduacion'),
       supabase.from('carreras').select('id,nombre,id_facultad'),
       supabase.from('facultades').select('id,nombre'),
