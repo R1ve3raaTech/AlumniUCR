@@ -7,6 +7,7 @@ import AlumniLogo from '@/components/AlumniLogo';
 const LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/perfil-estudiante', label: 'Mi perfil' },
+  { href: '/mi-curriculum', label: 'Mi CV' },
   { href: '/mis-matches', label: 'Mis matches' },
   { href: '/posiciones', label: 'Posiciones' },
   { href: '/estudiantes?rol=estudiante', label: 'Directorio' },
