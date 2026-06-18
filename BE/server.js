@@ -77,6 +77,7 @@ const matchesPosicionesRoutes = require('./routes/matches.posiciones.routes');
 const adminRoutes = require('./routes/admin.routes');
 const perfilExalumnoRoutes = require('./routes/perfilExalumno.routes');
 const directorioEstudiantesRoutes = require('./routes/directorioEstudiantes.routes');
+const comprobantesRoutes = require('./routes/comprobantes.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
@@ -119,6 +120,7 @@ app.use('/api/matches-posiciones', matchesPosicionesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
 app.use('/api/estudiantes', directorioEstudiantesRoutes);
+app.use('/api/comprobantes', comprobantesRoutes);
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
