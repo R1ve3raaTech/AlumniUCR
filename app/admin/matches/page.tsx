@@ -94,6 +94,15 @@ export default function AdminMatchesPage() {
   }, [lista, filtroEstado, desde, hasta, busqueda]);
 
   const alertas = useMemo(() => lista.filter((m) => m.alerta_seguimiento).length, [lista]);
+  const conteos = useMemo(() => ({
+    total: lista.length,
+    activos: lista.filter((m) => m.estado === 'activo').length,
+    contactados: lista.filter((m) => m.estado === 'contactado').length,
+    sugeridos: lista.filter((m) => m.estado === 'sugerido').length,
+  }), [lista]);
+
+  const inic = (n: string | null) => (n || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  const claseScore = (s: number | null) => (s == null ? '' : s >= 70 ? styles.scoreAlto : s >= 40 ? styles.scoreMedio : styles.scoreBajo);
 
   function abrirEdicion(m: Match) {
     setEditando(m);
@@ -152,16 +161,30 @@ export default function AdminMatchesPage() {
         <h1 className={styles.heroTitle}>Gestión de Matches</h1>
         <p className={styles.heroText}>
           Coincidencias entre estudiantes y mentores. Revisá su estado, agregá notas de
-          seguimiento y exportá la lista. Los matches activos por más de 6 meses se marcan
-          para dar seguimiento.
+          seguimiento y exportá la lista.
         </p>
+      </section>
 
-        <div className={styles.resumen}>
-          <span className={styles.resChip}>Total: <strong>{lista.length}</strong></span>
-          <span className={styles.resChip}>Activos: <strong>{lista.filter((m) => m.estado === 'activo').length}</strong></span>
-          {alertas > 0 && <span className={styles.resChipAlerta}>⚠ {alertas} con seguimiento &gt; 6 meses</span>}
+      <section className={styles.kpis}>
+        <div className={styles.kpi}>
+          <span className={styles.kpiLabel}>Total de matches</span>
+          <span className={styles.kpiValor}>{conteos.total}</span>
         </div>
+        <div className={`${styles.kpi} ${styles.kpiActivo}`}>
+          <span className={styles.kpiLabel}>Activos</span>
+          <span className={styles.kpiValor}>{conteos.activos}</span>
+        </div>
+        <div className={styles.kpi}>
+          <span className={styles.kpiLabel}>Contactados</span>
+          <span className={styles.kpiValor}>{conteos.contactados}</span>
+        </div>
+        <div className={`${styles.kpi} ${alertas > 0 ? styles.kpiAlerta : ''}`}>
+          <span className={styles.kpiLabel}>Seguimiento &gt; 6 meses</span>
+          <span className={styles.kpiValor}>{alertas}</span>
+        </div>
+      </section>
 
+      <section className={styles.toolbar}>
         <div className={styles.controles}>
           <input
             className={styles.search}
@@ -208,20 +231,30 @@ export default function AdminMatchesPage() {
               <tbody>
                 {visibles.map((m) => (
                   <tr key={m.id} className={m.alerta_seguimiento ? styles.filaAlerta : ''}>
-                    <td>{nom(m.estudiante)}</td>
-                    <td>{nom(m.exalumno)}</td>
-                    <td className={styles.score}>{m.score_match ?? '—'}</td>
+                    <td>
+                      <div className={styles.persona}>
+                        <span className={`${styles.avatar} ${styles.avatarEst}`}>{inic(nom(m.estudiante))}</span>
+                        <span className={styles.personaNom}>{nom(m.estudiante)}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.persona}>
+                        <span className={`${styles.avatar} ${styles.avatarExa}`}>{inic(nom(m.exalumno))}</span>
+                        <span className={styles.personaNom}>{nom(m.exalumno)}</span>
+                      </div>
+                    </td>
+                    <td><span className={`${styles.scorePill} ${claseScore(m.score_match)}`}>{m.score_match ?? '—'}</span></td>
                     <td>
                       <span className={`${styles.chip} ${styles[m.estado] || ''}`}>{m.estado}</span>
                       {m.alerta_seguimiento && <span className={styles.alertaBadge} title="Activo > 6 meses">⚠ 6m</span>}
                     </td>
-                    <td>{fmtFecha(m.created_at)}</td>
-                    <td>{fmtFecha(m.updated_at)}</td>
+                    <td className={styles.num}>{fmtFecha(m.created_at)}</td>
+                    <td className={styles.num}>{fmtFecha(m.updated_at)}</td>
                     <td className={styles.notasCell} title={m.notas_admin || ''}>
-                      {m.notas_admin ? (m.notas_admin.length > 30 ? `${m.notas_admin.slice(0, 30)}…` : m.notas_admin) : '—'}
+                      {m.notas_admin ? (m.notas_admin.length > 30 ? `${m.notas_admin.slice(0, 30)}…` : m.notas_admin) : <span className={styles.sinNota}>Sin notas</span>}
                     </td>
                     <td>
-                      <button className={styles.btnEdit} onClick={() => abrirEdicion(m)}>Notas / estado</button>
+                      <button className={styles.btnEdit} onClick={() => abrirEdicion(m)}>Editar</button>
                     </td>
                   </tr>
                 ))}
