@@ -4,7 +4,7 @@ const reporteUsuarioService = require('../services/reporteUsuarioService');
 // OBTENER TODOS LOS REPORTES
 // ======================================================
 
-const obtenerReportesUsuarios = async (req, res, next) => {
+async function obtenerReportesUsuarios(req, res, next) {
     try {
         const reportes = await reporteUsuarioService.obtenerReportesUsuarios();
 
@@ -22,7 +22,7 @@ const obtenerReportesUsuarios = async (req, res, next) => {
 // OBTENER REPORTE POR ID
 // ======================================================
 
-const obtenerReportePorId = async (req, res, next) => {
+async function obtenerReportePorId(req, res, next) {
     try {
         const { id } = req.params;
 
@@ -49,7 +49,7 @@ const obtenerReportePorId = async (req, res, next) => {
 // CREAR REPORTE
 // ======================================================
 
-const crearReporteUsuario = async (req, res, next) => {
+async function crearReporteUsuario(req, res, next) {
     try {
         const { id_usuario_reportado, id_usuario_emisor, motivo, descripcion } = req.body;
 
@@ -95,7 +95,7 @@ const crearReporteUsuario = async (req, res, next) => {
 // ACTUALIZAR REPORTE
 // ======================================================
 
-const actualizarReporteUsuario = async (req, res, next) => {
+async function actualizarReporteUsuario(req, res, next) {
     try {
         const { id } = req.params;
         const { id_usuario_reportado, id_usuario_emisor, motivo, descripcion, resuelto } = req.body;
@@ -130,7 +130,7 @@ const actualizarReporteUsuario = async (req, res, next) => {
 // ELIMINAR REPORTE
 // ======================================================
 
-const eliminarReporteUsuario = async (req, res, next) => {
+async function eliminarReporteUsuario(req, res, next) {
     try {
         const { id } = req.params;
 
@@ -150,7 +150,7 @@ const eliminarReporteUsuario = async (req, res, next) => {
 // OBTENER REPORTES POR USUARIO REPORTADO
 // ======================================================
 
-const obtenerReportesPorUsuarioReportado = async (req, res, next) => {
+async function obtenerReportesPorUsuarioReportado(req, res, next) {
     try {
         const { idUsuarioReportado } = req.params;
 
@@ -170,7 +170,7 @@ const obtenerReportesPorUsuarioReportado = async (req, res, next) => {
 // OBTENER REPORTES POR USUARIO EMISOR
 // ======================================================
 
-const obtenerReportesPorUsuarioEmisor = async (req, res, next) => {
+async function obtenerReportesPorUsuarioEmisor(req, res, next) {
     try {
         const { idUsuarioEmisor } = req.params;
 
@@ -190,7 +190,7 @@ const obtenerReportesPorUsuarioEmisor = async (req, res, next) => {
 // BUSCAR REPORTES POR MOTIVO
 // ======================================================
 
-const buscarReportesPorMotivo = async (req, res, next) => {
+async function buscarReportesPorMotivo(req, res, next) {
     try {
         const { motivo } = req.params;
 
@@ -218,5 +218,34 @@ module.exports = {
     eliminarReporteUsuario,
     obtenerReportesPorUsuarioReportado,
     obtenerReportesPorUsuarioEmisor,
-    buscarReportesPorMotivo
+    buscarReportesPorMotivo,
+    reactivarUsuario,
+    eliminarUsuarioPermanente,
+};
+
+// ======================================================
+// PUT - REACTIVAR PERFIL (admin) — RF-09
+// ======================================================
+
+async function reactivarUsuario(req, res, next) {
+    try {
+        const { idUsuario } = req.params;
+        if (!idUsuario) return res.status(400).json({ success: false, message: 'El ID del usuario es requerido' });
+        const usuario = await reporteUsuarioService.reactivarUsuario(idUsuario);
+        res.status(200).json({ success: true, data: usuario, message: 'Perfil reactivado correctamente' });
+    } catch (error) { next(error); }
+};
+
+
+// ======================================================
+// DELETE - ELIMINAR PERFIL PERMANENTEMENTE (admin) — RF-09
+// ======================================================
+
+async function eliminarUsuarioPermanente(req, res, next) {
+    try {
+        const { idUsuario } = req.params;
+        if (!idUsuario) return res.status(400).json({ success: false, message: 'El ID del usuario es requerido' });
+        const usuario = await reporteUsuarioService.eliminarUsuarioPermanente(idUsuario);
+        res.status(200).json({ success: true, data: usuario, message: 'Perfil eliminado permanentemente' });
+    } catch (error) { next(error); }
 };

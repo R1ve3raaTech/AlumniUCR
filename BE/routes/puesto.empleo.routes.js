@@ -14,4 +14,7 @@ router.post('/', autenticarUsuario, exigirRol(['admin', 'exalumno']), puestoEmpl
 router.put('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno']), puestoEmpleoController.actualizarPuestoEmpleo);
 router.delete('/:id', autenticarUsuario, exigirRol('admin'), puestoEmpleoController.eliminarPuestoEmpleo);
 
+// POST /api/puestos-empleo/cerrar-vencidas — admin cierra posiciones con fecha_limite vencida (RF-10)
+router.post('/cerrar-vencidas', autenticarUsuario, exigirRol('admin'), puestoEmpleoController.cerrarPosicionesVencidas);
+
 module.exports = router;

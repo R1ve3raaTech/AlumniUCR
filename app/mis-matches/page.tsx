@@ -4,7 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
+import AlumniLogo from '@/components/AlumniLogo';
 import StudentNav from '@/components/StudentNav';
+import ReportarPerfil from '@/components/ReportarPerfil';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
@@ -275,57 +277,31 @@ export default function MisMatchesPage() {
                         ))}
                       </div>
 
-                      {/* Barra de compatibilidad */}
-                      <div className="mb-1 flex items-center justify-between text-xs text-ucr-on-surface-variant">
-                        <span>Compatibilidad</span>
-                        <span className="font-semibold">{score}%</span>
-                      </div>
-                      <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-ucr-surface-container">
-                        <span className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda transition-all" style={{ width: `${score}%` }} />
-                      </div>
-
-                      {/* Accion segun estado */}
-                      <div className="mt-auto">
-                        {estado === 'activo' ? (
-                          <div className="rounded-2xl bg-ucr-esmeralda/10 p-3">
-                            <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-ucr-esmeralda">
-                              <span className="material-symbols-outlined text-base">check_circle</span>
-                              Conexion activa
-                            </p>
-                            {est.correo ? (
-                              <a href={`mailto:${est.correo}`} className="flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
-                                <span className="material-symbols-outlined text-base">mail</span>
-                                {est.correo}
-                              </a>
-                            ) : (
-                              <p className="text-xs text-ucr-on-surface-variant">Contacto disponible pronto.</p>
-                            )}
-                          </div>
-                        ) : estado === 'contactado' ? (
-                          <div className="flex items-center gap-2 rounded-2xl bg-ucr-surface-container px-4 py-2.5">
-                            <span className="material-symbols-outlined text-base text-ucr-outline">schedule</span>
-                            <span className="text-sm text-ucr-on-surface-variant">Solicitud enviada — esperando respuesta</span>
-                          </div>
-                        ) : estado === 'rechazada' ? (
-                          <div className="flex items-center gap-2 rounded-2xl bg-ucr-surface-container px-4 py-2.5">
-                            <span className="material-symbols-outlined text-base text-ucr-outline">block</span>
-                            <span className="text-sm text-ucr-outline">No aceptada</span>
-                          </div>
-                        ) : (
+                      {/* Accion */}
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                        <span className="text-xs font-medium text-ucr-on-surface-variant">
+                          {estado === 'activo' ? 'Conexion activa' : estado === 'contactado' ? 'Conexion enviada' : estado === 'rechazada' ? 'No aceptada' : 'Sugerido'}
+                        </span>
+                        {estado === 'activo' && est.correo ? (
+                          <a href={`mailto:${est.correo}`} className="text-sm font-semibold text-ucr-secondary underline">{est.correo}</a>
+                        ) : estado === 'sugerido' ? (
                           <button onClick={() => conectar(est.id)} disabled={enviando === est.id}
-                            className="w-full rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface transition hover:border-ucr-secondary hover:text-ucr-secondary disabled:opacity-60">
+                            className="rounded-2xl bg-ucr-secondary px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
                             {enviando === est.id ? 'Enviando...' : 'Solicitar conexion'}
                           </button>
-                        )}
+                        ) : null}
+                      </div>
+                      <div className="mt-3 flex justify-end border-t border-ucr-outline-variant pt-2">
+                        <ReportarPerfil idReportado={est.id} nombre={est.nombre} />
                       </div>
                     </article>
-                  );
-                })}
-              </div>
-            )
-          ) : (
-            <p className="py-16 text-center text-sm text-ucr-on-surface-variant">El matching esta disponible para estudiantes y exalumnos.</p>
-          )}
+                );
+              })}
+            </div>
+          )
+        ) : (
+          <p className="py-16 text-center text-sm text-ucr-on-surface-variant">El matching esta disponible para estudiantes y exalumnos. El panel del admin tiene su propia vista.</p>
+        )}
         </div>
       </main>
     </div>

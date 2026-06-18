@@ -10,6 +10,8 @@ router.get('/usuario/:idUsuarioExalumno', autenticarUsuario, exigirRol(['admin',
 router.get('/proyecto/:idProyecto', autenticarUsuario, exigirRol(['admin', 'estudiante']), donacionesController.obtenerDonacionesPorProyecto);
 router.get('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno']), donacionesController.obtenerDonacionPorId);
 router.post('/', autenticarUsuario, exigirRol('exalumno'), donacionesController.crearDonacion);
+router.put('/:id/confirmar', autenticarUsuario, exigirRol('admin'), donacionesController.confirmarDonacion);
+router.put('/:id/rechazar', autenticarUsuario, exigirRol('admin'), donacionesController.rechazarDonacion);
 router.put('/:id', autenticarUsuario, exigirRol('admin'), donacionesController.actualizarDonacion);
 router.delete('/:id', autenticarUsuario, exigirRol('admin'), donacionesController.eliminarDonacion);
 

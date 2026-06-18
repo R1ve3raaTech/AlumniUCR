@@ -109,7 +109,8 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
       <StudentNav onSignOut={handleSignOut} />
 
-      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      {/* Contenido principal */}
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         {/* Hero header */}
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
           <div className="flex flex-wrap items-center gap-5">
