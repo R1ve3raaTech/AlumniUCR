@@ -70,8 +70,9 @@ export default function DonacionesPage() {
 
   const setCampo = (campo: keyof typeof form, valor: string) => setForm((f) => ({ ...f, [campo]: valor }));
 
+  // id_proyecto es opcional: vacío = "fondo general".
   const valido = useMemo(() =>
-    Number(form.monto) > 0 && form.id_tipo_pago && form.id_proyecto && form.moneda &&
+    Number(form.monto) > 0 && form.id_tipo_pago && form.moneda &&
     form.fecha_hora_transferencia && form.numero_referencia.trim() && form.comprobante.trim(), [form]);
 
   async function enviar(e: React.FormEvent) {
@@ -84,7 +85,7 @@ export default function DonacionesPage() {
         id_usuario_exalumno: user.id,
         id_tipo_pago: form.id_tipo_pago,
         monto: Number(form.monto),
-        id_proyecto: form.id_proyecto,
+        id_proyecto: form.id_proyecto || null,
         moneda: form.moneda,
         fecha_hora_transferencia: form.fecha_hora_transferencia,
         numero_referencia: form.numero_referencia.trim(),
@@ -161,11 +162,14 @@ export default function DonacionesPage() {
             </div>
 
             <label className={styles.campo}>
-              Proyecto a apoyar *
-              <select required value={form.id_proyecto} onChange={(e) => setCampo('id_proyecto', e.target.value)}>
-                <option value="">Seleccioná un proyecto…</option>
+              Proyecto a apoyar
+              <select value={form.id_proyecto} onChange={(e) => setCampo('id_proyecto', e.target.value)}>
+                <option value="">Fondo general (sin proyecto específico)</option>
                 {proyectos.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
+              <span className={styles.ayuda}>
+                Si no elegís un proyecto, tu aporte va al fondo general de la Fundación.
+              </span>
             </label>
 
             <div className={styles.fila}>

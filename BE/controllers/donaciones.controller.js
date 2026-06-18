@@ -89,12 +89,8 @@ const crearDonacion = async (req, res, next) => {
             });
         }
 
-        if (!id_proyecto) {
-            return res.status(400).json({
-                success: false,
-                message: 'El IdProyecto es requerido'
-            });
-        }
+        // RF-07: id_proyecto es OPCIONAL. Si viene null/vacío, la donación va al
+        // "fondo general" (no se vincula a un proyecto específico).
 
         if (!moneda) {
             return res.status(400).json({
@@ -117,15 +113,24 @@ const crearDonacion = async (req, res, next) => {
             });
         }
 
+        // RF-07: el comprobante es obligatorio (la columna es NOT NULL y el
+        // documento lo exige). Se valida aquí para devolver un mensaje claro.
+        if (!comprobante || !comprobante.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'El comprobante es requerido'
+            });
+        }
+
         const nuevaDonacion = await donacionesService.crearDonacion({
             id_usuario_exalumno,
             id_tipo_pago,
             monto,
-            id_proyecto,
+            id_proyecto: id_proyecto || null,
             moneda,
             fecha_hora_transferencia,
             numero_referencia,
-            comprobante: comprobante ? comprobante.trim() : null,
+            comprobante: comprobante.trim(),
             mensaje: mensaje ? mensaje.trim() : null,
             estado: estado || 'pendiente'
         });
