@@ -127,6 +127,7 @@ export default function MisPosicionesPage() {
                     <p className={styles.fecha}>Fecha límite: <strong>{fmtFecha(p.fecha_limite)}</strong></p>
                   </div>
                   <div className={styles.acciones}>
+                    <Link href={`/mis-posiciones/${p.id}/aplicantes`} className={styles.btnLink}>Ver aplicantes</Link>
                     {!cerrada && !p.pausada && (
                       <button className={styles.btnWarn} disabled={enProceso} onClick={() => aplicar(p, { pausada: true })}>Pausar</button>
                     )}

@@ -1,8 +1,8 @@
 'use client';
 
-// Directorio de posiciones de empleo/pasantía (RF-10). Visible para estudiantes
-// y exalumnos. Lista las posiciones activas (no pausadas, no vencidas) con filtros
-// por tipo, modalidad y búsqueda. El cierre automático por fecha lo hace el BE.
+// Directorio de posiciones de empleo/pasantía (RF-10) + aplicar (RF-13).
+// Visible para estudiantes y exalumnos. Lista las posiciones activas con filtros.
+// Los estudiantes pueden APLICAR (con mensaje de presentación) y ven si ya aplicaron.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
 import { obtenerPosicionesActivas } from '@/lib/posiciones';
+import { obtenerPerfil } from '@/lib/auth';
+import { aplicarAPosicion, obtenerMisAplicaciones } from '@/lib/aplicaciones';
 import styles from './posiciones.module.css';
 
 interface Posicion {
@@ -37,6 +39,13 @@ export default function PosicionesPage() {
   const [tipo, setTipo] = useState('');
   const [modalidad, setModalidad] = useState('');
 
+  const [esEstudiante, setEsEstudiante] = useState(false);
+  const [aplicadas, setAplicadas] = useState<Set<string>>(new Set());
+  const [aplicando, setAplicando] = useState<Posicion | null>(null);
+  const [mensaje, setMensaje] = useState('');
+  const [enviandoApp, setEnviandoApp] = useState(false);
+  const [error, setError] = useState('');
+
   useEffect(() => {
     if (!authLoading && !token) router.replace('/login');
   }, [authLoading, token, router]);
@@ -46,8 +55,20 @@ export default function PosicionesPage() {
     let activo = true;
     (async () => {
       try {
-        const ps = await obtenerPosicionesActivas(token);
-        if (activo) setLista(ps);
+        const [ps, perfil] = await Promise.all([
+          obtenerPosicionesActivas(token),
+          obtenerPerfil(token).catch(() => null),
+        ]);
+        if (!activo) return;
+        setLista(ps);
+        const rol = perfil?.data?.roles?.nombre?.toLowerCase().trim();
+        if (rol === 'estudiante') {
+          setEsEstudiante(true);
+          try {
+            const apps = await obtenerMisAplicaciones(token);
+            setAplicadas(new Set(apps.map((a: { puestos_empleo?: { id: number | string } }) => String(a.puestos_empleo?.id))));
+          } catch { /* sin aplicaciones aún */ }
+        }
       } catch {
         if (activo) setLista([]);
       } finally {
@@ -70,13 +91,29 @@ export default function PosicionesPage() {
     });
   }, [lista, busqueda, tipo, modalidad]);
 
+  async function confirmarAplicacion() {
+    if (!aplicando) return;
+    setEnviandoApp(true);
+    setError('');
+    try {
+      await aplicarAPosicion(token as string, aplicando.id, mensaje.trim());
+      setAplicadas((s) => new Set(s).add(String(aplicando.id)));
+      setAplicando(null);
+      setMensaje('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo enviar la aplicación.');
+    } finally {
+      setEnviandoApp(false);
+    }
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
         <nav className={styles.nav}>
           <Link href="/dashboard" className={styles.navLink}>Mi panel</Link>
-          <Link href="/estudiantes" className={styles.navLink}>Estudiantes</Link>
+          {esEstudiante && <Link href="/mis-aplicaciones" className={styles.navLink}>Mis aplicaciones</Link>}
         </nav>
       </header>
 
@@ -123,30 +160,67 @@ export default function PosicionesPage() {
           <p className={styles.vacio}>No hay posiciones que coincidan. Volvé pronto: se publican nuevas seguido.</p>
         ) : (
           <div className={styles.grid}>
-            {visibles.map((p) => (
-              <article key={p.id} className={styles.card}>
-                <div className={styles.cardHead}>
-                  <h3 className={styles.titulo}>{p.titulo_puesto}</h3>
-                  {p.tipo && <span className={styles.tipoChip}>{cap(p.tipo)}</span>}
-                </div>
-                <p className={styles.empresa}>{p.empresa || 'Empresa confidencial'}{p.lugar_trabajo ? ` · ${p.lugar_trabajo}` : ''}</p>
+            {visibles.map((p) => {
+              const yaAplico = aplicadas.has(String(p.id));
+              return (
+                <article key={p.id} className={styles.card}>
+                  <div className={styles.cardHead}>
+                    <h3 className={styles.titulo}>{p.titulo_puesto}</h3>
+                    {p.tipo && <span className={styles.tipoChip}>{cap(p.tipo)}</span>}
+                  </div>
+                  <p className={styles.empresa}>{p.empresa || 'Empresa confidencial'}{p.lugar_trabajo ? ` · ${p.lugar_trabajo}` : ''}</p>
 
-                <div className={styles.chips}>
-                  {p.modalidad && <span className={styles.chip}>{cap(p.modalidad)}</span>}
-                  {p.jornada && <span className={styles.chip}>{cap(p.jornada)}</span>}
-                </div>
+                  <div className={styles.chips}>
+                    {p.modalidad && <span className={styles.chip}>{cap(p.modalidad)}</span>}
+                    {p.jornada && <span className={styles.chip}>{cap(p.jornada)}</span>}
+                  </div>
 
-                {p.descripcion && <p className={styles.desc}>{p.descripcion.length > 140 ? `${p.descripcion.slice(0, 140)}…` : p.descripcion}</p>}
-                {p.habilidades && <p className={styles.habilidades}><strong>Habilidades:</strong> {p.habilidades}</p>}
+                  {p.descripcion && <p className={styles.desc}>{p.descripcion.length > 140 ? `${p.descripcion.slice(0, 140)}…` : p.descripcion}</p>}
+                  {p.habilidades && <p className={styles.habilidades}><strong>Habilidades:</strong> {p.habilidades}</p>}
 
-                <div className={styles.cardFoot}>
-                  <span className={styles.fecha}>Aplicar antes de: <strong>{fmtFecha(p.fecha_limite)}</strong></span>
-                </div>
-              </article>
-            ))}
+                  <div className={styles.cardFoot}>
+                    <span className={styles.fecha}>Aplicar antes de: <strong>{fmtFecha(p.fecha_limite)}</strong></span>
+                    {esEstudiante && (
+                      yaAplico
+                        ? <span className={styles.yaAplico}>✓ Ya aplicaste</span>
+                        : <button className={styles.aplicarBtn} onClick={() => { setAplicando(p); setMensaje(''); setError(''); }}>Aplicar</button>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </main>
+
+      {/* Modal de aplicación */}
+      {aplicando && (
+        <div className={styles.modalBg} onClick={() => setAplicando(null)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <span>Aplicar a: {aplicando.titulo_puesto}</span>
+              <button className={styles.cerrar} onClick={() => setAplicando(null)}>✕</button>
+            </div>
+            {error && <p className={styles.modalError}>{error}</p>}
+            <p className={styles.modalText}>
+              Escribí un breve mensaje de presentación para {aplicando.empresa || 'la empresa'} (opcional).
+            </p>
+            <textarea
+              className={styles.textarea}
+              rows={5}
+              placeholder="Contá por qué te interesa esta posición y qué aportarías…"
+              value={mensaje}
+              onChange={(e) => setMensaje(e.target.value)}
+            />
+            <div className={styles.modalAcciones}>
+              <button className={styles.btnGhost} onClick={() => setAplicando(null)}>Cancelar</button>
+              <button className={styles.btnPrimary} disabled={enviandoApp} onClick={confirmarAplicacion}>
+                {enviandoApp ? 'Enviando…' : 'Enviar aplicación'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

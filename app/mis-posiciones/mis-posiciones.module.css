@@ -35,7 +35,10 @@
 .pausada { background: #fff3cd; color: #8a6d00; }
 .cerrada { background: #e6e2e1; color: #6a5f5d; }
 
-.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btnLink { font-family: var(--font-ucr-display); padding: 8px 16px; border-radius: 8px; font-size: .85rem;
+  background: var(--ucr-surface-container); color: var(--ucr-primary); text-decoration: none; }
+.btnLink:hover { background: var(--ucr-celeste); }
 .btnOk, .btnNo, .btnWarn { font-family: var(--font-ucr-display); padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: .85rem; }
 .btnOk { background: #d8f5e3; color: #14794a; }
 .btnWarn { background: #fff3cd; color: #8a6d00; }
