@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import styles from './ExalumnoDashboard.module.css';
 
@@ -42,17 +42,20 @@ const STATS = [
 ];
 
 const ACCIONES = [
-  { icon: <IHeart />, titulo: 'Explorar proyectos', desc: 'Apoya iniciativas estudiantiles con tu experiencia o aporte.', href: '/proyectos' },
+  { icon: <IHeart />, titulo: 'Hacer una donación', desc: 'Apoya económicamente un proyecto de graduación.', href: '/donaciones' },
+  { icon: <IHeart />, titulo: 'Mis donaciones', desc: 'Consulta el estado de tus aportes registrados.', href: '/mis-donaciones' },
+  { icon: <IHub />, titulo: 'Publicar una posición', desc: 'Ofrece empleos o pasantías a estudiantes de la UCR.', href: '/posiciones/nueva' },
+  { icon: <IHub />, titulo: 'Mis posiciones', desc: 'Gestiona las posiciones que has publicado.', href: '/mis-posiciones' },
   { icon: <IUsers />, titulo: 'Ofrecer mentoría', desc: 'Guía a la próxima generación de profesionales de la UCR.', href: '/mentorias' },
   { icon: <IUsers />, titulo: 'Directorio de estudiantes', desc: 'Conoce proyectos y solicita contacto para apoyar.', href: '/estudiantes' },
   { icon: <IHub />, titulo: 'Centro de ayuda', desc: '¿Dudas? Encuentra respuestas y contacto de soporte.', href: '/ayuda' },
 ];
 
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.1 } },
 };
-const fadeItem = {
+const fadeItem: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 };
@@ -87,6 +90,10 @@ export default function ExalumnoDashboard({
         <div className={styles.nav}>
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
           <nav className={styles.navLinks}>
+            <Link href="/mis-matches" className={styles.navLink}>Mis matches</Link>
+            <Link href="/donaciones" className={styles.navLink}>Donar</Link>
+            <Link href="/mis-posiciones" className={styles.navLink}>Posiciones</Link>
+            <Link href="/estudiantes" className={styles.navLink}>Estudiantes</Link>
             <Link href="/proyectos" className={styles.navLink}>Proyectos</Link>
             <Link href="/mentorias" className={styles.navLink}>Mentorías</Link>
             <Link href="/ayuda" className={styles.navLink}>Ayuda</Link>

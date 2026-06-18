@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
+import ReportarPerfil from '@/components/ReportarPerfil';
+import StudentNav from '@/components/StudentNav';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { apiFetch } from '@/lib/api';
 import { CARRERAS_UCR } from '@/lib/catalogoUCR';
@@ -304,46 +306,10 @@ export default function EstudiantesPage() {
   const hayFiltros = Object.values(filtrosAplicados).some(Boolean);
 
   return (
-    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
-      {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-        <Link href="/" aria-label="Alumni UCR — inicio" className="mb-10 block">
-          <AlumniLogo height={32} />
-        </Link>
-        <nav className="flex flex-1 flex-col gap-1">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">Paneles</p>
-          <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-            <span className="material-symbols-outlined">dashboard</span>Dashboard
-          </Link>
-          <Link href={rol === 'estudiante' ? '/perfil-estudiante' : '/perfil-exalumno'} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-            <span className="material-symbols-outlined">person</span>Mi perfil
-          </Link>
-          <span className="flex items-center gap-3 rounded-xl bg-ucr-secondary-container/30 px-3 py-2 text-sm font-semibold text-ucr-primary">
-            <span className="material-symbols-outlined">groups</span>Directorio
-          </span>
+    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <StudentNav onSignOut={handleSignOut} />
 
-          {rol === 'estudiante' && (
-            <>
-              <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">Secciones</p>
-              <Link href="/perfil-estudiante#academico" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-                <span className="material-symbols-outlined">school</span>Información académica
-              </Link>
-              <Link href="/perfil-estudiante#proyecto" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-                <span className="material-symbols-outlined">assignment</span>Proyecto de graduación
-              </Link>
-              <Link href="/perfil-estudiante#habilidades" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-                <span className="material-symbols-outlined">workspace_premium</span>Habilidades
-              </Link>
-            </>
-          )}
-        </nav>
-        <button type="button" onClick={handleSignOut} className="mt-6 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container">
-          <span className="material-symbols-outlined">logout</span>Cerrar sesión
-        </button>
-      </aside>
-
-      {/* Contenido principal */}
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         {/* Hero */}
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
           <h1 className="font-ucr-display text-3xl font-bold tracking-tight sm:text-4xl">Directorio de Estudiantes</h1>
@@ -457,6 +423,10 @@ export default function EstudiantesPage() {
                           {enviando === e.id ? 'Enviando…' : 'Ofrecer apoyo'}
                         </button>
                       )}
+                    </div>
+
+                    <div className="mt-3 flex justify-end border-t border-ucr-outline-variant pt-2">
+                      <ReportarPerfil idReportado={e.id} nombre={e.nombre} />
                     </div>
                   </article>
                 );

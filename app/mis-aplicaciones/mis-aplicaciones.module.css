@@ -1,0 +1,35 @@
+/* Mis aplicaciones (RF-13) — vista del estudiante. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface); font-family: var(--font-brand-body); }
+
+.main { max-width: 920px; margin: 0 auto; padding: 2rem clamp(1rem, 4vw, 2.5rem) 4rem; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.titulo { font-family: var(--font-ucr-display); font-weight: 800; font-size: clamp(1.6rem, 1.3rem + 1.5vw, 2.2rem); color: var(--ucr-primary); margin: 0; }
+.cta { font-family: var(--font-ucr-display); font-weight: 700; padding: 10px 20px; border-radius: 10px;
+  background: var(--brand-esmeralda); color: #fff; text-decoration: none; font-size: .9rem; }
+
+.vacio { text-align: center; color: var(--ucr-on-surface-variant); padding: 50px 0; }
+.error { background: #fde2e1; color: #a3261f; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; font-size: .9rem; }
+.vacioBox { background: #fff; border: 1px dashed var(--ucr-outline-variant); border-radius: 16px; padding: 40px 28px;
+  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--ucr-on-surface-variant); }
+
+.lista { display: flex; flex-direction: column; gap: 1rem; }
+.card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: #fff; border: 1px solid var(--ucr-outline-variant); border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 4px 20px rgba(0,76,99,.06); }
+.cardMain { flex: 1 1 280px; display: flex; flex-direction: column; gap: 4px; }
+.cardHead { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.puesto { font-family: var(--font-ucr-display); font-weight: 700; font-size: 1.15rem; color: var(--ucr-primary); margin: 0; }
+.meta { font-size: .85rem; color: var(--ucr-on-surface-variant); margin: 0; }
+.fecha { font-size: .8rem; color: var(--ucr-outline); margin: 0; }
+.mensaje { font-style: italic; color: var(--ucr-on-surface-variant); font-size: .85rem; margin: 4px 0 0;
+  border-left: 3px solid var(--ucr-surface-variant); padding-left: 10px; }
+
+.chip { padding: 3px 12px; border-radius: 999px; font-size: .76rem; font-weight: 700; }
+.enviada { background: #fff3cd; color: #8a6d00; }
+.revision { background: rgba(0,106,211,.12); color: var(--brand-azul); }
+.seleccionado { background: #d8f5e3; color: #14794a; }
+.descartado { background: #e6e2e1; color: #6a5f5d; }
+
+.btnNo { font-family: var(--font-ucr-display); padding: 8px 16px; border-radius: 8px; border: none; background: #e74c3c; color: #fff; cursor: pointer; font-size: .85rem; }
+.btnNo:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 560px) { .btnNo { width: 100%; } }

@@ -186,5 +186,21 @@ module.exports = {
     obtenerPuestosPorUsuario,
     obtenerPuestosActivos,
     buscarPuestosPorEmpresa,
-    buscarPuestosPorTitulo
+    buscarPuestosPorTitulo,
+    cerrarPosicionesVencidas,
+};
+
+// ======================================================
+// POST - CERRAR POSICIONES VENCIDAS (admin) — RF-10
+// ======================================================
+
+async function cerrarPosicionesVencidas(req, res, next) {
+    try {
+        const resultado = await puestoEmpleoService.cerrarPosicionesVencidas();
+        res.status(200).json({
+            success: true,
+            data: resultado,
+            message: `${resultado.cerradas} posición(es) cerrada(s) automáticamente`
+        });
+    } catch (error) { next(error); }
 };

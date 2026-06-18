@@ -2,6 +2,8 @@
    Directorio de estudiantes (RF-03) para exalumnos. Identidad de marca.
    ════════════════════════════════════════════════════════════════════ */
 
+.reportarRow { display: flex; justify-content: flex-end; border-top: 1px solid var(--ucr-surface-variant); padding-top: 8px; margin-top: 4px; }
+
 .page {
   min-height: 100vh;
   display: flex;
