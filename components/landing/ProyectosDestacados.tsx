@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, ArrowTrend } from './icons';
 import styles from './landing.module.css';
 
@@ -10,20 +11,20 @@ const PROYECTOS = [
     titulo: 'Sistema Eco-Data',
     texto:
       'Optimización de recursos energéticos mediante IA para pymes locales, reduciendo costos operativos en un 30%.',
-    img: '/images/ecosistema-ucr.png',
+    img: '/images/ecodata.jpg',
   },
   {
     tag: 'Salud Digital',
     titulo: 'Med-Link UCR',
     texto:
       'Plataforma de telemedicina para comunidades rurales, conectando especialistas con pacientes remotos.',
-    img: '/images/campus.png',
+    img: '/images/MEDLINK.png',
   },
   {
     tag: 'Finanzas',
     titulo: 'Fin-Connect',
     texto: 'Herramienta de educación financiera gamificada para jóvenes adultos.',
-    img: '/images/descarga-1.jpg',
+    img: '/images/finconnect.jpg',
   },
 ];
 
@@ -35,7 +36,7 @@ export default function ProyectosDestacados() {
     const track = trackRef.current;
     if (!track) return;
     const primera = track.querySelector<HTMLElement>(`.${styles.slide}`);
-    const ancho = (primera?.offsetWidth ?? track.clientWidth) + 32; // +gap
+    const ancho = (primera?.offsetWidth ?? track.clientWidth) + 32;
     track.scrollBy({ left: dir * ancho, behavior: 'smooth' });
   };
 
@@ -57,7 +58,13 @@ export default function ProyectosDestacados() {
   return (
     <section id="proyectos" className={`${styles.section} ${styles.sectionGray}`}>
       <div className={styles.container}>
-        <div className={styles.sectionHeader}>
+        <motion.div
+          className={styles.sectionHeader}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
           <div>
             <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>
               Proyectos <em>Destacados</em>
@@ -65,30 +72,41 @@ export default function ProyectosDestacados() {
             <div className={styles.accentBar} />
           </div>
           <div className={styles.sliderControls}>
-            <button
+            <motion.button
               type="button"
               className={styles.sliderBtn}
               onClick={() => desplazar(-1)}
               aria-label="Anterior"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
               <ArrowLeft />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               className={styles.sliderBtn}
               onClick={() => desplazar(1)}
               aria-label="Siguiente"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
               <ArrowRight />
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         <div className={styles.sliderViewport}>
           <div ref={trackRef} className={styles.sliderTrack} onScroll={onScroll}>
-            {PROYECTOS.map((p) => (
+            {PROYECTOS.map((p, i) => (
               <div key={p.titulo} className={styles.slide}>
-                <article className={styles.slideCard}>
+                <motion.article
+                  className={styles.slideCard}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.5, delay: i * 0.1, ease: 'easeOut' }}
+                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                >
                   <div className={styles.slideImageWrap}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img className={styles.slideImage} src={p.img} alt={p.titulo} loading="lazy" />
@@ -97,11 +115,16 @@ export default function ProyectosDestacados() {
                     <span className={styles.slideTag}>{p.tag}</span>
                     <h3 className={`${styles.slideTitle} ${styles.headlineMd}`}>{p.titulo}</h3>
                     <p className={styles.slideText}>{p.texto}</p>
-                    <button type="button" className={styles.linkBtn}>
+                    <motion.button
+                      type="button"
+                      className={styles.linkBtn}
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       Ver detalles <ArrowTrend />
-                    </button>
+                    </motion.button>
                   </div>
-                </article>
+                </motion.article>
               </div>
             ))}
           </div>
@@ -109,12 +132,14 @@ export default function ProyectosDestacados() {
 
         <div className={styles.dots}>
           {PROYECTOS.map((p, i) => (
-            <button
+            <motion.button
               key={p.titulo}
               type="button"
               className={`${styles.dot} ${i === activo ? styles.dotActive : ''}`}
               onClick={() => irA(i)}
               aria-label={`Ir al proyecto ${i + 1}`}
+              whileHover={{ scale: 1.3 }}
+              whileTap={{ scale: 0.9 }}
             />
           ))}
         </div>

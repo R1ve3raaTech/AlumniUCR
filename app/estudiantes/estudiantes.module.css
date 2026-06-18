@@ -1,0 +1,206 @@
+/* ════════════════════════════════════════════════════════════════════
+   Directorio de estudiantes (RF-03) para exalumnos. Identidad de marca.
+   ════════════════════════════════════════════════════════════════════ */
+
+.reportarRow { display: flex; justify-content: flex-end; border-top: 1px solid var(--ucr-surface-variant); padding-top: 8px; margin-top: 4px; }
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ucr-surface);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
+  background-image:
+    linear-gradient(rgba(0, 76, 99, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 76, 99, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--brand-blanco);
+  border-bottom: 1px solid var(--ucr-outline-variant);
+  padding: 1rem clamp(1rem, 4vw, 64px);
+}
+
+.brand { display: block; }
+.back { font-size: 0.85rem; font-weight: 600; color: var(--ucr-secondary); }
+.back:hover { text-decoration: underline; }
+
+/* ─── Hero ────────────────────────────────────────────────────────── */
+.hero { background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda)); color: var(--brand-blanco); }
+
+.heroInner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 1.5rem + 4vw, 4rem) clamp(1rem, 4vw, 64px);
+  text-align: center;
+}
+
+.heroTitle {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 1.6rem + 3vw, 3.5rem);
+  color: var(--brand-blanco);
+  margin: 0 0 0.75rem;
+}
+
+.heroText { color: rgba(255, 255, 255, 0.85); max-width: 42rem; margin: 0 auto 2rem; line-height: 1.6; }
+
+.search {
+  width: 100%;
+  max-width: 36rem;
+  padding: 0.9rem 1.25rem;
+  border: none;
+  border-radius: 9999px;
+  font-family: var(--font-brand-body);
+  font-size: 1rem;
+  box-shadow: 0 12px 30px -10px rgba(0, 31, 42, 0.5);
+}
+.search:focus { outline: none; box-shadow: 0 0 0 4px var(--brand-amarillo); }
+
+/* ─── Grilla ──────────────────────────────────────────────────────── */
+.main {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: clamp(2rem, 1.5rem + 3vw, 3rem) clamp(1rem, 4vw, 64px);
+}
+
+.vacio {
+  color: var(--ucr-on-surface-variant);
+  background: var(--brand-blanco);
+  border: 1px dashed var(--ucr-outline-variant);
+  padding: 2rem;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--brand-blanco);
+  border: 1px solid var(--ucr-outline-variant);
+  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  padding: 1.5rem;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+.card:hover { border-color: var(--brand-esmeralda); transform: translateY(-4px); }
+
+.cardHead { display: flex; align-items: center; gap: 1rem; }
+
+.ini {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--brand-azul);
+  color: var(--brand-blanco);
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+}
+
+.nombre {
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  color: var(--ucr-primary);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.carrera { font-size: 0.82rem; color: var(--ucr-on-surface-variant); margin-top: 0.15rem; }
+
+.proyecto { font-size: 0.9rem; color: var(--ucr-on-surface); margin: 0.25rem 0 0; }
+.proyecto strong { color: var(--ucr-primary); }
+
+.barra { height: 4px; width: 100%; background: var(--ucr-surface-container); overflow: hidden; }
+.barraFill { display: block; height: 100%; background: var(--brand-esmeralda); }
+.avance { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ucr-outline); }
+
+.areas { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.areaChip {
+  background: rgba(0, 106, 211, 0.1);
+  color: var(--brand-azul);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+}
+
+.busca { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.buscaLabel { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--ucr-outline); }
+.buscaChip {
+  background: rgba(243, 75, 38, 0.1);
+  color: var(--brand-naranja);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+}
+
+/* ─── Contacto / revelado ─────────────────────────────────────────── */
+.contacto { margin-top: auto; padding-top: 0.85rem; border-top: 1px solid var(--ucr-outline-variant); }
+
+.btn {
+  width: 100%;
+  background: var(--brand-esmeralda);
+  color: var(--brand-blanco);
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.6rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.btn:hover { background: var(--ucr-secondary); }
+.btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.estadoPend { font-size: 0.82rem; font-weight: 600; color: #b06a00; }
+.estadoRech { font-size: 0.82rem; font-weight: 600; color: #ba1a1a; }
+
+.revelado {
+  font-size: 0.85rem;
+  color: var(--ucr-on-surface);
+  background: rgba(0, 125, 103, 0.1);
+  border-left: 3px solid var(--ucr-esmeralda);
+  padding: 0.6rem 0.8rem;
+}
+.revelado p { margin: 0.1rem 0; }
+.revelado a { color: var(--ucr-secondary); font-weight: 600; }
+
+/* ─── Footer ──────────────────────────────────────────────────────── */
+.footer {
+  margin-top: auto;
+  background: var(--brand-blanco);
+  border-top: 1px solid var(--ucr-outline-variant);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.5rem clamp(1rem, 4vw, 64px);
+}
+.footerCopy { font-size: 0.8rem; color: var(--ucr-outline); }
+
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }

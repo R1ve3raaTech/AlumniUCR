@@ -1,10 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config({ path: '.env.local' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const supabaseUrl = process.env.SUPABASE_URL;
-// Se prefiere la clave secreta (service_role) para operaciones de backend, ya que permite
-// saltarse las políticas RLS y gestionar registros de forma segura. Si no está configurada,
-// se utiliza la clave anon (pública).
 const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_ANON_KEY;
 
 // Validar que las variables de entorno estén presentes y no sean placeholders
@@ -27,5 +26,8 @@ const supabase = createClient(
         }
     }
 );
+
+console.log("SUPABASE URL:", supabaseUrl);
+console.log("KEY USADA:", supabaseKey);
 
 module.exports = supabase;

@@ -1,6 +1,10 @@
-require('dotenv').config({ path: '.env.local' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
+
 const app = express();
 
 // CORS
@@ -28,12 +32,16 @@ app.use(
 
 app.use(express.json());
 
-// Rutas
+// ======================================================
+// ROUTES
+// ======================================================
+
 const authRoutes = require('./routes/auth.routes');
 const aplicantesEmpleoRoutes = require('./routes/aplicantes.empleo.routes');
 const areasInteresRoutes = require('./routes/areas.interes.routes');
 const areasInteresExalumnosRoutes = require('./routes/areas.interes.exalumnos.routes');
 const areasInteresProyectoRoutes = require('./routes/areas.interes.proyecto.routes');
+const areasInteresEmpleoRoutes = require('./routes/areas.interes.empleo.routes');
 const becaSocioeconomicaRoutes = require('./routes/beca.socioeconomica.routes');
 const carrerasRoutes = require('./routes/carreras.routes');
 const carrerasUsuarioRoutes = require('./routes/carreras.usuario.routes');
@@ -63,12 +71,20 @@ const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
 const voluntariosRoutes = require('./routes/voluntarios.routes');
 const matchingRoutes = require('./routes/matching.routes');
+const claudeRoutes = require('./routes/claude.routes');
+const matchesMentoriaRoutes = require('./routes/matches.mentoria.routes');
+const matchesPosicionesRoutes = require('./routes/matches.posiciones.routes');
+const adminRoutes = require('./routes/admin.routes');
+const perfilExalumnoRoutes = require('./routes/perfilExalumno.routes');
+const directorioEstudiantesRoutes = require('./routes/directorioEstudiantes.routes');
+const comprobantesRoutes = require('./routes/comprobantes.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
 app.use('/api/areas-interes', areasInteresRoutes);
 app.use('/api/areas-interes-exalumnos', areasInteresExalumnosRoutes);
 app.use('/api/areas-interes-proyectos', areasInteresProyectoRoutes);
+app.use('/api/areas-interes-empleo', areasInteresEmpleoRoutes);
 app.use('/api/becas-socioeconomicas', becaSocioeconomicaRoutes);
 app.use('/api/carreras', carrerasRoutes);
 app.use('/api/carreras-usuarios', carrerasUsuarioRoutes);
@@ -98,6 +114,13 @@ app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/voluntarios', voluntariosRoutes);
 app.use('/api/matching', matchingRoutes);
+app.use('/api/claude', claudeRoutes);
+app.use('/api/matches-mentoria', matchesMentoriaRoutes);
+app.use('/api/matches-posiciones', matchesPosicionesRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
+app.use('/api/estudiantes', directorioEstudiantesRoutes);
+app.use('/api/comprobantes', comprobantesRoutes);
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
@@ -108,7 +131,12 @@ app.get('/api/health', (req, res) => {
 const errorMiddleware = require('./middlewares/error.middleware');
 app.use(errorMiddleware);
 
+// ======================================================
+// SERVER
+// ======================================================
+
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

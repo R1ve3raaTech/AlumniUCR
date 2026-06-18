@@ -1,15 +1,32 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
-import InformacionAcademicaForm from '@/components/perfil/InformacionAcademicaForm';
-import ProyectoGraduacionForm from '@/components/perfil/ProyectoGraduacionForm';
-import HabilidadesForm from '@/components/perfil/HabilidadesForm';
-import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
+import StudentNav from '@/components/StudentNav';
 import perfilStyles from '@/components/perfil/perfil.module.css';
+import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
+import { obtenerProyectoDelEstudiante } from '@/lib/proyectoGraduacion';
+import { obtenerHabilidadesDelEstudiante } from '@/lib/habilidades';
+
+// Carga diferida de los formularios (cada uno trae sus propios catálogos y
+// estado): reduce el JS inicial de /perfil-estudiante y el costo de
+// montar/desmontar la página al navegar hacia/desde el dashboard.
+const cargando = <p className={perfilStyles.cargando}>Cargando…</p>;
+const InformacionAcademicaForm = dynamic(() => import('@/components/perfil/InformacionAcademicaForm'), {
+  loading: () => cargando,
+});
+const ProyectoGraduacionForm = dynamic(() => import('@/components/perfil/ProyectoGraduacionForm'), {
+  loading: () => cargando,
+});
+const HabilidadesForm = dynamic(() => import('@/components/perfil/HabilidadesForm'), {
+  loading: () => cargando,
+});
+const SolicitudesContacto = dynamic(() => import('@/components/perfil/SolicitudesContacto'), {
+  loading: () => cargando,
+});
 
 // Página del perfil de estudiante (RF-03). Incluye la Sección 1 (Información
 // Académica / Situación Socioeconómica), la Sección 3 (Proyecto de
@@ -22,6 +39,9 @@ export default function PerfilEstudiantePage() {
 
   const [verificandoPerfil, setVerificandoPerfil] = useState(true);
   const [perfilAcademicoListo, setPerfilAcademicoListo] = useState(false);
+  // Estado real por sección (RF-03), para el indicador de progreso y la regla
+  // "el perfil incompleto no aparece en el directorio".
+  const [estado, setEstado] = useState({ academica: false, proyecto: false, habilidades: false });
 
   useEffect(() => {
     if (!loading && !token) {
@@ -29,20 +49,32 @@ export default function PerfilEstudiantePage() {
     }
   }, [loading, token, router]);
 
-  useEffect(() => {
+  const refrescarEstado = useCallback(async () => {
     if (!token || !user?.id) return;
-    let activo = true;
-
-    obtenerInformacionEstudiante(token, user.id).then((informacion) => {
-      if (!activo) return;
-      setPerfilAcademicoListo(Boolean(informacion));
-      setVerificandoPerfil(false);
-    });
-
-    return () => {
-      activo = false;
-    };
+    const [info, proyecto, habilidades] = await Promise.all([
+      obtenerInformacionEstudiante(token, user.id).catch(() => null),
+      obtenerProyectoDelEstudiante(token, user.id).catch(() => null),
+      obtenerHabilidadesDelEstudiante(token, user.id).catch(() => null),
+    ]);
+    const academica = Boolean(info);
+    const proyectoOk = Boolean(proyecto && (proyecto.titulo_proyecto || proyecto.id));
+    const habilidadesOk = Array.isArray(habilidades)
+      ? habilidades.length > 0
+      : Boolean(habilidades && (habilidades.tecnicas || habilidades.id));
+    setEstado({ academica, proyecto: proyectoOk, habilidades: habilidadesOk });
+    setPerfilAcademicoListo(academica);
+    setVerificandoPerfil(false);
   }, [token, user?.id]);
+
+  useEffect(() => {
+    let activo = true;
+    if (token && user?.id) refrescarEstado().finally(() => { if (!activo) return; });
+    return () => { activo = false; };
+  }, [token, user?.id, refrescarEstado]);
+
+  // % de completitud del perfil (3 secciones obligatorias del RF-03).
+  const completadas = [estado.academica, estado.proyecto, estado.habilidades].filter(Boolean).length;
+  const progreso = Math.round((completadas / 3) * 100);
 
   function handleSignOut() {
     signOut();
@@ -57,75 +89,10 @@ export default function PerfilEstudiantePage() {
   const inicial = correo.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface lg:flex">
-      {/* Sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ucr-outline-variant bg-white px-6 py-8 lg:flex">
-        <Link href="/" aria-label="Alumni UCR — inicio" className="mb-10 block">
-          <AlumniLogo height={32} />
-        </Link>
+    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <StudentNav onSignOut={handleSignOut} />
 
-        <nav className="flex flex-1 flex-col gap-1">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
-            Paneles
-          </p>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            Dashboard
-          </Link>
-          <span className="flex items-center gap-3 rounded-xl bg-ucr-secondary-container/30 px-3 py-2 text-sm font-semibold text-ucr-primary">
-            <span className="material-symbols-outlined">person</span>
-            Mi perfil
-          </span>
-          <span
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-outline opacity-60 cursor-not-allowed"
-            title="Próximamente"
-            aria-disabled="true"
-          >
-            <span className="material-symbols-outlined">groups</span>
-            Directorio
-          </span>
-
-          <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-ucr-outline">
-            Secciones
-          </p>
-          <a
-            href="#academico"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">school</span>
-            Información académica
-          </a>
-          <a
-            href="#proyecto"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">assignment</span>
-            Proyecto de graduación
-          </a>
-          <a
-            href="#habilidades"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-          >
-            <span className="material-symbols-outlined">workspace_premium</span>
-            Habilidades
-          </a>
-        </nav>
-
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="mt-6 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-ucr-on-surface-variant transition hover:bg-ucr-surface-container"
-        >
-          <span className="material-symbols-outlined">logout</span>
-          Cerrar sesión
-        </button>
-      </aside>
-
-      {/* Contenido principal */}
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         {/* Hero header */}
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
           <div className="flex flex-wrap items-center gap-5">
@@ -144,103 +111,121 @@ export default function PerfilEstudiantePage() {
           </div>
         </section>
 
-        {/* Bento grid */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <section
-            id="academico"
-            className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-8"
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">school</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Información académica
-              </h2>
-            </div>
-            <p className="mb-4 text-sm text-ucr-on-surface-variant">
-              Completa tu información académica y socioeconómica para que el resto de tu perfil
-              pueda guardarse correctamente.
-            </p>
-            <InformacionAcademicaForm onGuardado={() => setPerfilAcademicoListo(true)} />
-          </section>
-
-          <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-4">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">checklist</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Estado del perfil
-              </h2>
-            </div>
-            <ul className="flex flex-col gap-3 text-sm">
-              <li className="flex items-center gap-2">
-                <span
-                  className={`material-symbols-outlined ${
-                    perfilAcademicoListo ? 'text-ucr-esmeralda' : 'text-ucr-outline'
-                  }`}
-                >
-                  {perfilAcademicoListo ? 'check_circle' : 'radio_button_unchecked'}
-                </span>
-                Información académica
-              </li>
-              <li className="flex items-center gap-2">
-                <span
-                  className={`material-symbols-outlined ${
-                    perfilAcademicoListo ? 'text-ucr-esmeralda' : 'text-ucr-outline'
-                  }`}
-                >
-                  {perfilAcademicoListo ? 'check_circle' : 'radio_button_unchecked'}
-                </span>
-                Proyecto de graduación
-              </li>
-              {!perfilAcademicoListo && !verificandoPerfil && (
-                <li className={perfilStyles.aviso}>
-                  Completa la información académica para habilitar el proyecto de graduación.
-                </li>
-              )}
-            </ul>
-          </section>
-
-          <section
-            id="proyecto"
-            className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-12"
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">assignment</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Proyecto de graduación
-              </h2>
-            </div>
-            <p className="mb-4 text-sm text-ucr-on-surface-variant">
-              Completa la información de tu proyecto de graduación para que aparezca en tu
-              perfil.
-            </p>
-            {verificandoPerfil ? (
-              <p className={perfilStyles.cargando}>Cargando…</p>
-            ) : perfilAcademicoListo ? (
-              <ProyectoGraduacionForm />
-            ) : (
-              <p className={perfilStyles.aviso}>
-                Primero completa y guarda tu información académica para poder registrar tu
-                proyecto de graduación.
+        {/* Contenido: formularios en columna + resumen de progreso fijo */}
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+          <div className="flex flex-col gap-6 lg:col-span-8">
+            <section id="academico" className="rounded-3xl bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="material-symbols-outlined text-ucr-secondary">school</span>
+                <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
+                  Información académica
+                </h2>
+              </div>
+              <p className="mb-4 text-sm text-ucr-on-surface-variant">
+                Completa tu información académica y socioeconómica para que el resto de tu perfil
+                pueda guardarse correctamente.
               </p>
-            )}
-          </section>
+              <InformacionAcademicaForm onGuardado={refrescarEstado} />
+            </section>
 
-          <section
-            id="habilidades"
-            className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-12"
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">workspace_premium</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Habilidades
-              </h2>
-            </div>
-            <p className="mb-4 text-sm text-ucr-on-surface-variant">
-              Agrega tus habilidades técnicas (opcional) para mejorar las coincidencias con tu
-              perfil.
-            </p>
-            <HabilidadesForm />
-          </section>
+            <section id="proyecto" className="rounded-3xl bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="material-symbols-outlined text-ucr-secondary">assignment</span>
+                <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
+                  Proyecto de graduación
+                </h2>
+              </div>
+              <p className="mb-4 text-sm text-ucr-on-surface-variant">
+                Completa la información de tu proyecto de graduación para que aparezca en tu
+                perfil.
+              </p>
+              {verificandoPerfil ? (
+                <p className={perfilStyles.cargando}>Cargando…</p>
+              ) : perfilAcademicoListo ? (
+                <ProyectoGraduacionForm onGuardado={refrescarEstado} />
+              ) : (
+                <p className={perfilStyles.aviso}>
+                  Primero completa y guarda tu información académica para poder registrar tu
+                  proyecto de graduación.
+                </p>
+              )}
+            </section>
+
+            <section id="habilidades" className="rounded-3xl bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="material-symbols-outlined text-ucr-secondary">workspace_premium</span>
+                <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
+                  Habilidades
+                </h2>
+              </div>
+              <p className="mb-4 text-sm text-ucr-on-surface-variant">
+                Agrega tus habilidades técnicas (opcional) para mejorar las coincidencias con tu
+                perfil.
+              </p>
+              <HabilidadesForm onGuardado={refrescarEstado} />
+            </section>
+
+            <SolicitudesContacto />
+          </div>
+
+          {/* Resumen de progreso: fijo al hacer scroll en pantallas grandes */}
+          <aside className="lg:col-span-4">
+            <section className="rounded-3xl bg-white p-6 shadow-sm lg:sticky lg:top-10">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="material-symbols-outlined text-ucr-secondary">checklist</span>
+                <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
+                  Estado del perfil
+                </h2>
+              </div>
+              {/* Indicador de progreso (RF-03) */}
+              <div className="mb-4">
+                <div className="mb-1 flex items-baseline justify-between text-xs font-semibold uppercase tracking-wide text-ucr-outline">
+                  <span>Progreso del perfil</span>
+                  <span className="font-ucr-display text-2xl text-ucr-esmeralda">{progreso}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-ucr-surface-container">
+                  <span
+                    className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda transition-all"
+                    style={{ width: `${progreso}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-ucr-on-surface-variant">
+                  {progreso === 100
+                    ? '✓ Perfil completo: ya puede aparecer en el directorio.'
+                    : 'Completa las 3 secciones para llegar al 100% y aparecer en el directorio.'}
+                </p>
+              </div>
+
+              <ul className="flex flex-col gap-3 text-sm">
+                {[
+                  { ok: estado.academica, label: 'Información académica', href: '#academico' },
+                  { ok: estado.proyecto, label: 'Proyecto de graduación', href: '#proyecto' },
+                  { ok: estado.habilidades, label: 'Habilidades', href: '#habilidades' },
+                ].map((s) => (
+                  <li key={s.label}>
+                    <a
+                      href={s.href}
+                      className="flex items-center gap-2 rounded-xl px-2 py-1.5 -mx-2 transition hover:bg-ucr-surface-container"
+                    >
+                      <span
+                        className={`material-symbols-outlined ${
+                          s.ok ? 'text-ucr-esmeralda' : 'text-ucr-outline'
+                        }`}
+                      >
+                        {s.ok ? 'check_circle' : 'radio_button_unchecked'}
+                      </span>
+                      {s.label}
+                    </a>
+                  </li>
+                ))}
+                {!perfilAcademicoListo && !verificandoPerfil && (
+                  <li className={perfilStyles.aviso}>
+                    Completa la información académica para habilitar el proyecto de graduación.
+                  </li>
+                )}
+              </ul>
+            </section>
+          </aside>
         </div>
       </main>
     </div>

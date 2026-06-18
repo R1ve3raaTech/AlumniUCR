@@ -1,0 +1,53 @@
+/* Historial de donaciones del exalumno (RF-07). Identidad de marca UCR. */
+.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body); display: flex; flex-direction: column; }
+
+.header { display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px; background: var(--ucr-primary); }
+.brand { display: block; }
+.headerLinks { display: flex; gap: 18px; flex-wrap: wrap; }
+.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display);
+  font-size: .95rem; opacity: .9; }
+.back:hover { opacity: 1; text-decoration: underline; }
+
+.hero { background: linear-gradient(120deg, var(--ucr-primary), var(--brand-esmeralda));
+  color: #fff; padding: clamp(2rem, 1.5rem + 3vw, 3rem) 32px; text-align: center; }
+.heroTitle { font-family: var(--font-ucr-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(1.8rem, 1.4rem + 2vw, 2.6rem); margin: 0 0 .5rem; color: #fff; }
+.heroText { color: rgba(255,255,255,.85); max-width: 44rem; margin: 0 auto; line-height: 1.6; }
+.totales { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 18px; }
+.totalChip { background: rgba(255,255,255,.15); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: .9rem; }
+
+.main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 32px; }
+.vacio { text-align: center; color: var(--ucr-on-surface-variant); padding: 50px 0; }
+.error { background: #fde2e1; color: #a3261f; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; font-size: .9rem; }
+.vacioBox { background: #fff; border: 1px dashed var(--ucr-outline-variant); border-radius: 16px;
+  padding: 40px 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;
+  color: var(--ucr-on-surface-variant); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+.card { background: #fff; border: 1px solid var(--ucr-outline-variant); border-radius: 14px; padding: 20px;
+  display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 20px rgba(0,76,99,.06); }
+.cardHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.monto { font-family: var(--font-ucr-display); font-weight: 800; font-size: 1.5rem; color: var(--ucr-primary); }
+.proyecto { font-weight: 600; color: var(--ucr-on-surface); margin: 0; }
+
+.detalle { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 0; }
+.detalle div { display: flex; justify-content: space-between; gap: 10px; font-size: .85rem; }
+.detalle dt { color: var(--ucr-on-surface-variant); }
+.detalle dd { margin: 0; font-weight: 500; text-align: right; }
+.mensaje { font-style: italic; color: var(--ucr-on-surface-variant); font-size: .88rem; margin: 4px 0 0;
+  border-left: 3px solid var(--ucr-surface-variant); padding-left: 10px; }
+.comprobante { color: var(--brand-azul); font-weight: 600; font-size: .85rem; text-decoration: none; margin-top: 2px;
+  background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left; align-self: flex-start; }
+.comprobante:hover { text-decoration: underline; }
+
+.chip { padding: 4px 12px; border-radius: 999px; font-size: .78rem; font-weight: 700; text-transform: capitalize; }
+.pendiente { background: #fff3cd; color: #8a6d00; }
+.confirmada { background: #d8f5e3; color: #14794a; }
+.rechazada { background: #fde2e1; color: #a3261f; }
+
+.btnPrimary { font-family: var(--font-ucr-display); font-weight: 700; padding: 12px 24px; border-radius: 10px;
+  border: none; background: var(--brand-esmeralda); color: #fff; cursor: pointer; font-size: .95rem; text-decoration: none; }
+
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }

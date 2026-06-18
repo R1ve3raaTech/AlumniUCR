@@ -1,11 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
+import { useAuth } from '@/context/AuthContext';
+import { obtenerPerfil } from '@/lib/auth';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './proyectos.module.css';
 
-// ─── Íconos SVG inline (heredan currentColor) ─────────────────────────────
+if (typeof window !== 'undefined') { gsap.registerPlugin(ScrollTrigger); }
+
+// ─── Íconos SVG inline ─────────────────────────────────────────────────────
 const base = {
   viewBox: '0 0 24 24',
   fill: 'none',
@@ -14,22 +22,26 @@ const base = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
 };
-const ISearch = () => (<svg {...base}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>);
-const IBell = () => (<svg {...base}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>);
-const IChevronLeft = () => (<svg {...base}><path d="m15 18-6-6 6-6" /></svg>);
-const IChevronRight = () => (<svg {...base}><path d="m9 18 6-6-6-6" /></svg>);
-const IGrid = () => (<svg {...base}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>);
-const IGroups = () => (<svg {...base}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>);
-const IUser = () => (<svg {...base}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>);
+const IChevronLeft  = () => <svg {...base}><path d="m15 18-6-6 6-6" /></svg>;
+const IChevronRight = () => <svg {...base}><path d="m9 18 6-6-6-6" /></svg>;
+const IGrid    = () => <svg {...base}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>;
+const ISearch  = () => <svg {...base}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>;
+const IGroups  = () => <svg {...base}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+const IUser    = () => <svg {...base}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>;
+const ILock    = () => <svg {...base}><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>;
+const IClose   = () => <svg {...base}><path d="M18 6 6 18M6 6l12 12" /></svg>;
 
 // ─── Datos ────────────────────────────────────────────────────────────────
 const AREAS = ['Todas las áreas', 'Ingeniería', 'Artes y Letras', 'Ciencias Sociales', 'Salud'];
+const POR_PAGINA = 3;
 
 type Proyecto = {
   img: string;
   area: string;
   titulo: string;
-  afinidad: string;
+  afinidad: number;
+  fechaMs: number;
+  impacto: number;
   autor: { iniciales?: string; img?: string; nombre: string };
   cta: string;
   ctaVariant: 'primary' | 'outline';
@@ -41,9 +53,11 @@ type Proyecto = {
 const PROYECTOS: Proyecto[] = [
   {
     img: '/images/ecosistema-ucr.png',
-    area: 'Ingeniería Eléctrica',
+    area: 'Ingeniería',
     titulo: 'Optimización de Redes Inteligentes',
-    afinidad: '98% Afinidad',
+    afinidad: 98,
+    fechaMs: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    impacto: 85,
     autor: { iniciales: 'CM', nombre: 'Carlos Mendoza' },
     tipo: 'meta',
     metaLabel: 'Meta Académica',
@@ -54,9 +68,11 @@ const PROYECTOS: Proyecto[] = [
   },
   {
     img: '/images/campus.png',
-    area: 'Arquitectura Sostenible',
+    area: 'Artes y Letras',
     titulo: 'Módulos Habitacionales Bio-Climáticos',
-    afinidad: '85% Afinidad',
+    afinidad: 85,
+    fechaMs: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    impacto: 92,
     autor: { img: '/images/descarga-1.jpg', nombre: 'Lucía Torres' },
     tipo: 'requerimiento',
     requerimiento: 'Busca: Mentoría Técnica Especializada',
@@ -65,9 +81,11 @@ const PROYECTOS: Proyecto[] = [
   },
   {
     img: '/images/descarga-1.jpg',
-    area: 'Biotecnología',
+    area: 'Ciencias Sociales',
     titulo: 'Nuevos Biomateriales Orgánicos',
-    afinidad: '92% Afinidad',
+    afinidad: 92,
+    fechaMs: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    impacto: 70,
     autor: { iniciales: 'JP', nombre: 'Jorge Palma' },
     tipo: 'meta',
     metaLabel: 'Financiamiento Requerido',
@@ -76,39 +94,221 @@ const PROYECTOS: Proyecto[] = [
     cta: 'Ver Detalles',
     ctaVariant: 'primary',
   },
+  {
+    img: '/images/ecosistema-ucr.png',
+    area: 'Salud',
+    titulo: 'Sistema de Diagnóstico IA',
+    afinidad: 77,
+    fechaMs: Date.now() - 10 * 24 * 60 * 60 * 1000,
+    impacto: 95,
+    autor: { iniciales: 'MV', nombre: 'María Vargas' },
+    tipo: 'meta',
+    metaLabel: 'Meta Clínica',
+    meta: '$6,000',
+    progreso: 50,
+    cta: 'Apoyar Proyecto',
+    ctaVariant: 'primary',
+  },
+  {
+    img: '/images/campus.png',
+    area: 'Ingeniería',
+    titulo: 'Red de Sensores Sísmicos UCR',
+    afinidad: 88,
+    fechaMs: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    impacto: 80,
+    autor: { iniciales: 'AR', nombre: 'Andrés Rojas' },
+    tipo: 'requerimiento',
+    requerimiento: 'Busca: Ingeniero de Software',
+    cta: 'Conectar con Andrés',
+    ctaVariant: 'outline',
+  },
+  {
+    img: '/images/descarga-1.jpg',
+    area: 'Ciencias Sociales',
+    titulo: 'Plataforma de Salud Mental Estudiantil',
+    afinidad: 91,
+    fechaMs: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    impacto: 99,
+    autor: { iniciales: 'SF', nombre: 'Sofía Fernández' },
+    tipo: 'meta',
+    metaLabel: 'Meta de Impacto',
+    meta: '$3,800',
+    progreso: 80,
+    cta: 'Apoyar Proyecto',
+    ctaVariant: 'primary',
+  },
 ];
 
+// ─── Roles con acceso completo ────────────────────────────────────────────
+const ROLES_PERMITIDOS = ['exalumno', 'voluntario', 'administrador'];
+
 export default function ProyectosPage() {
-  const [areaActiva, setAreaActiva] = useState(0);
+  return (
+    <React.Suspense fallback={<div className={styles.page}>Cargando...</div>}>
+      <ProyectosContent />
+    </React.Suspense>
+  );
+}
+
+function ProyectosContent() {
+  const { user, token } = useAuth();
+  const router = useRouter();
+
+  // ─── Estado de filtros / orden / página / búsqueda ─────────────────────
+  const [areaActiva, setAreaActiva]   = useState(0);
+  const [orden, setOrden]             = useState<'recientes' | 'afinidad' | 'impacto'>('recientes');
+  const [pagina, setPagina]           = useState(1);
+  const [query, setQuery]             = useState('');
+
+  // ─── Rol del usuario ─────────────────────────────────────────────────
+  const [rolUsuario, setRolUsuario]   = useState<string | null>(null);
+  useEffect(() => {
+    if (!user || !token) return;
+    obtenerPerfil(token)
+      .then((perfil: { rol?: string }) => setRolUsuario(perfil?.rol ?? null))
+      .catch(() => setRolUsuario(null));
+  }, [user, token]);
+
+  // ─── Modal GSAP ──────────────────────────────────────────────────────
+  const overlayRef  = useRef<HTMLDivElement>(null);
+  const boxRef      = useRef<HTMLDivElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // ─── Refs para animaciones ─────────────────────────────────────────────
+  const heroRef     = useRef<HTMLElement>(null);
+  const filtersRef  = useRef<HTMLElement>(null);
+  const gridAnimRef = useRef<HTMLDivElement>(null);
+
+  // ─── GSAP: Hero Entrance — clip-path + blur reveal ────────────────────
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        const tl: gsap.core.Timeline = gsap.timeline({ delay: 0.15 });
+        tl.fromTo(`.${styles.badge}`,
+          { clipPath: 'inset(0 100% 0 0)', opacity: 0 },
+          { clipPath: 'inset(0 0% 0 0)', opacity: 1, duration: 0.7, ease: 'power3.inOut' }
+        )
+        .fromTo(`.${styles.heroTitle}`,
+          { y: 70, opacity: 0, filter: 'blur(10px)', rotateX: -12 },
+          { y: 0, opacity: 1, filter: 'blur(0px)', rotateX: 0, duration: 1.1, ease: 'power4.out' },
+          '-=0.3'
+        )
+        .fromTo(`.${styles.heroText}`,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: 'power2.out' },
+          '-=0.6'
+        );
+      });
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set([`.${styles.badge}`, `.${styles.heroTitle}`, `.${styles.heroText}`], { opacity: 1 });
+      });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  // ─── GSAP: Filters slide-down (ScrollTrigger) ─────────────────────────
+  useEffect(() => {
+    if (!filtersRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      gsap.fromTo(filtersRef.current,
+        { y: -25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.55, ease: 'power2.out',
+          scrollTrigger: { trigger: filtersRef.current, start: 'top 92%' } }
+      );
+    }, filtersRef);
+    return () => ctx.revert();
+  }, []);
+
+  // ─── GSAP: Cards 3D stagger + progress bars (Scroll Dynamics) ─────────
+  useEffect(() => {
+    if (!gridAnimRef.current) return;
+    const ctx: gsap.Context = gsap.context(() => {
+      const mm: gsap.MatchMedia = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo('.prj-card',
+          { y: 60, opacity: 0, rotateY: 10, transformPerspective: 900, scale: 0.94 },
+          { y: 0, opacity: 1, rotateY: 0, scale: 1,
+            duration: 0.75, stagger: 0.13, ease: 'back.out(1.5)',
+            scrollTrigger: { trigger: gridAnimRef.current, start: 'top 85%' } }
+        );
+        // Progress bars fill on scroll
+        gridAnimRef.current!.querySelectorAll<HTMLSpanElement>('.prj-bar').forEach((bar) => {
+          const w = bar.style.width;
+          gsap.from(bar, { width: '0%', duration: 1.3, ease: 'power2.out',
+            scrollTrigger: { trigger: bar, start: 'top 90%' } });
+        });
+      });
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('.prj-card', { opacity: 1 });
+      });
+    }, gridAnimRef);
+    return () => ctx.revert();
+  }, [pagina, areaActiva, orden, query]);
+
+  const abrirModal = useCallback(() => {
+    setModalOpen(true);
+    gsap.to(overlayRef.current, { opacity: 1, visibility: 'visible', pointerEvents: 'all', duration: 0.3, ease: 'power2.out' });
+    gsap.fromTo(boxRef.current,
+      { y: 28, scale: 0.96, opacity: 0 },
+      { y: 0, scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.4)', delay: 0.05 }
+    );
+  }, []);
+
+  const cerrarModal = useCallback(() => {
+    gsap.to(boxRef.current, { y: 16, scale: 0.97, opacity: 0, duration: 0.25, ease: 'power2.in' });
+    gsap.to(overlayRef.current, { opacity: 0, duration: 0.3, ease: 'power2.in', delay: 0.1,
+      onComplete: () => { setModalOpen(false); gsap.set(overlayRef.current, { visibility: 'hidden', pointerEvents: 'none' }); }
+    });
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && modalOpen) cerrarModal(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen, cerrarModal]);
+
+  // ─── Guard del CTA ────────────────────────────────────────────────────
+  const handleCta = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const tieneAcceso = user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario);
+    if (!tieneAcceso) { abrirModal(); return; }
+    // Con acceso: aquí iría la navegación real al detalle
+  };
+
+  // ─── Filtrado + ordenamiento + paginación ────────────────────────────
+  const areaSeleccionada = AREAS[areaActiva];
+
+  const proyectosFiltrados = PROYECTOS
+    .filter(p => {
+      if (areaSeleccionada !== 'Todas las áreas' && p.area !== areaSeleccionada) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        return p.titulo.toLowerCase().includes(q) || p.area.toLowerCase().includes(q) || p.autor.nombre.toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (orden === 'afinidad') return b.afinidad - a.afinidad;
+      if (orden === 'impacto')  return b.impacto  - a.impacto;
+      return b.fechaMs - a.fechaMs; // recientes
+    });
+
+  const totalPaginas  = Math.max(1, Math.ceil(proyectosFiltrados.length / POR_PAGINA));
+  const paginaReal    = Math.min(pagina, totalPaginas);
+  const proyectosPag  = proyectosFiltrados.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
+
+  const cambiarArea = (i: number) => { setAreaActiva(i); setPagina(1); };
+  const cambiarOrden = (v: string) => { setOrden(v as typeof orden); setPagina(1); };
 
   return (
     <div className={styles.page}>
-      {/* Cabecera */}
-      <header className={styles.header}>
-        <nav className={styles.nav}>
-          <div className={styles.navLeft}>
-            <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={40} /></Link>
-            <div className={styles.navLinks}>
-              <Link href="/" className={styles.navLink}>Inicio</Link>
-              <span className={`${styles.navLink} ${styles.navLinkActive}`}>Proyectos</span>
-              <Link href="/#impacto" className={styles.navLink}>Impacto</Link>
-              <Link href="/#historias" className={styles.navLink}>Historias</Link>
-            </div>
-          </div>
-          <div className={styles.navRight}>
-            <div className={styles.searchBox}>
-              <span className={styles.searchIcon}><ISearch /></span>
-              <input className={styles.searchInput} type="text" placeholder="BUSCAR PROYECTOS..." aria-label="Buscar proyectos" />
-            </div>
-            <Link href="/ayuda" className={styles.iconBtn} aria-label="Notificaciones"><IBell /></Link>
-            <Link href="/dashboard" className={styles.avatar} aria-label="Mi perfil">AU</Link>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <main className={styles.main}>
         {/* Hero diagonal */}
-        <section className={styles.hero}>
+        <section className={styles.hero} ref={heroRef}>
           <div className={styles.heroInner}>
             <div className={styles.heroContent}>
               <span className={styles.badge}>
@@ -125,89 +325,149 @@ export default function ProyectosPage() {
 
         <div className={styles.container}>
           {/* Filtros */}
-          <section className={styles.filters}>
+          <section className={styles.filters} ref={filtersRef}>
             <div className={styles.areaBtns}>
               {AREAS.map((a, i) => (
                 <button
                   key={a}
                   type="button"
+                  id={`area-btn-${i}`}
                   className={`${styles.areaBtn} ${i === areaActiva ? styles.areaBtnActive : ''}`}
-                  onClick={() => setAreaActiva(i)}
+                  onClick={() => cambiarArea(i)}
                 >
                   {a}
                 </button>
               ))}
             </div>
+
+            {/* Buscador inline — mismo estilo que el Navbar */}
+            <div className={styles.filterSearch}>
+              <input
+                id="buscar-proyectos"
+                type="search"
+                placeholder="Buscar proyectos..."
+                className={styles.filterSearchInput}
+                value={query}
+                onChange={e => { setQuery(e.target.value); setPagina(1); }}
+                aria-label="Buscar proyectos"
+              />
+              <button type="button" className={styles.filterSearchBtn} aria-label="Buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                </svg>
+              </button>
+            </div>
+
             <div className={styles.sort}>
               <span className={styles.sortLabel}>Ordenar por:</span>
-              <select className={styles.sortSelect} aria-label="Ordenar proyectos">
-                <option>Recientes</option>
-                <option>Afinidad</option>
-                <option>Impacto</option>
+              <select
+                id="sort-proyectos"
+                className={styles.sortSelect}
+                aria-label="Ordenar proyectos"
+                value={orden}
+                onChange={e => cambiarOrden(e.target.value)}
+              >
+                <option value="recientes">Recientes</option>
+                <option value="afinidad">Afinidad</option>
+                <option value="impacto">Impacto</option>
               </select>
             </div>
           </section>
 
           {/* Grilla de proyectos */}
-          <div className={styles.grid}>
-            {PROYECTOS.map((p) => (
-              <article key={p.titulo} className={styles.card}>
-                <div className={styles.cardMedia}>
-                  <img className={styles.cardImg} src={p.img} alt={p.titulo} />
-                  <span className={styles.afinidad}>{p.afinidad}</span>
-                </div>
-                <div className={styles.cardBody}>
-                  <p className={styles.cardArea}>{p.area}</p>
-                  <h3 className={styles.cardTitle}>{p.titulo}</h3>
-
-                  <div className={styles.autor}>
-                    {p.autor.img ? (
-                      <img className={styles.autorImg} src={p.autor.img} alt={p.autor.nombre} />
-                    ) : (
-                      <span className={styles.autorIniciales}>{p.autor.iniciales}</span>
-                    )}
-                    <span className={styles.autorNombre}>{p.autor.nombre}</span>
+          <div className={styles.grid} ref={gridAnimRef}>
+            {proyectosPag.length === 0 ? (
+              <div className={styles.noResults}>No se encontraron proyectos.</div>
+            ) : (
+              proyectosPag.map((p) => (
+                <article key={p.titulo} className={`${styles.card} prj-card`}>
+                  <div className={styles.cardMedia}>
+                    <img className={styles.cardImg} src={p.img} alt={p.titulo} />
+                    <span className={styles.afinidad}>{p.afinidad}% Afinidad</span>
                   </div>
+                  <div className={styles.cardBody}>
+                    <p className={styles.cardArea}>{p.area}</p>
+                    <h3 className={styles.cardTitle}>{p.titulo}</h3>
 
-                  <div className={styles.cardFooter}>
-                    {p.tipo === 'meta' ? (
-                      <>
-                        <div className={styles.metaRow}>
-                          <span className={styles.metaLabel}>{p.metaLabel}</span>
-                          <span className={styles.metaValor}>{p.meta}</span>
+                    <div className={styles.autor}>
+                      {p.autor.img ? (
+                        <img className={styles.autorImg} src={p.autor.img} alt={p.autor.nombre} />
+                      ) : (
+                        <span className={styles.autorIniciales}>{p.autor.iniciales}</span>
+                      )}
+                      <span className={styles.autorNombre}>{p.autor.nombre}</span>
+                    </div>
+
+                    <div className={styles.cardFooter}>
+                      {p.tipo === 'meta' ? (
+                        <>
+                          <div className={styles.metaRow}>
+                            <span className={styles.metaLabel}>{p.metaLabel}</span>
+                            <span className={styles.metaValor}>{p.meta}</span>
+                          </div>
+                          <div className={styles.barra}>
+                            <span className={`${styles.barraFill} prj-bar`} style={{ width: `${p.progreso}%` }} />
+                          </div>
+                        </>
+                      ) : (
+                        <div className={styles.requerimiento}>
+                          <p className={styles.requerimientoLabel}>Requerimiento</p>
+                          <p className={styles.requerimientoTexto}>{p.requerimiento}</p>
                         </div>
-                        <div className={styles.barra}>
-                          <span className={styles.barraFill} style={{ width: `${p.progreso}%` }} />
-                        </div>
-                      </>
-                    ) : (
-                      <div className={styles.requerimiento}>
-                        <p className={styles.requerimientoLabel}>Requerimiento</p>
-                        <p className={styles.requerimientoTexto}>{p.requerimiento}</p>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      className={p.ctaVariant === 'primary' ? styles.ctaPrimary : styles.ctaOutline}
-                    >
-                      {p.cta}
-                    </button>
+                      )}
+                      <button
+                        id={`cta-${p.titulo.replace(/\s+/g, '-').toLowerCase()}`}
+                        type="button"
+                        className={p.ctaVariant === 'primary' ? styles.ctaPrimary : styles.ctaOutline}
+                        onClick={handleCta}
+                      >
+                        {p.cta}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))
+            )}
           </div>
 
           {/* Paginación */}
-          <div className={styles.pagination}>
-            <button type="button" className={styles.pageArrow} aria-label="Anterior"><IChevronLeft /></button>
-            <div className={styles.pageNums}>
-              <button type="button" className={`${styles.pageNum} ${styles.pageNumActive}`}>1</button>
-              <button type="button" className={styles.pageNum}>2</button>
-              <button type="button" className={styles.pageNum}>3</button>
+          {totalPaginas > 1 && (
+            <div className={styles.pagination}>
+              <button
+                type="button"
+                id="pag-anterior"
+                className={styles.pageArrow}
+                aria-label="Anterior"
+                disabled={paginaReal === 1}
+                onClick={() => setPagina(p => Math.max(1, p - 1))}
+              >
+                <IChevronLeft />
+              </button>
+              <div className={styles.pageNums}>
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                  <button
+                    key={n}
+                    id={`pag-${n}`}
+                    type="button"
+                    className={`${styles.pageNum} ${n === paginaReal ? styles.pageNumActive : ''}`}
+                    onClick={() => setPagina(n)}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                id="pag-siguiente"
+                className={styles.pageArrow}
+                aria-label="Siguiente"
+                disabled={paginaReal === totalPaginas}
+                onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+              >
+                <IChevronRight />
+              </button>
             </div>
-            <button type="button" className={styles.pageArrow} aria-label="Siguiente"><IChevronRight /></button>
-          </div>
+          )}
         </div>
       </main>
 
@@ -254,6 +514,62 @@ export default function ProyectosPage() {
         <Link href="/#impacto" className={styles.bottomItem}><IGroups /><span>Impacto</span></Link>
         <Link href="/dashboard" className={styles.bottomItem}><IUser /><span>Perfil</span></Link>
       </nav>
+
+      {/* ─── Modal de acceso restringido (GSAP) ──────────────────────── */}
+      <div
+        ref={overlayRef}
+        className={styles.modalOverlay}
+        id="modal-acceso"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-titulo"
+        onClick={e => { if (e.target === overlayRef.current) cerrarModal(); }}
+      >
+        <div ref={boxRef} className={styles.modalBox}>
+          <button
+            id="modal-cerrar"
+            type="button"
+            className={styles.modalClose}
+            onClick={cerrarModal}
+            aria-label="Cerrar"
+          >
+            <IClose />
+          </button>
+
+          <div className={styles.modalIcon}>
+            <ILock />
+          </div>
+
+          <p className={styles.modalTag}>Acceso Restringido</p>
+          <h2 id="modal-titulo" className={styles.modalTitle}>
+            Cuenta requerida
+          </h2>
+          <p className={styles.modalText}>
+            Para acceder a los proyectos y conectar con sus autores necesitas una
+            cuenta de <strong>Exalumno</strong> o <strong>Voluntario</strong> de la
+            red UCR Connect. ¡Únete y sé parte del ecosistema!
+          </p>
+
+          <div className={styles.modalActions}>
+            <button
+              id="modal-registrarse"
+              type="button"
+              className={styles.modalBtnPrimary}
+              onClick={() => { cerrarModal(); router.push('/unete'); }}
+            >
+              Crear cuenta — Es gratis
+            </button>
+            <button
+              id="modal-iniciar-sesion"
+              type="button"
+              className={styles.modalBtnSecondary}
+              onClick={() => { cerrarModal(); router.push('/login'); }}
+            >
+              Ya tengo cuenta — Iniciar sesión
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
