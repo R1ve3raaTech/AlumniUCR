@@ -299,6 +299,7 @@
   color: var(--ucr-on-surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   background: var(--brand-blanco);
+  box-shadow: 0 2px 10px rgba(0, 52, 69, 0.07);
 }
 
 .input::placeholder {

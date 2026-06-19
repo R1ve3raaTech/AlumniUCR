@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
 import ReportarPerfil from '@/components/ReportarPerfil';
 import StudentNav from '@/components/StudentNav';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
@@ -200,10 +198,8 @@ function FiltroBtn({ label, valor, placeholder, onClick }: { label: string; valo
   );
 }
 
-export default function EstudiantesPage() {
+function EstudiantesPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const rol = searchParams.get('rol') ?? '';
   const { token, loading: authLoading, signOut } = useAuth();
   const [lista, setLista] = useState<Estudiante[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -462,5 +458,17 @@ export default function EstudiantesPage() {
           onSeleccionar={setFiltroAreaInteres} onCerrar={() => setModalAbierto(null)} placeholder="Cualquier área" />
       )}
     </div>
+  );
+}
+
+export default function EstudiantesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">
+        Cargando…
+      </div>
+    }>
+      <EstudiantesPageContent />
+    </Suspense>
   );
 }
