@@ -49,6 +49,12 @@ export default function AtomoImpacto() {
     let cx = 0, cy = 0, raf = 0, t = 0, spin = 0, fit = 1;
     const orbs = ORBITAS.map((o) => ({ ...o, trail: [] as { x: number; y: number }[] }));
 
+    // Logo Alumni UCR como núcleo central
+    const logo = new Image();
+    let logoReady = false;
+    logo.onload = () => { logoReady = true; };
+    logo.src = '/images/alumni_mejor-removebg-preview.png';
+
     const resize = () => {
       const r = cv.parentElement!.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
@@ -119,13 +125,22 @@ export default function AtomoImpacto() {
         ctx.strokeStyle = g; ctx.beginPath(); ctx.moveTo(elec[i].sx, elec[i].sy); ctx.lineTo(elec[j].sx, elec[j].sy); ctx.stroke();
       }
 
-      // núcleo pulsante (tematizado para fondo claro: core teal + halo celeste)
+      // núcleo: halo de energía + disco claro + LOGO Alumni UCR al centro
       const nr = 27 * CFG.nuc * (1 + Math.sin(t * 2) * 0.09);
       const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, nr * 2.4);
-      cg.addColorStop(0, 'rgba(0,76,99,0.9)'); cg.addColorStop(0.42, 'rgba(84,188,235,0.5)'); cg.addColorStop(1, 'rgba(84,188,235,0)');
+      cg.addColorStop(0, 'rgba(84,188,235,0.5)'); cg.addColorStop(0.5, 'rgba(84,188,235,0.22)'); cg.addColorStop(1, 'rgba(84,188,235,0)');
       ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx, cy, nr * 2.4, 0, 7); ctx.fill();
-      ctx.fillStyle = '#004C63'; ctx.beginPath(); ctx.arc(cx, cy, nr * 0.5, 0, 7); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.beginPath(); ctx.arc(cx - nr * 0.16, cy - nr * 0.16, nr * 0.17, 0, 7); ctx.fill();
+      const wd = ctx.createRadialGradient(cx, cy, 0, cx, cy, nr * 1.5);
+      wd.addColorStop(0, 'rgba(255,255,255,0.95)'); wd.addColorStop(0.68, 'rgba(255,255,255,0.78)'); wd.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = wd; ctx.beginPath(); ctx.arc(cx, cy, nr * 1.5, 0, 7); ctx.fill();
+      if (logoReady) {
+        const ar = logo.naturalWidth / logo.naturalHeight || 1;
+        let lh = nr * 1.95, lw = lh * ar;
+        if (lw > nr * 3.1) { lw = nr * 3.1; lh = lw / ar; }
+        ctx.drawImage(logo, cx - lw / 2, cy - lh / 2, lw, lh);
+      } else {
+        ctx.fillStyle = '#004C63'; ctx.beginPath(); ctx.arc(cx, cy, nr * 0.5, 0, 7); ctx.fill();
+      }
 
       // electrones (orden por profundidad)
       elec.sort((a, b) => b.z - a.z).forEach((e) => {
