@@ -156,26 +156,17 @@ export default function MatchingSeccion() {
           ))}
         </div>
 
-        {/* Criterios del score */}
         <motion.div
-          className={styles.matchCriterios}
+          className={styles.matchCtaWrap}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
-          <span className={styles.matchCriteriosTitle}>¿Cómo se calcula?</span>
-          <span className={styles.matchCriterio}>Misma carrera <strong>30</strong></span>
-          <span className={styles.matchCriterio}>Áreas en común <strong>30</strong></span>
-          <span className={styles.matchCriterio}>Sector ↔ área <strong>20</strong></span>
-          <span className={styles.matchCriterio}>Tipo de apoyo <strong>20</strong></span>
-        </motion.div>
-
-        <div className={styles.matchCtaWrap}>
           <Link href="/registro" className={styles.matchCta}>
             Encontrá tu match <ArrowRight />
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
