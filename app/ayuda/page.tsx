@@ -51,8 +51,6 @@ const FAQS = [
   { categoria: 'Mentorías', pregunta: '¿Puedo tener más de un mentor?', respuesta: 'Actualmente, el sistema permite conectar activamente con un máximo de 2 mentores simultáneamente para asegurar la calidad y el compromiso en el proceso de guía.' },
 ];
 
-const SOPORTE_CORREO = 'soporte@ucrconnect.cr';
-
 export default function AyudaPage() {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);

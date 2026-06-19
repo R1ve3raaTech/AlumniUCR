@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
-import AlumniLogo from '@/components/AlumniLogo';
 import StudentNav from '@/components/StudentNav';
 import ReportarPerfil from '@/components/ReportarPerfil';
 import {
