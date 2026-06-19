@@ -9,7 +9,7 @@ import { ArrowUp } from './icons';
 import styles from './landing.module.css';
 
 // Secciones donde el botón debe mostrarse (ver ids en cada componente de sección).
-const SECCIONES = ['proyectos', 'impacto', 'historias'];
+const SECCIONES = ['matching', 'impacto', 'historias'];
 
 export default function ScrollToHero() {
   const [visible, setVisible] = useState(false);

@@ -2,7 +2,7 @@ import React from 'react';
 import LandingShell from '@/components/landing/LandingShell';
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
-import ProyectosDestacados from '@/components/landing/ProyectosDestacados';
+import MatchingSeccion from '@/components/landing/MatchingSeccion';
 import Impacto from '@/components/landing/Impacto';
 import ProyectosGraduacion from '@/components/landing/ProyectosGraduacion';
 import Testimonios from '@/components/landing/Testimonios';
@@ -19,7 +19,7 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <ProyectosDestacados />
+        <MatchingSeccion />
         <Impacto />
         <ProyectosGraduacion />
         <Testimonios />
