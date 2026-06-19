@@ -26,6 +26,24 @@
               box-shadow 0.3s ease;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  animation: cosmicGlow 4s ease-in-out infinite;
+}
+
+@keyframes cosmicGlow {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 
+                0 0 15px rgba(6, 182, 212, 0.45), 
+                0 0 30px rgba(6, 182, 212, 0.2),
+                inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    border-color: rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(168, 85, 247, 0.4), 
+                0 0 25px rgba(168, 85, 247, 0.65), 
+                0 0 50px rgba(6, 182, 212, 0.45),
+                inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    border-color: rgba(168, 85, 247, 0.4);
+  }
 }
 
 /* El degradado de neón del cerebro animado */
@@ -83,6 +101,61 @@
 
 .chatFabActive svg {
   transform: rotate(90deg);
+}
+
+.chatFabAvatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 2;
+  animation: galaxySpin 25s linear infinite;
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.chatFab:hover .chatFabAvatar {
+  transform: scale(1.08);
+}
+
+.chatFabTrail {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(6, 182, 212, 0.3) 35%,
+    rgba(168, 85, 247, 0.45) 65%,
+    rgba(6, 182, 212, 0.2) 85%,
+    transparent 100%
+  );
+  z-index: 3;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  filter: blur(4px);
+  animation: spaceTrailSpin 4s linear infinite;
+  opacity: 0.85;
+}
+
+@keyframes galaxySpin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.03);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes spaceTrailSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .chatWindow {
@@ -143,6 +216,15 @@
   filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.6));
 }
 
+.chatHeaderAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  object-fit: cover;
+  filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.4));
+}
+
 .chatCloseBtn {
   background: none;
   border: none;
@@ -189,6 +271,31 @@
 .chatMessages::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
+}
+
+.chatUserWrapper {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.chatAssistantWrapper {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.chatMessageAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  object-fit: cover;
+  margin-top: 2px;
 }
 
 .chatBubble {
