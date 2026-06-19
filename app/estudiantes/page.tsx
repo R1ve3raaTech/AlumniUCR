@@ -198,7 +198,7 @@ function FiltroBtn({ label, valor, placeholder, onClick }: { label: string; valo
   );
 }
 
-export default function EstudiantesPage() {
+function EstudiantesPageContent() {
   const router = useRouter();
   const { token, loading: authLoading, signOut } = useAuth();
   const [lista, setLista] = useState<Estudiante[]>([]);
@@ -458,5 +458,17 @@ export default function EstudiantesPage() {
           onSeleccionar={setFiltroAreaInteres} onCerrar={() => setModalAbierto(null)} placeholder="Cualquier área" />
       )}
     </div>
+  );
+}
+
+export default function EstudiantesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">
+        Cargando…
+      </div>
+    }>
+      <EstudiantesPageContent />
+    </Suspense>
   );
 }
