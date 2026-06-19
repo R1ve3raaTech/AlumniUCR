@@ -28,6 +28,12 @@ const MATCHES: Match[] = [
     est: 'Carlos Torres', estCarrera: 'Psicología', mentor: 'Esteban Murillo', mentorEmpresa: 'Bienestar Digital', score: 92, inter: true },
   { proyecto: 'Fin-Connect', img: '/images/finconnect.jpg', tag: 'Finanzas',
     est: 'Ana Rojas', estCarrera: 'Economía', mentor: 'Mariana Castro', mentorEmpresa: 'AgroTech', score: 78, inter: false },
+  { proyecto: 'AquaSensor UCR', img: '/images/ecosistema-ucr.png', tag: 'Medio Ambiente',
+    est: 'Laura Vega', estCarrera: 'Ing. Ambiental', mentor: 'Roberto Soto', mentorEmpresa: 'TechCR', score: 88, inter: true },
+  { proyecto: 'EduRobótica', img: '/images/estudiantes.jpg', tag: 'Educación',
+    est: 'Diego Mora', estCarrera: 'Enseñanza', mentor: 'Mariana Castro', mentorEmpresa: 'AgroTech', score: 74, inter: false },
+  { proyecto: 'Cultura Viva', img: '/images/charla.jpg', tag: 'Arte y Cultura',
+    est: 'Sofía Blanco', estCarrera: 'Artes Plásticas', mentor: 'Esteban Murillo', mentorEmpresa: 'Bienestar Digital', score: 81, inter: true },
 ];
 
 const ini = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -38,7 +44,9 @@ export default function MatchingSeccion() {
 
   const ir = (dir: number) => setActivo((a) => (a + dir + n) % n);
 
-  // Posición/transform de cada tarjeta según su distancia (circular) al centro.
+  // Posición/transform 3D de cada tarjeta según su distancia (circular) al centro.
+  // Se muestran el centro + 2 a cada lado, con profundidad (translateZ) para dar
+  // volumen tipo "coverflow". Más allá quedan ocultas.
   const estiloCard = (i: number): React.CSSProperties => {
     let off = i - activo;
     if (off > n / 2) off -= n;
@@ -46,17 +54,23 @@ export default function MatchingSeccion() {
     const abs = Math.abs(off);
     const dir = off >= 0 ? 1 : -1;
     if (abs === 0) {
-      return { transform: 'translateX(-50%) scale(1) rotateY(0deg)', opacity: 1, zIndex: 30 };
+      return { transform: 'translateX(-50%) translateZ(60px) scale(1) rotateY(0deg)', opacity: 1, zIndex: 30 };
     }
     if (abs === 1) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 66}%)) scale(0.8) rotateY(${-dir * 24}deg)`,
-        opacity: 0.9, zIndex: 20,
+        transform: `translateX(calc(-50% + ${dir * 58}%)) translateZ(-90px) rotateY(${-dir * 35}deg) scale(0.86)`,
+        opacity: 0.95, zIndex: 20,
+      };
+    }
+    if (abs === 2) {
+      return {
+        transform: `translateX(calc(-50% + ${dir * 102}%)) translateZ(-300px) rotateY(${-dir * 42}deg) scale(0.68)`,
+        opacity: 0.55, zIndex: 10,
       };
     }
     return {
-      transform: `translateX(calc(-50% + ${dir * 115}%)) scale(0.62) rotateY(${-dir * 30}deg)`,
-      opacity: 0, zIndex: 10, pointerEvents: 'none',
+      transform: `translateX(calc(-50% + ${dir * 130}%)) translateZ(-450px) rotateY(${-dir * 48}deg) scale(0.5)`,
+      opacity: 0, zIndex: 5, pointerEvents: 'none',
     };
   };
 
@@ -64,22 +78,20 @@ export default function MatchingSeccion() {
     <section id="matching" className={`${styles.section} ${styles.sectionGray}`}>
       <div className={styles.container}>
         <motion.div
-          className={styles.sectionHeader}
+          className={styles.matchHeader}
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
-          <div>
-            <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>
-              Matching <em>Inteligente</em>
-            </h2>
-            <div className={styles.accentBar} />
-            <p className={styles.matchSubtitle}>
-              Conectamos a cada estudiante con el mentor ideal según su carrera, áreas de
-              interés, sector y tipo de apoyo. Explorá las coincidencias.
-            </p>
-          </div>
+          <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>
+            Matching <em>Inteligente</em>
+          </h2>
+          <div className={styles.accentBar} />
+          <p className={styles.matchSubtitle}>
+            Conectamos a cada estudiante con el mentor ideal según su carrera, áreas de
+            interés, sector y tipo de apoyo. Explorá las coincidencias.
+          </p>
         </motion.div>
 
         {/* Carrusel coverflow */}
