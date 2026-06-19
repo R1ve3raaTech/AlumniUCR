@@ -6,10 +6,10 @@ import AtomoImpacto from './AtomoImpacto';
 import styles from './landing.module.css';
 
 const METRICAS = [
-  { valor: '+1200', etiqueta: 'Conexiones', color: '#54BCEB' },
-  { valor: '85%', etiqueta: 'Éxito de Match', color: '#007D67' },
-  { valor: '450', etiqueta: 'Mentores', color: '#FFC72C' },
-  { valor: '+50', etiqueta: 'Proyectos Activos', color: '#F34B26' },
+  { valor: '+1200', etiqueta: 'Conexiones', color: '#54BCEB', prog: 92 },
+  { valor: '85%', etiqueta: 'Éxito de Match', color: '#007D67', prog: 85 },
+  { valor: '450', etiqueta: 'Mentores', color: '#FFC72C', prog: 78 },
+  { valor: '+50', etiqueta: 'Proyectos Activos', color: '#F34B26', prog: 65 },
 ];
 
 // Contador animado: cuenta de 0 al valor real y se re-anima cada 3 s para dar
@@ -46,11 +46,19 @@ export default function Impacto() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
 
-  const tarjeta = (m: typeof METRICAS[number]) => (
-    <div key={m.etiqueta} className={styles.statCard} style={{ ['--c' as string]: m.color } as React.CSSProperties}>
-      <span className={styles.statDot} />
-      <Counter valor={m.valor} color={m.color} inView={inView} />
-      <p className={styles.statLabel}>{m.etiqueta}</p>
+  // Cada métrica como anillo de progreso 3D (volumen + flotación). El arco usa
+  // el color de marca; el valor va al centro sobre el disco elevado.
+  const anillo = (m: typeof METRICAS[number], i: number) => (
+    <div
+      key={m.etiqueta}
+      className={styles.ring}
+      style={{ ['--c']: m.color, ['--prog']: m.prog, animationDelay: `${i * 0.55}s` } as React.CSSProperties}
+    >
+      <span className={styles.ringInner} />
+      <div className={styles.ringContent}>
+        <Counter valor={m.valor} color="#0c3a4b" inView={inView} />
+        <p className={styles.ringLabel}>{m.etiqueta}</p>
+      </div>
     </div>
   );
 
@@ -72,7 +80,7 @@ export default function Impacto() {
         {/* Layout: tarjetas a los costados + átomo en el centro (todo en pantalla) */}
         <div ref={ref} className={styles.impactoLayout}>
           <div className={styles.impactoSide}>
-            {METRICAS.slice(0, 2).map(tarjeta)}
+            {METRICAS.slice(0, 2).map((m, i) => anillo(m, i))}
           </div>
 
           <div className={styles.atomStage}>
@@ -80,7 +88,7 @@ export default function Impacto() {
           </div>
 
           <div className={styles.impactoSide}>
-            {METRICAS.slice(2, 4).map(tarjeta)}
+            {METRICAS.slice(2, 4).map((m, i) => anillo(m, i + 2))}
           </div>
         </div>
       </div>
