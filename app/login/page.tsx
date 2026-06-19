@@ -252,7 +252,7 @@ export default function LoginPage() {
       </main>
 
       <footer className={styles.footer}>
-        <div className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</div>
+        <div className={styles.footerCopy}>© 2026 Alumni UCR. Todos los derechos reservados.</div>
         <div className={styles.footerLinks}>
           <a href="#">Privacidad</a>
           <a href="#">Términos</a>
