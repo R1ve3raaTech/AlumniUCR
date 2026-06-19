@@ -66,7 +66,7 @@ export default function AtomoImpacto() {
       const frontScale = PERSP / (PERSP - MAXR);
       // crece hasta llenar el espacio (cap 1.6) -> en un canvas grande el átomo
       // y el logo central se ven más grandes; nunca se corta.
-      fit = Math.max(0.4, Math.min(1.6, (half - MARGEN) / (MAXR * frontScale)));
+      fit = Math.max(0.4, Math.min(2.4, (half - MARGEN) / (MAXR * frontScale)));
     };
     resize();
     window.addEventListener('resize', resize);
