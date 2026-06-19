@@ -54,22 +54,22 @@ export default function MatchingSeccion() {
     const abs = Math.abs(off);
     const dir = off >= 0 ? 1 : -1;
     if (abs === 0) {
-      return { transform: 'translateX(-50%) translateZ(60px) scale(1) rotateY(0deg)', opacity: 1, zIndex: 30 };
+      return { transform: 'translateX(-50%) translateZ(90px) scale(1) rotateY(0deg)', opacity: 1, zIndex: 30 };
     }
     if (abs === 1) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 58}%)) translateZ(-90px) rotateY(${-dir * 35}deg) scale(0.86)`,
+        transform: `translateX(calc(-50% + ${dir * 56}%)) translateZ(-170px) rotateY(${-dir * 46}deg) scale(0.84)`,
         opacity: 0.95, zIndex: 20,
       };
     }
     if (abs === 2) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 102}%)) translateZ(-300px) rotateY(${-dir * 42}deg) scale(0.68)`,
-        opacity: 0.55, zIndex: 10,
+        transform: `translateX(calc(-50% + ${dir * 98}%)) translateZ(-440px) rotateY(${-dir * 54}deg) scale(0.64)`,
+        opacity: 0.5, zIndex: 10,
       };
     }
     return {
-      transform: `translateX(calc(-50% + ${dir * 130}%)) translateZ(-450px) rotateY(${-dir * 48}deg) scale(0.5)`,
+      transform: `translateX(calc(-50% + ${dir * 125}%)) translateZ(-600px) rotateY(${-dir * 58}deg) scale(0.48)`,
       opacity: 0, zIndex: 5, pointerEvents: 'none',
     };
   };
