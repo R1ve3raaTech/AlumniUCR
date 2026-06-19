@@ -1,44 +1,65 @@
 'use client';
 
-// Sección del landing: Matching entre estudiantes y exalumnos (reemplaza a
-// "Proyectos Destacados"). Explica el corazón de UCR Connect: el algoritmo que
-// conecta a cada estudiante con el mentor ideal según carrera, áreas, sector y
-// tipo de apoyo. Muestra ejemplos de match con su % de compatibilidad.
+// Sección del landing: Matching estudiantes ↔ exalumnos, en formato CARRUSEL
+// "coverflow" (efecto volante): la tarjeta central protagoniza y crece, las de
+// los lados asoman giradas e invitan a explorar. Tarjetas verticales con imagen
+// del proyecto. Al hacer clic en una lateral, gira al centro con animación.
+//
+// NOTA: las imágenes son placeholders (proyectos demo). Para cambiarlas por las
+// reales, editá el campo `img` de cada match en MATCHES (apunta a /public/images).
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight } from './icons';
+import { ArrowLeft, ArrowRight } from './icons';
 import styles from './landing.module.css';
 
-const MATCHES = [
-  {
-    est: { nombre: 'María Jiménez', carrera: 'Computación e Informática' },
-    mentor: { nombre: 'Roberto Soto', empresa: 'TechCR' },
-    score: 85, area: 'Tecnología e Innovación', inter: false,
-  },
-  {
-    est: { nombre: 'Carlos Torres', carrera: 'Psicología' },
-    mentor: { nombre: 'Esteban Murillo', empresa: 'Bienestar Digital' },
-    score: 78, area: 'Salud y Bienestar', inter: false,
-  },
-  {
-    est: { nombre: 'Ana Rojas', carrera: 'Agronomía' },
-    mentor: { nombre: 'Mariana Castro', empresa: 'AgroTech CR' },
-    score: 92, area: 'Agro + Datos', inter: true,
-  },
-];
+interface Match {
+  proyecto: string; img: string; tag: string;
+  est: string; estCarrera: string;
+  mentor: string; mentorEmpresa: string;
+  score: number; inter: boolean;
+}
 
-const CRITERIOS = [
-  { label: 'Misma carrera', pts: 30 },
-  { label: 'Áreas en común', pts: 30 },
-  { label: 'Sector ↔ área', pts: 20 },
-  { label: 'Tipo de apoyo', pts: 20 },
+const MATCHES: Match[] = [
+  { proyecto: 'Sistema Eco-Data', img: '/images/ecodata.jpg', tag: 'Sostenibilidad',
+    est: 'María Jiménez', estCarrera: 'Computación', mentor: 'Roberto Soto', mentorEmpresa: 'TechCR', score: 85, inter: false },
+  { proyecto: 'Med-Link UCR', img: '/images/MEDLINK.png', tag: 'Salud Digital',
+    est: 'Carlos Torres', estCarrera: 'Psicología', mentor: 'Esteban Murillo', mentorEmpresa: 'Bienestar Digital', score: 92, inter: true },
+  { proyecto: 'Fin-Connect', img: '/images/finconnect.jpg', tag: 'Finanzas',
+    est: 'Ana Rojas', estCarrera: 'Economía', mentor: 'Mariana Castro', mentorEmpresa: 'AgroTech', score: 78, inter: false },
 ];
 
 const ini = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
 export default function MatchingSeccion() {
+  const n = MATCHES.length;
+  const [activo, setActivo] = useState(1); // arranca en la central
+
+  const ir = (dir: number) => setActivo((a) => (a + dir + n) % n);
+
+  // Posición/transform de cada tarjeta según su distancia (circular) al centro.
+  const estiloCard = (i: number): React.CSSProperties => {
+    let off = i - activo;
+    if (off > n / 2) off -= n;
+    if (off < -n / 2) off += n;
+    const abs = Math.abs(off);
+    const dir = off >= 0 ? 1 : -1;
+    if (abs === 0) {
+      return { transform: 'translateX(-50%) scale(1) rotateY(0deg)', opacity: 1, zIndex: 30 };
+    }
+    if (abs === 1) {
+      return {
+        transform: `translateX(calc(-50% + ${dir * 66}%)) scale(0.8) rotateY(${-dir * 24}deg)`,
+        opacity: 0.9, zIndex: 20,
+      };
+    }
+    return {
+      transform: `translateX(calc(-50% + ${dir * 115}%)) scale(0.62) rotateY(${-dir * 30}deg)`,
+      opacity: 0, zIndex: 10, pointerEvents: 'none',
+    };
+  };
+
   return (
     <section id="matching" className={`${styles.section} ${styles.sectionGray}`}>
       <div className={styles.container}>
@@ -56,60 +77,74 @@ export default function MatchingSeccion() {
             <div className={styles.accentBar} />
             <p className={styles.matchSubtitle}>
               Conectamos a cada estudiante con el mentor ideal según su carrera, áreas de
-              interés, sector y tipo de apoyo. Así nacen las mejores mentorías.
+              interés, sector y tipo de apoyo. Explorá las coincidencias.
             </p>
           </div>
         </motion.div>
 
-        {/* Ejemplos de match */}
-        <div className={styles.matchGrid}>
+        {/* Carrusel coverflow */}
+        <div className={styles.coverflow}>
+          <button type="button" className={`${styles.cfArrow} ${styles.cfArrowLeft}`} onClick={() => ir(-1)} aria-label="Anterior">
+            <ArrowLeft />
+          </button>
+
+          <div className={styles.cfStage}>
+            {MATCHES.map((m, i) => {
+              const esActivo = i === activo;
+              return (
+                <article
+                  key={m.proyecto}
+                  className={`${styles.cfCard} ${esActivo ? styles.cfCardActive : ''}`}
+                  style={estiloCard(i)}
+                  onClick={() => !esActivo && setActivo(i)}
+                  aria-hidden={!esActivo}
+                >
+                  <div className={styles.cfImgWrap}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className={styles.cfImg} src={m.img} alt={m.proyecto} loading="lazy" />
+                    <span className={styles.cfTag}>{m.tag}</span>
+                    <span className={styles.cfScore}>{m.score}<small>%</small></span>
+                    {m.inter && <span className={styles.cfInter}>★ Interdisciplinario</span>}
+                  </div>
+
+                  <div className={styles.cfBody}>
+                    <h3 className={styles.cfTitle}>{m.proyecto}</h3>
+                    <div className={styles.cfMatch}>
+                      <div className={styles.cfPerson}>
+                        <span className={`${styles.cfAvatar} ${styles.cfAvatarEst}`}>{ini(m.est)}</span>
+                        <span className={styles.cfPersonInfo}>{m.est}<small>{m.estCarrera}</small></span>
+                      </div>
+                      <span className={styles.cfLink} aria-hidden>↔</span>
+                      <div className={styles.cfPerson}>
+                        <span className={`${styles.cfAvatar} ${styles.cfAvatarMentor}`}>{ini(m.mentor)}</span>
+                        <span className={styles.cfPersonInfo}>{m.mentor}<small>{m.mentorEmpresa}</small></span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <button type="button" className={`${styles.cfArrow} ${styles.cfArrowRight}`} onClick={() => ir(1)} aria-label="Siguiente">
+            <ArrowRight />
+          </button>
+        </div>
+
+        {/* Dots */}
+        <div className={styles.dots}>
           {MATCHES.map((m, i) => (
-            <motion.article
-              key={m.est.nombre}
-              className={styles.matchCard}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: i * 0.12, ease: 'easeOut' }}
-              whileHover={{ y: -6, transition: { duration: 0.2 } }}
-            >
-              <div className={styles.matchRow}>
-                <div className={styles.matchPerson}>
-                  <span className={`${styles.matchAvatar} ${styles.matchAvatarEst}`}>{ini(m.est.nombre)}</span>
-                  <span className={styles.matchName}>{m.est.nombre}</span>
-                  <span className={styles.matchRole}>{m.est.carrera}</span>
-                </div>
-
-                <div className={styles.matchConnector}>
-                  <span className={styles.matchLine} aria-hidden />
-                  <motion.span
-                    className={styles.matchScore}
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    whileInView={{ scale: 1, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: i * 0.12 + 0.2, ease: 'backOut' }}
-                  >
-                    {m.score}<small>%</small>
-                  </motion.span>
-                  <span className={styles.matchScoreLbl}>compatible</span>
-                </div>
-
-                <div className={styles.matchPerson}>
-                  <span className={`${styles.matchAvatar} ${styles.matchAvatarMentor}`}>{ini(m.mentor.nombre)}</span>
-                  <span className={styles.matchName}>{m.mentor.nombre}</span>
-                  <span className={styles.matchRole}>{m.mentor.empresa}</span>
-                </div>
-              </div>
-
-              <div className={styles.matchFoot}>
-                <span className={styles.matchArea}>{m.area}</span>
-                {m.inter && <span className={styles.matchInter}>★ Interdisciplinario</span>}
-              </div>
-            </motion.article>
+            <button
+              key={m.proyecto}
+              type="button"
+              className={`${styles.dot} ${i === activo ? styles.dotActive : ''}`}
+              onClick={() => setActivo(i)}
+              aria-label={`Ver match ${i + 1}`}
+            />
           ))}
         </div>
 
-        {/* Cómo se calcula la compatibilidad */}
+        {/* Criterios del score */}
         <motion.div
           className={styles.matchCriterios}
           initial={{ opacity: 0, y: 20 }}
@@ -118,11 +153,10 @@ export default function MatchingSeccion() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           <span className={styles.matchCriteriosTitle}>¿Cómo se calcula?</span>
-          {CRITERIOS.map((c) => (
-            <span key={c.label} className={styles.matchCriterio}>
-              {c.label} <strong>{c.pts}</strong>
-            </span>
-          ))}
+          <span className={styles.matchCriterio}>Misma carrera <strong>30</strong></span>
+          <span className={styles.matchCriterio}>Áreas en común <strong>30</strong></span>
+          <span className={styles.matchCriterio}>Sector ↔ área <strong>20</strong></span>
+          <span className={styles.matchCriterio}>Tipo de apoyo <strong>20</strong></span>
         </motion.div>
 
         <div className={styles.matchCtaWrap}>
