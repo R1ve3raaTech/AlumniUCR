@@ -39,9 +39,9 @@ export default function ScrollToHero() {
   }, []);
 
   const subirAlHero = () => {
-    const hero = document.getElementById('inicio');
-    if (hero) hero.scrollIntoView({ behavior: 'smooth' });
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Va a la parte superior REAL de la página (no a #inicio), para que el navbar
+    // sticky quede visible arriba del hero en vez de superponerse a su contenido.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
