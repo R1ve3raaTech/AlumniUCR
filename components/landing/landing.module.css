@@ -1477,11 +1477,11 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   TAPIZ DE FONDO · Sección Matching  (BLOQUE APARTE — fácil de editar/quitar)
-   Diseñado en MAQUETA-TEXTURA-MATCH.html. Imagen: /public/images/
-   tapiz-background-match.svg (cambiá/eliminá ese archivo para otra textura).
-   Para quitar el tapiz: borrá la clase `matchTapiz` del <section> en
-   MatchingSeccion.tsx (o este bloque).
+   TAPIZ DE FONDO · compartido por Matching e Impacto (BLOQUE APARTE).
+   Imagen única: /public/images/tapiz-triangulos.svg (cambiá/eliminá ese
+   archivo para otra textura en ambas secciones).
+   Para quitar el tapiz: borrá la clase `matchTapiz`/`impactoTapiz` del
+   <section> correspondiente (o este bloque).
    ════════════════════════════════════════════════════════════════════ */
 .matchTapiz {
   position: relative;
