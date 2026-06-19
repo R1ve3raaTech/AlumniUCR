@@ -128,8 +128,12 @@ export default function AdminReportesPage() {
       <header className={`${styles.header} ${styles.noPrint}`}>
         <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
         <div className={styles.headerLinks}>
-          <Link href="/admin/donaciones" className={styles.back}>Gestión de donaciones</Link>
-          <Link href="/dashboard" className={styles.back}>Volver al panel</Link>
+          <Link href="/" className={styles.back}>Inicio</Link>
+          <Link href="/admin/matches" className={styles.back}>Matches</Link>
+          <Link href="/admin/usuarios" className={styles.back}>Usuarios</Link>
+          <Link href="/admin/donaciones" className={styles.back}>Donaciones</Link>
+          <Link href="/admin/reportes" className={styles.back}>Impacto</Link>
+          <Link href="/dashboard" className={styles.back}>Panel Principal ✨</Link>
         </div>
       </header>
 
