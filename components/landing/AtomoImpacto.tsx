@@ -28,7 +28,7 @@ const ORBITAS: Orbita[] = [
 // Radio máximo proyectado (la órbita más grande con la perspectiva al frente),
 // para autoajustar el átomo al canvas y que ninguna órbita se corte.
 const MAXR = Math.max(...ORBITAS.map((o) => o.radius)) * 1.2;
-const MARGEN = 44; // espacio para electrón + etiqueta
+const MARGEN = 30; // espacio para electrón + etiqueta (menor = átomo más grande)
 
 type P3 = { x: number; y: number; z: number };
 const rad = (d: number) => (d * Math.PI) / 180;

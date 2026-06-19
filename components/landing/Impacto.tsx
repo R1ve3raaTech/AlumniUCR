@@ -6,10 +6,10 @@ import AtomoImpacto from './AtomoImpacto';
 import styles from './landing.module.css';
 
 const METRICAS = [
-  { valor: '+1200', etiqueta: 'Conexiones', color: '#54BCEB', prog: 92 },
-  { valor: '85%', etiqueta: 'Éxito de Match', color: '#007D67', prog: 85 },
-  { valor: '450', etiqueta: 'Mentores', color: '#FFC72C', prog: 78 },
-  { valor: '+50', etiqueta: 'Proyectos Activos', color: '#F34B26', prog: 65 },
+  { valor: '+1200', etiqueta: 'Conexiones', color: '#54BCEB' },
+  { valor: '85%', etiqueta: 'Éxito de Match', color: '#007D67' },
+  { valor: '450', etiqueta: 'Mentores', color: '#FFC72C' },
+  { valor: '+50', etiqueta: 'Proyectos Activos', color: '#F34B26' },
 ];
 
 // Contador animado: cuenta de 0 al valor real y se re-anima cada 3 s para dar
@@ -46,19 +46,12 @@ export default function Impacto() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
 
-  // Cada métrica como anillo de progreso 3D (volumen + flotación). El arco usa
-  // el color de marca; el valor va al centro sobre el disco elevado.
-  const anillo = (m: typeof METRICAS[number], i: number) => (
-    <div
-      key={m.etiqueta}
-      className={styles.ring}
-      style={{ ['--c']: m.color, ['--prog']: m.prog, animationDelay: `${i * 0.55}s` } as React.CSSProperties}
-    >
-      <span className={styles.ringInner} />
-      <div className={styles.ringContent}>
-        <Counter valor={m.valor} color="#0c3a4b" inView={inView} />
-        <p className={styles.ringLabel}>{m.etiqueta}</p>
-      </div>
+  // Cada métrica como ficha (tarjeta) en un array 2×2 a la izquierda.
+  const ficha = (m: typeof METRICAS[number]) => (
+    <div key={m.etiqueta} className={styles.metricCard} style={{ ['--c']: m.color } as React.CSSProperties}>
+      <span className={styles.metricDot} />
+      <Counter valor={m.valor} color={m.color} inView={inView} />
+      <p className={styles.metricCardLabel}>{m.etiqueta}</p>
     </div>
   );
 
@@ -77,13 +70,12 @@ export default function Impacto() {
           <p className={styles.impactoSub}>Una red viva que conecta talento y experiencia. Cada órbita representa una métrica y cómo se entrelazan.</p>
         </motion.div>
 
-        {/* Layout: los 4 anillos apilados a la izquierda + átomo grande a la derecha */}
+        {/* Izquierda: fichas en array 2×2 · Derecha: átomo (50% del div) */}
         <div ref={ref} className={styles.impactoLayout}>
-          <div className={styles.impactoSide}>
-            {METRICAS.map((m, i) => anillo(m, i))}
+          <div className={styles.metricGrid}>
+            {METRICAS.map((m) => ficha(m))}
           </div>
-
-          <div className={styles.atomStage}>
+          <div className={styles.atomBox}>
             <AtomoImpacto />
           </div>
         </div>
