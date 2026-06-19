@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
 import ReportarPerfil from '@/components/ReportarPerfil';
 import StudentNav from '@/components/StudentNav';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
@@ -202,8 +200,6 @@ function FiltroBtn({ label, valor, placeholder, onClick }: { label: string; valo
 
 function EstudiantesPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const rol = searchParams.get('rol') ?? '';
   const { token, loading: authLoading, signOut } = useAuth();
   const [lista, setLista] = useState<Estudiante[]>([]);
   const [cargando, setCargando] = useState(true);
