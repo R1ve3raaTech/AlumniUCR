@@ -1522,7 +1522,8 @@
   /* Fondo gris tipo "infografía 3D": superficie donde vive el ecosistema */
   background: radial-gradient(circle at 50% 38%, #f1f4f6 0%, #d3dadf 56%, #c2cbd1 100%);
 }
-/* Tapiz de fondo seamless (mismo estilo que Matching, archivo propio) */
+/* Tapiz de fondo (MISMO triángulo esmeralda que Matching, archivo propio).
+   El tile tesela como malla triangular continua (sin corte entre patrones). */
 .impactoTapiz::before {
   content: '';
   position: absolute;
@@ -1530,7 +1531,7 @@
   z-index: 0;
   background-image: url('/images/tapiz-nuestro-impacto.svg');
   background-repeat: repeat;
-  background-size: 20px 20px;
+  background-size: 15px 15px;
   opacity: 0.13;
   mix-blend-mode: multiply;
   pointer-events: none;
