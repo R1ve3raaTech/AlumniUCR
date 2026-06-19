@@ -1471,3 +1471,28 @@
   .cfArrowLeft { left: -0.5rem; }
   .cfArrowRight { right: -0.5rem; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   TAPIZ DE FONDO · Sección Matching  (BLOQUE APARTE — fácil de editar/quitar)
+   Diseñado en MAQUETA-TEXTURA-MATCH.html. Imagen: /public/images/
+   tapiz-background-match.svg (cambiá/eliminá ese archivo para otra textura).
+   Para quitar el tapiz: borrá la clase `matchTapiz` del <section> en
+   MatchingSeccion.tsx (o este bloque).
+   ════════════════════════════════════════════════════════════════════ */
+.matchTapiz {
+  position: relative;
+  background-color: #d5dde1;
+  isolation: isolate;
+}
+.matchTapiz::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url('/images/tapiz-background-match.svg');
+  background-repeat: repeat;
+  background-size: 15px 15px;
+  opacity: 0.15;
+  mix-blend-mode: multiply;
+  filter: blur(1px);
+}

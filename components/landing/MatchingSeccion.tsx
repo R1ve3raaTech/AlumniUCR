@@ -75,7 +75,7 @@ export default function MatchingSeccion() {
   };
 
   return (
-    <section id="matching" className={`${styles.section} ${styles.sectionGray}`}>
+    <section id="matching" className={`${styles.section} ${styles.matchTapiz}`}>
       <div className={styles.container}>
         <motion.div
           className={styles.matchHeader}
