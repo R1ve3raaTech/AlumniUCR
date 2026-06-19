@@ -61,12 +61,7 @@ export default function Impacto() {
           <p className={styles.impactoSub}>Una red viva que conecta talento y experiencia. Cada órbita representa una métrica y cómo se entrelazan.</p>
         </motion.div>
 
-        {/* Átomo 3D */}
-        <div className={styles.atomPanel}>
-          <AtomoImpacto />
-        </div>
-
-        {/* Tarjetas de métrica (minimalistas) */}
+        {/* Tarjetas de métrica (minimalistas) — debajo del texto */}
         <div ref={ref} className={styles.statCards}>
           {METRICAS.map((m) => (
             <div key={m.etiqueta} className={styles.statCard} style={{ ['--c' as string]: m.color } as React.CSSProperties}>
@@ -75,6 +70,11 @@ export default function Impacto() {
               <p className={styles.statLabel}>{m.etiqueta}</p>
             </div>
           ))}
+        </div>
+
+        {/* Átomo 3D — debajo de las métricas, con más cuerpo */}
+        <div className={styles.atomPanel}>
+          <AtomoImpacto />
         </div>
       </div>
     </section>

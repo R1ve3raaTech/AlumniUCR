@@ -1515,16 +1515,23 @@
 .impactoHead .accentBar { margin-left: auto; margin-right: auto; }
 .impactoSub { max-width: 44rem; margin: 1rem auto 0; color: var(--ucr-on-surface-variant); font-size: 1.02rem; line-height: 1.6; }
 
-/* Panel oscuro que contiene el átomo (para que las órbitas/glow resalten) */
+/* Panel que contiene el átomo. Fondo con glows de marca (no plano/aburrido)
+   pero oscuro lo suficiente para que las órbitas y el glow resalten. */
 .atomPanel {
   position: relative;
   width: 100%;
-  height: 440px;
-  border-radius: 24px;
+  height: 520px;
+  margin-top: 2.25rem;
+  border-radius: 26px;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 42%, #0a2a38 0%, #061922 55%, #04121a 100%);
-  border: 1px solid rgba(84, 188, 235, 0.12);
-  box-shadow: 0 30px 70px -24px rgba(0, 31, 42, 0.55);
+  background:
+    radial-gradient(120% 90% at 18% 18%, rgba(84, 188, 235, 0.16), transparent 46%),
+    radial-gradient(120% 90% at 84% 22%, rgba(0, 125, 103, 0.18), transparent 48%),
+    radial-gradient(130% 110% at 78% 92%, rgba(243, 75, 38, 0.12), transparent 52%),
+    radial-gradient(120% 100% at 30% 88%, rgba(255, 199, 44, 0.10), transparent 50%),
+    radial-gradient(circle at 50% 46%, #0c3041 0%, #07212c 52%, #051722 100%);
+  border: 1px solid rgba(84, 188, 235, 0.16);
+  box-shadow: 0 34px 80px -26px rgba(0, 31, 42, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .atomoCanvas { display: block; width: 100%; height: 100%; }
 
@@ -1578,9 +1585,9 @@
 
 @media (max-width: 860px) {
   .statCards { grid-template-columns: 1fr 1fr; }
-  .atomPanel { height: 380px; }
+  .atomPanel { height: 440px; }
 }
 @media (max-width: 480px) {
   .statCards { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .atomPanel { height: 320px; }
+  .atomPanel { height: 380px; }
 }
