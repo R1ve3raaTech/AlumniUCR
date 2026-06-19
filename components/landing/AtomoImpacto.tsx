@@ -25,6 +25,11 @@ const ORBITAS: Orbita[] = [
   { label: 'Proyectos Activos', valor: '+50', color: '#F34B26', radius: 165, speed: 1.1, tiltX: 50, tiltZ: 75, phase: 3.6, trail: [] },
 ];
 
+// Radio máximo proyectado (la órbita más grande con la perspectiva al frente),
+// para autoajustar el átomo al canvas y que ninguna órbita se corte.
+const MAXR = Math.max(...ORBITAS.map((o) => o.radius)) * 1.2;
+const MARGEN = 44; // espacio para electrón + etiqueta
+
 type P3 = { x: number; y: number; z: number };
 const rad = (d: number) => (d * Math.PI) / 180;
 const rotX = (p: P3, a: number): P3 => { const c = Math.cos(a), s = Math.sin(a); return { x: p.x, y: p.y * c - p.z * s, z: p.y * s + p.z * c }; };
@@ -41,7 +46,7 @@ export default function AtomoImpacto() {
     const ctx = cv.getContext('2d');
     if (!ctx) return;
 
-    let cx = 0, cy = 0, raf = 0, t = 0, spin = 0;
+    let cx = 0, cy = 0, raf = 0, t = 0, spin = 0, fit = 1;
     const orbs = ORBITAS.map((o) => ({ ...o, trail: [] as { x: number; y: number }[] }));
 
     const resize = () => {
@@ -50,12 +55,17 @@ export default function AtomoImpacto() {
       cv.width = r.width * dpr; cv.height = r.height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cx = r.width / 2; cy = r.height / 2;
+      // autoajuste: que la órbita más grande (proyectada) quepa con margen
+      const half = Math.min(r.width, r.height) / 2;
+      const frontScale = PERSP / (PERSP - MAXR);
+      fit = Math.max(0.4, Math.min(1, (half - MARGEN) / (MAXR * frontScale)));
     };
     resize();
     window.addEventListener('resize', resize);
 
     const punto = (o: Orbita, th: number) => {
-      let p: P3 = { x: Math.cos(th) * o.radius * CFG.rad, y: Math.sin(th) * o.radius * CFG.rad, z: 0 };
+      const rr = o.radius * CFG.rad * fit;
+      let p: P3 = { x: Math.cos(th) * rr, y: Math.sin(th) * rr, z: 0 };
       p = rotX(p, rad(o.tiltX)); p = rotZ(p, rad(o.tiltZ));
       p = rotY(p, spin);
       const sc = PERSP / (PERSP + p.z);
