@@ -56,7 +56,7 @@ export default function Impacto() {
   );
 
   return (
-    <section id="impacto" className={`${styles.section} ${styles.sectionLight} ${styles.impactoFull}`}>
+    <section id="impacto" className={`${styles.section} ${styles.sectionLight} ${styles.impactoFull} ${styles.impactoTapiz}`}>
       <div className={styles.container}>
         <motion.div
           className={styles.impactoHead}

@@ -1513,15 +1513,27 @@
    ════════════════════════════════════════════════════════════════════ */
 .impactoFull {
   position: relative;
-  overflow-x: clip;          /* el átomo puede sobresalir en vertical (flota) */
-  overflow-y: visible;
+  overflow: hidden;          /* todo cabe en 100vh, sin scroll */
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding-block: 2.5rem 2rem;
+  padding-block: 2rem 1.5rem;
   /* Fondo gris tipo "infografía 3D": superficie donde vive el ecosistema */
   background: radial-gradient(circle at 50% 38%, #f1f4f6 0%, #d3dadf 56%, #c2cbd1 100%);
+}
+/* Tapiz de fondo seamless (mismo estilo que Matching, archivo propio) */
+.impactoTapiz::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/images/tapiz-nuestro-impacto.svg');
+  background-repeat: repeat;
+  background-size: 20px 20px;
+  opacity: 0.13;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 .impactoFull .container { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
@@ -1582,7 +1594,7 @@
 .atomBox {
   position: relative;
   width: 132%;
-  height: 142%;
+  height: 100%;          /* alto de fila -> entra en 100vh */
   margin-left: -32%;
   align-self: center;
   z-index: 8;
