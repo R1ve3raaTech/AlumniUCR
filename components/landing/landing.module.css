@@ -1507,48 +1507,49 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   SECCIÓN IMPACTO · Átomo 3D + tarjetas minimalistas (BLOQUE APARTE)
-   El átomo se dibuja en <canvas> (AtomoImpacto.tsx). Para quitarlo:
-   borrá el panel .atomPanel del componente Impacto.tsx.
+   SECCIÓN IMPACTO · Átomo 3D (sin fondo sólido) + tarjetas a los costados
+   (BLOQUE APARTE). Todo cabe en una pantalla (100vh): texto arriba, átomo
+   al centro transparente, tarjetas flanqueando izquierda/derecha.
+   Para quitar el átomo: borrá .atomStage de Impacto.tsx.
    ════════════════════════════════════════════════════════════════════ */
-.impactoHead { text-align: center; margin-bottom: 1.5rem; }
+.impactoFull {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 3rem;
+}
+.impactoHead { text-align: center; margin-bottom: 0.5rem; }
 .impactoHead .accentBar { margin-left: auto; margin-right: auto; }
-.impactoSub { max-width: 44rem; margin: 1rem auto 0; color: var(--ucr-on-surface-variant); font-size: 1.02rem; line-height: 1.6; }
+.impactoSub { max-width: 42rem; margin: 0.9rem auto 0; color: var(--ucr-on-surface-variant); font-size: 1rem; line-height: 1.55; }
 
-/* Panel que contiene el átomo. Fondo con glows de marca (no plano/aburrido)
-   pero oscuro lo suficiente para que las órbitas y el glow resalten. */
-.atomPanel {
+/* Layout central: [tarjetas] · [átomo] · [tarjetas] */
+.impactoLayout {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(360px, 1.7fr) minmax(190px, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+.impactoSide { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* Átomo SIN fondo sólido: transparente sobre la sección clara */
+.atomStage {
   position: relative;
   width: 100%;
-  height: 520px;
-  margin-top: 2.25rem;
-  border-radius: 26px;
-  overflow: hidden;
-  background:
-    radial-gradient(120% 90% at 18% 18%, rgba(84, 188, 235, 0.16), transparent 46%),
-    radial-gradient(120% 90% at 84% 22%, rgba(0, 125, 103, 0.18), transparent 48%),
-    radial-gradient(130% 110% at 78% 92%, rgba(243, 75, 38, 0.12), transparent 52%),
-    radial-gradient(120% 100% at 30% 88%, rgba(255, 199, 44, 0.10), transparent 50%),
-    radial-gradient(circle at 50% 46%, #0c3041 0%, #07212c 52%, #051722 100%);
-  border: 1px solid rgba(84, 188, 235, 0.16);
-  box-shadow: 0 34px 80px -26px rgba(0, 31, 42, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  height: min(58vh, 540px);
 }
 .atomoCanvas { display: block; width: 100%; height: 100%; }
 
 /* Tarjetas de métrica: minimalistas, serias, sin degradé */
-.statCards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  margin-top: 1.75rem;
-}
 .statCard {
   position: relative;
   background: var(--brand-blanco);
   border: 1px solid var(--ucr-outline-variant);
   border-top: 3px solid var(--c);
   border-radius: 16px;
-  padding: 1.6rem 1.5rem 1.4rem;
+  padding: 1.5rem 1.4rem 1.35rem;
   box-shadow: 0 6px 22px rgba(0, 76, 99, 0.06);
   transition: transform 0.18s ease, box-shadow 0.25s ease;
 }
@@ -1558,8 +1559,8 @@
 }
 .statDot {
   position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
+  top: 1.15rem;
+  right: 1.15rem;
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -1569,25 +1570,30 @@
 .statValue {
   font-family: var(--font-ucr-display);
   font-weight: 800;
-  font-size: 2.7rem;
+  font-size: 2.5rem;
   line-height: 1;
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
 .statLabel {
-  margin: 0.55rem 0 0;
-  font-size: 0.82rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ucr-on-surface-variant);
 }
 
-@media (max-width: 860px) {
-  .statCards { grid-template-columns: 1fr 1fr; }
-  .atomPanel { height: 440px; }
+/* En pantallas chicas dejamos de forzar 100vh y apilamos: tarjetas, átomo,
+   tarjetas (todo accesible scrolleando). */
+@media (max-width: 900px) {
+  .impactoFull { min-height: 0; padding-block: 3.5rem; }
+  .impactoLayout { grid-template-columns: 1fr; gap: 1.25rem; }
+  .impactoSide { flex-direction: row; }
+  .atomStage { height: 46vh; min-height: 320px; }
 }
 @media (max-width: 480px) {
-  .statCards { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .atomPanel { height: 380px; }
+  .impactoSide { flex-direction: column; }
+  .statValue { font-size: 2.2rem; }
+  .atomStage { min-height: 300px; }
 }

@@ -10,7 +10,7 @@ import styles from './landing.module.css';
 
 const PERSP = 1400;
 const SPIN = 0.16; // rotación lenta del átomo (sensación de objeto 3D)
-const CFG = { vel: 0.8, esize: 2.1, glow: 0.24, trail: 18, linkO: 0.42, nuc: 1.7, rad: 1.2 };
+const CFG = { vel: 0.8, esize: 2.1, glow: 0.38, trail: 18, linkO: 0.5, nuc: 1.7, rad: 1.2 };
 
 interface Orbita {
   label: string; valor: string; color: string;
@@ -68,15 +68,15 @@ export default function AtomoImpacto() {
       const w = cv.width, h = cv.height;
       ctx.clearRect(0, 0, w, h);
 
-      // sombra de contacto (ancla el átomo en el div)
-      const sh = ctx.createRadialGradient(cx, cy + 150, 0, cx, cy + 150, 200);
-      sh.addColorStop(0, 'rgba(0,12,18,0.45)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.save(); ctx.translate(cx, cy + 150); ctx.scale(1, 0.28); ctx.fillStyle = sh;
-      ctx.beginPath(); ctx.arc(0, 0, 200, 0, 7); ctx.fill(); ctx.restore();
+      // sombra de contacto (ancla el átomo, suave sobre fondo claro)
+      const sh = ctx.createRadialGradient(cx, cy + 150, 0, cx, cy + 150, 210);
+      sh.addColorStop(0, 'rgba(0,42,55,0.22)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.save(); ctx.translate(cx, cy + 150); ctx.scale(1, 0.26); ctx.fillStyle = sh;
+      ctx.beginPath(); ctx.arc(0, 0, 210, 0, 7); ctx.fill(); ctx.restore();
 
-      // glow central
-      const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, 250);
-      ng.addColorStop(0, 'rgba(0,90,118,0.34)'); ng.addColorStop(1, 'rgba(0,0,0,0)');
+      // halo central suave (tinte de marca, sin fondo sólido)
+      const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, 260);
+      ng.addColorStop(0, 'rgba(84,188,235,0.16)'); ng.addColorStop(1, 'rgba(84,188,235,0)');
       ctx.fillStyle = ng; ctx.fillRect(0, 0, w, h);
 
       // anillos (órbitas) con grosor por profundidad (frente más grueso)
@@ -87,7 +87,7 @@ export default function AtomoImpacto() {
           const p1 = punto(o, ((i + 1) / steps) * Math.PI * 2);
           const da = depthA((p0.z + p1.z) / 2);
           ctx.lineWidth = 1.1 + da * 2.4;
-          ctx.strokeStyle = hexA(o.color, da * 0.6);
+          ctx.strokeStyle = hexA(o.color, da * 0.78);
           ctx.beginPath(); ctx.moveTo(p0.sx, p0.sy); ctx.lineTo(p1.sx, p1.sy); ctx.stroke();
         }
       });
@@ -109,12 +109,13 @@ export default function AtomoImpacto() {
         ctx.strokeStyle = g; ctx.beginPath(); ctx.moveTo(elec[i].sx, elec[i].sy); ctx.lineTo(elec[j].sx, elec[j].sy); ctx.stroke();
       }
 
-      // núcleo pulsante
+      // núcleo pulsante (tematizado para fondo claro: core teal + halo celeste)
       const nr = 27 * CFG.nuc * (1 + Math.sin(t * 2) * 0.09);
       const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, nr * 2.4);
-      cg.addColorStop(0, 'rgba(255,255,255,0.97)'); cg.addColorStop(0.4, 'rgba(84,188,235,0.85)'); cg.addColorStop(1, 'rgba(0,76,99,0)');
+      cg.addColorStop(0, 'rgba(0,76,99,0.9)'); cg.addColorStop(0.42, 'rgba(84,188,235,0.5)'); cg.addColorStop(1, 'rgba(84,188,235,0)');
       ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx, cy, nr * 2.4, 0, 7); ctx.fill();
-      ctx.fillStyle = '#eaf7fb'; ctx.beginPath(); ctx.arc(cx, cy, nr * 0.5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#004C63'; ctx.beginPath(); ctx.arc(cx, cy, nr * 0.5, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.beginPath(); ctx.arc(cx - nr * 0.16, cy - nr * 0.16, nr * 0.17, 0, 7); ctx.fill();
 
       // electrones (orden por profundidad)
       elec.sort((a, b) => b.z - a.z).forEach((e) => {
@@ -125,11 +126,13 @@ export default function AtomoImpacto() {
         const r = (8.5 * CFG.esize) * e.sc;
         const a = depthA(e.z);
         const gg = ctx.createRadialGradient(e.sx, e.sy, 0, e.sx, e.sy, r * 4.2);
-        gg.addColorStop(0, hexA(e.o.color, 0.6 * CFG.glow * a)); gg.addColorStop(1, hexA(e.o.color, 0));
+        gg.addColorStop(0, hexA(e.o.color, 0.9 * CFG.glow * a)); gg.addColorStop(1, hexA(e.o.color, 0));
         ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(e.sx, e.sy, r * 4.2, 0, 7); ctx.fill();
-        ctx.fillStyle = hexA(e.o.color, a); ctx.beginPath(); ctx.arc(e.sx, e.sy, r, 0, 7); ctx.fill();
-        ctx.fillStyle = `rgba(255,255,255,${0.9 * a})`; ctx.beginPath(); ctx.arc(e.sx - r * 0.32, e.sy - r * 0.32, r * 0.34, 0, 7); ctx.fill();
-        ctx.font = '800 13px "Segoe UI",sans-serif'; ctx.fillStyle = hexA('#ffffff', a); ctx.textAlign = 'center';
+        ctx.beginPath(); ctx.arc(e.sx, e.sy, r, 0, 7);
+        ctx.fillStyle = hexA(e.o.color, a); ctx.fill();
+        ctx.lineWidth = 1.4 * e.sc; ctx.strokeStyle = `rgba(0,40,55,${0.32 * a})`; ctx.stroke(); // borde: definición en fondo claro
+        ctx.fillStyle = `rgba(255,255,255,${0.85 * a})`; ctx.beginPath(); ctx.arc(e.sx - r * 0.32, e.sy - r * 0.32, r * 0.32, 0, 7); ctx.fill();
+        ctx.font = '800 13px "Segoe UI",sans-serif'; ctx.fillStyle = hexA('#01303f', a); ctx.textAlign = 'center';
         ctx.fillText(e.o.valor, e.sx, e.sy - r - 8);
       });
 

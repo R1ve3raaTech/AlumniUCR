@@ -46,8 +46,16 @@ export default function Impacto() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
 
+  const tarjeta = (m: typeof METRICAS[number]) => (
+    <div key={m.etiqueta} className={styles.statCard} style={{ ['--c' as string]: m.color } as React.CSSProperties}>
+      <span className={styles.statDot} />
+      <Counter valor={m.valor} color={m.color} inView={inView} />
+      <p className={styles.statLabel}>{m.etiqueta}</p>
+    </div>
+  );
+
   return (
-    <section id="impacto" className={`${styles.section} ${styles.sectionLight}`}>
+    <section id="impacto" className={`${styles.section} ${styles.sectionLight} ${styles.impactoFull}`}>
       <div className={styles.container}>
         <motion.div
           className={styles.impactoHead}
@@ -61,20 +69,19 @@ export default function Impacto() {
           <p className={styles.impactoSub}>Una red viva que conecta talento y experiencia. Cada órbita representa una métrica y cómo se entrelazan.</p>
         </motion.div>
 
-        {/* Tarjetas de métrica (minimalistas) — debajo del texto */}
-        <div ref={ref} className={styles.statCards}>
-          {METRICAS.map((m) => (
-            <div key={m.etiqueta} className={styles.statCard} style={{ ['--c' as string]: m.color } as React.CSSProperties}>
-              <span className={styles.statDot} />
-              <Counter valor={m.valor} color={m.color} inView={inView} />
-              <p className={styles.statLabel}>{m.etiqueta}</p>
-            </div>
-          ))}
-        </div>
+        {/* Layout: tarjetas a los costados + átomo en el centro (todo en pantalla) */}
+        <div ref={ref} className={styles.impactoLayout}>
+          <div className={styles.impactoSide}>
+            {METRICAS.slice(0, 2).map(tarjeta)}
+          </div>
 
-        {/* Átomo 3D — debajo de las métricas, con más cuerpo */}
-        <div className={styles.atomPanel}>
-          <AtomoImpacto />
+          <div className={styles.atomStage}>
+            <AtomoImpacto />
+          </div>
+
+          <div className={styles.impactoSide}>
+            {METRICAS.slice(2, 4).map(tarjeta)}
+          </div>
         </div>
       </div>
     </section>
