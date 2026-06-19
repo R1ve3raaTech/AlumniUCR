@@ -64,7 +64,9 @@ export default function AtomoImpacto() {
       // autoajuste: que la órbita más grande (proyectada) quepa con margen
       const half = Math.min(r.width, r.height) / 2;
       const frontScale = PERSP / (PERSP - MAXR);
-      fit = Math.max(0.4, Math.min(1, (half - MARGEN) / (MAXR * frontScale)));
+      // crece hasta llenar el espacio (cap 1.6) -> en un canvas grande el átomo
+      // y el logo central se ven más grandes; nunca se corta.
+      fit = Math.max(0.4, Math.min(1.6, (half - MARGEN) / (MAXR * frontScale)));
     };
     resize();
     window.addEventListener('resize', resize);
@@ -85,10 +87,11 @@ export default function AtomoImpacto() {
       ctx.clearRect(0, 0, w, h);
 
       // sombra de contacto (ancla el átomo, suave sobre fondo claro)
-      const sh = ctx.createRadialGradient(cx, cy + 150, 0, cx, cy + 150, 210);
+      const shY = cy + 150 * fit, shR = 210 * fit;
+      const sh = ctx.createRadialGradient(cx, shY, 0, cx, shY, shR);
       sh.addColorStop(0, 'rgba(0,42,55,0.22)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.save(); ctx.translate(cx, cy + 150); ctx.scale(1, 0.26); ctx.fillStyle = sh;
-      ctx.beginPath(); ctx.arc(0, 0, 210, 0, 7); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.translate(cx, shY); ctx.scale(1, 0.26); ctx.fillStyle = sh;
+      ctx.beginPath(); ctx.arc(0, 0, shR, 0, 7); ctx.fill(); ctx.restore();
 
       // halo central suave (tinte de marca, sin fondo sólido)
       const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, 260);
@@ -126,7 +129,7 @@ export default function AtomoImpacto() {
       }
 
       // núcleo: halo de energía + disco claro + LOGO Alumni UCR al centro
-      const nr = 27 * CFG.nuc * (1 + Math.sin(t * 2) * 0.09);
+      const nr = 27 * CFG.nuc * fit * (1 + Math.sin(t * 2) * 0.09);
       const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, nr * 2.4);
       cg.addColorStop(0, 'rgba(84,188,235,0.5)'); cg.addColorStop(0.5, 'rgba(84,188,235,0.22)'); cg.addColorStop(1, 'rgba(84,188,235,0)');
       ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx, cy, nr * 2.4, 0, 7); ctx.fill();
@@ -148,7 +151,7 @@ export default function AtomoImpacto() {
           ctx.strokeStyle = hexA(e.o.color, 0.28); ctx.lineWidth = 3;
           ctx.beginPath(); e.o.trail.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
         }
-        const r = (8.5 * CFG.esize) * e.sc;
+        const r = (8.5 * CFG.esize) * fit * e.sc;
         const a = depthA(e.z);
         const gg = ctx.createRadialGradient(e.sx, e.sy, 0, e.sx, e.sy, r * 4.2);
         gg.addColorStop(0, hexA(e.o.color, 0.9 * CFG.glow * a)); gg.addColorStop(1, hexA(e.o.color, 0));

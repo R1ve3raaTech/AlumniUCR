@@ -77,18 +77,14 @@ export default function Impacto() {
           <p className={styles.impactoSub}>Una red viva que conecta talento y experiencia. Cada órbita representa una métrica y cómo se entrelazan.</p>
         </motion.div>
 
-        {/* Layout: tarjetas a los costados + átomo en el centro (todo en pantalla) */}
+        {/* Layout: los 4 anillos apilados a la izquierda + átomo grande a la derecha */}
         <div ref={ref} className={styles.impactoLayout}>
           <div className={styles.impactoSide}>
-            {METRICAS.slice(0, 2).map((m, i) => anillo(m, i))}
+            {METRICAS.map((m, i) => anillo(m, i))}
           </div>
 
           <div className={styles.atomStage}>
             <AtomoImpacto />
-          </div>
-
-          <div className={styles.impactoSide}>
-            {METRICAS.slice(2, 4).map((m, i) => anillo(m, i + 2))}
           </div>
         </div>
       </div>
