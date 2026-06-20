@@ -1624,12 +1624,24 @@
 .imInfo { align-self: center; }
 .imInfo .matchHeader { text-align: left; margin-bottom: 1rem; }
 .imInfo .accentBar { margin-left: 0; margin-right: auto; }
-.imInfo .matchSubtitle { margin: 1rem 0 0; max-width: 34rem; }
+.imInfo .matchSubtitle {
+  margin: 1.1rem 0 0;
+  max-width: 34rem;
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ucr-on-surface);
+}
 
-.imScoreLegend { list-style: none; margin: 1.4rem 0 1.9rem; padding: 0; display: flex; flex-direction: column; gap: 0.65rem; max-width: 22rem; }
-.imScoreLegend li { display: flex; align-items: center; gap: 0.7rem; font-size: 0.95rem; color: var(--ucr-on-surface); }
-.imScoreLegend b { margin-left: auto; font-family: var(--font-ucr-display); font-weight: 800; color: var(--brand-esmeralda); }
-.imLegendDot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--ucr-celeste); flex-shrink: 0; }
+.imScoreLegend { list-style: none; margin: 1.8rem 0 2.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; max-width: 28rem; }
+.imScoreLegend li {
+  display: flex; align-items: center; gap: 0.9rem;
+  font-family: var(--font-ucr-display);
+  font-size: clamp(1.15rem, 1rem + 0.5vw, 1.45rem);
+  font-weight: 700;
+  color: var(--ucr-primary);
+}
+.imLegendDot { width: 0.95rem; height: 0.95rem; border-radius: 50%; background: var(--ucr-celeste); flex-shrink: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--ucr-celeste) 22%, transparent); }
 
 /* Showcase: 2 columnas con marquee + máscara circular difuminada */
 .imShowcase {

@@ -144,15 +144,15 @@ export default function MatchingSeccion() {
               <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>Matching <em>Inteligente</em></h2>
               <div className={styles.accentBar} />
               <p className={styles.matchSubtitle}>
-                Conectamos a cada estudiante con el exalumno ideal por afinidad. Mientras más
-                coincidencias, mayor el puntaje del match.
+                Estudiantes y Exalumnos ahora conectarán más rápido. Mientras más coincidencias,
+                mayor será el puntaje del MATCH.
               </p>
             </div>
             <ul className={styles.imScoreLegend}>
-              <li><span className={styles.imLegendDot} /> Misma carrera <b>30 pts</b></li>
-              <li><span className={styles.imLegendDot} /> Áreas de interés común <b>30 pts</b></li>
-              <li><span className={styles.imLegendDot} /> Temática de proyecto <b>20 pts</b></li>
-              <li><span className={styles.imLegendDot} /> Tipo de apoyo ofrecido <b>10 pts</b></li>
+              <li><span className={styles.imLegendDot} /> Misma carrera</li>
+              <li><span className={styles.imLegendDot} /> Áreas de interés común</li>
+              <li><span className={styles.imLegendDot} /> Temática de proyecto</li>
+              <li><span className={styles.imLegendDot} /> Tipo de apoyo ofrecido</li>
             </ul>
             <Link href="/registro" className={styles.matchCta}>Encontrá tu match</Link>
           </motion.div>
