@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import StudentNav from '@/components/StudentNav';
-import ProgressBar from '@/components/ui/ProgressBar';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
@@ -30,6 +29,8 @@ export default function DashboardPage() {
   const [estado, setEstado] = useState({ academica: false, proyecto: false, habilidades: false });
   // RF-03: al llegar al 100% el sistema pregunta si el perfil quedó finalizado.
   const [finalizado, setFinalizado] = useState(false);
+  // Saludo por hora del día (en efecto para evitar desajuste de hidratación SSR).
+  const [saludo, setSaludo] = useState('Hola');
 
   // Protección client-side: si no hay sesión una vez hidratado, redirige al login.
   useEffect(() => {
@@ -76,6 +77,11 @@ export default function DashboardPage() {
     if (token && user?.id) refrescarEstado();
   }, [token, user?.id, refrescarEstado]);
 
+  useEffect(() => {
+    const h = new Date().getHours();
+    setSaludo(h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches');
+  }, []);
+
   function handleSignOut() {
     signOut();
     router.replace('/login');
@@ -113,7 +119,14 @@ export default function DashboardPage() {
 
   const completadas = [estado.academica, estado.proyecto, estado.habilidades].filter(Boolean).length;
   const progreso = Math.round((completadas / 3) * 100);
-  const inicial = correo.charAt(0).toUpperCase();
+  const nombre = perfil?.nombre?.trim().split(/\s+/)[0] || correo.split('@')[0] || 'estudiante';
+  const iniciales = (perfil?.nombre || correo)
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
@@ -121,22 +134,21 @@ export default function DashboardPage() {
 
       {/* Contenido principal */}
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-        {/* Hero header */}
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
-          <div className="flex flex-wrap items-center gap-5">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/15 font-ucr-display text-3xl font-bold">
-              {inicial}
-            </div>
-            <div>
-              <h1 className="font-ucr-display text-3xl font-bold tracking-tight sm:text-4xl">
-                ¡Hola de nuevo!
-              </h1>
-              <p className="mt-1 text-sm text-white/80">
-                Has iniciado sesión como <span className="font-semibold">{correo}</span>.
-              </p>
-            </div>
+        {/* Encabezado */}
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-ucr-on-surface-variant">Panel de estudiante</p>
+            <h1 className="mt-1 font-ucr-display text-3xl font-bold tracking-tight text-ucr-primary sm:text-4xl">
+              {saludo}, {nombre}
+            </h1>
           </div>
-        </section>
+          <Link
+            href="/perfil-estudiante"
+            className="inline-flex items-center gap-2 rounded-full bg-ucr-esmeralda px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+          >
+            <span className="material-symbols-outlined text-base">tune</span> Completar perfil
+          </Link>
+        </header>
 
         {/* RF-03: al llegar al 100% el sistema pregunta si el perfil quedó finalizado */}
         {progreso === 100 && (
@@ -171,90 +183,196 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* Bento grid */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">checklist</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Estado del perfil
-              </h2>
-            </div>
-            <div className="mb-4">
-              <ProgressBar value={progreso} label="Progreso del perfil" showValue />
-              <p className="mt-2 text-xs text-ucr-on-surface-variant">
-                {progreso === 100
-                  ? '✓ Perfil completo: ya puede aparecer en el directorio.'
-                  : 'Completa las 3 secciones para llegar al 100% y aparecer en el directorio.'}
-              </p>
+        {/* Bento moderno */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          {/* Columna principal */}
+          <div className="space-y-6 lg:col-span-2">
+            {/* Fila 1: perfil destacado + métricas */}
+            <div className="grid gap-6 sm:grid-cols-2">
+              <article className="relative flex flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-6 text-white shadow-lg">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 font-ucr-display text-2xl font-bold">
+                    {iniciales}
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="truncate font-brand-heading text-lg font-bold">{perfil?.nombre || nombre}</h2>
+                    <p className="text-sm text-white/80">Estudiante UCR</p>
+                  </div>
+                </div>
+                <p className="mt-5 text-sm text-white/85">
+                  {progreso === 100
+                    ? 'Tu perfil está completo. ¡Listo para conectar con mentores!'
+                    : 'Completá tu perfil para que los mentores te encuentren.'}
+                </p>
+                <Link
+                  href="/perfil-estudiante"
+                  className="mt-4 inline-flex w-fit items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-ucr-primary"
+                >
+                  Ver mi perfil <span className="material-symbols-outlined text-base">arrow_forward</span>
+                </Link>
+              </article>
+
+              <div className="grid gap-6">
+                {/* KPI avance + dot-matrix */}
+                <article className="rounded-3xl bg-white p-6 shadow-lg">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-ucr-display text-4xl font-bold text-ucr-primary">{progreso}%</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ucr-outline">
+                        Avance de tu perfil
+                      </p>
+                    </div>
+                    <span className="material-symbols-outlined rounded-full bg-ucr-esmeralda/10 p-2 text-ucr-esmeralda">
+                      trending_up
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-10 gap-1.5">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-2 w-2 rounded-full ${
+                          i < Math.round((progreso / 100) * 30) ? 'bg-ucr-esmeralda' : 'bg-ucr-surface-container'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </article>
+                {/* Dos mini tiles */}
+                <div className="grid grid-cols-2 gap-6">
+                  <article className="rounded-3xl bg-white p-5 shadow-lg">
+                    <p className="font-ucr-display text-2xl font-bold text-ucr-primary">{completadas}/3</p>
+                    <p className="text-xs text-ucr-on-surface-variant">Secciones completas</p>
+                  </article>
+                  <article className="rounded-3xl bg-white p-5 shadow-lg">
+                    <p className={`font-ucr-display text-2xl font-bold ${progreso === 100 ? 'text-ucr-esmeralda' : 'text-ucr-naranja'}`}>
+                      {progreso === 100 ? 'Sí' : 'No'}
+                    </p>
+                    <p className="text-xs text-ucr-on-surface-variant">En el directorio</p>
+                  </article>
+                </div>
+              </div>
             </div>
 
-            <ul className="flex flex-col gap-3 text-sm">
-              {[
-                { ok: estado.academica, label: 'Académica y situación socioeconómica' },
-                { ok: estado.proyecto, label: 'Proyecto, áreas de interés y tipo de apoyo' },
-                { ok: estado.habilidades, label: 'Habilidades' },
-              ].map((s) => (
-                <li key={s.label} className="flex items-center gap-2">
-                  <span
-                    className={`material-symbols-outlined ${
-                      s.ok ? 'text-ucr-esmeralda' : 'text-ucr-outline'
-                    }`}
+            {/* Fila 2: gauge + mentores */}
+            <div className="grid gap-6 sm:grid-cols-2">
+              <article className="rounded-3xl bg-white p-6 shadow-lg">
+                <h3 className="mb-4 font-brand-heading text-base font-bold text-ucr-on-surface">Seguí tu avance</h3>
+                <div className="flex items-center gap-5">
+                  <div
+                    className="relative grid h-28 w-28 shrink-0 place-items-center rounded-full"
+                    style={{ background: `conic-gradient(var(--ucr-esmeralda) ${progreso * 3.6}deg, #e7eef0 0deg)` }}
                   >
-                    {s.ok ? 'check_circle' : 'radio_button_unchecked'}
-                  </span>
-                  {s.label}
-                </li>
-              ))}
-            </ul>
-          </section>
+                    <div className="grid h-20 w-20 place-items-center rounded-full bg-white">
+                      <span className="font-ucr-display text-2xl font-bold text-ucr-primary">{progreso}%</span>
+                    </div>
+                  </div>
+                  <ul className="flex-1 space-y-2 text-sm">
+                    {[
+                      { ok: estado.academica, label: 'Académica' },
+                      { ok: estado.proyecto, label: 'Proyecto' },
+                      { ok: estado.habilidades, label: 'Habilidades' },
+                    ].map((s) => (
+                      <li key={s.label} className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 rounded-full ${s.ok ? 'bg-ucr-esmeralda' : 'bg-ucr-outline-variant'}`} />
+                        <span className={s.ok ? 'text-ucr-on-surface' : 'text-ucr-on-surface-variant'}>{s.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
 
-          <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">person</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Mi perfil
-              </h2>
-            </div>
-            <p className="mb-4 text-sm text-ucr-on-surface-variant">
-              Completa y actualiza tu información académica, proyecto de graduación y
-              habilidades.
-            </p>
-            <Link href="/perfil-estudiante" className="btn-primary">
-              Ir a mi perfil
-            </Link>
-          </section>
-
-          <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">bolt</span>
-              <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Accesos rápidos
-              </h2>
-            </div>
-            <p className="mb-4 text-sm text-ucr-on-surface-variant">
-              Las funciones clave de tu cuenta de estudiante.
-            </p>
-            <ul className="flex flex-col gap-2 text-sm">
-              {[
-                { href: '/mis-matches', icon: 'handshake', label: 'Mis matches con mentores' },
-                { href: '/estudiantes', icon: 'groups', label: 'Directorio de exalumnos' },
-                { href: '/posiciones', icon: 'work', label: 'Empleos y pasantías' },
-                { href: '/mi-curriculum', icon: 'description', label: 'Mi currículum (CV + IA)' },
-              ].map((a) => (
-                <li key={a.href}>
-                  <Link
-                    href={a.href}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-ucr-on-surface transition-colors hover:bg-ucr-surface-container"
-                  >
-                    <span className="material-symbols-outlined text-ucr-secondary">{a.icon}</span>
-                    {a.label}
-                    <span className="material-symbols-outlined ml-auto text-ucr-outline">chevron_right</span>
+              <article className="flex flex-col justify-between rounded-3xl bg-white p-6 shadow-lg">
+                <div>
+                  <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">Mentores para vos</h3>
+                  <p className="mt-1 text-sm text-ucr-on-surface-variant">
+                    Exalumnos que pueden apoyar tu proyecto de graduación.
+                  </p>
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex -space-x-3">
+                    {['bg-ucr-primary', 'bg-ucr-secondary', 'bg-ucr-esmeralda', 'bg-ucr-naranja'].map((c, i) => (
+                      <span
+                        key={i}
+                        className={`grid h-9 w-9 place-items-center rounded-full border-2 border-white text-xs font-bold text-white ${c}`}
+                      >
+                        {['A', 'U', 'C', 'R'][i]}
+                      </span>
+                    ))}
+                  </div>
+                  <Link href="/mis-matches" className="inline-flex items-center gap-1 text-sm font-bold text-ucr-secondary">
+                    Ver matches <span className="material-symbols-outlined text-base">arrow_forward</span>
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          {/* Columna lateral */}
+          <aside className="space-y-6">
+            <article className="rounded-3xl bg-white p-6 shadow-lg">
+              <h3 className="mb-4 font-brand-heading text-base font-bold text-ucr-on-surface">Estado de tu perfil</h3>
+              <ul className="space-y-3">
+                {[
+                  { ok: estado.academica, icon: 'school', label: 'Académica y situación socioeconómica' },
+                  { ok: estado.proyecto, icon: 'lightbulb', label: 'Proyecto, áreas y tipo de apoyo' },
+                  { ok: estado.habilidades, icon: 'stars', label: 'Habilidades' },
+                ].map((s) => (
+                  <li key={s.label} className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ucr-surface-container">
+                      <span className="material-symbols-outlined text-ucr-secondary">{s.icon}</span>
+                    </span>
+                    <span className="flex-1 text-sm text-ucr-on-surface">{s.label}</span>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        s.ok ? 'bg-ucr-esmeralda/15 text-ucr-esmeralda' : 'bg-ucr-naranja/15 text-ucr-naranja'
+                      }`}
+                    >
+                      {s.ok ? 'Completo' : 'Pendiente'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="rounded-3xl bg-gradient-to-br from-ucr-esmeralda to-ucr-primary p-6 text-white shadow-lg">
+              <p className="text-sm text-white/80">Tu perfil</p>
+              <p className="font-ucr-display text-4xl font-bold">{progreso}%</p>
+              <p className="mt-1 text-sm text-white/85">
+                {progreso === 100
+                  ? '¡Completo! Ya aparecés en el directorio.'
+                  : 'Completalo al 100% para aparecer en el directorio.'}
+              </p>
+              <Link
+                href="/perfil-estudiante"
+                className="mt-4 inline-flex w-fit items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-ucr-primary"
+              >
+                Continuar <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            </article>
+
+            <article className="rounded-3xl bg-white p-6 shadow-lg">
+              <h3 className="mb-3 font-brand-heading text-base font-bold text-ucr-on-surface">Accesos rápidos</h3>
+              <ul className="flex flex-col gap-1 text-sm">
+                {[
+                  { href: '/mis-matches', icon: 'handshake', label: 'Mis matches con mentores' },
+                  { href: '/estudiantes', icon: 'groups', label: 'Directorio de exalumnos' },
+                  { href: '/posiciones', icon: 'work', label: 'Empleos y pasantías' },
+                  { href: '/mi-curriculum', icon: 'description', label: 'Mi currículum (CV + IA)' },
+                ].map((a) => (
+                  <li key={a.href}>
+                    <Link
+                      href={a.href}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-ucr-on-surface transition-colors hover:bg-ucr-surface-container"
+                    >
+                      <span className="material-symbols-outlined text-ucr-secondary">{a.icon}</span>
+                      {a.label}
+                      <span className="material-symbols-outlined ml-auto text-ucr-outline">chevron_right</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </aside>
         </div>
       </main>
     </div>
