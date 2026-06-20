@@ -103,7 +103,7 @@ export default function RegistroPage() {
 
   function enviarEnlace() {
     run(async () => {
-      await solicitarMagicLink('estudiante', correo.trim());
+      const res = await solicitarMagicLink('estudiante', correo.trim());
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           'ct_registro_datos',
@@ -116,6 +116,10 @@ export default function RegistroPage() {
           }),
         );
       }
+      // En desarrollo el backend devuelve token_hash → enlace directo (ruta
+      // relativa, funciona en cualquier puerto y sin depender del correo).
+      const th = res?.token_hash;
+      setConfirmUrl(th ? `/auth/confirmar?token_hash=${encodeURIComponent(th)}` : null);
       setModoExito('magiclink');
       setEnviado(true);
     });
@@ -308,17 +312,32 @@ export default function RegistroPage() {
                     </>
                   ) : (
                     <>
-                      <motion.button
-                        type="button"
-                        className={styles.submit}
-                        onClick={abrirCorreo}
-                        whileHover={!reduced ? { scale: 1.015 } : {}}
-                        whileTap={!reduced ? { scale: 0.98 } : {}}
-                        transition={{ duration: 0.15, ease: EASE_OUT }}
-                      >
-                        Abrir mi correo
-                      </motion.button>
+                      {confirmUrl ? (
+                        <motion.a
+                          href={confirmUrl}
+                          className={styles.submit}
+                          whileHover={!reduced ? { scale: 1.015 } : {}}
+                          whileTap={!reduced ? { scale: 0.98 } : {}}
+                          transition={{ duration: 0.15, ease: EASE_OUT }}
+                        >
+                          Confirmar mi cuenta ahora
+                        </motion.a>
+                      ) : (
+                        <motion.button
+                          type="button"
+                          className={styles.submit}
+                          onClick={abrirCorreo}
+                          whileHover={!reduced ? { scale: 1.015 } : {}}
+                          whileTap={!reduced ? { scale: 0.98 } : {}}
+                          transition={{ duration: 0.15, ease: EASE_OUT }}
+                        >
+                          Abrir mi correo
+                        </motion.button>
+                      )}
                       <div className={styles.resendHint}>
+                        {confirmUrl && (
+                          <p className={styles.expiry}>Modo desarrollo: confirmá con el botón de arriba (no depende del correo).</p>
+                        )}
                         <button type="button" className={styles.resendBtn} onClick={enviarEnlace} disabled={loading}>
                           {loading ? 'Reenviando…' : '¿No recibiste el correo? Volver a enviar'}
                         </button>

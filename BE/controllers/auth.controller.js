@@ -26,11 +26,13 @@ const solicitarMagicLink = async (req, res, next) => {
     const errorCorreo = validarCorreoPorRol(correo, rolNormalizado);
     if (errorCorreo) throw errorValidacion(errorCorreo);
 
-    await authService.solicitarMagicLink(correo.trim(), rolNormalizado);
+    const resultado = await authService.solicitarMagicLink(correo.trim(), rolNormalizado);
 
     res.status(200).json({
       success: true,
       mensaje: 'Te enviamos un enlace de verificación a tu correo.',
+      // En desarrollo se incluye para confirmar sin depender del correo.
+      token_hash: resultado?.token_hash ?? null,
     });
   } catch (error) {
     next(error);
