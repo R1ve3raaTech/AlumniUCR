@@ -2,7 +2,7 @@
 
 // Sección "Proyectos de Graduación" con el MISMO diseño que Matching (coverflow
 // + tarjeta cf*). 10 proyectos de distintas escuelas, áreas de interés y tipos
-// de apoyo (TFG / Pasantía / STC).
+// de apoyo (TFG / Pasantía / Apoyo económico).
 //
 // NOTA: los proyectos son ejemplos realistas e ilustrativos (no provienen aún de
 // una base real). Para conectarlos a datos reales hace falta un endpoint público
@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from './icons';
 import styles from './landing.module.css';
 
-type TipoApoyo = 'TFG' | 'Pasantía' | 'STC';
+type TipoApoyo = 'TFG' | 'Pasantía' | 'Apoyo económico';
 
 interface Proyecto {
   proyecto: string; img: string; area: string;
@@ -25,9 +25,9 @@ interface Proyecto {
 
 // Color del badge según el tipo de apoyo
 const APOYO_COLOR: Record<TipoApoyo, string> = {
-  TFG: '#004C63',        // teal
-  'Pasantía': '#007D67', // esmeralda
-  STC: '#F34B26',        // naranja
+  TFG: '#004C63',                 // teal
+  'Pasantía': '#007D67',          // esmeralda
+  'Apoyo económico': '#F34B26',   // naranja
 };
 
 const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
@@ -43,7 +43,7 @@ const PROYECTOS: Proyecto[] = [
     autor: 'Diego Mora', escuela: 'Ing. Eléctrica', apoyo: 'TFG',
     busca: 'Mentor técnico', buscaDetalle: 'Micro-redes solares rurales', inter: false },
   { proyecto: 'AquaMonitor', img: IMG('1500375592092-40eb2168fd21'), area: 'Medio Ambiente',
-    autor: 'Laura Vega', escuela: 'Ing. Ambiental + Biología', apoyo: 'STC',
+    autor: 'Laura Vega', escuela: 'Ing. Ambiental + Biología', apoyo: 'Apoyo económico',
     busca: 'Comunidad aliada', buscaDetalle: 'Monitoreo de calidad del agua', inter: true },
   { proyecto: 'Casa Trópico', img: IMG('1487958449943-2429e8be8625'), area: 'Arquitectura Sostenible',
     autor: 'Sofía Blanco', escuela: 'Arquitectura', apoyo: 'TFG',
@@ -52,7 +52,7 @@ const PROYECTOS: Proyecto[] = [
     autor: 'Andrés Soto', escuela: 'Biología', apoyo: 'Pasantía',
     busca: 'Host de pasantía', buscaDetalle: 'Restauración de arrecifes', inter: false },
   { proyecto: 'Voces UCR', img: IMG('1504384308090-c894fdcc538d'), area: 'Comunicación',
-    autor: 'Valeria Núñez', escuela: 'Comunicación Colectiva', apoyo: 'STC',
+    autor: 'Valeria Núñez', escuela: 'Comunicación Colectiva', apoyo: 'Apoyo económico',
     busca: 'Aliado mediático', buscaDetalle: 'Periodismo comunitario', inter: false },
   { proyecto: 'Fin-Connect', img: IMG('1554224155-6726b3ff858f'), area: 'Educación Financiera',
     autor: 'Ana Rojas', escuela: 'Economía', apoyo: 'TFG',
@@ -61,7 +61,7 @@ const PROYECTOS: Proyecto[] = [
     autor: 'José Ramírez', escuela: 'Ing. Mecánica + Enseñanza', apoyo: 'Pasantía',
     busca: 'Empresa aliada', buscaDetalle: 'Kits de robótica para escuelas rurales', inter: true },
   { proyecto: 'Bienestar UCR', img: IMG('1573497019940-1c28c88b4f3e'), area: 'Salud Mental',
-    autor: 'Daniela Campos', escuela: 'Psicología', apoyo: 'STC',
+    autor: 'Daniela Campos', escuela: 'Psicología', apoyo: 'Apoyo económico',
     busca: 'Red de apoyo', buscaDetalle: 'Acompañamiento estudiantil', inter: false },
 ];
 
@@ -116,7 +116,7 @@ export default function ProyectosGraduacion() {
           <div className={styles.accentBar} />
           <p className={styles.matchSubtitle}>
             Iniciativas de nuestros graduados de distintas escuelas y áreas, que buscan
-            apoyo en formato TFG, pasantía o STC. Conectá con el proyecto que te inspire.
+            apoyo en formato TFG, pasantía o apoyo económico. Conectá con el proyecto que te inspire.
           </p>
         </motion.div>
 

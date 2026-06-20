@@ -1388,6 +1388,7 @@
   z-index: 2;
   top: 0.85rem;
   right: 0.85rem;
+  white-space: nowrap;
   background: var(--apoyo, var(--ucr-primary));
   color: #fff;
   font-size: 0.64rem;
