@@ -22,10 +22,10 @@ export default function Home() {
         <Hero />
         <MatchingSeccion />
         <ProyectosGraduacion />
-        <Testimonios />
-        <Impacto />
-        <CTAFinal />
         <MisionFundacion />
+        <Testimonios />
+        <CTAFinal />
+        <Impacto />
       </main>
       <Footer />
       <ScrollToHero />
