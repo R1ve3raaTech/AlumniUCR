@@ -11,12 +11,26 @@ import AdminDashboard from '@/components/AdminDashboard';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
 import { obtenerProyectoDelEstudiante } from '@/lib/proyectoGraduacion';
 import { obtenerHabilidadesDelEstudiante } from '@/lib/habilidades';
+import {
+  obtenerDirectorioEstudiantes,
+  obtenerDirectorioExalumnos,
+  calcularScore,
+} from '@/lib/misMatches';
 
 interface Perfil {
   nombre?: string;
   correo_electronico?: string;
   estado?: string;
+  foto_url?: string;
   roles?: { nombre?: string } | null;
+}
+
+// Match calculado (exalumno sugerido para el estudiante) con score > 60.
+interface MatchEstudiante {
+  exa: { id: string; nombre?: string; carreras?: string[]; facultades?: string[] };
+  score: number;
+  comunes: string[];
+  interdisciplinario: boolean;
 }
 
 export default function DashboardPage() {
@@ -31,6 +45,8 @@ export default function DashboardPage() {
   const [finalizado, setFinalizado] = useState(false);
   // Saludo por hora del día (en efecto para evitar desajuste de hidratación SSR).
   const [saludo, setSaludo] = useState('Hola');
+  // Matches (exalumnos sugeridos) con score > 60, calculados con el motor real.
+  const [matches, setMatches] = useState<MatchEstudiante[]>([]);
 
   // Protección client-side: si no hay sesión una vez hidratado, redirige al login.
   useEffect(() => {
@@ -82,6 +98,39 @@ export default function DashboardPage() {
     setSaludo(h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches');
   }, []);
 
+  // Matches del estudiante (RF-06): se cruza su propio perfil del directorio
+  // contra los exalumnos y se filtran los de score > 60, igual que /mis-matches.
+  useEffect(() => {
+    const esEstudiante = perfil?.roles?.nombre?.toLowerCase().trim() === 'estudiante';
+    if (!token || !user?.id || !esEstudiante) return;
+    let activo = true;
+    (async () => {
+      try {
+        const [dirEst, dirExa] = await Promise.all([
+          obtenerDirectorioEstudiantes(token),
+          obtenerDirectorioExalumnos(),
+        ]);
+        if (!activo) return;
+        const yo = (dirEst?.data ?? []).find((e: { id: string }) => e.id === user.id);
+        if (!yo) {
+          setMatches([]);
+          return;
+        }
+        const ranking = (dirExa?.data ?? [])
+          .map((exa: MatchEstudiante['exa']) => ({ exa, ...calcularScore(exa, yo) }))
+          .filter((m: MatchEstudiante) => m.score > 60)
+          .sort((a: MatchEstudiante, b: MatchEstudiante) => b.score - a.score)
+          .slice(0, 6);
+        setMatches(ranking as MatchEstudiante[]);
+      } catch {
+        if (activo) setMatches([]);
+      }
+    })();
+    return () => {
+      activo = false;
+    };
+  }, [token, user?.id, perfil]);
+
   function handleSignOut() {
     signOut();
     router.replace('/login');
@@ -120,13 +169,10 @@ export default function DashboardPage() {
   const completadas = [estado.academica, estado.proyecto, estado.habilidades].filter(Boolean).length;
   const progreso = Math.round((completadas / 3) * 100);
   const nombre = perfil?.nombre?.trim().split(/\s+/)[0] || correo.split('@')[0] || 'estudiante';
-  const iniciales = (perfil?.nombre || correo)
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  // Foto del estudiante: su foto subida (foto_url) → /images/adri.jpg (si se
+  // coloca) → retrato real existente como respaldo (sin imágenes rotas).
+  const FOTO_FALLBACK = '/images/TANIA_RODRIGUEZ01-pq2.png';
+  const fotoSrc = perfil?.foto_url || '/images/adri.jpg';
 
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
@@ -189,27 +235,33 @@ export default function DashboardPage() {
           <div className="space-y-6 lg:col-span-2">
             {/* Fila 1: perfil destacado + métricas */}
             <div className="grid gap-6 sm:grid-cols-2">
-              <article className="relative flex flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-6 text-white shadow-lg">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 font-ucr-display text-2xl font-bold">
-                    {iniciales}
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="truncate font-brand-heading text-lg font-bold">{perfil?.nombre || nombre}</h2>
-                    <p className="text-sm text-white/80">Estudiante UCR</p>
-                  </div>
+              {/* Tarjeta de perfil con foto (usa foto_url; respaldo a retrato real) */}
+              <article className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-3xl shadow-lg">
+                <img
+                  src={fotoSrc}
+                  alt={perfil?.nombre || nombre}
+                  className="absolute inset-0 h-full w-full object-cover object-top"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (img.src.indexOf(FOTO_FALLBACK) === -1) img.src = FOTO_FALLBACK;
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ucr-primary via-ucr-primary/35 to-transparent" />
+                <div className="relative p-6 text-white">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+                    <span className="material-symbols-outlined text-sm">school</span> Estudiante UCR
+                  </span>
+                  <h2 className="mt-3 font-brand-heading text-xl font-bold">{perfil?.nombre || nombre}</h2>
+                  <p className="text-sm text-white/85">
+                    {progreso === 100 ? 'Perfil completo' : `Perfil al ${progreso}%`}
+                  </p>
+                  <Link
+                    href="/perfil-estudiante"
+                    className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-ucr-primary"
+                  >
+                    Ver mi perfil <span className="material-symbols-outlined text-base">arrow_forward</span>
+                  </Link>
                 </div>
-                <p className="mt-5 text-sm text-white/85">
-                  {progreso === 100
-                    ? 'Tu perfil está completo. ¡Listo para conectar con mentores!'
-                    : 'Completá tu perfil para que los mentores te encuentren.'}
-                </p>
-                <Link
-                  href="/perfil-estudiante"
-                  className="mt-4 inline-flex w-fit items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-ucr-primary"
-                >
-                  Ver mi perfil <span className="material-symbols-outlined text-base">arrow_forward</span>
-                </Link>
               </article>
 
               <div className="grid gap-6">
@@ -374,6 +426,90 @@ export default function DashboardPage() {
             </article>
           </aside>
         </div>
+
+        {/* Matches con score > 60 (RF-06, motor de scoring real) */}
+        <section className="mt-6 rounded-3xl bg-white p-6 shadow-lg">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-brand-heading text-lg font-bold text-ucr-on-surface">
+                Tus mejores coincidencias
+              </h2>
+              <p className="text-sm text-ucr-on-surface-variant">
+                Exalumnos con afinidad mayor a 60 según tu carrera, áreas de interés y tipo de apoyo.
+              </p>
+            </div>
+            <Link
+              href="/mis-matches"
+              className="inline-flex items-center gap-1 text-sm font-bold text-ucr-secondary"
+            >
+              Ver todos <span className="material-symbols-outlined text-base">arrow_forward</span>
+            </Link>
+          </div>
+
+          {matches.length === 0 ? (
+            <p className="rounded-2xl bg-ucr-surface-container/60 p-6 text-center text-sm text-ucr-on-surface-variant">
+              Aún no hay mentores con afinidad mayor a 60. Completá tu perfil (carrera, áreas de
+              interés y tipo de apoyo) para mejorar tus coincidencias.
+            </p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {matches.map((m) => (
+                <article key={m.exa.id} className="rounded-2xl border border-ucr-outline-variant p-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ucr-primary/10 font-bold text-ucr-primary">
+                      {(m.exa.nombre || '?')
+                        .split(' ')
+                        .map((p) => p[0])
+                        .slice(0, 2)
+                        .join('')
+                        .toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-brand-heading text-sm font-bold text-ucr-on-surface">
+                        {m.exa.nombre}
+                      </h3>
+                      <p className="truncate text-xs text-ucr-on-surface-variant">
+                        {m.exa.carreras?.[0] || '—'}
+                        {m.exa.facultades?.[0] ? ` · ${m.exa.facultades[0]}` : ''}
+                      </p>
+                    </div>
+                    <span
+                      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${
+                        m.score >= 70 ? 'bg-ucr-esmeralda' : 'bg-ucr-secondary'
+                      }`}
+                    >
+                      {m.score}
+                    </span>
+                  </div>
+                  {m.comunes?.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {m.comunes.slice(0, 3).map((a) => (
+                        <span
+                          key={a}
+                          className="rounded-full bg-ucr-celeste/10 px-2 py-0.5 text-xs font-medium text-ucr-secondary"
+                        >
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 flex items-center justify-between">
+                    {m.interdisciplinario ? (
+                      <span className="rounded-full bg-ucr-naranja/15 px-2 py-0.5 text-xs font-semibold text-ucr-naranja">
+                        Interdisciplinario
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <Link href="/mis-matches" className="text-xs font-bold text-ucr-secondary">
+                      Conectar →
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
