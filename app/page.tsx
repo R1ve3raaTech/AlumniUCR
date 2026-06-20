@@ -21,8 +21,8 @@ export default function Home() {
         <Hero />
         <MatchingSeccion />
         <ProyectosGraduacion />
-        <Impacto />
         <Testimonios />
+        <Impacto />
         <CTAFinal />
       </main>
       <Footer />
