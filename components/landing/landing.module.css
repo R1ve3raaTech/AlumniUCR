@@ -1382,6 +1382,22 @@
   border-radius: 999px;
   box-shadow: 0 4px 12px rgba(0, 31, 42, 0.3);
 }
+/* Badge "tipo de apoyo" (Pasantía / TFG / STC) — esquina superior derecha */
+.cfApoyo {
+  position: absolute;
+  z-index: 2;
+  top: 0.85rem;
+  right: 0.85rem;
+  background: var(--apoyo, var(--ucr-primary));
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 31, 42, 0.3);
+}
 
 .cfBody { padding: 1.3rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.9rem; }
 

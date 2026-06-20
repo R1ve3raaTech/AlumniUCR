@@ -1,8 +1,12 @@
 'use client';
 
-// Sección "Proyectos de Graduación" con el MISMO diseño que Matching: carrusel
-// coverflow (efecto volante) y la misma tarjeta (cf*). Cada tarjeta muestra el
-// proyecto, su autor/a graduado/a y qué busca (mentoría o inversión).
+// Sección "Proyectos de Graduación" con el MISMO diseño que Matching (coverflow
+// + tarjeta cf*). 10 proyectos de distintas escuelas, áreas de interés y tipos
+// de apoyo (TFG / Pasantía / STC).
+//
+// NOTA: los proyectos son ejemplos realistas e ilustrativos (no provienen aún de
+// una base real). Para conectarlos a datos reales hace falta un endpoint público
+// de proyectos en el BE; con esa lista se reemplaza el array PROYECTOS.
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -10,26 +14,55 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from './icons';
 import styles from './landing.module.css';
 
+type TipoApoyo = 'TFG' | 'Pasantía' | 'STC';
+
 interface Proyecto {
-  proyecto: string; img: string; tag: string;
-  autor: string; autorCarrera: string;
-  busca: string; buscaDetalle: string;
+  proyecto: string; img: string; area: string;
+  autor: string; escuela: string;
+  apoyo: TipoApoyo; busca: string; buscaDetalle: string;
   inter: boolean;
 }
 
+// Color del badge según el tipo de apoyo
+const APOYO_COLOR: Record<TipoApoyo, string> = {
+  TFG: '#004C63',        // teal
+  'Pasantía': '#007D67', // esmeralda
+  STC: '#F34B26',        // naranja
+};
+
+const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
+
 const PROYECTOS: Proyecto[] = [
-  { proyecto: 'Sistema Eco-Data', img: '/images/ecodata.jpg', tag: 'Sostenibilidad',
-    autor: 'María Jiménez', autorCarrera: 'Computación', busca: 'Mentoría', buscaDetalle: 'Escalar a pymes', inter: false },
-  { proyecto: 'Med-Link UCR', img: '/images/MEDLINK.png', tag: 'Salud Digital',
-    autor: 'Carlos Torres', autorCarrera: 'Psicología', busca: 'Inversión', buscaDetalle: 'Telemedicina rural', inter: true },
-  { proyecto: 'Fin-Connect', img: '/images/finconnect.jpg', tag: 'Finanzas',
-    autor: 'Ana Rojas', autorCarrera: 'Economía', busca: 'Mentoría', buscaDetalle: 'Educación financiera', inter: false },
-  { proyecto: 'AquaSensor UCR', img: '/images/ecosistema-ucr.png', tag: 'Medio Ambiente',
-    autor: 'Laura Vega', autorCarrera: 'Ing. Ambiental', busca: 'Inversión', buscaDetalle: 'Monitoreo de agua', inter: true },
-  { proyecto: 'EduRobótica', img: '/images/estudiantes.jpg', tag: 'Educación',
-    autor: 'Diego Mora', autorCarrera: 'Enseñanza', busca: 'Mentoría', buscaDetalle: 'Robótica educativa', inter: false },
-  { proyecto: 'Cultura Viva', img: '/images/charla.jpg', tag: 'Arte y Cultura',
-    autor: 'Sofía Blanco', autorCarrera: 'Artes Plásticas', busca: 'Inversión', buscaDetalle: 'Plataforma cultural', inter: true },
+  { proyecto: 'Med-Link CR', img: IMG('1576091160550-2173dba999ef'), area: 'Salud Digital',
+    autor: 'Carlos Torres', escuela: 'Medicina + Computación', apoyo: 'TFG',
+    busca: 'Tutor clínico', buscaDetalle: 'Pilotos de telemedicina en EBAIS', inter: true },
+  { proyecto: 'AgroSensor Café', img: IMG('1500382017468-9049fed747ef'), area: 'Agrotecnología',
+    autor: 'Mariana Vargas', escuela: 'Agronomía + Ing. Eléctrica', apoyo: 'Pasantía',
+    busca: 'Host de pasantía', buscaDetalle: 'Sensores IoT en cooperativas de café', inter: true },
+  { proyecto: 'SolarComunidad', img: IMG('1509391366360-2e959784a276'), area: 'Energía Renovable',
+    autor: 'Diego Mora', escuela: 'Ing. Eléctrica', apoyo: 'TFG',
+    busca: 'Mentor técnico', buscaDetalle: 'Micro-redes solares rurales', inter: false },
+  { proyecto: 'AquaMonitor', img: IMG('1500375592092-40eb2168fd21'), area: 'Medio Ambiente',
+    autor: 'Laura Vega', escuela: 'Ing. Ambiental + Biología', apoyo: 'STC',
+    busca: 'Comunidad aliada', buscaDetalle: 'Monitoreo de calidad del agua', inter: true },
+  { proyecto: 'Casa Trópico', img: IMG('1487958449943-2429e8be8625'), area: 'Arquitectura Sostenible',
+    autor: 'Sofía Blanco', escuela: 'Arquitectura', apoyo: 'TFG',
+    busca: 'Tutor de diseño', buscaDetalle: 'Vivienda bioclimática costera', inter: false },
+  { proyecto: 'BioReef', img: IMG('1532094349884-543bc11b234d'), area: 'Biología Marina',
+    autor: 'Andrés Soto', escuela: 'Biología', apoyo: 'Pasantía',
+    busca: 'Host de pasantía', buscaDetalle: 'Restauración de arrecifes', inter: false },
+  { proyecto: 'Voces UCR', img: IMG('1504384308090-c894fdcc538d'), area: 'Comunicación',
+    autor: 'Valeria Núñez', escuela: 'Comunicación Colectiva', apoyo: 'STC',
+    busca: 'Aliado mediático', buscaDetalle: 'Periodismo comunitario', inter: false },
+  { proyecto: 'Fin-Connect', img: IMG('1554224155-6726b3ff858f'), area: 'Educación Financiera',
+    autor: 'Ana Rojas', escuela: 'Economía', apoyo: 'TFG',
+    busca: 'Mentor fintech', buscaDetalle: 'App de finanzas gamificada', inter: false },
+  { proyecto: 'EduRobótica', img: IMG('1485827404703-89b55fcc595e'), area: 'Robótica Educativa',
+    autor: 'José Ramírez', escuela: 'Ing. Mecánica + Enseñanza', apoyo: 'Pasantía',
+    busca: 'Empresa aliada', buscaDetalle: 'Kits de robótica para escuelas rurales', inter: true },
+  { proyecto: 'Bienestar UCR', img: IMG('1573497019940-1c28c88b4f3e'), area: 'Salud Mental',
+    autor: 'Daniela Campos', escuela: 'Psicología', apoyo: 'STC',
+    busca: 'Red de apoyo', buscaDetalle: 'Acompañamiento estudiantil', inter: false },
 ];
 
 const ini = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -82,8 +115,8 @@ export default function ProyectosGraduacion() {
           </h2>
           <div className={styles.accentBar} />
           <p className={styles.matchSubtitle}>
-            Las iniciativas más brillantes de nuestros recién graduados que buscan
-            mentoría o inversión. Conectá con el proyecto que te inspire.
+            Iniciativas de nuestros graduados de distintas escuelas y áreas, que buscan
+            apoyo en formato TFG, pasantía o STC. Conectá con el proyecto que te inspire.
           </p>
         </motion.div>
 
@@ -107,7 +140,8 @@ export default function ProyectosGraduacion() {
                   <div className={styles.cfImgWrap}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img className={styles.cfImg} src={p.img} alt={p.proyecto} loading="lazy" />
-                    <span className={styles.cfTag}>{p.tag}</span>
+                    <span className={styles.cfTag}>{p.area}</span>
+                    <span className={styles.cfApoyo} style={{ ['--apoyo']: APOYO_COLOR[p.apoyo] } as React.CSSProperties}>{p.apoyo}</span>
                     {p.inter && <span className={styles.cfInter}>★ Interdisciplinario</span>}
                   </div>
 
@@ -116,12 +150,12 @@ export default function ProyectosGraduacion() {
                     <div className={styles.cfMatch}>
                       <div className={styles.cfPerson}>
                         <span className={`${styles.cfAvatar} ${styles.cfAvatarEst}`}>{ini(p.autor)}</span>
-                        <span className={styles.cfPersonInfo}>{p.autor}<small>{p.autorCarrera}</small></span>
+                        <span className={styles.cfPersonInfo}>{p.autor}<small>{p.escuela}</small></span>
                       </div>
                       <span className={styles.cfLink} aria-hidden>↔</span>
                       <div className={styles.cfPerson}>
-                        <span className={`${styles.cfAvatar} ${styles.cfAvatarMentor}`}>{p.busca[0]}</span>
-                        <span className={styles.cfPersonInfo}>Busca {p.busca}<small>{p.buscaDetalle}</small></span>
+                        <span className={styles.cfAvatar} style={{ background: APOYO_COLOR[p.apoyo] }}>{p.apoyo[0]}</span>
+                        <span className={styles.cfPersonInfo}>{p.busca}<small>{p.buscaDetalle}</small></span>
                       </div>
                     </div>
                   </div>
