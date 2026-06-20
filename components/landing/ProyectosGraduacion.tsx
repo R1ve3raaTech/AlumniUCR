@@ -94,36 +94,36 @@ export default function ProyectosGraduacion() {
     }
     if (abs === 1) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 56}%)) translateZ(-170px) rotateY(${-dir * 46}deg) scale(0.84)`,
+        transform: `translateX(calc(-50% + ${dir * 68}%)) translateZ(-170px) rotateY(${-dir * 44}deg) scale(0.84)`,
         opacity: 0.95, zIndex: 20,
       };
     }
     if (abs === 2) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 98}%)) translateZ(-440px) rotateY(${-dir * 54}deg) scale(0.64)`,
+        transform: `translateX(calc(-50% + ${dir * 116}%)) translateZ(-440px) rotateY(${-dir * 52}deg) scale(0.64)`,
         opacity: 0.6, zIndex: 10,
       };
     }
     if (abs === 3) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 120}%)) translateZ(-560px) rotateY(${-dir * 57}deg) scale(0.54)`,
+        transform: `translateX(calc(-50% + ${dir * 140}%)) translateZ(-560px) rotateY(${-dir * 56}deg) scale(0.54)`,
         opacity: 0.42, zIndex: 8,
       };
     }
     if (abs === 4) {
       return {
-        transform: `translateX(calc(-50% + ${dir * 140}%)) translateZ(-700px) rotateY(${-dir * 60}deg) scale(0.44)`,
+        transform: `translateX(calc(-50% + ${dir * 160}%)) translateZ(-700px) rotateY(${-dir * 59}deg) scale(0.44)`,
         opacity: 0.24, zIndex: 6,
       };
     }
     return {
-      transform: `translateX(calc(-50% + ${dir * 158}%)) translateZ(-820px) rotateY(${-dir * 62}deg) scale(0.36)`,
+      transform: `translateX(calc(-50% + ${dir * 178}%)) translateZ(-820px) rotateY(${-dir * 62}deg) scale(0.36)`,
       opacity: 0, zIndex: 4, pointerEvents: 'none',
     };
   };
 
   return (
-    <section id="graduacion" className={`${styles.section} ${styles.sectionGray}`}>
+    <section id="graduacion" className={`${styles.section} ${styles.sectionGray} ${styles.gradSection}`}>
       <div className={styles.container}>
         <motion.div
           className={styles.matchHeader}

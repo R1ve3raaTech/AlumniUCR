@@ -1285,8 +1285,8 @@
 .cfStage {
   position: relative;
   width: 100%;
-  max-width: 1140px;
-  height: 555px;
+  max-width: 1300px;
+  height: 640px;
   perspective: 1850px;
   margin: 0 auto;
 }
@@ -1296,7 +1296,7 @@
   top: 0;
   left: 50%;
   width: 345px;
-  height: 518px;
+  height: 596px;
   background: var(--brand-blanco);
   border: 1px solid var(--ucr-outline-variant);
   border-radius: 20px;
@@ -1480,18 +1480,21 @@
 .matchCta:hover svg { transform: translateX(5px); }
 
 @media (max-width: 860px) {
-  .cfStage { height: 505px; }
-  .cfCard { width: 290px; height: 460px; }
+  .cfStage { height: 580px; }
+  .cfCard { width: 290px; height: 529px; }
   .cfImgWrap { height: 250px; }
   .cfArrow { width: 2.5rem; height: 2.5rem; }
 }
 @media (max-width: 480px) {
-  .cfStage { height: 470px; }
-  .cfCard { width: 250px; height: 435px; }
+  .cfStage { height: 540px; }
+  .cfCard { width: 250px; height: 500px; }
   .cfImgWrap { height: 215px; }
   .cfArrowLeft { left: -0.5rem; }
   .cfArrowRight { right: -0.5rem; }
 }
+
+/* Sección Proyectos de Graduación: subir el encabezado (menos espacio arriba) */
+.gradSection { padding-top: clamp(2rem, 1rem + 2vw, 3rem); }
 
 /* ════════════════════════════════════════════════════════════════════
    FONDO · Sección Matching (BLOQUE APARTE). Tapiz/textura removido: queda
