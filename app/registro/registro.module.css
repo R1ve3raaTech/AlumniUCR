@@ -587,6 +587,37 @@
   text-align: center;
 }
 
+/* Alerta de error JUSTO debajo del botón Registrarse (visible sin scrollear) */
+.submitError {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: #ffe2dd;
+  color: #93000a;
+  border: 1px solid #f3b5ab;
+  border-radius: 0.85rem;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  box-shadow: 0 12px 28px -14px rgba(147, 0, 10, 0.32);
+}
+.submitErrorIcon {
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--ucr-naranja);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
 @media (min-width: 769px) {
   .submit {
     width: auto;

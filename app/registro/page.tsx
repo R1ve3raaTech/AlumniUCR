@@ -340,21 +340,6 @@ export default function RegistroPage() {
                     visible: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
                   }}
                 >
-                  {/* Error global */}
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        className={styles.formError}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.18, ease: EASE_IN }}
-                      >
-                        {error}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
                   {/* Paso 1: Rol */}
                   <motion.div variants={fieldFade}>
                     <h2 className={styles.stepTitle}>Paso 1: ¿Cuál es tu rol?</h2>
@@ -419,20 +404,6 @@ export default function RegistroPage() {
                       Paso 2: {rol === 'exalumno' ? 'Datos de autodeclaración' : 'Información Personal'}
                     </h2>
 
-                    <AnimatePresence>
-                      {errorForm && (
-                        <motion.div
-                          className={styles.formError}
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.18, ease: EASE_IN }}
-                        >
-                          {errorForm}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
                     <div className={styles.fields}>
                       <div className={styles.field}>
                         <label className={styles.label} htmlFor="nombre">Nombre completo</label>
@@ -472,7 +443,6 @@ export default function RegistroPage() {
                             onChange={(e) => { setCorreo(e.target.value); if (errorCorreo) setErrorCorreo(null); }}
                             required />
                         </div>
-                        {errorCorreo && <span className={styles.formError}>{errorCorreo}</span>}
                       </div>
 
                       {/* Campos exclusivos exalumno — fade in/out según rol */}
@@ -558,6 +528,25 @@ export default function RegistroPage() {
                         ? <><ISpinner className={styles.spinner} /> Procesando…</>
                         : rol === 'exalumno' ? 'Crear cuenta' : 'Registrarse'}
                     </motion.button>
+
+                    {/* Error justo debajo del botón: visible sin scrollear */}
+                    <AnimatePresence>
+                      {(errorCorreo || errorForm || error) && (
+                        <motion.div
+                          className={styles.submitError}
+                          role="alert"
+                          aria-live="assertive"
+                          initial={{ opacity: 0, y: -6, height: 0 }}
+                          animate={{ opacity: 1, y: 0, height: 'auto' }}
+                          exit={{ opacity: 0, y: -6, height: 0 }}
+                          transition={{ duration: 0.2, ease: EASE_OUT }}
+                        >
+                          <span className={styles.submitErrorIcon}>!</span>
+                          <span>{errorCorreo || errorForm || error}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <p className={styles.terms}>
                       Al registrarte, aceptas nuestros <a href="#">Términos y Condiciones</a>.
                     </p>
