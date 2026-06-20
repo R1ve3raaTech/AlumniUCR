@@ -9,7 +9,7 @@ import { ArrowUp } from './icons';
 import styles from './landing.module.css';
 
 // Secciones donde el botón debe mostrarse (ver ids en cada componente de sección).
-const SECCIONES = ['proyectos', 'impacto', 'historias'];
+const SECCIONES = ['matching', 'impacto', 'historias'];
 
 export default function ScrollToHero() {
   const [visible, setVisible] = useState(false);
@@ -39,9 +39,9 @@ export default function ScrollToHero() {
   }, []);
 
   const subirAlHero = () => {
-    const hero = document.getElementById('inicio');
-    if (hero) hero.scrollIntoView({ behavior: 'smooth' });
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Va a la parte superior REAL de la página (no a #inicio), para que el navbar
+    // sticky quede visible arriba del hero en vez de superponerse a su contenido.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

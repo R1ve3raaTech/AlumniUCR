@@ -191,7 +191,14 @@ export default function GlobalChatbot() {
         className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
         aria-label="Abrir chat de asistencia"
       >
-        {chatAbierto ? <IClose /> : <IBrain />}
+        {chatAbierto ? (
+          <IClose />
+        ) : (
+          <>
+            <img src="/images/chatbot-avatar.png" alt="Abrir chat" className={styles.chatFabAvatar} />
+            <div className={styles.chatFabTrail}></div>
+          </>
+        )}
       </button>
 
       {/* Ventana de Chat */}
@@ -199,7 +206,7 @@ export default function GlobalChatbot() {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderTitle}>
-              <IBrain />
+              <img src="/images/chatbot-avatar.png" alt="Avatar" className={styles.chatHeaderAvatar} />
               <span>Soporte Alumni UCR</span>
             </div>
             <button
@@ -215,21 +222,39 @@ export default function GlobalChatbot() {
             {mensajes.map((msg, index) => (
               <div
                 key={index}
-                className={`${styles.chatBubble} ${
-                  msg.role === 'user' ? styles.chatBubbleUser : styles.chatBubbleAssistant
-                }`}
+                className={msg.role === 'user' ? styles.chatUserWrapper : styles.chatAssistantWrapper}
               >
-                {formatearTextoMarkdown(msg.text)}
+                {msg.role !== 'user' && (
+                  <img
+                    src="/images/chatbot-avatar.png"
+                    alt="Asistente"
+                    className={styles.chatMessageAvatar}
+                  />
+                )}
+                <div
+                  className={`${styles.chatBubble} ${
+                    msg.role === 'user' ? styles.chatBubbleUser : styles.chatBubbleAssistant
+                  }`}
+                >
+                  {formatearTextoMarkdown(msg.text)}
+                </div>
               </div>
             ))}
             {cargando && (
-              <div className={`${styles.chatBubble} ${styles.chatBubbleLoading}`}>
-                <span className={styles.chatLoadingDots}>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-                <span>Asistente escribiendo...</span>
+              <div className={styles.chatAssistantWrapper}>
+                <img
+                  src="/images/chatbot-avatar.png"
+                  alt="Asistente"
+                  className={styles.chatMessageAvatar}
+                />
+                <div className={`${styles.chatBubble} ${styles.chatBubbleAssistant} ${styles.chatBubbleLoading}`}>
+                  <span className={styles.chatLoadingDots}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </span>
+                  <span>Asistente escribiendo...</span>
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />

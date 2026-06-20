@@ -34,8 +34,8 @@
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
 .card { display: flex; flex-direction: column; gap: .7rem; background: var(--brand-blanco);
-  border: 1px solid var(--ucr-outline-variant); box-shadow: 0 4px 20px rgba(0,76,99,.06); padding: 1.5rem;
-  transition: border-color .3s ease, transform .3s ease; }
+  border: 1px solid var(--ucr-outline-variant); box-shadow: 0 8px 24px rgba(0,76,99,.14); padding: 1.5rem;
+  transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease; }
 .card:hover { border-color: var(--brand-esmeralda); transform: translateY(-4px); }
 .cardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
 .titulo { font-family: var(--font-ucr-display); font-weight: 700; font-size: 1.2rem; color: var(--ucr-primary); margin: 0; line-height: 1.2; }
@@ -53,8 +53,8 @@
 .fecha strong { color: var(--ucr-primary); }
 .cardAcciones { display: flex; align-items: center; gap: .6rem; }
 .aplicarBtn { font-family: var(--font-ucr-display); font-weight: 700; padding: 8px 18px; border-radius: 8px; border: none;
-  background: var(--brand-esmeralda); color: #fff; cursor: pointer; font-size: .85rem; }
-.aplicarBtn:hover { filter: brightness(1.05); }
+  background: #06a5b4; color: #fff; cursor: pointer; font-size: .85rem; transition: transform .15s ease, filter .15s ease; }
+.aplicarBtn:hover { filter: brightness(1.06); transform: scale(1.04); }
 .yaAplico { font-size: .8rem; font-weight: 700; color: var(--ucr-esmeralda); }
 .adaptarLink { font-family: var(--font-ucr-display); font-weight: 700; font-size: .8rem; color: #4a2b8a; text-decoration: none; white-space: nowrap; }
 .adaptarLink:hover { text-decoration: underline; }
