@@ -7,6 +7,7 @@ import Impacto from '@/components/landing/Impacto';
 import ProyectosGraduacion from '@/components/landing/ProyectosGraduacion';
 import Testimonios from '@/components/landing/Testimonios';
 import CTAFinal from '@/components/landing/CTAFinal';
+import MisionFundacion from '@/components/landing/MisionFundacion';
 import Footer from '@/components/landing/Footer';
 import ScrollToHero from '@/components/landing/ScrollToHero';
 
@@ -24,6 +25,7 @@ export default function Home() {
         <Testimonios />
         <Impacto />
         <CTAFinal />
+        <MisionFundacion />
       </main>
       <Footer />
       <ScrollToHero />
