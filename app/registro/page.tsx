@@ -70,6 +70,7 @@ export default function RegistroPage() {
 
   const [rol, setRol] = useState<Rol>('estudiante');
   const [nombre, setNombre] = useState('');
+  const [apellidos, setApellidos] = useState('');
   const [carne, setCarne] = useState('');
   const [cedula, setCedula] = useState('');
   const [correo, setCorreo] = useState('');
@@ -96,7 +97,13 @@ export default function RegistroPage() {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           'ct_registro_datos',
-          JSON.stringify({ nombre: nombre.trim(), carne: carne.trim(), cedula: cedula.trim(), rol: 'estudiante' }),
+          JSON.stringify({
+            nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
+            apellidos: apellidos.trim(),
+            carne: carne.trim(),
+            cedula: cedula.trim(),
+            rol: 'estudiante',
+          }),
         );
       }
       setModoExito('magiclink');
@@ -108,7 +115,8 @@ export default function RegistroPage() {
     setErrorForm(null);
     const errCorreo = validarCorreo(correo);
     if (errCorreo) return setErrorForm(errCorreo);
-    if (nombre.trim().length < 3) return setErrorForm('El nombre completo debe tener al menos 3 caracteres.');
+    if (nombre.trim().length < 1) return setErrorForm('Ingresá tu nombre.');
+    if (apellidos.trim().length < 1) return setErrorForm('Ingresá tus apellidos.');
     const errPass = validarContrasena(contrasena);
     if (errPass) return setErrorForm(errPass);
     if (carreras.length < 1) return setErrorForm('Selecciona al menos una carrera cursada en la UCR.');
@@ -119,7 +127,7 @@ export default function RegistroPage() {
     }
     run(async () => {
       const res = await registrarExalumno({
-        correo: correo.trim(), contrasena, nombre: nombre.trim(),
+        correo: correo.trim(), contrasena, nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
         carreras, facultad, anioGraduacion: anio,
       });
       setConfirmUrl(res?.data?.confirmUrl ?? null);
@@ -131,6 +139,11 @@ export default function RegistroPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rol === 'exalumno') { registrarComoExalumno(); return; }
+    // Campos obligatorios del estudiante (error se muestra debajo del botón)
+    setErrorForm(null);
+    if (nombre.trim().length < 1) return setErrorForm('Ingresá tu nombre.');
+    if (apellidos.trim().length < 1) return setErrorForm('Ingresá tus apellidos.');
+    if (cedula.trim().length < 1) return setErrorForm('Ingresá tu número de cédula.');
     const err = validarCorreoPorRol(correo, 'estudiante');
     setErrorCorreo(err);
     if (err) return;
@@ -406,12 +419,21 @@ export default function RegistroPage() {
                     </h2>
 
                     <div className={styles.fields}>
-                      <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
-                        <label className={styles.label} htmlFor="nombre">Nombre completo</label>
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor="nombre">Nombre <span className={styles.req}>*</span></label>
                         <div className={styles.inputWrap}>
                           <span className={styles.inputIcon}><IPerson /></span>
-                          <input id="nombre" className={styles.input} type="text" placeholder="Ej: Juan Pérez"
-                            value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                          <input id="nombre" className={styles.input} type="text" placeholder="Ej: Juan"
+                            autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                        </div>
+                      </div>
+
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor="apellidos">Apellidos <span className={styles.req}>*</span></label>
+                        <div className={styles.inputWrap}>
+                          <span className={styles.inputIcon}><IPerson /></span>
+                          <input id="apellidos" className={styles.input} type="text" placeholder="Ej: Pérez Mora"
+                            autoComplete="family-name" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
                         </div>
                       </div>
 
@@ -434,11 +456,11 @@ export default function RegistroPage() {
                             </div>
 
                             <div className={`${styles.field} ${styles.fieldFull}`}>
-                              <label className={styles.label} htmlFor="cedula">Cédula</label>
+                              <label className={styles.label} htmlFor="cedula">Cédula <span className={styles.req}>*</span></label>
                               <div className={styles.inputWrap}>
                                 <span className={styles.inputIcon}><IBadge /></span>
                                 <input id="cedula" className={styles.input} type="text" placeholder="Ej: 1-1234-5678"
-                                  inputMode="numeric" value={cedula} onChange={(e) => setCedula(e.target.value)} />
+                                  inputMode="numeric" value={cedula} onChange={(e) => setCedula(e.target.value)} required />
                               </div>
                             </div>
                           </motion.div>
@@ -446,7 +468,7 @@ export default function RegistroPage() {
                       </AnimatePresence>
 
                       <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
-                        <label className={styles.label} htmlFor="correo">Correo electrónico</label>
+                        <label className={styles.label} htmlFor="correo">Correo electrónico <span className={styles.req}>*</span></label>
                         <div className={styles.inputWrap}>
                           <span className={styles.inputIcon}><IMail /></span>
                           <input id="correo" className={styles.input} type="email"
@@ -560,7 +582,7 @@ export default function RegistroPage() {
                     </AnimatePresence>
 
                     <p className={styles.terms}>
-                      Al registrarte, aceptas nuestros <a href="#">Términos y Condiciones</a>.
+                      Al registrarte, aceptas nuestros <Link href="/terminos">Términos y Condiciones</Link>.
                     </p>
                   </motion.div>
                 </motion.form>
@@ -574,8 +596,8 @@ export default function RegistroPage() {
         <AlumniLogo height={34} />
         <div className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</div>
         <div className={styles.footerLinks}>
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
+          <Link href="/terminos#privacidad">Privacidad</Link>
+          <Link href="/terminos">Términos</Link>
           <Link href="/ayuda">Soporte</Link>
         </div>
       </footer>
