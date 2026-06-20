@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+
 import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
@@ -23,7 +23,7 @@ export default function Navbar() {
   const cerrar = () => setAbierto(false);
 
   return (
-    <motion.nav
+    <nav
       className={styles.navbar}
     >
       <div className={`${styles.container} ${styles.navInner}`}>
@@ -78,19 +78,18 @@ export default function Navbar() {
           )}
         </div>
 
-        <motion.button
+        <button
           type="button"
           className={styles.navToggle}
           aria-label="Abrir menú"
           aria-expanded={abierto}
           onClick={() => setAbierto((v) => !v)}
-          whileTap={{ scale: 0.85 }}
         >
           <span />
           <span />
           <span />
-        </motion.button>
+        </button>
       </div>
-    </motion.nav>
+    </nav>
   );
 }
