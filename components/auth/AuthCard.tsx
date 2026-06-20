@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import AlumniLogo from '@/components/AlumniLogo';
 import styles from './auth.module.css';
 
 interface AuthCardProps {
@@ -14,7 +15,7 @@ export default function AuthCard({ title, subtitle, children }: AuthCardProps) {
   return (
     <div className={styles.page}>
       <motion.div
-        className={`glass-card ${styles.card}`}
+        className={styles.card}
         initial={{ opacity: 0, scale: 0.92, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.45, ease: 'easeOut' }}
@@ -27,13 +28,14 @@ export default function AuthCard({ title, subtitle, children }: AuthCardProps) {
         >
           <motion.div
             className={styles.brand}
-            initial={{ scale: 0.4, opacity: 0 }}
+            initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.45, type: 'spring', stiffness: 220, damping: 15 }}
           >
-            CT
+            <AlumniLogo height={42} />
           </motion.div>
           <h1 className={styles.title}>{title}</h1>
+          <div className={styles.accentBar} />
           {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
         </motion.div>
         {children}

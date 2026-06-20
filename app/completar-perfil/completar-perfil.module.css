@@ -1,9 +1,9 @@
-/* Estilos del paso de completar perfil. Reutiliza el tema de app/globals.css
-   y los estilos compartidos de components/auth/auth.module.css. */
+/* Estilos del paso de completar perfil. Identidad de marca UCR; reutiliza los
+   estilos compartidos de components/auth/auth.module.css. */
 
 .requisitos {
-  margin-top: 0.4rem;
+  margin-top: 0.45rem;
   font-size: 0.78rem;
-  color: hsl(var(--muted-foreground));
+  color: var(--ucr-on-surface-variant);
   line-height: 1.5;
 }
