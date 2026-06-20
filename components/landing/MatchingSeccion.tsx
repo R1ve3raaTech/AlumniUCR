@@ -1,161 +1,172 @@
 'use client';
 
-// Sección Matching INTERDISCIPLINARIO: grid de tarjetas estudiante ↔ exalumno.
-// La afinidad se calcula por 4 conexiones, cada una con su puntaje:
-//   misma carrera (30) · áreas de interés (30) · temática de proyecto (20) ·
-//   tipo de apoyo (10). El exalumno ofrece: financiamiento, empleo, pasantía
-//   o mentoría.
+// Sección Matching: layout "info + showcase". A la izquierda la información y la
+// leyenda de puntajes; a la derecha 2 columnas de tarjetas-perfil que bajan en
+// marquee escalonado (con máscara circular difuminada para el efecto de
+// aparición). Cada tarjeta-perfil (estilo "carta de match") muestra foto,
+// nombre/edad, carrera, qué busca, una cita, su proyecto destacado, hashtags y
+// acciones (descartar / conectar / guardar).
 //
-// NOTA: los matches son ejemplos realistas e ilustrativos (no de una base real
-// todavía). Con un endpoint de matches se reemplaza el array MATCHES.
+// NOTA: los perfiles son ejemplos realistas e ilustrativos (no de base real).
 
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight } from './icons';
 import styles from './landing.module.css';
 
-type Apoyo = 'Financiamiento' | 'Empleo' | 'Pasantía' | 'Mentoría';
-interface Afin { carrera: boolean; interes: boolean; tematica: boolean; apoyo: boolean; }
-interface Match {
-  est: string; estCarrera: string;
-  ex: string; exRol: string; exEmpresa: string;
-  area: string; img: string;
-  afin: Afin; ofrece: Apoyo;
+type Busca = 'Empleo' | 'Mentoría' | 'Pasantía' | 'Financiamiento';
+interface Perfil {
+  nombre: string; edad: number; carrera: string; busca: Busca;
+  cita: string; proyecto: string; tags: string[];
+  foto: string; proyImg: string;
 }
 
-const PESOS = { carrera: 30, interes: 30, tematica: 20, apoyo: 10 } as const;
-const AFIN_META: { key: keyof Afin; label: string; pts: number }[] = [
-  { key: 'carrera', label: 'Misma carrera', pts: PESOS.carrera },
-  { key: 'interes', label: 'Áreas de interés', pts: PESOS.interes },
-  { key: 'tematica', label: 'Temática de proyecto', pts: PESOS.tematica },
-  { key: 'apoyo', label: 'Tipo de apoyo', pts: PESOS.apoyo },
-];
-const score = (a: Afin) =>
-  (a.carrera ? PESOS.carrera : 0) + (a.interes ? PESOS.interes : 0) +
-  (a.tematica ? PESOS.tematica : 0) + (a.apoyo ? PESOS.apoyo : 0);
-
-const APOYO_COLOR: Record<Apoyo, string> = {
-  Financiamiento: '#F34B26', // naranja
-  Empleo: '#004C63',         // teal
-  'Pasantía': '#007D67',     // esmeralda
-  'Mentoría': '#E0A400',     // amarillo (oscurecido para contraste sobre blanco)
+const BUSCA_COLOR: Record<Busca, { bg: string; tx: string }> = {
+  Empleo: { bg: '#FFC72C', tx: '#5a4600' },
+  'Mentoría': { bg: '#54BCEB', tx: '#00303f' },
+  'Pasantía': { bg: '#007D67', tx: '#ffffff' },
+  Financiamiento: { bg: '#F34B26', tx: '#ffffff' },
 };
 
-const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=800&q=80&auto=format&fit=crop`;
+const F = (id: string) => `https://images.unsplash.com/photo-${id}?w=600&q=80&auto=format&fit=crop`;
 
-const MATCHES: Match[] = [
-  { est: 'María Jiménez', estCarrera: 'Computación', ex: 'Roberto Soto', exRol: 'Ing. de Software', exEmpresa: 'TechCR', area: 'Salud Digital', img: IMG('1576091160550-2173dba999ef'), afin: { carrera: true, interes: true, tematica: true, apoyo: true }, ofrece: 'Mentoría' },
-  { est: 'Carlos Torres', estCarrera: 'Psicología', ex: 'Esteban Murillo', exRol: 'Psicólogo Org.', exEmpresa: 'Bienestar Digital', area: 'Salud Mental', img: IMG('1573497019940-1c28c88b4f3e'), afin: { carrera: true, interes: true, tematica: false, apoyo: true }, ofrece: 'Empleo' },
-  { est: 'Ana Rojas', estCarrera: 'Economía', ex: 'Mariana Castro', exRol: 'Analista Financiera', exEmpresa: 'AgroTech', area: 'Educación Financiera', img: IMG('1554224155-6726b3ff858f'), afin: { carrera: true, interes: false, tematica: true, apoyo: true }, ofrece: 'Financiamiento' },
-  { est: 'Laura Vega', estCarrera: 'Ing. Ambiental', ex: 'Andrés León', exRol: 'Ing. Ambiental', exEmpresa: 'AquaCR', area: 'Medio Ambiente', img: IMG('1500375592092-40eb2168fd21'), afin: { carrera: true, interes: true, tematica: true, apoyo: false }, ofrece: 'Pasantía' },
-  { est: 'Diego Mora', estCarrera: 'Ing. Eléctrica', ex: 'Sofía Arias', exRol: 'Ing. de Energía', exEmpresa: 'SolarTica', area: 'Energía Renovable', img: IMG('1509391366360-2e959784a276'), afin: { carrera: true, interes: true, tematica: false, apoyo: true }, ofrece: 'Pasantía' },
-  { est: 'Sofía Blanco', estCarrera: 'Arquitectura', ex: 'Luis Brenes', exRol: 'Arquitecto', exEmpresa: 'EcoHaus', area: 'Arq. Sostenible', img: IMG('1487958449943-2429e8be8625'), afin: { carrera: true, interes: false, tematica: true, apoyo: true }, ofrece: 'Mentoría' },
-  { est: 'Mariana Vargas', estCarrera: 'Agronomía', ex: 'José Quirós', exRol: 'Agrónomo', exEmpresa: 'CaféCoop', area: 'Agrotecnología', img: IMG('1500382017468-9049fed747ef'), afin: { carrera: true, interes: true, tematica: true, apoyo: true }, ofrece: 'Financiamiento' },
-  { est: 'Andrés Soto', estCarrera: 'Biología', ex: 'Lucía Méndez', exRol: 'Bióloga Marina', exEmpresa: 'MarViva', area: 'Biología Marina', img: IMG('1532094349884-543bc11b234d'), afin: { carrera: true, interes: true, tematica: false, apoyo: false }, ofrece: 'Empleo' },
-  { est: 'Valeria Núñez', estCarrera: 'Comunicación', ex: 'Pedro Ramírez', exRol: 'Productor', exEmpresa: 'Canal UCR', area: 'Comunicación', img: IMG('1504384308090-c894fdcc538d'), afin: { carrera: true, interes: false, tematica: true, apoyo: false }, ofrece: 'Mentoría' },
-  { est: 'José Ramírez', estCarrera: 'Ing. Mecánica', ex: 'Karla Solís', exRol: 'Ing. de Robótica', exEmpresa: 'RoboCR', area: 'Robótica Educativa', img: IMG('1485827404703-89b55fcc595e'), afin: { carrera: false, interes: true, tematica: true, apoyo: true }, ofrece: 'Pasantía' },
-  { est: 'Daniela Campos', estCarrera: 'Nutrición', ex: 'Marta Vega', exRol: 'Nutricionista', exEmpresa: 'VidaSana', area: 'Nutrición', img: IMG('1490645935967-10de6ba17061'), afin: { carrera: true, interes: true, tematica: true, apoyo: false }, ofrece: 'Mentoría' },
-  { est: 'Gabriel Mora', estCarrera: 'Ing. Civil', ex: 'Fernando Rojas', exRol: 'Ing. Civil', exEmpresa: 'Constructora CR', area: 'Infraestructura', img: IMG('1503387762-592deb58ef4e'), afin: { carrera: true, interes: false, tematica: false, apoyo: true }, ofrece: 'Empleo' },
-  { est: 'Fernanda Rojas', estCarrera: 'Derecho', ex: 'Carolina Díaz', exRol: 'Abogada', exEmpresa: 'LexCR', area: 'Tecnología Legal', img: IMG('1589829545856-d10d557cf95f'), afin: { carrera: true, interes: true, tematica: false, apoyo: false }, ofrece: 'Mentoría' },
-  { est: 'Tomás Herrera', estCarrera: 'Computación', ex: 'Natalia Vargas', exRol: 'CTO', exEmpresa: 'DataCR', area: 'IA & Software', img: IMG('1517694712202-14dd9538aa97'), afin: { carrera: true, interes: true, tematica: true, apoyo: false }, ofrece: 'Empleo' },
-  { est: 'Camila Soto', estCarrera: 'Diseño Gráfico', ex: 'Diego Pérez', exRol: 'Director Creativo', exEmpresa: 'Estudio Pixela', area: 'Arte y Diseño', img: IMG('1452860606245-08befc0ff44b'), afin: { carrera: true, interes: false, tematica: true, apoyo: true }, ofrece: 'Pasantía' },
+const COL_A: Perfil[] = [
+  { nombre: 'Carlos', edad: 24, carrera: 'Computación', busca: 'Empleo',
+    cita: 'Desarrollador enfocado en Big Data y visualización. Mi TFG optimiza el análisis de datos universitarios. Busco mi primera oportunidad en tech.',
+    proyecto: 'Data Analytics Dashboard', tags: ['BigData', 'Python', 'UCR'],
+    foto: F('1507003211169-0a1dd7228f2d'), proyImg: F('1517694712202-14dd9538aa97') },
+  { nombre: 'Valeria', edad: 23, carrera: 'Psicología', busca: 'Mentoría',
+    cita: 'Investigo bienestar y salud mental digital. Busco una mentora que me guíe hacia la psicología organizacional.',
+    proyecto: 'App Bienestar UCR', tags: ['SaludMental', 'UX', 'Investigación'],
+    foto: F('1494790108377-be9c29b29330'), proyImg: F('1573497019940-1c28c88b4f3e') },
+  { nombre: 'Diego', edad: 25, carrera: 'Ing. Eléctrica', busca: 'Pasantía',
+    cita: 'Apasionado por la energía renovable. Diseñé micro-redes solares para comunidades rurales sin acceso a la red.',
+    proyecto: 'SolarComunidad', tags: ['Energía', 'IoT', 'Sostenibilidad'],
+    foto: F('1500648767791-00dcc994a43e'), proyImg: F('1509391366360-2e959784a276') },
+  { nombre: 'Ana', edad: 22, carrera: 'Economía', busca: 'Financiamiento',
+    cita: 'Creé una app de educación financiera gamificada para jóvenes. Busco inversión para llevarla al mercado.',
+    proyecto: 'Fin-Connect', tags: ['Fintech', 'Edtech', 'Startup'],
+    foto: F('1438761681033-6461ffad8d80'), proyImg: F('1554224155-6726b3ff858f') },
+  { nombre: 'Laura', edad: 24, carrera: 'Ing. Ambiental', busca: 'Pasantía',
+    cita: 'Monitoreo de calidad del agua con sensores de bajo costo. Quiero aplicar mi TFG en campo con una organización.',
+    proyecto: 'AquaMonitor', tags: ['MedioAmbiente', 'Datos', 'Comunidad'],
+    foto: F('1544005313-94ddf0286df2'), proyImg: F('1500375592092-40eb2168fd21') },
+  { nombre: 'Mariana', edad: 23, carrera: 'Agronomía', busca: 'Mentoría',
+    cita: 'Sensores IoT para cafetales. Busco mentoría de agrónomos con experiencia en cooperativas.',
+    proyecto: 'AgroSensor Café', tags: ['Agrotech', 'Café', 'IoT'],
+    foto: F('1534528741775-53994a69daeb'), proyImg: F('1500382017468-9049fed747ef') },
 ];
 
-const ini = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+const COL_B: Perfil[] = [
+  { nombre: 'Andrés', edad: 26, carrera: 'Biología', busca: 'Empleo',
+    cita: 'Restauración de arrecifes en el Pacífico. Quiero sumarme a un equipo de conservación marina.',
+    proyecto: 'BioReef', tags: ['BiologíaMarina', 'Conservación', 'Buceo'],
+    foto: F('1506794778202-cad84cf45f1d'), proyImg: F('1532094349884-543bc11b234d') },
+  { nombre: 'Sofía', edad: 24, carrera: 'Arquitectura', busca: 'Mentoría',
+    cita: 'Diseño bioclimático para el trópico húmedo. Busco aprender de arquitectos en práctica sostenible.',
+    proyecto: 'Casa Trópico', tags: ['Arquitectura', 'Sostenible', 'Diseño'],
+    foto: F('1573496359142-b8d87734a5a2'), proyImg: F('1487958449943-2429e8be8625') },
+  { nombre: 'José', edad: 25, carrera: 'Ing. Mecánica', busca: 'Pasantía',
+    cita: 'Kits de robótica educativa para escuelas rurales. Busco una empresa aliada para escalar.',
+    proyecto: 'EduRobótica', tags: ['Robótica', 'Educación', 'Maker'],
+    foto: F('1519085360753-af0119f7cbe7'), proyImg: F('1485827404703-89b55fcc595e') },
+  { nombre: 'Daniela', edad: 23, carrera: 'Comunicación', busca: 'Empleo',
+    cita: 'Periodismo comunitario basado en datos. Busco mi primer puesto en medios digitales.',
+    proyecto: 'Voces UCR', tags: ['Periodismo', 'Datos', 'Comunidad'],
+    foto: F('1607746882042-944635dfe10e'), proyImg: F('1504384308090-c894fdcc538d') },
+  { nombre: 'Tomás', edad: 24, carrera: 'Computación', busca: 'Empleo',
+    cita: 'Backend e IA. Mi TFG es un asistente de matching. Busco trabajo en una startup de tecnología.',
+    proyecto: 'MatchAI', tags: ['IA', 'Backend', 'Node'],
+    foto: F('1492562080023-ab3db95bfbce'), proyImg: F('1518770660439-4636190af475') },
+  { nombre: 'Camila', edad: 22, carrera: 'Diseño Gráfico', busca: 'Pasantía',
+    cita: 'Branding e identidad visual. Busco una pasantía en un estudio creativo para crecer.',
+    proyecto: 'Marca Viva', tags: ['Branding', 'UI', 'Ilustración'],
+    foto: F('1517841905240-472988babdf9'), proyImg: F('1452860606245-08befc0ff44b') },
+];
+
+const ICns = {
+  ext: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M14 5h5v5M19 5l-8 8M19 13v6H5V5h6" /></svg>,
+  x: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>,
+  heart: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.6-9.5-9C1 9 2.4 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.6 0 5 3.5 3.5 6.5C19 16.4 12 21 12 21z" /></svg>,
+  save: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12v16l-6-4-6 4z" /></svg>,
+};
+
+function Card({ p }: { p: Perfil }) {
+  const bc = BUSCA_COLOR[p.busca];
+  return (
+    <div className={styles.imProfile}>
+      <div className={styles.imPhoto}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={p.foto} alt={p.nombre} loading="lazy" />
+        <span className={styles.imBusca} style={{ ['--bc']: bc.bg, ['--btc']: bc.tx } as React.CSSProperties}>
+          Busca {p.busca}
+        </span>
+        <div className={styles.imPhotoName}>
+          <b>{p.nombre}, {p.edad}</b>
+          <small>{p.carrera}</small>
+        </div>
+      </div>
+      <div className={styles.imProfBody}>
+        <p className={styles.imQuote}>“{p.cita}”</p>
+        <div className={styles.imProyecto}>
+          <p className={styles.imProyTit}>Proyecto destacado</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={styles.imProyImg} src={p.proyImg} alt={p.proyecto} loading="lazy" />
+          <div className={styles.imProyName}>{p.proyecto} {ICns.ext}</div>
+        </div>
+        <div className={styles.imTags}>
+          {p.tags.map((t) => <span key={t} className={styles.imTag}>#{t}</span>)}
+        </div>
+        <div className={styles.imActions}>
+          <button type="button" className={styles.imAct} aria-label="Descartar">{ICns.x}</button>
+          <button type="button" className={`${styles.imAct} ${styles.imActLike}`} aria-label="Conectar">{ICns.heart}</button>
+          <button type="button" className={styles.imAct} aria-label="Guardar">{ICns.save}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MatchingSeccion() {
   return (
     <section id="matching" className={`${styles.section} ${styles.matchTapiz}`}>
       <div className={styles.container}>
-        <motion.div
-          className={styles.matchHeader}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-        >
-          <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>
-            Matching <em>Inteligente</em>
-          </h2>
-          <div className={styles.accentBar} />
-          <p className={styles.matchSubtitle}>
-            Conectamos a cada estudiante con el exalumno ideal por afinidad: misma carrera (30),
-            áreas de interés (30), temática de proyecto (20) y tipo de apoyo (10). El puntaje total
-            mide qué tan fuerte es el match.
-          </p>
-        </motion.div>
+        <div className={styles.imLayout}>
+          {/* Info a la izquierda */}
+          <motion.div
+            className={styles.imInfo}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          >
+            <div className={styles.matchHeader}>
+              <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>Matching <em>Inteligente</em></h2>
+              <div className={styles.accentBar} />
+              <p className={styles.matchSubtitle}>
+                Conectamos a cada estudiante con el exalumno ideal por afinidad. Mientras más
+                coincidencias, mayor el puntaje del match.
+              </p>
+            </div>
+            <ul className={styles.imScoreLegend}>
+              <li><span className={styles.imLegendDot} /> Misma carrera <b>30 pts</b></li>
+              <li><span className={styles.imLegendDot} /> Áreas de interés común <b>30 pts</b></li>
+              <li><span className={styles.imLegendDot} /> Temática de proyecto <b>20 pts</b></li>
+              <li><span className={styles.imLegendDot} /> Tipo de apoyo ofrecido <b>10 pts</b></li>
+            </ul>
+            <Link href="/registro" className={styles.matchCta}>Encontrá tu match</Link>
+          </motion.div>
 
-        <div className={styles.imGrid}>
-          {MATCHES.map((m) => {
-            const total = score(m.afin);
-            return (
-              <motion.article
-                key={`${m.est}-${m.ex}`}
-                className={styles.imCard}
-                initial={{ opacity: 0, y: 26 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.45, ease: 'easeOut' }}
-              >
-                <div className={styles.imImgWrap}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className={styles.imImg} src={m.img} alt={m.area} loading="lazy" />
-                  <span className={styles.imArea}>{m.area}</span>
-                  <span className={styles.imScore}>{total}<small>pts</small></span>
-                  <span className={styles.imOfrece} style={{ ['--ap']: APOYO_COLOR[m.ofrece] } as React.CSSProperties}>
-                    Ofrece: {m.ofrece}
-                  </span>
-                </div>
-
-                <div className={styles.imBody}>
-                  <div className={styles.imPeople}>
-                    <div className={styles.imPerson}>
-                      <span className={`${styles.imAvatar} ${styles.imAvEst}`}>{ini(m.est)}</span>
-                      <span className={styles.imInfo}>
-                        <b>{m.est}</b>
-                        <small>{m.estCarrera}</small>
-                        <span className={`${styles.imRol} ${styles.imRolEst}`}>Estudiante</span>
-                      </span>
-                    </div>
-                    <span className={styles.imLink} aria-hidden>↔</span>
-                    <div className={styles.imPerson}>
-                      <span className={`${styles.imAvatar} ${styles.imAvEx}`}>{ini(m.ex)}</span>
-                      <span className={styles.imInfo}>
-                        <b>{m.ex}</b>
-                        <small>{m.exRol} · {m.exEmpresa}</small>
-                        <span className={`${styles.imRol} ${styles.imRolEx}`}>Exalumno</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={styles.imAfin}>
-                    {AFIN_META.map((a) => {
-                      const on = m.afin[a.key];
-                      return (
-                        <span key={a.key} className={`${styles.imChip} ${on ? styles.imChipOn : styles.imChipOff}`}>
-                          {a.label}{on && <b>+{a.pts}</b>}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.article>
-            );
-          })}
+          {/* Showcase: 2 columnas en marquee escalonado */}
+          <div className={styles.imShowcase} aria-hidden>
+            <div className={`${styles.imColumn} ${styles.imColA}`}>
+              {[...COL_A, ...COL_A].map((p, i) => <Card key={`a-${p.nombre}-${i}`} p={p} />)}
+            </div>
+            <div className={`${styles.imColumn} ${styles.imColB}`}>
+              {[...COL_B, ...COL_B].map((p, i) => <Card key={`b-${p.nombre}-${i}`} p={p} />)}
+            </div>
+          </div>
         </div>
-
-        <motion.div
-          className={styles.matchCtaWrap}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-        >
-          <Link href="/registro" className={styles.matchCta}>
-            Encontrá tu match <ArrowRight />
-          </Link>
-        </motion.div>
       </div>
     </section>
   );
