@@ -94,7 +94,8 @@ export default function Impacto() {
       <div className={styles.impactoRight}>
         <div className={styles.impactoHead}>
           <h2 className={`${styles.sectionTitle} ${styles.headlineLg}`}>Nuestro <em>Impacto</em></h2>
-          <p className={styles.impactoSub}>Una red viva que conecta talento y experiencia. Esto es lo que logramos juntos.</p>
+          <div className={styles.accentBar} />
+          <p className={styles.matchSubtitle}>Una red viva que conecta talento y experiencia. Esto es lo que logramos juntos.</p>
         </div>
 
         <div ref={ref} className={styles.apiCols}>

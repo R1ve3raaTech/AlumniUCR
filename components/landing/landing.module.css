@@ -1523,9 +1523,9 @@
   gap: 1.6rem;
   padding: 3rem clamp(1.5rem, 4vw, 4rem);
 }
-.impactoHead { text-align: center; }
-.impactoHead .sectionTitle { color: var(--ucr-primary); }
-.impactoSub { max-width: 34rem; margin: 0.7rem auto 0; color: var(--ucr-primary); font-weight: 500; font-size: 0.98rem; line-height: 1.5; }
+/* Encabezado con el MISMO estilo que Matching (título + accentBar + subtítulo) */
+.impactoHead { text-align: center; margin-bottom: 0.5rem; }
+.impactoHead .accentBar { margin-left: auto; margin-right: auto; }
 
 /* Grid 2×2: las 4 tarjetas con el MISMO ancho y alto (filas iguales) */
 .apiCols {
