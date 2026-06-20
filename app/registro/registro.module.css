@@ -260,12 +260,23 @@
 }
 
 .stepTitle {
-  font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ucr-outline);
+  color: var(--ucr-primary);
   margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.stepTitle::before {
+  content: '';
+  width: 1.6rem;
+  height: 0.28rem;
+  border-radius: 2px;
+  background: var(--ucr-celeste);
 }
 
 /* ─── Paso 1: selección de rol ────────────────────────────────────── */
@@ -357,67 +368,76 @@
 }
 
 .roleCard {
-  border: 2px solid var(--ucr-surface-variant);
-  background: var(--ucr-surface);
-  padding: 1.5rem;
-  border-radius: 0.75rem;
+  border: 2px solid var(--ucr-outline-variant);
+  background: var(--brand-blanco);
+  padding: 1.85rem 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px -18px rgba(0, 40, 55, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease,
-    background 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease,
+    background 0.25s ease, box-shadow 0.25s ease;
   height: 100%;
 }
 
 .roleCard:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  border-color: var(--ucr-celeste);
+  box-shadow: 0 22px 44px -20px rgba(0, 40, 55, 0.3);
 }
 
-/* Estado seleccionado (el input :checked precede al label vía data-active) */
-.roleCardActive {
-  border-color: var(--ucr-esmeralda);
-  background: #f0fdfa;
+/* Estado seleccionado: borde esmeralda + tinte sutil + sombra de marca */
+.roleCardActive,
+.roleCardActive:hover {
+  border-color: var(--brand-esmeralda);
+  background: linear-gradient(180deg, #eafaf5 0%, #ffffff 70%);
+  box-shadow: 0 20px 44px -18px rgba(0, 125, 103, 0.32);
 }
 
 .roleIcon {
-  width: 4rem;
-  height: 4rem;
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: 50%;
-  background: var(--ucr-surface-container);
-  color: var(--ucr-secondary);
+  background: linear-gradient(135deg, var(--ucr-celeste), var(--brand-esmeralda));
+  color: var(--brand-blanco);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
-  transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
+  margin-bottom: 1.1rem;
+  box-shadow: 0 12px 26px -10px rgba(0, 125, 103, 0.45);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .roleCard:hover .roleIcon {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .roleCardActive .roleIcon {
-  background: var(--ucr-esmeralda);
-  color: var(--brand-blanco);
+  background: linear-gradient(135deg, var(--brand-esmeralda), var(--ucr-primary));
+  box-shadow: 0 14px 30px -10px rgba(0, 125, 103, 0.55);
 }
 
 .roleIcon svg {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
 }
 
 .roleTitle {
   font-family: var(--font-ucr-display);
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
   color: var(--ucr-primary);
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
 }
 
 .roleDesc {
-  font-size: 0.75rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.4;
   color: var(--ucr-on-surface-variant);
 }
 
