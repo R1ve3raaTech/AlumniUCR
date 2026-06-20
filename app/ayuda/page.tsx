@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
+import { enviarConsultaSoporte } from '@/lib/consultasSoporte';
 import styles from './ayuda.module.css';
 
 // Registro de plugins GSAP
@@ -55,6 +56,43 @@ export default function AyudaPage() {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
   const [abierto, setAbierto] = useState<number | null>(null);
+
+  // ─── Consulta directa al administrador (Centro de Soporte) ──────────────
+  const [consulta, setConsulta] = useState({ nombre: '', apellidos: '', cedula: '', telefono: '', mensaje: '' });
+  const [enviandoConsulta, setEnviandoConsulta] = useState(false);
+  const [consultaEnviada, setConsultaEnviada] = useState(false);
+  const [errorConsulta, setErrorConsulta] = useState<string | null>(null);
+
+  const setCampoConsulta = (campo: keyof typeof consulta, valor: string) =>
+    setConsulta((c) => ({ ...c, [campo]: valor }));
+
+  async function enviarConsulta(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorConsulta(null);
+    const { nombre, apellidos, cedula, telefono, mensaje } = consulta;
+    if (!nombre.trim() || !apellidos.trim() || !cedula.trim() || !telefono.trim() || !mensaje.trim()) {
+      setErrorConsulta('Por favor completá todos los campos.');
+      return;
+    }
+    setEnviandoConsulta(true);
+    try {
+      await enviarConsultaSoporte({
+        nombre: nombre.trim(), apellidos: apellidos.trim(), cedula: cedula.trim(),
+        telefono: telefono.trim(), mensaje: mensaje.trim(),
+      });
+      setConsultaEnviada(true);
+    } catch (err) {
+      setErrorConsulta(err instanceof Error ? err.message : 'No se pudo enviar la consulta. Intentá de nuevo.');
+    } finally {
+      setEnviandoConsulta(false);
+    }
+  }
+
+  const irAConsulta = () => {
+    if (typeof document !== 'undefined') {
+      document.getElementById('consulta-admin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const categoriasRef = useRef<HTMLElement>(null);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -308,6 +346,13 @@ export default function AyudaPage() {
                   >
                     <IChat /> Consultar Asistente
                   </button>
+                  <button
+                    type="button"
+                    onClick={irAConsulta}
+                    style={{ background: 'transparent', color: 'var(--ucr-primary)', padding: '0.5rem 1rem', borderRadius: '0.375rem', fontSize: '0.9rem', fontWeight: 700, border: '1.5px solid var(--ucr-celeste)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}
+                  >
+                    <IMessageSquare style={{ width: 18, height: 18 }} /> Escribir al administrador
+                  </button>
                 </div>
               ) : (
                 faqsFiltradas.map((f, i) => {
@@ -391,6 +436,70 @@ export default function AyudaPage() {
               </div>
             </div>
             
+          </div>
+        </section>
+
+        {/* ─── Consulta directa al administrador (Centro de Soporte) ─── */}
+        <section id="consulta-admin" style={{ padding: '4rem 2rem 5rem', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '100%', maxWidth: '680px', background: 'var(--brand-blanco)', border: '1px solid var(--ucr-outline-variant)', borderTop: '5px solid var(--ucr-celeste)', borderRadius: '1.25rem', boxShadow: '0 30px 70px -30px rgba(0,31,42,0.22)', padding: 'clamp(1.5rem, 1rem + 2vw, 2.75rem)' }}>
+            {consultaEnviada ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                <div style={{ width: '5rem', height: '5rem', margin: '0 auto 1.25rem', borderRadius: '50%', background: 'linear-gradient(135deg, var(--ucr-celeste), var(--brand-esmeralda))', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ width: 40, height: 40 }}><path d="M20 6 9 17l-5-5" /></svg>
+                </div>
+                <h2 style={{ fontFamily: 'var(--font-ucr-display)', fontWeight: 800, fontSize: '1.7rem', color: 'var(--ucr-primary)', margin: '0 0 0.5rem' }}>¡Consulta enviada!</h2>
+                <p style={{ color: 'var(--ucr-on-surface-variant)', fontSize: '1.05rem', lineHeight: 1.6, maxWidth: '34rem', margin: '0 auto' }}>
+                  Tu consulta fue enviada al <strong style={{ color: 'var(--ucr-primary)' }}>Centro de Soporte Alumni UCR</strong>. Nuestro equipo la revisará y te contactará a la brevedad.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', marginBottom: '0.5rem' }}>
+                  <span style={{ width: '3rem', height: '3rem', flexShrink: 0, borderRadius: '0.85rem', background: 'rgba(84,188,235,0.15)', color: 'var(--ucr-primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><IMessageSquare style={{ width: 24, height: 24 }} /></span>
+                  <h2 style={{ fontFamily: 'var(--font-ucr-display)', fontWeight: 800, fontSize: 'clamp(1.5rem, 1.2rem + 1vw, 2rem)', color: 'var(--ucr-primary)', margin: 0, lineHeight: 1.1 }}>¿No encontraste tu respuesta?</h2>
+                </div>
+                <p style={{ color: 'var(--ucr-on-surface-variant)', fontSize: '1rem', lineHeight: 1.55, margin: '0 0 1.5rem' }}>
+                  Escribinos directamente al <strong>administrador del Centro de Soporte</strong> y te ayudamos con tu consulta.
+                </p>
+
+                <form onSubmit={enviarConsulta} noValidate>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label htmlFor="c-nombre" style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', color: 'var(--ucr-primary)', marginBottom: '0.4rem' }}>Nombre completo *</label>
+                      <input id="c-nombre" type="text" value={consulta.nombre} onChange={(e) => setCampoConsulta('nombre', e.target.value)} placeholder="Ej: Juan" style={{ width: '100%', padding: '0.8rem 1rem', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.6rem', background: 'var(--ucr-surface)', fontSize: '0.95rem', color: 'var(--ucr-on-surface)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label htmlFor="c-apellidos" style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', color: 'var(--ucr-primary)', marginBottom: '0.4rem' }}>Apellidos *</label>
+                      <input id="c-apellidos" type="text" value={consulta.apellidos} onChange={(e) => setCampoConsulta('apellidos', e.target.value)} placeholder="Ej: Pérez Mora" style={{ width: '100%', padding: '0.8rem 1rem', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.6rem', background: 'var(--ucr-surface)', fontSize: '0.95rem', color: 'var(--ucr-on-surface)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label htmlFor="c-cedula" style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', color: 'var(--ucr-primary)', marginBottom: '0.4rem' }}>Cédula o documento *</label>
+                      <input id="c-cedula" type="text" inputMode="numeric" value={consulta.cedula} onChange={(e) => setCampoConsulta('cedula', e.target.value)} placeholder="Ej: 1-1234-5678" style={{ width: '100%', padding: '0.8rem 1rem', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.6rem', background: 'var(--ucr-surface)', fontSize: '0.95rem', color: 'var(--ucr-on-surface)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label htmlFor="c-telefono" style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', color: 'var(--ucr-primary)', marginBottom: '0.4rem' }}>Teléfono de contacto *</label>
+                      <input id="c-telefono" type="tel" inputMode="tel" value={consulta.telefono} onChange={(e) => setCampoConsulta('telefono', e.target.value)} placeholder="Ej: 8888-8888" style={{ width: '100%', padding: '0.8rem 1rem', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.6rem', background: 'var(--ucr-surface)', fontSize: '0.95rem', color: 'var(--ucr-on-surface)', fontFamily: 'inherit' }} />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label htmlFor="c-mensaje" style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', color: 'var(--ucr-primary)', marginBottom: '0.4rem' }}>Tu consulta *</label>
+                    <textarea id="c-mensaje" rows={4} value={consulta.mensaje} onChange={(e) => setCampoConsulta('mensaje', e.target.value)} placeholder="Contanos en qué te podemos ayudar…" style={{ width: '100%', padding: '0.8rem 1rem', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.6rem', background: 'var(--ucr-surface)', fontSize: '0.95rem', color: 'var(--ucr-on-surface)', fontFamily: 'inherit', resize: 'vertical' }} />
+                  </div>
+
+                  <button type="submit" disabled={enviandoConsulta} style={{ width: '100%', padding: '0.95rem 2rem', background: 'linear-gradient(135deg, var(--brand-esmeralda), var(--ucr-primary))', color: '#fff', fontFamily: 'var(--font-ucr-display)', fontWeight: 800, fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '0.02em', border: 'none', borderRadius: '999px', boxShadow: '0 16px 38px -10px rgba(0,125,103,0.5)', cursor: enviandoConsulta ? 'not-allowed' : 'pointer', opacity: enviandoConsulta ? 0.7 : 1 }}>
+                    {enviandoConsulta ? 'Enviando…' : 'Enviar consulta al administrador'}
+                  </button>
+
+                  {errorConsulta && (
+                    <div role="alert" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', background: '#ffe2dd', color: '#93000a', border: '1px solid #f3b5ab', borderRadius: '0.75rem', padding: '0.85rem 1rem', fontSize: '0.92rem', fontWeight: 600 }}>
+                      <span style={{ flexShrink: 0, width: '1.5rem', height: '1.5rem', borderRadius: '50%', background: 'var(--brand-naranja, #F34B26)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>!</span>
+                      {errorConsulta}
+                    </div>
+                  )}
+                </form>
+              </>
+            )}
           </div>
         </section>
       </main>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import AdminSolicitudes from './AdminSolicitudes';
+import AdminConsultas from './AdminConsultas';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
 
@@ -275,6 +276,21 @@ export default function AdminDashboard({
               <span className={styles.bloqueHint}>Voluntarios externos y accesos</span>
             </div>
             {token && <AdminSolicitudes token={token} />}
+          </motion.section>
+
+          {/* Consultas de soporte (enviadas desde el Centro de Ayuda) */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Consultas de soporte</h2>
+              <span className={styles.bloqueHint}>Mensajes enviados desde el Centro de Ayuda</span>
+            </div>
+            {token && <AdminConsultas token={token} />}
           </motion.section>
         </div>
       </main>
