@@ -11,9 +11,11 @@ const norm = (s?: string) =>
     .replace(/[̀-ͯ]/g, '')
     .trim();
 
-/** Mapa nombre → ruta de la foto real (en /public/images). */
+/** Mapa nombre → ruta de la foto real (en /public/images). Se contemplan las
+   variantes con que puede estar registrada la persona. */
 export const FOTOS_POR_NOMBRE: Record<string, string> = {
   'adriana solano': '/images/adri.jpg',
+  'adri solano': '/images/adri.jpg',
 };
 
 /** Retrato genérico de respaldo (evita imágenes rotas). */
