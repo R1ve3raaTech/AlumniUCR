@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import { obtenerMisDonaciones } from '@/lib/donaciones';
+import KPICard from './ui/KPICard';
 import styles from './ExalumnoDashboard.module.css';
 
 interface Perfil {
@@ -194,18 +195,9 @@ export default function ExalumnoDashboard({
             viewport={{ once: true, margin: '-40px' }}
           >
             {STATS.map((s) => (
-              <motion.article
-                key={s.label}
-                className={styles.statCard}
-                variants={fadeItem}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              >
-                <span className={styles.statIcon}>{s.icon}</span>
-                <div>
-                  <span className={styles.statValor}>{s.valor}</span>
-                  <span className={styles.statLabel}>{s.label}</span>
-                </div>
-              </motion.article>
+              <motion.div key={s.label} variants={fadeItem}>
+                <KPICard icon={s.icon} valor={s.valor} label={s.label} />
+              </motion.div>
             ))}
           </motion.section>
 

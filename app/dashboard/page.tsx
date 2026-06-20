@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import StudentNav from '@/components/StudentNav';
+import ProgressBar from '@/components/ui/ProgressBar';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
@@ -180,16 +181,7 @@ export default function DashboardPage() {
               </h2>
             </div>
             <div className="mb-4">
-              <div className="mb-1 flex items-baseline justify-between text-xs font-semibold uppercase tracking-wide text-ucr-outline">
-                <span>Progreso del perfil</span>
-                <span className="font-ucr-display text-2xl text-ucr-esmeralda">{progreso}%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-ucr-surface-container">
-                <span
-                  className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda transition-all"
-                  style={{ width: `${progreso}%` }}
-                />
-              </div>
+              <ProgressBar value={progreso} label="Progreso del perfil" showValue />
               <p className="mt-2 text-xs text-ucr-on-surface-variant">
                 {progreso === 100
                   ? '✓ Perfil completo: ya puede aparecer en el directorio.'

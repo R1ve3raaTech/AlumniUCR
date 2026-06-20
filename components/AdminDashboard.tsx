@@ -8,6 +8,7 @@ import AdminSolicitudes from './AdminSolicitudes';
 import AdminConsultas from './AdminConsultas';
 import AdminExalumnosPendientes from './AdminExalumnosPendientes';
 import AdminDonacionesPendientes from './AdminDonacionesPendientes';
+import KPICard from './ui/KPICard';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
 
@@ -156,18 +157,9 @@ export default function AdminDashboard({
             viewport={{ once: true, margin: '-40px' }}
           >
             {stats.map((s) => (
-              <motion.article
-                key={s.label}
-                className={styles.statCard}
-                variants={fadeItem}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              >
-                <span className={styles.statIcon}>{s.icon}</span>
-                <div>
-                  <span className={styles.statValor}>{s.valor}</span>
-                  <span className={styles.statLabel}>{s.label}</span>
-                </div>
-              </motion.article>
+              <motion.div key={s.label} variants={fadeItem}>
+                <KPICard icon={s.icon} valor={s.valor} label={s.label} />
+              </motion.div>
             ))}
           </motion.section>
 
