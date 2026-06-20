@@ -8,7 +8,7 @@
 // una base real). Para conectarlos a datos reales hace falta un endpoint público
 // de proyectos en el BE; con esa lista se reemplaza el array PROYECTOS.
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from './icons';
@@ -70,8 +70,18 @@ const ini = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').to
 export default function ProyectosGraduacion() {
   const n = PROYECTOS.length;
   const [activo, setActivo] = useState(1);
+  const [pausa, setPausa] = useState(false);
 
   const ir = (dir: number) => setActivo((a) => (a + dir + n) % n);
+
+  // Auto-avance: cambia una tarjeta cada 4 s. Se pausa al pasar el mouse y
+  // respeta prefers-reduced-motion.
+  useEffect(() => {
+    if (pausa) return;
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const id = setInterval(() => setActivo((a) => (a + 1) % n), 4000);
+    return () => clearInterval(id);
+  }, [pausa, n]);
 
   const estiloCard = (i: number): React.CSSProperties => {
     let off = i - activo;
@@ -91,12 +101,24 @@ export default function ProyectosGraduacion() {
     if (abs === 2) {
       return {
         transform: `translateX(calc(-50% + ${dir * 98}%)) translateZ(-440px) rotateY(${-dir * 54}deg) scale(0.64)`,
-        opacity: 0.5, zIndex: 10,
+        opacity: 0.6, zIndex: 10,
+      };
+    }
+    if (abs === 3) {
+      return {
+        transform: `translateX(calc(-50% + ${dir * 120}%)) translateZ(-560px) rotateY(${-dir * 57}deg) scale(0.54)`,
+        opacity: 0.42, zIndex: 8,
+      };
+    }
+    if (abs === 4) {
+      return {
+        transform: `translateX(calc(-50% + ${dir * 140}%)) translateZ(-700px) rotateY(${-dir * 60}deg) scale(0.44)`,
+        opacity: 0.24, zIndex: 6,
       };
     }
     return {
-      transform: `translateX(calc(-50% + ${dir * 125}%)) translateZ(-600px) rotateY(${-dir * 58}deg) scale(0.48)`,
-      opacity: 0, zIndex: 5, pointerEvents: 'none',
+      transform: `translateX(calc(-50% + ${dir * 158}%)) translateZ(-820px) rotateY(${-dir * 62}deg) scale(0.36)`,
+      opacity: 0, zIndex: 4, pointerEvents: 'none',
     };
   };
 
@@ -121,7 +143,11 @@ export default function ProyectosGraduacion() {
         </motion.div>
 
         {/* Carrusel coverflow (mismo diseño que Matching) */}
-        <div className={styles.coverflow}>
+        <div
+          className={styles.coverflow}
+          onMouseEnter={() => setPausa(true)}
+          onMouseLeave={() => setPausa(false)}
+        >
           <button type="button" className={`${styles.cfArrow} ${styles.cfArrowLeft}`} onClick={() => ir(-1)} aria-label="Anterior">
             <ArrowLeft />
           </button>
