@@ -1499,8 +1499,8 @@
   .cfArrowRight { right: -0.5rem; }
 }
 
-/* Sección Proyectos de Graduación: subir el encabezado (menos espacio arriba) */
-.gradSection { padding-top: clamp(2rem, 1rem + 2vw, 3rem); }
+/* Sección Proyectos de Graduación: mismo gris que Matching + encabezado más arriba */
+.gradSection { background: #d5dde1; padding-top: clamp(2rem, 1rem + 2vw, 3rem); }
 
 /* ════════════════════════════════════════════════════════════════════
    FONDO · Sección Matching (BLOQUE APARTE). Tapiz/textura removido: queda
