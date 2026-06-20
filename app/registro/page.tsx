@@ -446,21 +446,23 @@ export default function RegistroPage() {
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2, ease: EASE_OUT }}
                           >
-                            <div className={`${styles.field} ${styles.fieldFull}`}>
-                              <label className={styles.label} htmlFor="carne">Carné universitario</label>
-                              <div className={styles.inputWrap}>
-                                <span className={styles.inputIcon}><IBadge /></span>
-                                <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
-                                  value={carne} onChange={(e) => setCarne(e.target.value)} />
-                              </div>
-                            </div>
-
-                            <div className={`${styles.field} ${styles.fieldFull}`}>
+                            {/* Cédula debajo del Nombre (columna izquierda) */}
+                            <div className={styles.field}>
                               <label className={styles.label} htmlFor="cedula">Cédula <span className={styles.req}>*</span></label>
                               <div className={styles.inputWrap}>
                                 <span className={styles.inputIcon}><IBadge /></span>
                                 <input id="cedula" className={styles.input} type="text" placeholder="Ej: 1-1234-5678"
                                   inputMode="numeric" value={cedula} onChange={(e) => setCedula(e.target.value)} required />
+                              </div>
+                            </div>
+
+                            {/* Carné debajo de Apellidos (columna derecha) */}
+                            <div className={styles.field}>
+                              <label className={styles.label} htmlFor="carne">Carné universitario</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><IBadge /></span>
+                                <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
+                                  value={carne} onChange={(e) => setCarne(e.target.value)} />
                               </div>
                             </div>
                           </motion.div>
