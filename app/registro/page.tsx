@@ -71,6 +71,7 @@ export default function RegistroPage() {
   const [rol, setRol] = useState<Rol>('estudiante');
   const [nombre, setNombre] = useState('');
   const [carne, setCarne] = useState('');
+  const [cedula, setCedula] = useState('');
   const [correo, setCorreo] = useState('');
   const [errorCorreo, setErrorCorreo] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
@@ -95,7 +96,7 @@ export default function RegistroPage() {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           'ct_registro_datos',
-          JSON.stringify({ nombre: nombre.trim(), carne: carne.trim(), rol: 'estudiante' }),
+          JSON.stringify({ nombre: nombre.trim(), carne: carne.trim(), cedula: cedula.trim(), rol: 'estudiante' }),
         );
       }
       setModoExito('magiclink');
@@ -405,7 +406,7 @@ export default function RegistroPage() {
                     </h2>
 
                     <div className={styles.fields}>
-                      <div className={styles.field}>
+                      <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
                         <label className={styles.label} htmlFor="nombre">Nombre completo</label>
                         <div className={styles.inputWrap}>
                           <span className={styles.inputIcon}><IPerson /></span>
@@ -417,17 +418,28 @@ export default function RegistroPage() {
                       <AnimatePresence>
                         {rol === 'estudiante' && (
                           <motion.div
-                            className={styles.field}
-                            initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                            animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
-                            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                            style={{ display: 'contents' }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             transition={{ duration: 0.2, ease: EASE_OUT }}
                           >
-                            <label className={styles.label} htmlFor="carne">Carné / Cédula</label>
-                            <div className={styles.inputWrap}>
-                              <span className={styles.inputIcon}><IBadge /></span>
-                              <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
-                                value={carne} onChange={(e) => setCarne(e.target.value)} />
+                            <div className={`${styles.field} ${styles.fieldFull}`}>
+                              <label className={styles.label} htmlFor="carne">Carné universitario</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><IBadge /></span>
+                                <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
+                                  value={carne} onChange={(e) => setCarne(e.target.value)} />
+                              </div>
+                            </div>
+
+                            <div className={`${styles.field} ${styles.fieldFull}`}>
+                              <label className={styles.label} htmlFor="cedula">Cédula</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><IBadge /></span>
+                                <input id="cedula" className={styles.input} type="text" placeholder="Ej: 1-1234-5678"
+                                  inputMode="numeric" value={cedula} onChange={(e) => setCedula(e.target.value)} />
+                              </div>
                             </div>
                           </motion.div>
                         )}
