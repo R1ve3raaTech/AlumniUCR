@@ -193,9 +193,9 @@
   gap: 0.85rem;
   background: var(--brand-blanco);
   border: 1px solid var(--ucr-outline-variant);
-  box-shadow: 0 4px 20px rgba(0, 76, 99, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 76, 99, 0.14);
   padding: 1.5rem;
-  transition: border-color 0.3s ease, transform 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover { border-color: var(--brand-esmeralda); transform: translateY(-4px); }

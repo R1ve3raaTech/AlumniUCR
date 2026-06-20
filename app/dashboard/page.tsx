@@ -130,7 +130,7 @@ export default function DashboardPage() {
 
         {/* Bento grid */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-4">
+          <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
             <div className="mb-4 flex items-center gap-3">
               <span className="material-symbols-outlined text-ucr-secondary">checklist</span>
               <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
@@ -175,7 +175,7 @@ export default function DashboardPage() {
             </ul>
           </section>
 
-          <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-4">
+          <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
             <div className="mb-4 flex items-center gap-3">
               <span className="material-symbols-outlined text-ucr-secondary">person</span>
               <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
@@ -191,7 +191,7 @@ export default function DashboardPage() {
             </Link>
           </section>
 
-          <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-4">
+          <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
             <div className="mb-4 flex items-center gap-3">
               <span className="material-symbols-outlined text-ucr-secondary">badge</span>
               <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">

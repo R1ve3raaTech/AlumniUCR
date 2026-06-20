@@ -235,7 +235,6 @@ function ProyectosContent() {
         );
         // Progress bars fill on scroll
         gridAnimRef.current!.querySelectorAll<HTMLSpanElement>('.prj-bar').forEach((bar) => {
-          const w = bar.style.width;
           gsap.from(bar, { width: '0%', duration: 1.3, ease: 'power2.out',
             scrollTrigger: { trigger: bar, start: 'top 90%' } });
         });
