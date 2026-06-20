@@ -17,7 +17,7 @@ import styles from './landing.module.css';
 type TipoApoyo = 'TFG' | 'Pasantía' | 'Apoyo económico';
 
 interface Proyecto {
-  proyecto: string; img: string; area: string;
+  proyecto: string; img: string; area: string; desc: string;
   autor: string; escuela: string;
   apoyo: TipoApoyo; busca: string; buscaDetalle: string;
   inter: boolean;
@@ -34,35 +34,45 @@ const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&
 
 const PROYECTOS: Proyecto[] = [
   { proyecto: 'Med-Link CR', img: IMG('1576091160550-2173dba999ef'), area: 'Salud Digital',
+    desc: 'Telemedicina para zonas rurales: conecta pacientes con especialistas por videollamada y un expediente digital compartido.',
     autor: 'Carlos Torres', escuela: 'Medicina + Computación', apoyo: 'TFG',
-    busca: 'Tutor clínico', buscaDetalle: 'Pilotos de telemedicina en EBAIS', inter: true },
+    busca: 'Tutor clínico', buscaDetalle: 'Pilotos en EBAIS', inter: true },
   { proyecto: 'AgroSensor Café', img: IMG('1500382017468-9049fed747ef'), area: 'Agrotecnología',
+    desc: 'Sensores IoT que miden humedad y nutrientes del cafetal en tiempo real para optimizar la cosecha de pequeños productores.',
     autor: 'Mariana Vargas', escuela: 'Agronomía + Ing. Eléctrica', apoyo: 'Pasantía',
-    busca: 'Host de pasantía', buscaDetalle: 'Sensores IoT en cooperativas de café', inter: true },
+    busca: 'Host de pasantía', buscaDetalle: 'Cooperativas de café', inter: true },
   { proyecto: 'SolarComunidad', img: IMG('1509391366360-2e959784a276'), area: 'Energía Renovable',
+    desc: 'Micro-redes solares con baterías compartidas para llevar energía limpia y estable a caseríos sin acceso a la red eléctrica.',
     autor: 'Diego Mora', escuela: 'Ing. Eléctrica', apoyo: 'TFG',
-    busca: 'Mentor técnico', buscaDetalle: 'Micro-redes solares rurales', inter: false },
+    busca: 'Mentor técnico', buscaDetalle: 'Micro-redes rurales', inter: false },
   { proyecto: 'AquaMonitor', img: IMG('1500375592092-40eb2168fd21'), area: 'Medio Ambiente',
+    desc: 'Estaciones de bajo costo que miden la calidad del agua en cuencas y alertan a las comunidades ante contaminación.',
     autor: 'Laura Vega', escuela: 'Ing. Ambiental + Biología', apoyo: 'Apoyo económico',
-    busca: 'Comunidad aliada', buscaDetalle: 'Monitoreo de calidad del agua', inter: true },
+    busca: 'Comunidad aliada', buscaDetalle: 'Cuencas hidrográficas', inter: true },
   { proyecto: 'Casa Trópico', img: IMG('1487958449943-2429e8be8625'), area: 'Arquitectura Sostenible',
+    desc: 'Vivienda bioclimática para el trópico húmedo: ventilación pasiva y materiales locales para reducir el aire acondicionado.',
     autor: 'Sofía Blanco', escuela: 'Arquitectura', apoyo: 'TFG',
-    busca: 'Tutor de diseño', buscaDetalle: 'Vivienda bioclimática costera', inter: false },
+    busca: 'Tutor de diseño', buscaDetalle: 'Zona costera', inter: false },
   { proyecto: 'BioReef', img: IMG('1532094349884-543bc11b234d'), area: 'Biología Marina',
+    desc: 'Vivero de corales y técnicas de trasplante para restaurar arrecifes degradados del Pacífico costarricense.',
     autor: 'Andrés Soto', escuela: 'Biología', apoyo: 'Pasantía',
-    busca: 'Host de pasantía', buscaDetalle: 'Restauración de arrecifes', inter: false },
+    busca: 'Host de pasantía', buscaDetalle: 'Pacífico Sur', inter: false },
   { proyecto: 'Voces UCR', img: IMG('1504384308090-c894fdcc538d'), area: 'Comunicación',
+    desc: 'Plataforma de periodismo comunitario donde los vecinos publican y verifican noticias locales con acompañamiento estudiantil.',
     autor: 'Valeria Núñez', escuela: 'Comunicación Colectiva', apoyo: 'Apoyo económico',
-    busca: 'Aliado mediático', buscaDetalle: 'Periodismo comunitario', inter: false },
+    busca: 'Aliado mediático', buscaDetalle: 'Medios locales', inter: false },
   { proyecto: 'Fin-Connect', img: IMG('1554224155-6726b3ff858f'), area: 'Educación Financiera',
+    desc: 'App gamificada que enseña ahorro, crédito e inversión a jóvenes mediante retos y metas personalizadas.',
     autor: 'Ana Rojas', escuela: 'Economía', apoyo: 'TFG',
-    busca: 'Mentor fintech', buscaDetalle: 'App de finanzas gamificada', inter: false },
+    busca: 'Mentor fintech', buscaDetalle: 'Producto digital', inter: false },
   { proyecto: 'EduRobótica', img: IMG('1485827404703-89b55fcc595e'), area: 'Robótica Educativa',
+    desc: 'Kits de robótica de bajo costo y guías docentes para acercar la programación a escuelas rurales del país.',
     autor: 'José Ramírez', escuela: 'Ing. Mecánica + Enseñanza', apoyo: 'Pasantía',
-    busca: 'Empresa aliada', buscaDetalle: 'Kits de robótica para escuelas rurales', inter: true },
+    busca: 'Empresa aliada', buscaDetalle: 'Escuelas rurales', inter: true },
   { proyecto: 'Bienestar UCR', img: IMG('1573497019940-1c28c88b4f3e'), area: 'Salud Mental',
+    desc: 'Red de acompañamiento psicológico estudiantil con citas, recursos y seguimiento para cuidar la salud mental en la U.',
     autor: 'Daniela Campos', escuela: 'Psicología', apoyo: 'Apoyo económico',
-    busca: 'Red de apoyo', buscaDetalle: 'Acompañamiento estudiantil', inter: false },
+    busca: 'Red de apoyo', buscaDetalle: 'Vida estudiantil', inter: false },
 ];
 
 const ini = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -173,7 +183,8 @@ export default function ProyectosGraduacion() {
 
                   <div className={styles.cfBody}>
                     <h3 className={styles.cfTitle}>{p.proyecto}</h3>
-                    <div className={styles.cfMatch}>
+                    <p className={styles.cfDesc}>{p.desc}</p>
+                    <div className={styles.cfMatch} style={{ marginTop: 'auto' }}>
                       <div className={styles.cfPerson}>
                         <span className={`${styles.cfAvatar} ${styles.cfAvatarEst}`}>{ini(p.autor)}</span>
                         <span className={styles.cfPersonInfo}>{p.autor}<small>{p.escuela}</small></span>
