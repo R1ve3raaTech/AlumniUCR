@@ -98,14 +98,7 @@ export default function Impacto() {
         </div>
 
         <div ref={ref} className={styles.apiCols}>
-          <div className={styles.apiCol}>
-            {card(METRICAS[0])}
-            {card(METRICAS[2])}
-          </div>
-          <div className={`${styles.apiCol} ${styles.apiColB}`}>
-            {card(METRICAS[1])}
-            {card(METRICAS[3])}
-          </div>
+          {METRICAS.map((m) => card(m))}
         </div>
       </div>
     </section>

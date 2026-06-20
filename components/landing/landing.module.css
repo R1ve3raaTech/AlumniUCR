@@ -1527,11 +1527,17 @@
 .impactoHead .sectionTitle { color: var(--ucr-primary); }
 .impactoSub { max-width: 34rem; margin: 0.7rem auto 0; color: var(--ucr-primary); font-weight: 500; font-size: 0.98rem; line-height: 1.5; }
 
-.apiCols { display: flex; gap: 1.25rem; align-items: flex-start; }
-.apiCol { flex: 1; display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
-.apiColB { margin-top: 0; }   /* columnas alineadas (sin escalonado) */
+/* Grid 2×2: las 4 tarjetas con el MISMO ancho y alto (filas iguales) */
+.apiCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1.25rem;
+}
 
 .apiCard {
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
   border: 1px solid rgba(0, 40, 55, 0.06);
   border-radius: 20px;
@@ -1573,6 +1579,5 @@
   .impactoRight { padding: 2.5rem 1.25rem; }
 }
 @media (max-width: 560px) {
-  .apiCols { flex-direction: column; }
-  .apiColB { margin-top: 0; }
+  .apiCols { grid-template-columns: 1fr; grid-template-rows: auto; }
 }
