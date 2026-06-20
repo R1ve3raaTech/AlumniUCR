@@ -62,7 +62,7 @@ const EASE_OUT: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 const EASE_IN: [number, number, number, number] = [0.55, 0.055, 0.675, 0.19];
 
 export default function RegistroPage() {
-  const { error, loading, run } = useAuthForm();
+  const { error, loading, run, reset } = useAuthForm();
   const reduced = useReducedMotion();
 
   const ANIO_ACTUAL = new Date().getFullYear();
@@ -87,6 +87,16 @@ export default function RegistroPage() {
   const [confirmUrl, setConfirmUrl] = useState<string | null>(null);
 
   const esUCR = correo.trim().toLowerCase().endsWith('@ucr.ac.cr');
+
+  // Al cambiar de rol, "refrescamos" los errores: la nueva sección no arrastra
+  // los del rol anterior.
+  function cambiarRol(value: Rol) {
+    if (value === rol) return;
+    setRol(value);
+    setErrorForm(null);
+    setErrorCorreo(null);
+    reset();
+  }
 
   const toggleCarrera = (c: string) =>
     setCarreras((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -366,7 +376,7 @@ export default function RegistroPage() {
                             name="rol"
                             value={r.value}
                             checked={rol === r.value}
-                            onChange={() => setRol(r.value)}
+                            onChange={() => cambiarRol(r.value)}
                           />
                           {/* Role card: solo escala al hacer hover/tap, no con la selección */}
                           <motion.div
@@ -406,7 +416,7 @@ export default function RegistroPage() {
                         <p>Detectamos un correo <strong>@ucr.ac.cr</strong>. ¿Ya te graduaste?</p>
                         <div className={styles.ucrPromptActions}>
                           <span className={styles.ucrPromptOk}>Sí, continúa como exalumno</span>
-                          <button type="button" onClick={() => setRol('estudiante')}>No, soy estudiante</button>
+                          <button type="button" onClick={() => cambiarRol('estudiante')}>No, soy estudiante</button>
                         </div>
                       </motion.div>
                     )}
