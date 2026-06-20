@@ -324,8 +324,9 @@ export default function RegistroPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: dur, ease: EASE_OUT, delay: 0.12 }}
                 >
-                  <h1 className={styles.title}>Únete a la Red</h1>
-                  <p className={styles.subtitle}>Completa tus datos para empezar a conectar.</p>
+                  <h1 className={styles.title}>Únete a la <em>Red</em></h1>
+                  <div className={styles.accentBar} />
+                  <p className={styles.subtitle}>Conectá con la comunidad Alumni UCR. Completá tus datos para empezar.</p>
                 </motion.div>
 
                 <motion.form

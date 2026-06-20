@@ -107,7 +107,11 @@
 .page {
   position: relative;
   min-height: 100vh;
-  background: var(--ucr-surface);
+  /* Identidad del landing: glows de marca sobre superficie clara */
+  background:
+    radial-gradient(55% 45% at 88% -5%, rgba(84, 188, 235, 0.16), transparent 60%),
+    radial-gradient(50% 40% at -5% 105%, rgba(0, 76, 99, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--ucr-surface) 0%, #eaf3f6 100%);
   color: var(--ucr-on-surface);
   font-family: var(--font-brand-body);
   overflow-x: hidden;
@@ -128,23 +132,23 @@
   position: absolute;
   top: -10%;
   right: -5%;
-  width: 400px;
-  height: 400px;
-  background: var(--ucr-secondary);
-  opacity: 0.1;
+  width: 460px;
+  height: 460px;
+  background: var(--ucr-celeste);
+  opacity: 0.16;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(90px);
 }
 
 .bgBlock {
   position: absolute;
-  bottom: -10%;
-  left: -5%;
-  width: 600px;
-  height: 600px;
+  bottom: -12%;
+  left: -6%;
+  width: 620px;
+  height: 620px;
   background: var(--ucr-primary);
-  opacity: 0.05;
-  border-radius: 0.75rem;
+  opacity: 0.06;
+  border-radius: 1rem;
   transform: skewX(-18deg);
 }
 
@@ -206,11 +210,12 @@
 .panel {
   width: 100%;
   max-width: 56rem;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px 0 rgba(0, 76, 99, 0.08);
-  border-radius: 0.75rem;
+  border: 1px solid var(--ucr-outline-variant);
+  border-top: 5px solid var(--ucr-celeste);
+  box-shadow: 0 30px 70px -28px rgba(0, 31, 42, 0.22);
+  border-radius: 1.25rem;
   padding: clamp(1.5rem, 1rem + 2vw, 3rem);
   animation: fadeIn 0.5s ease-out forwards;
 }
@@ -232,6 +237,15 @@
   color: var(--ucr-primary);
   line-height: 1.1;
   margin: 0 0 0.5rem;
+}
+/* Acento celeste en el título, igual que los headers del landing */
+.title em { font-style: normal; color: var(--ucr-celeste); }
+.accentBar {
+  width: 6rem;
+  height: 0.5rem;
+  background: var(--ucr-celeste);
+  border-radius: 3px;
+  margin: 0.25rem auto 1rem;
 }
 
 .subtitle {
@@ -489,18 +503,18 @@
 .submit {
   width: 100%;
   padding: 1rem 3rem;
-  background: var(--ucr-naranja);
+  background: linear-gradient(135deg, var(--brand-esmeralda), var(--ucr-primary));
   color: var(--brand-blanco);
   font-family: var(--font-ucr-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1.25rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   border: none;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 25px -8px rgba(243, 75, 38, 0.5);
+  border-radius: 999px;
+  box-shadow: 0 16px 38px -10px rgba(0, 125, 103, 0.5);
   cursor: pointer;
-  transition: filter 0.2s ease, transform 0.1s ease;
+  transition: filter 0.2s ease, transform 0.18s ease, box-shadow 0.22s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -508,7 +522,9 @@
 }
 
 .submit:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 22px 46px -12px rgba(0, 125, 103, 0.55);
 }
 
 .submit:active {
