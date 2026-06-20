@@ -6,6 +6,8 @@ import { motion, Variants } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import AdminSolicitudes from './AdminSolicitudes';
 import AdminConsultas from './AdminConsultas';
+import AdminExalumnosPendientes from './AdminExalumnosPendientes';
+import AdminDonacionesPendientes from './AdminDonacionesPendientes';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
 
@@ -262,6 +264,36 @@ export default function AdminDashboard({
               </motion.div>
             )}
           </section>
+
+          {/* Exalumnos pendientes de aprobación (RF-01 / RF-08) */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Exalumnos pendientes de aprobación</h2>
+              <span className={styles.bloqueHint}>Aprueba o rechaza el ingreso de nuevos egresados</span>
+            </div>
+            {token && <AdminExalumnosPendientes token={token} />}
+          </motion.section>
+
+          {/* Donaciones pendientes con alerta SLA 48h (RF-07 / RF-08.2) */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Donaciones por confirmar</h2>
+              <span className={styles.bloqueHint}>Cola por antigüedad · alerta a las 48 h hábiles</span>
+            </div>
+            {token && <AdminDonacionesPendientes token={token} />}
+          </motion.section>
 
           {/* Solicitudes de colaboración */}
           <motion.section

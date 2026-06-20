@@ -27,6 +27,8 @@ export default function DashboardPage() {
 
   // Estado de avance del perfil (RF-03), igual que en /perfil-estudiante.
   const [estado, setEstado] = useState({ academica: false, proyecto: false, habilidades: false });
+  // RF-03: al llegar al 100% el sistema pregunta si el perfil quedó finalizado.
+  const [finalizado, setFinalizado] = useState(false);
 
   // Protección client-side: si no hay sesión una vez hidratado, redirige al login.
   useEffect(() => {
@@ -88,12 +90,19 @@ export default function DashboardPage() {
   }
 
   const correo = user?.email ?? perfil?.correo_electronico ?? '—';
-  const id = user?.id ?? '—';
   const rol = perfil?.roles?.nombre?.toLowerCase().trim();
 
   // Panel dedicado del exalumno (identidad de marca).
   if (rol === 'exalumno') {
-    return <ExalumnoDashboard perfil={perfil} correo={correo} onSignOut={handleSignOut} />;
+    return (
+      <ExalumnoDashboard
+        perfil={perfil}
+        correo={correo}
+        onSignOut={handleSignOut}
+        userId={user?.id}
+        token={token ?? undefined}
+      />
+    );
   }
 
   // Panel del administrador (identidad del landing) con matching interdisciplinario.
@@ -128,6 +137,39 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {/* RF-03: al llegar al 100% el sistema pregunta si el perfil quedó finalizado */}
+        {progreso === 100 && (
+          <section className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-ucr-esmeralda/30 bg-ucr-esmeralda/5 p-6">
+            {finalizado ? (
+              <p className="font-brand-heading text-base font-semibold text-ucr-esmeralda">
+                ✓ Marcaste tu perfil como finalizado. Ya está listo para aparecer en el directorio.
+              </p>
+            ) : (
+              <>
+                <div>
+                  <h2 className="font-brand-heading text-lg font-bold text-ucr-on-surface">
+                    ¿Diste por finalizado tu perfil?
+                  </h2>
+                  <p className="mt-1 text-sm text-ucr-on-surface-variant">
+                    Llegaste al 100%. Confirma si ya está listo o seguí editándolo.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button type="button" onClick={() => setFinalizado(true)} className="btn-primary">
+                    Sí, está listo
+                  </button>
+                  <Link
+                    href="/perfil-estudiante"
+                    className="rounded-full border border-ucr-outline-variant px-5 py-2 text-sm font-semibold text-ucr-primary"
+                  >
+                    Seguir editando
+                  </Link>
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
         {/* Bento grid */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
           <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
@@ -157,8 +199,8 @@ export default function DashboardPage() {
 
             <ul className="flex flex-col gap-3 text-sm">
               {[
-                { ok: estado.academica, label: 'Información académica' },
-                { ok: estado.proyecto, label: 'Proyecto de graduación' },
+                { ok: estado.academica, label: 'Académica y situación socioeconómica' },
+                { ok: estado.proyecto, label: 'Proyecto, áreas de interés y tipo de apoyo' },
                 { ok: estado.habilidades, label: 'Habilidades' },
               ].map((s) => (
                 <li key={s.label} className="flex items-center gap-2">
@@ -193,21 +235,33 @@ export default function DashboardPage() {
 
           <section className="rounded-3xl bg-white p-6 shadow-lg lg:col-span-4">
             <div className="mb-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-ucr-secondary">badge</span>
+              <span className="material-symbols-outlined text-ucr-secondary">bolt</span>
               <h2 className="font-brand-heading text-xl font-bold text-ucr-on-surface">
-                Datos de tu sesión
+                Accesos rápidos
               </h2>
             </div>
-            <dl className="flex flex-col gap-3 text-sm">
-              <div className="flex items-center justify-between gap-3 border-b border-ucr-outline-variant pb-2">
-                <dt className="text-ucr-on-surface-variant">Correo</dt>
-                <dd className="truncate font-medium">{correo}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-ucr-on-surface-variant">ID de usuario</dt>
-                <dd className="truncate font-medium">{id}</dd>
-              </div>
-            </dl>
+            <p className="mb-4 text-sm text-ucr-on-surface-variant">
+              Las funciones clave de tu cuenta de estudiante.
+            </p>
+            <ul className="flex flex-col gap-2 text-sm">
+              {[
+                { href: '/mis-matches', icon: 'handshake', label: 'Mis matches con mentores' },
+                { href: '/estudiantes', icon: 'groups', label: 'Directorio de exalumnos' },
+                { href: '/posiciones', icon: 'work', label: 'Empleos y pasantías' },
+                { href: '/mi-curriculum', icon: 'description', label: 'Mi currículum (CV + IA)' },
+              ].map((a) => (
+                <li key={a.href}>
+                  <Link
+                    href={a.href}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-ucr-on-surface transition-colors hover:bg-ucr-surface-container"
+                  >
+                    <span className="material-symbols-outlined text-ucr-secondary">{a.icon}</span>
+                    {a.label}
+                    <span className="material-symbols-outlined ml-auto text-ucr-outline">chevron_right</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         </div>
       </main>
