@@ -16,6 +16,7 @@ import {
   obtenerDirectorioExalumnos,
   calcularScore,
 } from '@/lib/misMatches';
+import { fotoDe, fotoPorNombre, FOTO_FALLBACK } from '@/lib/fotosDemo';
 
 interface Perfil {
   nombre?: string;
@@ -169,10 +170,8 @@ export default function DashboardPage() {
   const completadas = [estado.academica, estado.proyecto, estado.habilidades].filter(Boolean).length;
   const progreso = Math.round((completadas / 3) * 100);
   const nombre = perfil?.nombre?.trim().split(/\s+/)[0] || correo.split('@')[0] || 'estudiante';
-  // Foto del estudiante: su foto subida (foto_url) → /images/adri.jpg (si se
-  // coloca) → retrato real existente como respaldo (sin imágenes rotas).
-  const FOTO_FALLBACK = '/images/TANIA_RODRIGUEZ01-pq2.png';
-  const fotoSrc = perfil?.foto_url || '/images/adri.jpg';
+  // Foto del estudiante: foto_url (BD) → foto por nombre → retrato de respaldo.
+  const fotoSrc = fotoDe(perfil);
 
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
@@ -456,14 +455,25 @@ export default function DashboardPage() {
               {matches.map((m) => (
                 <article key={m.exa.id} className="rounded-2xl border border-ucr-outline-variant p-4">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ucr-primary/10 font-bold text-ucr-primary">
-                      {(m.exa.nombre || '?')
-                        .split(' ')
-                        .map((p) => p[0])
-                        .slice(0, 2)
-                        .join('')
-                        .toUpperCase()}
-                    </span>
+                    {fotoPorNombre(m.exa.nombre) ? (
+                      <img
+                        src={fotoPorNombre(m.exa.nombre)}
+                        alt={m.exa.nombre}
+                        className="h-11 w-11 shrink-0 rounded-full object-cover object-top"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = FOTO_FALLBACK;
+                        }}
+                      />
+                    ) : (
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ucr-primary/10 font-bold text-ucr-primary">
+                        {(m.exa.nombre || '?')
+                          .split(' ')
+                          .map((p) => p[0])
+                          .slice(0, 2)
+                          .join('')
+                          .toUpperCase()}
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-brand-heading text-sm font-bold text-ucr-on-surface">
                         {m.exa.nombre}
