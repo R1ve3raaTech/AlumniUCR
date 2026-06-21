@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { solicitarMagicLink, registrarExalumno } from '@/lib/auth';
+import { solicitarMagicLink, registrarExalumno, correoYaRegistrado } from '@/lib/auth';
 import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import AlumniLogo from '@/components/AlumniLogo';
@@ -85,6 +85,8 @@ export default function RegistroPage() {
   const [anioGraduacion, setAnioGraduacion] = useState('');
   const [errorForm, setErrorForm] = useState<string | null>(null);
   const [confirmUrl, setConfirmUrl] = useState<string | null>(null);
+  // Correo que ya está registrado (muestra el aviso "ya registrada" + ir a login).
+  const [existente, setExistente] = useState<string | null>(null);
 
   const esUCR = correo.trim().toLowerCase().endsWith('@ucr.ac.cr');
 
@@ -95,6 +97,7 @@ export default function RegistroPage() {
     setRol(value);
     setErrorForm(null);
     setErrorCorreo(null);
+    setExistente(null);
     reset();
   }
 
@@ -103,6 +106,11 @@ export default function RegistroPage() {
 
   function enviarEnlace() {
     run(async () => {
+      // El correo es el determinante: si ya existe, avisamos y ofrecemos login.
+      if (await correoYaRegistrado(correo.trim())) {
+        setExistente(correo.trim());
+        return;
+      }
       const res = await solicitarMagicLink('estudiante', correo.trim());
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
@@ -140,6 +148,11 @@ export default function RegistroPage() {
       return setErrorForm(`El año de graduación debe estar entre 1940 y ${ANIO_ACTUAL}.`);
     }
     run(async () => {
+      // El correo es el determinante: si ya existe, avisamos y ofrecemos login.
+      if (await correoYaRegistrado(correo.trim())) {
+        setExistente(correo.trim());
+        return;
+      }
       const res = await registrarExalumno({
         correo: correo.trim(), contrasena, nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
         carreras, facultad, anioGraduacion: anio,
@@ -505,7 +518,7 @@ export default function RegistroPage() {
                           <input id="correo" className={styles.input} type="email"
                             placeholder={rol === 'exalumno' ? 'tucorreo@dominio.com' : 'usuario@ucr.ac.cr'}
                             value={correo}
-                            onChange={(e) => { setCorreo(e.target.value); if (errorCorreo) setErrorCorreo(null); }}
+                            onChange={(e) => { setCorreo(e.target.value); if (errorCorreo) setErrorCorreo(null); if (existente) setExistente(null); }}
                             required />
                         </div>
                       </div>
@@ -594,9 +607,45 @@ export default function RegistroPage() {
                         : rol === 'exalumno' ? 'Crear cuenta' : 'Registrarse'}
                     </motion.button>
 
+                    {/* Aviso: ya existe una cuenta con ese correo → ofrecer login */}
+                    <AnimatePresence>
+                      {existente && (
+                        <motion.div
+                          role="alert"
+                          aria-live="assertive"
+                          initial={{ opacity: 0, y: -6, height: 0 }}
+                          animate={{ opacity: 1, y: 0, height: 'auto' }}
+                          exit={{ opacity: 0, y: -6, height: 0 }}
+                          transition={{ duration: 0.2, ease: EASE_OUT }}
+                          style={{
+                            display: 'flex', flexDirection: 'column', gap: '0.7rem',
+                            marginTop: '0.9rem', padding: '1rem 1.1rem', borderRadius: '0.8rem',
+                            border: '1px solid rgba(84,188,235,0.45)', background: 'rgba(84,188,235,0.12)',
+                            color: 'var(--ucr-primary, #004C63)',
+                          }}
+                        >
+                          <span style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>
+                            <strong>Esta persona ya se encuentra registrada.</strong>{' '}
+                            Ya existe una cuenta{cedula.trim() ? ` con la cédula ${cedula.trim()}` : ''} asociada
+                            al correo <strong>{existente}</strong>. Iniciá sesión para continuar.
+                          </span>
+                          <Link
+                            href="/login"
+                            style={{
+                              alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                              background: 'var(--brand-esmeralda, #007D67)', color: '#fff', fontWeight: 700,
+                              padding: '0.6rem 1.4rem', borderRadius: '999px', textDecoration: 'none',
+                            }}
+                          >
+                            Iniciar sesión →
+                          </Link>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     {/* Error justo debajo del botón: visible sin scrollear */}
                     <AnimatePresence>
-                      {(errorCorreo || errorForm || error) && (
+                      {!existente && (errorCorreo || errorForm || error) && (
                         <motion.div
                           className={styles.submitError}
                           role="alert"
