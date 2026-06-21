@@ -4,13 +4,14 @@
 // Reutilizable por dashboard, perfil, CV, matches y directorio. Identidad =
 // usuario logueado (sin datos quemados). Paleta/markup fieles al diseño Stitch.
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
+import AvatarUploader from '@/components/student/AvatarUploader';
 
 // Departamentos del estudiante. Perfil, CV y Matches ya tienen diseño Stitch.
 // Directorio, Comunidad y Reportes están por crear → marcados 'proximamente'.
@@ -35,7 +36,8 @@ export default function StudentShell({
 }) {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const { perfil } = usePerfilEstudiante();
+  const { perfil, actualizar } = usePerfilEstudiante();
+  const [editorFoto, setEditorFoto] = useState(false);
 
   const correo = user?.email ?? '';
   const nombrePerfil = `${perfil.nombre} ${perfil.apellidos}`.trim();
@@ -65,12 +67,27 @@ export default function StudentShell({
 
         <div className="mb-8 flex flex-col items-center px-4">
           <div className="relative mb-4">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm">
-              {iniciales || 'E'}
-            </div>
-            <div className="absolute bottom-0 right-0 rounded-full border-2 border-surface-container-low bg-secondary p-1 text-on-secondary">
-              <span className="material-symbols-outlined text-xs">verified</span>
-            </div>
+            {perfil.foto ? (
+              <img
+                src={perfil.foto}
+                alt={nombreMostrar}
+                className="h-24 w-24 rounded-full border-2 border-primary object-cover object-center shadow-sm"
+              />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm">
+                {iniciales || 'E'}
+              </div>
+            )}
+            {/* Botón para subir/editar la foto */}
+            <button
+              type="button"
+              onClick={() => setEditorFoto(true)}
+              title="Cambiar foto"
+              aria-label="Cambiar foto de perfil"
+              className="absolute bottom-0 right-0 rounded-full border-2 border-surface-container-low bg-secondary p-1.5 text-on-secondary transition-transform hover:scale-110"
+            >
+              <span className="material-symbols-outlined text-sm">photo_camera</span>
+            </button>
             <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
           </div>
           <h2 className="font-body-semibold text-primary">{nombreMostrar}</h2>
@@ -171,6 +188,12 @@ export default function StudentShell({
       {/* Main */}
       <main className="ml-64 min-h-screen pt-16">{children}</main>
 
+      <AvatarUploader
+        abierto={editorFoto}
+        fotoActual={perfil.foto}
+        onGuardar={(foto) => actualizar({ foto })}
+        onCerrar={() => setEditorFoto(false)}
+      />
       <Toast />
     </div>
   );

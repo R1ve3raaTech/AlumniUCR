@@ -15,6 +15,7 @@ export interface PerfilEstudiante {
   apellidos: string;
   telefono: string;
   linkedin: string;
+  foto: string; // data URL (imagen recortada) o URL; pertenece a la persona
   // Académica
   carne: string;
   carrera: string;
@@ -45,6 +46,7 @@ export const PERFIL_VACIO: PerfilEstudiante = {
   apellidos: '',
   telefono: '',
   linkedin: '',
+  foto: '',
   carne: '',
   carrera: '',
   sede: '',
