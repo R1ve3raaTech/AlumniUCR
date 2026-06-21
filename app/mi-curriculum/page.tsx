@@ -4,6 +4,7 @@
 // de IA Asistente de Carrera. Contenido de ejemplo; datos reales en otra etapa.
 
 import React from 'react';
+import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
@@ -59,9 +60,13 @@ export default function MiCurriculumPage() {
               <button className="flex items-center gap-2 rounded-lg border border-outline px-4 py-2 font-bold text-primary transition-colors hover:bg-surface-variant">
                 <span className="material-symbols-outlined">download</span> Exportar PDF
               </button>
-              <button className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-bold text-white transition-all hover:shadow-lg">
+              <Link
+                href="/mi-curriculum/crear"
+                data-real
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-bold text-white transition-all hover:shadow-lg"
+              >
                 <span className="material-symbols-outlined">edit</span> Editar Manualmente
-              </button>
+              </Link>
             </div>
           </div>
 
