@@ -9,6 +9,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfilOnboarding, guardarPerfilOnboarding } from '@/lib/perfilOnboarding';
 
+export interface Experiencia {
+  puesto: string;
+  empresa: string;
+  periodo: string;
+  descripcion: string;
+}
+
 export interface PerfilEstudiante {
   // Identidad
   nombre: string;
@@ -16,6 +23,11 @@ export interface PerfilEstudiante {
   telefono: string;
   linkedin: string;
   foto: string; // data URL (imagen recortada) o URL; pertenece a la persona
+  // CV (editor)
+  cargoDeseado: string;
+  ubicacion: string;
+  resumen: string;
+  experiencias: Experiencia[];
   // Académica
   carne: string;
   carrera: string;
@@ -47,6 +59,10 @@ export const PERFIL_VACIO: PerfilEstudiante = {
   telefono: '',
   linkedin: '',
   foto: '',
+  cargoDeseado: '',
+  ubicacion: '',
+  resumen: '',
+  experiencias: [],
   carne: '',
   carrera: '',
   sede: '',
