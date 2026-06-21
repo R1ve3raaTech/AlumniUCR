@@ -5,10 +5,12 @@
 // vista previa en vivo con guardado automático. Pantalla completa (sin sidebar)
 // para dar espacio al editor.
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import AvatarUploader from '@/components/student/AvatarUploader';
+import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type Experiencia } from '@/context/PerfilEstudianteContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -26,12 +28,29 @@ const label = 'mb-1.5 block text-sm font-body-semibold text-primary';
 const lista = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
 
 export default function EditorCurriculumPage() {
+  const router = useRouter();
   const { perfil, actualizar } = usePerfilEstudiante();
   const { user } = useAuth();
   const [activa, setActiva] = useState('datos');
   const [guardando, setGuardando] = useState(false);
   const [editorFoto, setEditorFoto] = useState(false);
   const t = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const centroRef = useRef<HTMLDivElement>(null);
+
+  const idx = SECCIONES.findIndex((s) => s.key === activa);
+  const irA = (delta: number) => {
+    const sig = SECCIONES[idx + delta];
+    if (sig) setActiva(sig.key);
+  };
+  const finalizar = () => {
+    notificar('✅ ¡CV completo! Lo guardamos automáticamente.');
+    router.push('/mi-curriculum');
+  };
+
+  // Al cambiar de sección, vuelve al inicio del formulario.
+  useEffect(() => {
+    centroRef.current?.scrollTo({ top: 0 });
+  }, [activa]);
 
   // Guarda en la fuente única y muestra el indicador de "guardado automático".
   const set = (parcial: Parameters<typeof actualizar>[0]) => {
@@ -112,7 +131,7 @@ export default function EditorCurriculumPage() {
         </aside>
 
         {/* Centro: formulario */}
-        <div className="flex-1 overflow-y-auto bg-background p-10">
+        <div ref={centroRef} className="flex-1 overflow-y-auto bg-background p-10">
           <div className="mx-auto max-w-2xl">
             <header className="mb-8">
               <h2 className="font-headline-md text-2xl text-primary">{SECCIONES.find((s) => s.key === activa)?.label}</h2>
@@ -199,6 +218,35 @@ export default function EditorCurriculumPage() {
                 <textarea className={`${input} min-h-[160px]`} value={perfil.resumen} onChange={(e) => set({ resumen: e.target.value })} placeholder="Un párrafo que resuma tu perfil, fortalezas y objetivos." />
               </div>
             )}
+
+            {/* Navegación entre secciones */}
+            <div className="mt-10 flex items-center justify-between border-t border-outline-variant pt-6">
+              <button
+                type="button"
+                onClick={() => irA(-1)}
+                disabled={idx === 0}
+                className="flex items-center gap-2 font-body-semibold text-primary transition-transform hover:-translate-x-1 disabled:opacity-40 disabled:hover:translate-x-0"
+              >
+                <span className="material-symbols-outlined">arrow_back</span> Anterior
+              </button>
+              {idx < SECCIONES.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => irA(1)}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary px-10 py-4 font-body-semibold text-on-primary shadow-md transition-transform hover:-translate-y-0.5 active:scale-95"
+                >
+                  Siguiente <span className="material-symbols-outlined">arrow_forward</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={finalizar}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary px-10 py-4 font-body-semibold text-on-primary shadow-md transition-transform hover:-translate-y-0.5 active:scale-95"
+                >
+                  <span className="material-symbols-outlined">check_circle</span> Finalizar
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
