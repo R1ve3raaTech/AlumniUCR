@@ -10,10 +10,16 @@ import { notificar } from '@/components/student/Toast';
 
 const ACEPTADOS = ['application/pdf', 'image/jpeg', 'image/png'];
 
+interface Archivo {
+  nombre: string;
+  tipo: string;
+  url: string; // data URL para la vista previa
+}
+
 export default function CrearCurriculumPage() {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const [archivo, setArchivo] = useState('');
+  const [archivo, setArchivo] = useState<Archivo | null>(null);
   const [error, setError] = useState('');
 
   // Muestra un error que se borra solo a los 4s (no se queda pegado).
@@ -28,13 +34,16 @@ export default function CrearCurriculumPage() {
     e.target.value = ''; // reset: permite re-seleccionar el mismo archivo y evita que se bugee
     if (!f) return;
     if (!ACEPTADOS.includes(f.type)) {
-      setArchivo('');
       mostrarError(`«${f.name}» no es un formato válido. Solo se aceptan PDF, JPG o PNG.`);
       return;
     }
     setError('');
-    setArchivo(f.name);
-    notificar(`📄 Recibido: ${f.name}`);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setArchivo({ nombre: f.name, tipo: f.type, url: String(reader.result) });
+      notificar(`📄 Recibido: ${f.name}`);
+    };
+    reader.readAsDataURL(f);
   };
 
   return (
@@ -80,20 +89,61 @@ export default function CrearCurriculumPage() {
             />
           </div>
 
-          {/* Estado: error (auto-desaparece) o éxito */}
+          {/* Error (auto-desaparece) */}
           <div className="mt-6 min-h-[2.75rem]">
-            {error ? (
+            {error && (
               <p className="inline-flex items-center gap-2 rounded-lg border border-error/30 bg-error/10 px-4 py-2 text-sm font-semibold text-error">
                 <span className="material-symbols-outlined text-base">error</span>
                 {error}
               </p>
-            ) : archivo ? (
-              <p className="inline-flex items-center gap-2 rounded-lg bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary">
-                <span className="material-symbols-outlined text-base">check_circle</span>
-                {archivo} — listo para mejorar
-              </p>
-            ) : null}
+            )}
           </div>
+
+          {/* Archivo elegido: vista previa + cambiar/eliminar + continuar */}
+          {archivo && (
+            <div className="mx-auto mt-2 w-full max-w-md rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 text-left shadow-sm">
+              {/* Mini vista previa */}
+              <div className="mb-3 grid h-44 place-items-center overflow-hidden rounded-xl bg-surface-container">
+                {archivo.tipo.startsWith('image/') ? (
+                  <img src={archivo.url} alt={archivo.nombre} className="h-full w-full object-contain" />
+                ) : (
+                  <iframe src={archivo.url} title="Vista previa del PDF" className="h-full w-full" />
+                )}
+              </div>
+
+              {/* Nombre + acciones */}
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-on-surface">
+                  <span className="material-symbols-outlined text-secondary">check_circle</span>
+                  <span className="truncate">{archivo.nombre}</span>
+                </span>
+                <div className="flex shrink-0 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-secondary hover:bg-secondary/10"
+                  >
+                    <span className="material-symbols-outlined text-base">cached</span> Cambiar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setArchivo(null)}
+                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-error hover:bg-error/10"
+                  >
+                    <span className="material-symbols-outlined text-base">delete</span> Eliminar
+                  </button>
+                </div>
+              </div>
+
+              {/* Continuar */}
+              <Link
+                href="/mi-curriculum/editor"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-on-primary transition-transform hover:-translate-y-0.5"
+              >
+                <span className="material-symbols-outlined">auto_fix_high</span> Mejorar este CV
+              </Link>
+            </div>
+          )}
 
           {/* Formatos aceptados — con más presencia */}
           <div className="mt-8 flex flex-col items-center gap-3">
