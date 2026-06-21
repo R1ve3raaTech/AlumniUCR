@@ -26,19 +26,16 @@
   justify-content: center;
 }
 
-/* Impresión / exportar a PDF: imprime SOLO la vista previa del CV (#cv-preview). */
+/* Impresión / exportar a PDF: imprime SOLO el CV (#cv-print). */
 @media print {
   body * { visibility: hidden !important; }
-  #cv-preview, #cv-preview * { visibility: visible !important; }
-  #cv-preview {
+  #cv-print, #cv-print * { visibility: visible !important; }
+  #cv-print {
     position: absolute !important;
     left: 0;
     top: 0;
     width: 100% !important;
     max-width: 100% !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
     /* conserva los colores de marca (header teal, chips) al imprimir */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

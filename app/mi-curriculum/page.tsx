@@ -6,14 +6,9 @@
 import React from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
+import CvDocumento from '@/components/student/CvDocumento';
 import { notificar } from '@/components/student/Toast';
-import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { useAuth } from '@/context/AuthContext';
 
-// Convierte un string separado por comas en lista, o un texto de respaldo.
-const lista = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
-
-const CV_SHADOW = 'shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]';
 const AI_GLOW = 'shadow-[0_0_15px_rgba(84,188,235,0.3)]';
 
 // Aviso temporal: los botones aún no tienen acción real (handler delegado).
@@ -25,27 +20,7 @@ function avisoProximamente(e: React.MouseEvent) {
   }
 }
 
-function CVSeccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-8">
-      <h3 className="mb-3 border-b border-outline-variant text-sm font-bold uppercase tracking-wider text-primary">
-        {titulo}
-      </h3>
-      {children}
-    </div>
-  );
-}
-
 export default function MiCurriculumPage() {
-  const { perfil } = usePerfilEstudiante();
-  const { user } = useAuth();
-
-  const nombreCompleto = `${perfil.nombre} ${perfil.apellidos}`.trim();
-  const correo = user?.email || (perfil.nombre ? `${perfil.nombre.toLowerCase()}@ucr.ac.cr` : '');
-  const tecnicas = lista(perfil.habilidadesTecnicas);
-  const blandas = lista(perfil.habilidadesBlandas);
-  const idiomas = lista(perfil.idiomas);
-
   return (
     <StudentShell active="cv">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-8 p-6" onClick={avisoProximamente}>
@@ -57,7 +32,13 @@ export default function MiCurriculumPage() {
               <p className="text-on-surface-variant">Refinado estilo Harvard · Última actualización: Hoy</p>
             </div>
             <div className="flex gap-2">
-              <button className="flex items-center gap-2 rounded-lg border border-outline px-4 py-2 font-bold text-primary transition-colors hover:bg-surface-variant">
+              <button
+                type="button"
+                data-real
+                onClick={() => window.print()}
+                title="Exportar o imprimir el CV (Ctrl+P)"
+                className="flex items-center gap-2 rounded-lg border border-outline px-4 py-2 font-bold text-primary transition-colors hover:bg-surface-variant"
+              >
                 <span className="material-symbols-outlined">download</span> Exportar PDF
               </button>
               <Link
@@ -70,98 +51,9 @@ export default function MiCurriculumPage() {
             </div>
           </div>
 
-          {/* Tarjeta CV estilo Harvard */}
-          <div className={`min-h-[1000px] border border-outline-variant/30 bg-white p-12 font-body-base ${CV_SHADOW}`}>
-            {/* Encabezado */}
-            <div className="mb-8 border-b-2 border-primary pb-8 text-center">
-              <h1 className="mb-1 text-3xl font-bold uppercase tracking-tight text-primary">
-                {nombreCompleto || 'Tu nombre'}
-              </h1>
-              <p className="mb-3 text-sm uppercase tracking-widest text-on-surface-variant">
-                {[perfil.nivel || 'Bachillerato', perfil.carrera].filter(Boolean).join(' en ') || 'Tu carrera'} · Universidad de Costa Rica
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 text-xs text-on-surface-variant">
-                {perfil.sede && <><span>{perfil.sede}</span><span>•</span></>}
-                {correo && <><span>{correo}</span><span>•</span></>}
-                {perfil.telefono && <><span>{perfil.telefono}</span><span>•</span></>}
-                <span>{perfil.linkedin || 'linkedin.com/in/...'}</span>
-              </div>
-            </div>
-
-            {/* Perfil Profesional */}
-            <CVSeccion titulo="Perfil Profesional">
-              <p className="text-justify text-sm leading-relaxed text-on-surface">
-                Ingeniera de Software graduada de la Universidad de Costa Rica con honores. Especialista en
-                optimización de backend y arquitecturas escalables. Con experiencia en entornos corporativos de
-                alta demanda técnica como Intel, aportando soluciones innovadoras mediante el uso de inteligencia
-                artificial aplicada y metodologías ágiles. Enfocada en la excelencia académica y técnica.
-              </p>
-            </CVSeccion>
-
-            {/* Experiencia Laboral */}
-            <CVSeccion titulo="Experiencia Laboral">
-              <div className="mb-6">
-                <div className="mb-1 flex items-baseline justify-between">
-                  <span className="text-sm font-bold">INTEL CORPORATION</span>
-                  <span className="text-xs italic">2023 - Presente</span>
-                </div>
-                <div className="mb-2 flex items-baseline justify-between">
-                  <span className="text-xs italic">Software Engineering Intern</span>
-                  <span className="text-xs">San José, CR</span>
-                </div>
-                <ul className="ml-4 list-disc space-y-2 text-xs text-on-surface">
-                  <li>Optimización de microservicios internos reduciendo el tiempo de latencia en un 15% mediante refactorización de código en Python y Go.</li>
-                  <li>Desarrollo de scripts de automatización para pruebas unitarias, incrementando la cobertura de código del 70% al 92% en el módulo de validación.</li>
-                  <li>Colaboración activa en equipos multidisciplinarios bajo el marco de trabajo SCRUM.</li>
-                </ul>
-              </div>
-              <div>
-                <div className="mb-1 flex items-baseline justify-between">
-                  <span className="text-sm font-bold">HACIENDA LABS (UCR)</span>
-                  <span className="text-xs italic">2022 - 2023</span>
-                </div>
-                <div className="mb-2 flex items-baseline justify-between">
-                  <span className="text-xs italic">Asistente de Investigación Tecnológica</span>
-                  <span className="text-xs">Sede Rodrigo Facio</span>
-                </div>
-                <ul className="ml-4 list-disc space-y-2 text-xs text-on-surface">
-                  <li>Implementación de algoritmos de procesamiento de datos para la visualización de indicadores macroeconómicos nacionales.</li>
-                  <li>Diseño de interfaces de usuario minimalistas utilizando React y Tailwind CSS para portales de consulta pública.</li>
-                </ul>
-              </div>
-            </CVSeccion>
-
-            {/* Educación */}
-            <CVSeccion titulo="Educación">
-              <div className="mb-1 flex items-baseline justify-between">
-                <span className="text-sm font-bold">UNIVERSIDAD DE COSTA RICA</span>
-                <span className="text-xs italic">{perfil.anioIngreso ? `${perfil.anioIngreso} - Presente` : '—'}</span>
-              </div>
-              <p className="text-xs">
-                {[perfil.nivel, perfil.carrera].filter(Boolean).join(' en ') || 'Carrera por definir'}
-                {perfil.sede ? ` · ${perfil.sede}` : ''}.
-              </p>
-              {perfil.beca && <p className="mt-1 text-xs italic">Beca socioeconómica: {perfil.beca}.</p>}
-            </CVSeccion>
-
-            {/* Habilidades + Proyectos */}
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-              <div>
-                <h3 className="mb-3 border-b border-outline-variant text-sm font-bold uppercase tracking-wider text-primary">Habilidades</h3>
-                <div className="grid grid-cols-1 gap-1 text-xs">
-                  <p><span className="font-bold">Técnicas:</span> {tecnicas.length ? tecnicas.join(', ') : '—'}</p>
-                  <p><span className="font-bold">Blandas:</span> {blandas.length ? blandas.join(', ') : '—'}</p>
-                  <p><span className="font-bold">Idiomas:</span> {idiomas.length ? idiomas.join(', ') : '—'}</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-3 border-b border-outline-variant text-sm font-bold uppercase tracking-wider text-primary">Proyectos Destacados</h3>
-                <p className="text-xs font-bold">{perfil.proyectoTitulo || 'Proyecto de graduación (TFG)'}</p>
-                <p className="text-xs leading-snug">
-                  {perfil.proyectoDescripcion || 'Describí tu proyecto de graduación en el onboarding para que aparezca aquí.'}
-                </p>
-              </div>
-            </div>
+          {/* CV editado (refleja la fuente única); id para imprimir/exportar */}
+          <div id="cv-print">
+            <CvDocumento />
           </div>
         </section>
 

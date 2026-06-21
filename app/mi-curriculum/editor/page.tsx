@@ -10,9 +10,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import AvatarUploader from '@/components/student/AvatarUploader';
+import CvDocumento from '@/components/student/CvDocumento';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type Experiencia } from '@/context/PerfilEstudianteContext';
 import { useAuth } from '@/context/AuthContext';
+import { limpiarTexto, tituloCaso, formatearTelefono } from '@/lib/texto';
 
 const SECCIONES = [
   { key: 'datos', label: 'Datos personales' },
@@ -25,7 +27,6 @@ const SECCIONES = [
 
 const input = 'w-full rounded-xl border border-outline-variant bg-surface-container-low p-3.5 text-sm focus:border-transparent focus:ring-2 focus:ring-secondary';
 const label = 'mb-1.5 block text-sm font-body-semibold text-primary';
-const lista = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
 
 export default function EditorCurriculumPage() {
   const router = useRouter();
@@ -61,9 +62,6 @@ export default function EditorCurriculumPage() {
   };
 
   const correo = user?.email || '';
-  const tecnicas = lista(perfil.habilidadesTecnicas);
-  const blandas = lista(perfil.habilidadesBlandas);
-  const idiomas = lista(perfil.idiomas);
 
   // % de CV completado (campos clave del CV).
   const progreso = useMemo(() => {
@@ -82,7 +80,8 @@ export default function EditorCurriculumPage() {
   const delExp = (i: number) => set({ experiencias: perfil.experiencias.filter((_, j) => j !== i) });
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background font-body-base text-on-background">
+    <>
+    <div className="flex h-screen flex-col overflow-hidden bg-background font-body-base text-on-background print:hidden">
       {/* Barra superior */}
       <header className="flex h-16 shrink-0 items-center justify-between border-b border-outline-variant bg-surface px-6">
         <div className="flex items-center gap-4">
@@ -143,10 +142,10 @@ export default function EditorCurriculumPage() {
             {activa === 'datos' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div><label className={label}>Nombre</label><input className={input} value={perfil.nombre} onChange={(e) => set({ nombre: e.target.value })} /></div>
-                  <div><label className={label}>Apellidos</label><input className={input} value={perfil.apellidos} onChange={(e) => set({ apellidos: e.target.value })} /></div>
+                  <div><label className={label}>Nombre</label><input className={input} value={perfil.nombre} onChange={(e) => set({ nombre: e.target.value })} onBlur={(e) => set({ nombre: tituloCaso(e.target.value) })} /></div>
+                  <div><label className={label}>Apellidos</label><input className={input} value={perfil.apellidos} onChange={(e) => set({ apellidos: e.target.value })} onBlur={(e) => set({ apellidos: tituloCaso(e.target.value) })} /></div>
                 </div>
-                <div><label className={label}>Cargo deseado</label><input className={input} value={perfil.cargoDeseado} onChange={(e) => set({ cargoDeseado: e.target.value })} placeholder="Ej: Desarrolladora Full Stack" /></div>
+                <div><label className={label}>Cargo deseado</label><input className={input} value={perfil.cargoDeseado} onChange={(e) => set({ cargoDeseado: e.target.value })} onBlur={(e) => set({ cargoDeseado: limpiarTexto(e.target.value) })} placeholder="Ej: Desarrolladora Full Stack" /></div>
                 <div>
                   <label className={label}>Foto de perfil</label>
                   <div className="flex items-center gap-6">
@@ -166,8 +165,8 @@ export default function EditorCurriculumPage() {
             {activa === 'contacto' && (
               <div className="space-y-6">
                 <div><label className={label}>Correo</label><input className={`${input} opacity-70`} value={correo} readOnly /></div>
-                <div><label className={label}>Teléfono</label><input className={input} value={perfil.telefono} onChange={(e) => set({ telefono: e.target.value })} placeholder="+506 8888-0000" /></div>
-                <div><label className={label}>Ubicación</label><input className={input} value={perfil.ubicacion} onChange={(e) => set({ ubicacion: e.target.value })} placeholder="San José, Costa Rica" /></div>
+                <div><label className={label}>Teléfono</label><input className={input} value={perfil.telefono} onChange={(e) => set({ telefono: e.target.value })} onBlur={(e) => set({ telefono: formatearTelefono(e.target.value) })} placeholder="8888 8888" /></div>
+                <div><label className={label}>Ubicación</label><input className={input} value={perfil.ubicacion} onChange={(e) => set({ ubicacion: e.target.value })} onBlur={(e) => set({ ubicacion: limpiarTexto(e.target.value) })} placeholder="San José, Costa Rica" /></div>
                 <div><label className={label}>LinkedIn</label><input className={input} value={perfil.linkedin} onChange={(e) => set({ linkedin: e.target.value })} placeholder="linkedin.com/in/…" /></div>
               </div>
             )}
@@ -182,11 +181,11 @@ export default function EditorCurriculumPage() {
                       <button type="button" onClick={() => delExp(i)} className="text-error hover:opacity-70"><span className="material-symbols-outlined text-base">delete</span></button>
                     </div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <input className={input} value={exp.puesto} onChange={(e) => updExp(i, 'puesto', e.target.value)} placeholder="Puesto" />
-                      <input className={input} value={exp.empresa} onChange={(e) => updExp(i, 'empresa', e.target.value)} placeholder="Empresa" />
+                      <input className={input} value={exp.puesto} onChange={(e) => updExp(i, 'puesto', e.target.value)} onBlur={(e) => updExp(i, 'puesto', tituloCaso(e.target.value))} placeholder="Puesto" />
+                      <input className={input} value={exp.empresa} onChange={(e) => updExp(i, 'empresa', e.target.value)} onBlur={(e) => updExp(i, 'empresa', tituloCaso(e.target.value))} placeholder="Empresa" />
                     </div>
                     <input className={input} value={exp.periodo} onChange={(e) => updExp(i, 'periodo', e.target.value)} placeholder="Período (ej: 2023 - Presente)" />
-                    <textarea className={`${input} min-h-[70px]`} value={exp.descripcion} onChange={(e) => updExp(i, 'descripcion', e.target.value)} placeholder="Logros y responsabilidades…" />
+                    <textarea className={`${input} min-h-[70px]`} value={exp.descripcion} onChange={(e) => updExp(i, 'descripcion', e.target.value)} onBlur={(e) => updExp(i, 'descripcion', limpiarTexto(e.target.value))} placeholder="Logros y responsabilidades…" />
                   </div>
                 ))}
                 <button type="button" onClick={addExp} className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-outline py-3 text-sm font-body-semibold text-primary hover:bg-primary/5">
@@ -205,7 +204,7 @@ export default function EditorCurriculumPage() {
 
             {activa === 'educacion' && (
               <div className="space-y-6">
-                <div><label className={label}>Carrera</label><input className={input} value={perfil.carrera} onChange={(e) => set({ carrera: e.target.value })} /></div>
+                <div><label className={label}>Carrera</label><input className={input} value={perfil.carrera} onChange={(e) => set({ carrera: e.target.value })} onBlur={(e) => set({ carrera: tituloCaso(e.target.value) })} /></div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div><label className={label}>Nivel</label><input className={input} value={perfil.nivel} onChange={(e) => set({ nivel: e.target.value })} placeholder="Bachillerato" /></div>
                   <div><label className={label}>Año de ingreso</label><input className={input} value={perfil.anioIngreso} onChange={(e) => set({ anioIngreso: e.target.value })} /></div>
@@ -217,7 +216,7 @@ export default function EditorCurriculumPage() {
             {activa === 'resumen' && (
               <div className="space-y-2">
                 <label className={label}>Resumen profesional</label>
-                <textarea className={`${input} min-h-[160px]`} value={perfil.resumen} onChange={(e) => set({ resumen: e.target.value })} placeholder="Un párrafo que resuma tu perfil, fortalezas y objetivos." />
+                <textarea className={`${input} min-h-[160px]`} value={perfil.resumen} onChange={(e) => set({ resumen: e.target.value })} onBlur={(e) => set({ resumen: limpiarTexto(e.target.value) })} placeholder="Un párrafo que resuma tu perfil, fortalezas y objetivos." />
               </div>
             )}
 
@@ -255,56 +254,8 @@ export default function EditorCurriculumPage() {
         {/* Derecha: vista previa en vivo */}
         <aside className="hidden w-[420px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-outline-variant bg-surface-container-high p-6 xl:flex">
           <h3 className="text-sm font-label-caps font-bold uppercase tracking-wider text-on-surface-variant">Vista previa</h3>
-          <div id="cv-preview" className="overflow-hidden rounded-lg border border-outline-variant bg-white shadow-xl">
-            <div className="flex items-center gap-3 bg-primary p-5">
-              {perfil.foto ? (
-                <img src={perfil.foto} alt="" className="h-14 w-14 rounded-full border-2 border-white object-cover" />
-              ) : (
-                <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-white bg-white/15 text-sm font-bold text-white">
-                  {`${perfil.nombre[0] || ''}${perfil.apellidos[0] || ''}`.toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0">
-                <h4 className="truncate font-bold leading-none text-white">{`${perfil.nombre} ${perfil.apellidos}`.trim() || 'Tu nombre'}</h4>
-                <p className="mt-1 truncate text-xs text-primary-fixed">{perfil.cargoDeseado || 'Cargo deseado'}</p>
-              </div>
-            </div>
-            <div className="space-y-4 p-5 text-xs text-on-surface">
-              <Bloque titulo="Contacto">
-                {[perfil.ubicacion, correo, perfil.telefono, perfil.linkedin].filter(Boolean).map((x) => <p key={x} className="break-words text-on-surface-variant">{x}</p>)}
-              </Bloque>
-              {perfil.resumen && <Bloque titulo="Perfil"><p className="leading-relaxed text-on-surface-variant">{perfil.resumen}</p></Bloque>}
-              {(tecnicas.length > 0 || blandas.length > 0 || idiomas.length > 0) && (
-                <Bloque titulo="Habilidades">
-                  {tecnicas.length > 0 && (
-                    <div className="mb-1.5 flex flex-wrap gap-1">{tecnicas.map((s) => <span key={s} className="rounded bg-secondary-fixed px-1.5 py-0.5 text-[10px] text-primary">{s}</span>)}</div>
-                  )}
-                  {blandas.length > 0 && <p className="text-on-surface-variant"><span className="font-bold text-primary">Blandas:</span> {blandas.join(', ')}</p>}
-                  {idiomas.length > 0 && <p className="text-on-surface-variant"><span className="font-bold text-primary">Idiomas:</span> {idiomas.join(', ')}</p>}
-                </Bloque>
-              )}
-              {perfil.experiencias.length > 0 && (
-                <Bloque titulo="Experiencia">
-                  <div className="space-y-2">
-                    {perfil.experiencias.map((e, i) => (
-                      <div key={i}>
-                        <p className="font-bold">{e.puesto || 'Puesto'} <span className="font-normal text-on-surface-variant">· {e.empresa}</span></p>
-                        <p className="text-[10px] text-on-surface-variant">{e.periodo}</p>
-                        {e.descripcion && <p className="mt-0.5 leading-snug text-on-surface-variant">{e.descripcion}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </Bloque>
-              )}
-              {(perfil.carrera || perfil.sede) && (
-                <Bloque titulo="Educación">
-                  <p className="font-bold">{[perfil.nivel, perfil.carrera].filter(Boolean).join(' en ') || 'Carrera'}</p>
-                  <p className="text-[10px] text-on-surface-variant">
-                    Universidad de Costa Rica{perfil.sede ? ` · ${perfil.sede}` : ''}{perfil.anioIngreso ? ` · ${perfil.anioIngreso}` : ''}
-                  </p>
-                </Bloque>
-              )}
-            </div>
+          <div className="shadow-xl">
+            <CvDocumento />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Link href="/mi-curriculum/plantillas" className="flex items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface px-4 py-3 text-sm font-body-semibold text-primary hover:bg-primary/5">
@@ -322,16 +273,13 @@ export default function EditorCurriculumPage() {
         </aside>
       </div>
 
-      <AvatarUploader abierto={editorFoto} fotoActual={perfil.foto} onGuardar={(foto) => set({ foto })} onCerrar={() => setEditorFoto(false)} />
-    </div>
-  );
-}
+        <AvatarUploader abierto={editorFoto} fotoActual={perfil.foto} onGuardar={(foto) => set({ foto })} onCerrar={() => setEditorFoto(false)} />
+      </div>
 
-function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h5 className="mb-1.5 border-b border-outline-variant pb-1 text-[10px] font-bold uppercase tracking-widest text-primary">{titulo}</h5>
-      {children}
-    </div>
+      {/* Versión solo para imprimir/exportar (fuera del aside responsive). */}
+      <div id="cv-print" className="hidden bg-white print:block">
+        <CvDocumento />
+      </div>
+    </>
   );
 }
