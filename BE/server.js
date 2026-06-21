@@ -123,6 +123,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
 app.use('/api/estudiantes', directorioEstudiantesRoutes);
 app.use('/api/comprobantes', comprobantesRoutes);
+app.use('/api/perfil-onboarding', require('./routes/perfilOnboarding.routes'));
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
