@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ReportarPerfil from '@/components/ReportarPerfil';
 import StudentNav from '@/components/StudentNav';
+import ProgressBar from '@/components/ui/ProgressBar';
+import { fotoPorNombre, FOTO_FALLBACK } from '@/lib/fotosDemo';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { apiFetch } from '@/lib/api';
 import { CARRERAS_UCR } from '@/lib/catalogoUCR';
@@ -352,9 +354,20 @@ function EstudiantesPageContent() {
                 return (
                   <article key={e.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm">
                     <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                        {iniciales(e.nombre)}
-                      </div>
+                      {fotoPorNombre(e.nombre) ? (
+                        <img
+                          src={fotoPorNombre(e.nombre)}
+                          alt={e.nombre}
+                          className="h-11 w-11 shrink-0 rounded-full object-cover object-top"
+                          onError={(ev) => {
+                            (ev.currentTarget as HTMLImageElement).src = FOTO_FALLBACK;
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                          {iniciales(e.nombre)}
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <h3 className="truncate font-brand-heading text-base font-bold text-ucr-on-surface">{e.nombre}</h3>
@@ -377,12 +390,8 @@ function EstudiantesPageContent() {
                       )}
                     </div>
 
-                    <div className="mb-1 flex items-center justify-between text-xs text-ucr-on-surface-variant">
-                      <span>Avance del proyecto</span>
-                      <span className="font-semibold text-ucr-esmeralda">{e.proyecto.avance}%</span>
-                    </div>
-                    <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-ucr-surface-container">
-                      <span className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda" style={{ width: `${e.proyecto.avance}%` }} />
+                    <div className="mb-3">
+                      <ProgressBar value={e.proyecto.avance} label="Avance del proyecto" showValue />
                     </div>
 
                     {e.areas.length > 0 && (

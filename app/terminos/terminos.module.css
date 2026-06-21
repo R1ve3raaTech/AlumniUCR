@@ -1,0 +1,154 @@
+/* ════════════════════════════════════════════════════════════════════
+   Términos y Condiciones — Fundación Alumni-UCR.
+   Diseño con identidad del proyecto (tokens --ucr-* / --font-*).
+   ════════════════════════════════════════════════════════════════════ */
+.page {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(55% 45% at 88% -5%, rgba(84, 188, 235, 0.16), transparent 60%),
+    radial-gradient(50% 40% at -5% 105%, rgba(0, 76, 99, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--ucr-surface) 0%, #eaf3f6 100%);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem clamp(1rem, 4vw, 48px);
+}
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  font-family: var(--font-ucr-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--ucr-primary);
+}
+.brand b { color: var(--ucr-celeste); }
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ucr-on-surface-variant);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+.backLink:hover { color: var(--ucr-primary); }
+.backLink svg { width: 18px; height: 18px; }
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 4vw, 48px) 3rem;
+}
+
+.hero { text-align: left; margin-bottom: 1.75rem; }
+.hero h1 {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 1.6rem + 2.4vw, 3.4rem);
+  color: var(--ucr-primary);
+  line-height: 1.08;
+  margin: 0;
+}
+.hero h1 em { font-style: normal; color: var(--ucr-celeste); }
+.accentBar { width: 6rem; height: 0.5rem; background: var(--ucr-celeste); border-radius: 3px; margin: 1rem 0 0; }
+.meta { margin-top: 1rem; color: var(--ucr-on-surface-variant); font-size: 0.95rem; max-width: 52rem; line-height: 1.6; }
+.updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand-esmeralda);
+  background: #eafaf5;
+  border: 1px solid #c9ece1;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+}
+
+/* Tarjeta de contenido */
+.card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--ucr-outline-variant);
+  border-top: 5px solid var(--ucr-celeste);
+  border-radius: 1.25rem;
+  box-shadow: 0 30px 70px -30px rgba(0, 31, 42, 0.22);
+  padding: clamp(1.5rem, 1rem + 2.5vw, 3.25rem);
+}
+
+.section { padding: 1.5rem 0; border-top: 1px solid var(--ucr-surface-variant); }
+.section:first-child { border-top: none; padding-top: 0; }
+.section h2 {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--ucr-primary);
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.section h2 .num {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--brand-esmeralda);
+  background: #eafaf5;
+  border-radius: 0.55rem;
+  padding: 0.15rem 0.55rem;
+  flex-shrink: 0;
+}
+.section p { color: var(--ucr-on-surface-variant); line-height: 1.7; margin: 0 0 0.7rem; font-size: 0.98rem; }
+.section p:last-child { margin-bottom: 0; }
+.section ul { margin: 0.3rem 0 0.7rem 1.1rem; padding: 0; }
+.section li { color: var(--ucr-on-surface-variant); line-height: 1.65; margin-bottom: 0.35rem; font-size: 0.96rem; }
+.section strong { color: var(--ucr-on-surface); }
+.section a { color: var(--brand-esmeralda); font-weight: 600; text-decoration: underline; }
+
+.callout {
+  margin-top: 2rem;
+  background: var(--ucr-surface-container);
+  border: 1px solid var(--ucr-outline-variant);
+  border-left: 4px solid var(--ucr-celeste);
+  border-radius: 0.85rem;
+  padding: 1.1rem 1.25rem;
+  font-size: 0.92rem;
+  color: var(--ucr-on-surface-variant);
+  line-height: 1.65;
+}
+
+.footer {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 48px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--ucr-outline);
+  font-size: 0.78rem;
+}
+.footer a { color: var(--ucr-outline); }
+.footer a:hover { color: var(--ucr-primary); }
+.footerLinks { display: flex; gap: 1rem; }
+
+@media (max-width: 640px) {
+  .header { flex-wrap: wrap; gap: 0.5rem; }
+  .footer { flex-direction: column; text-align: center; }
+}

@@ -1,0 +1,67 @@
+/* Primitivas de UI compartidas (identidad de marca UCR). Unifican KPIs,
+   barras de progreso y porcentajes en todo el proyecto. Modernas, minimalistas
+   y responsivas. Usadas por KPICard.tsx y ProgressBar.tsx. */
+
+/* ─── KPI / tarjeta de estadística ─────────────────────────────────── */
+.kpi {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  background: #fff;
+  border: 1px solid var(--ucr-outline-variant);
+  border-radius: 1.1rem;
+  box-shadow: 0 10px 30px -22px rgba(0, 31, 42, 0.35);
+}
+.kpiIcon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, var(--ucr-celeste), var(--ucr-esmeralda));
+  color: #fff;
+}
+.kpiIcon svg { width: 1.5rem; height: 1.5rem; }
+.kpiBody { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.kpiValor {
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  color: var(--ucr-primary);
+}
+.kpiLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ucr-on-surface-variant);
+}
+
+/* ─── Barra de progreso / porcentaje ──────────────────────────────── */
+.progressWrap { display: flex; flex-direction: column; gap: 0.4rem; }
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ucr-outline);
+}
+.progressPct { font-family: var(--font-ucr-display); font-size: 1.4rem; color: var(--ucr-esmeralda); }
+.track {
+  width: 100%;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--ucr-surface-container, #e7eef0);
+  overflow: hidden;
+}
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ucr-celeste), var(--ucr-esmeralda));
+}

@@ -62,7 +62,7 @@ const EASE_OUT: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 const EASE_IN: [number, number, number, number] = [0.55, 0.055, 0.675, 0.19];
 
 export default function RegistroPage() {
-  const { error, loading, run } = useAuthForm();
+  const { error, loading, run, reset } = useAuthForm();
   const reduced = useReducedMotion();
 
   const ANIO_ACTUAL = new Date().getFullYear();
@@ -70,7 +70,9 @@ export default function RegistroPage() {
 
   const [rol, setRol] = useState<Rol>('estudiante');
   const [nombre, setNombre] = useState('');
+  const [apellidos, setApellidos] = useState('');
   const [carne, setCarne] = useState('');
+  const [cedula, setCedula] = useState('');
   const [correo, setCorreo] = useState('');
   const [errorCorreo, setErrorCorreo] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
@@ -86,18 +88,38 @@ export default function RegistroPage() {
 
   const esUCR = correo.trim().toLowerCase().endsWith('@ucr.ac.cr');
 
+  // Al cambiar de rol, "refrescamos" los errores: la nueva sección no arrastra
+  // los del rol anterior.
+  function cambiarRol(value: Rol) {
+    if (value === rol) return;
+    setRol(value);
+    setErrorForm(null);
+    setErrorCorreo(null);
+    reset();
+  }
+
   const toggleCarrera = (c: string) =>
     setCarreras((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
   function enviarEnlace() {
     run(async () => {
-      await solicitarMagicLink('estudiante', correo.trim());
+      const res = await solicitarMagicLink('estudiante', correo.trim());
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           'ct_registro_datos',
-          JSON.stringify({ nombre: nombre.trim(), carne: carne.trim(), rol: 'estudiante' }),
+          JSON.stringify({
+            nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
+            apellidos: apellidos.trim(),
+            carne: carne.trim(),
+            cedula: cedula.trim(),
+            rol: 'estudiante',
+          }),
         );
       }
+      // En desarrollo el backend devuelve token_hash → enlace directo (ruta
+      // relativa, funciona en cualquier puerto y sin depender del correo).
+      const th = res?.token_hash;
+      setConfirmUrl(th ? `/auth/confirmar?token_hash=${encodeURIComponent(th)}` : null);
       setModoExito('magiclink');
       setEnviado(true);
     });
@@ -107,7 +129,8 @@ export default function RegistroPage() {
     setErrorForm(null);
     const errCorreo = validarCorreo(correo);
     if (errCorreo) return setErrorForm(errCorreo);
-    if (nombre.trim().length < 3) return setErrorForm('El nombre completo debe tener al menos 3 caracteres.');
+    if (nombre.trim().length < 1) return setErrorForm('Ingresá tu nombre.');
+    if (apellidos.trim().length < 1) return setErrorForm('Ingresá tus apellidos.');
     const errPass = validarContrasena(contrasena);
     if (errPass) return setErrorForm(errPass);
     if (carreras.length < 1) return setErrorForm('Selecciona al menos una carrera cursada en la UCR.');
@@ -118,7 +141,7 @@ export default function RegistroPage() {
     }
     run(async () => {
       const res = await registrarExalumno({
-        correo: correo.trim(), contrasena, nombre: nombre.trim(),
+        correo: correo.trim(), contrasena, nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
         carreras, facultad, anioGraduacion: anio,
       });
       setConfirmUrl(res?.data?.confirmUrl ?? null);
@@ -130,6 +153,11 @@ export default function RegistroPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rol === 'exalumno') { registrarComoExalumno(); return; }
+    // Campos obligatorios del estudiante (error se muestra debajo del botón)
+    setErrorForm(null);
+    if (nombre.trim().length < 1) return setErrorForm('Ingresá tu nombre.');
+    if (apellidos.trim().length < 1) return setErrorForm('Ingresá tus apellidos.');
+    if (cedula.trim().length < 1) return setErrorForm('Ingresá tu número de cédula.');
     const err = validarCorreoPorRol(correo, 'estudiante');
     setErrorCorreo(err);
     if (err) return;
@@ -284,17 +312,32 @@ export default function RegistroPage() {
                     </>
                   ) : (
                     <>
-                      <motion.button
-                        type="button"
-                        className={styles.submit}
-                        onClick={abrirCorreo}
-                        whileHover={!reduced ? { scale: 1.015 } : {}}
-                        whileTap={!reduced ? { scale: 0.98 } : {}}
-                        transition={{ duration: 0.15, ease: EASE_OUT }}
-                      >
-                        Abrir mi correo
-                      </motion.button>
+                      {confirmUrl ? (
+                        <motion.a
+                          href={confirmUrl}
+                          className={styles.submit}
+                          whileHover={!reduced ? { scale: 1.015 } : {}}
+                          whileTap={!reduced ? { scale: 0.98 } : {}}
+                          transition={{ duration: 0.15, ease: EASE_OUT }}
+                        >
+                          Confirmar mi cuenta ahora
+                        </motion.a>
+                      ) : (
+                        <motion.button
+                          type="button"
+                          className={styles.submit}
+                          onClick={abrirCorreo}
+                          whileHover={!reduced ? { scale: 1.015 } : {}}
+                          whileTap={!reduced ? { scale: 0.98 } : {}}
+                          transition={{ duration: 0.15, ease: EASE_OUT }}
+                        >
+                          Abrir mi correo
+                        </motion.button>
+                      )}
                       <div className={styles.resendHint}>
+                        {confirmUrl && (
+                          <p className={styles.expiry}>Modo desarrollo: confirmá con el botón de arriba (no depende del correo).</p>
+                        )}
                         <button type="button" className={styles.resendBtn} onClick={enviarEnlace} disabled={loading}>
                           {loading ? 'Reenviando…' : '¿No recibiste el correo? Volver a enviar'}
                         </button>
@@ -324,8 +367,9 @@ export default function RegistroPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: dur, ease: EASE_OUT, delay: 0.12 }}
                 >
-                  <h1 className={styles.title}>Únete a la Red</h1>
-                  <p className={styles.subtitle}>Completa tus datos para empezar a conectar.</p>
+                  <h1 className={styles.title}>Únete a la <em>Red</em></h1>
+                  <div className={styles.accentBar} />
+                  <p className={styles.subtitle}>Conectá con la comunidad Alumni UCR. Completá tus datos para empezar.</p>
                 </motion.div>
 
                 <motion.form
@@ -339,21 +383,6 @@ export default function RegistroPage() {
                     visible: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
                   }}
                 >
-                  {/* Error global */}
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        className={styles.formError}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.18, ease: EASE_IN }}
-                      >
-                        {error}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
                   {/* Paso 1: Rol */}
                   <motion.div variants={fieldFade}>
                     <h2 className={styles.stepTitle}>Paso 1: ¿Cuál es tu rol?</h2>
@@ -366,7 +395,7 @@ export default function RegistroPage() {
                             name="rol"
                             value={r.value}
                             checked={rol === r.value}
-                            onChange={() => setRol(r.value)}
+                            onChange={() => cambiarRol(r.value)}
                           />
                           {/* Role card: solo escala al hacer hover/tap, no con la selección */}
                           <motion.div
@@ -406,7 +435,7 @@ export default function RegistroPage() {
                         <p>Detectamos un correo <strong>@ucr.ac.cr</strong>. ¿Ya te graduaste?</p>
                         <div className={styles.ucrPromptActions}>
                           <span className={styles.ucrPromptOk}>Sí, continúa como exalumno</span>
-                          <button type="button" onClick={() => setRol('estudiante')}>No, soy estudiante</button>
+                          <button type="button" onClick={() => cambiarRol('estudiante')}>No, soy estudiante</button>
                         </div>
                       </motion.div>
                     )}
@@ -418,51 +447,59 @@ export default function RegistroPage() {
                       Paso 2: {rol === 'exalumno' ? 'Datos de autodeclaración' : 'Información Personal'}
                     </h2>
 
-                    <AnimatePresence>
-                      {errorForm && (
-                        <motion.div
-                          className={styles.formError}
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.18, ease: EASE_IN }}
-                        >
-                          {errorForm}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
                     <div className={styles.fields}>
                       <div className={styles.field}>
-                        <label className={styles.label} htmlFor="nombre">Nombre completo</label>
+                        <label className={styles.label} htmlFor="nombre">Nombre <span className={styles.req}>*</span></label>
                         <div className={styles.inputWrap}>
                           <span className={styles.inputIcon}><IPerson /></span>
-                          <input id="nombre" className={styles.input} type="text" placeholder="Ej: Juan Pérez"
-                            value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                          <input id="nombre" className={styles.input} type="text" placeholder="Ej: Juan"
+                            autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+                        </div>
+                      </div>
+
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor="apellidos">Apellidos <span className={styles.req}>*</span></label>
+                        <div className={styles.inputWrap}>
+                          <span className={styles.inputIcon}><IPerson /></span>
+                          <input id="apellidos" className={styles.input} type="text" placeholder="Ej: Pérez Mora"
+                            autoComplete="family-name" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
                         </div>
                       </div>
 
                       <AnimatePresence>
                         {rol === 'estudiante' && (
                           <motion.div
-                            className={styles.field}
-                            initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                            animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
-                            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                            style={{ display: 'contents' }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             transition={{ duration: 0.2, ease: EASE_OUT }}
                           >
-                            <label className={styles.label} htmlFor="carne">Carné / Cédula</label>
-                            <div className={styles.inputWrap}>
-                              <span className={styles.inputIcon}><IBadge /></span>
-                              <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
-                                value={carne} onChange={(e) => setCarne(e.target.value)} />
+                            {/* Cédula debajo del Nombre (columna izquierda) */}
+                            <div className={styles.field}>
+                              <label className={styles.label} htmlFor="cedula">Cédula <span className={styles.req}>*</span></label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><IBadge /></span>
+                                <input id="cedula" className={styles.input} type="text" placeholder="Ej: 1-1234-5678"
+                                  inputMode="numeric" value={cedula} onChange={(e) => setCedula(e.target.value)} required />
+                              </div>
+                            </div>
+
+                            {/* Carné debajo de Apellidos (columna derecha) */}
+                            <div className={styles.field}>
+                              <label className={styles.label} htmlFor="carne">Carné universitario</label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><IBadge /></span>
+                                <input id="carne" className={styles.input} type="text" placeholder="Ej: B12345"
+                                  value={carne} onChange={(e) => setCarne(e.target.value)} />
+                              </div>
                             </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
 
                       <div className={`${styles.field} ${rol === 'estudiante' ? styles.fieldFull : ''}`}>
-                        <label className={styles.label} htmlFor="correo">Correo electrónico</label>
+                        <label className={styles.label} htmlFor="correo">Correo electrónico <span className={styles.req}>*</span></label>
                         <div className={styles.inputWrap}>
                           <span className={styles.inputIcon}><IMail /></span>
                           <input id="correo" className={styles.input} type="email"
@@ -471,7 +508,6 @@ export default function RegistroPage() {
                             onChange={(e) => { setCorreo(e.target.value); if (errorCorreo) setErrorCorreo(null); }}
                             required />
                         </div>
-                        {errorCorreo && <span className={styles.formError}>{errorCorreo}</span>}
                       </div>
 
                       {/* Campos exclusivos exalumno — fade in/out según rol */}
@@ -557,8 +593,27 @@ export default function RegistroPage() {
                         ? <><ISpinner className={styles.spinner} /> Procesando…</>
                         : rol === 'exalumno' ? 'Crear cuenta' : 'Registrarse'}
                     </motion.button>
+
+                    {/* Error justo debajo del botón: visible sin scrollear */}
+                    <AnimatePresence>
+                      {(errorCorreo || errorForm || error) && (
+                        <motion.div
+                          className={styles.submitError}
+                          role="alert"
+                          aria-live="assertive"
+                          initial={{ opacity: 0, y: -6, height: 0 }}
+                          animate={{ opacity: 1, y: 0, height: 'auto' }}
+                          exit={{ opacity: 0, y: -6, height: 0 }}
+                          transition={{ duration: 0.2, ease: EASE_OUT }}
+                        >
+                          <span className={styles.submitErrorIcon}>!</span>
+                          <span>{errorCorreo || errorForm || error}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <p className={styles.terms}>
-                      Al registrarte, aceptas nuestros <a href="#">Términos y Condiciones</a>.
+                      Al registrarte, aceptas nuestros <Link href="/terminos">Términos y Condiciones</Link>.
                     </p>
                   </motion.div>
                 </motion.form>
@@ -572,8 +627,8 @@ export default function RegistroPage() {
         <AlumniLogo height={34} />
         <div className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</div>
         <div className={styles.footerLinks}>
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
+          <Link href="/terminos#privacidad">Privacidad</Link>
+          <Link href="/terminos">Términos</Link>
           <Link href="/ayuda">Soporte</Link>
         </div>
       </footer>

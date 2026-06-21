@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
 import AdminSolicitudes from './AdminSolicitudes';
+import AdminConsultas from './AdminConsultas';
+import AdminExalumnosPendientes from './AdminExalumnosPendientes';
+import AdminDonacionesPendientes from './AdminDonacionesPendientes';
+import KPICard from './ui/KPICard';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
 
@@ -151,18 +155,9 @@ export default function AdminDashboard({
             viewport={{ once: true, margin: '-40px' }}
           >
             {stats.map((s) => (
-              <motion.article
-                key={s.label}
-                className={styles.statCard}
-                variants={fadeItem}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              >
-                <span className={styles.statIcon}>{s.icon}</span>
-                <div>
-                  <span className={styles.statValor}>{s.valor}</span>
-                  <span className={styles.statLabel}>{s.label}</span>
-                </div>
-              </motion.article>
+              <motion.div key={s.label} variants={fadeItem}>
+                <KPICard icon={s.icon} valor={s.valor} label={s.label} />
+              </motion.div>
             ))}
           </motion.section>
 
@@ -260,6 +255,36 @@ export default function AdminDashboard({
             )}
           </section>
 
+          {/* Exalumnos pendientes de aprobación (RF-01 / RF-08) */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Exalumnos pendientes de aprobación</h2>
+              <span className={styles.bloqueHint}>Aprueba o rechaza el ingreso de nuevos egresados</span>
+            </div>
+            {token && <AdminExalumnosPendientes token={token} />}
+          </motion.section>
+
+          {/* Donaciones pendientes con alerta SLA 48h (RF-07 / RF-08.2) */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Donaciones por confirmar</h2>
+              <span className={styles.bloqueHint}>Cola por antigüedad · alerta a las 48 h hábiles</span>
+            </div>
+            {token && <AdminDonacionesPendientes token={token} />}
+          </motion.section>
+
           {/* Solicitudes de colaboración */}
           <motion.section
             className={styles.bloque}
@@ -273,6 +298,21 @@ export default function AdminDashboard({
               <span className={styles.bloqueHint}>Voluntarios externos y accesos</span>
             </div>
             {token && <AdminSolicitudes token={token} />}
+          </motion.section>
+
+          {/* Consultas de soporte (enviadas desde el Centro de Ayuda) */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Consultas de soporte</h2>
+              <span className={styles.bloqueHint}>Mensajes enviados desde el Centro de Ayuda</span>
+            </div>
+            {token && <AdminConsultas token={token} />}
           </motion.section>
         </div>
       </main>

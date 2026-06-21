@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import AlumniLogo from './AlumniLogo';
+import { obtenerMisDonaciones } from '@/lib/donaciones';
+import KPICard from './ui/KPICard';
 import styles from './ExalumnoDashboard.module.css';
 
 interface Perfil {
@@ -34,12 +36,10 @@ const IArrowRight = () => (<svg {...base}><path d="M5 12h14m-7-7 7 7-7 7" /></sv
 const ILogout = () => (<svg {...base}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></svg>);
 const IEdit = () => (<svg {...base}><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>);
 
-const STATS = [
-  { icon: <IHeart />, valor: '0', label: 'Proyectos apoyados' },
-  { icon: <IHub />, valor: '0', label: 'Donaciones realizadas' },
-  { icon: <IUsers />, valor: '0', label: 'Mentorías activas' },
-  { icon: <ILink />, valor: '0', label: 'Conexiones' },
-];
+interface Donacion {
+  estado?: string;
+  id_proyecto?: string | null;
+}
 
 const ACCIONES = [
   { icon: <IHeart />, titulo: 'Hacer una donación', desc: 'Apoya económicamente un proyecto de graduación.', href: '/donaciones' },
@@ -64,19 +64,55 @@ export default function ExalumnoDashboard({
   perfil,
   correo,
   onSignOut,
+  userId,
+  token,
 }: {
   perfil: Perfil | null;
   correo: string;
   onSignOut: () => void;
+  userId?: string;
+  token?: string;
 }) {
   const nombre = perfil?.nombre || correo.split('@')[0] || 'Exalumno';
   const rol = perfil?.roles?.nombre || 'Exalumno';
-  const estado = perfil?.estado || 'activo';
+  const estado = (perfil?.estado || 'activo').toLowerCase().trim();
+  const aprobado = estado === 'activo';
   const primerNombre = nombre.split(' ')[0];
 
   const carreras = perfil?.metadata?.carreras ?? [];
   const facultad = perfil?.metadata?.escuela_facultad || '—';
   const anioGraduacion = perfil?.metadata?.anio_graduacion || '—';
+
+  // Métricas reales de donaciones (RF-07). Sin datos disponibles → '—' (no ceros falsos).
+  const [donaciones, setDonaciones] = useState<Donacion[] | null>(null);
+  useEffect(() => {
+    if (!token || !userId) return;
+    let activo = true;
+    (async () => {
+      try {
+        const res = await obtenerMisDonaciones(token, userId);
+        const lista = Array.isArray(res) ? res : res?.data ?? [];
+        if (activo) setDonaciones(lista as Donacion[]);
+      } catch {
+        if (activo) setDonaciones(null);
+      }
+    })();
+    return () => { activo = false; };
+  }, [token, userId]);
+
+  const confirmadas = (donaciones ?? []).filter((d) => (d.estado || '').toLowerCase() === 'confirmada');
+  const pendientesDon = (donaciones ?? []).filter((d) => (d.estado || '').toLowerCase() === 'pendiente');
+  const proyectosApoyados = new Set(
+    confirmadas.map((d) => d.id_proyecto).filter((p): p is string => Boolean(p)),
+  ).size;
+  const dash = (v: number) => (donaciones === null ? '—' : String(v));
+
+  const STATS = [
+    { icon: <IHeart />, valor: dash(proyectosApoyados), label: 'Proyectos apoyados' },
+    { icon: <IHub />, valor: dash((donaciones ?? []).length), label: 'Donaciones realizadas' },
+    { icon: <ILink />, valor: dash(confirmadas.length), label: 'Confirmadas' },
+    { icon: <IUsers />, valor: dash(pendientesDon.length), label: 'Por confirmar' },
+  ];
 
   return (
     <div className={styles.page}>
@@ -129,6 +165,27 @@ export default function ExalumnoDashboard({
         </motion.section>
 
         <div className={styles.container}>
+          {/* Estado de cuenta: el exalumno queda 'pendiente' hasta que un admin
+              lo apruebe (RF-01). Mientras tanto, se le avisa claramente. */}
+          {!aprobado && (
+            <motion.div
+              className={`${styles.aviso} ${estado === 'rechazado' ? styles.avisoError : ''}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              role="status"
+            >
+              <strong>
+                {estado === 'rechazado'
+                  ? 'Tu cuenta no fue aprobada.'
+                  : 'Tu cuenta está en revisión.'}
+              </strong>{' '}
+              {estado === 'rechazado'
+                ? 'Escríbenos al Centro de ayuda si crees que es un error.'
+                : 'Un administrador validará tu registro de egresado. Mientras tanto, completá tu perfil para agilizar la aprobación; las acciones se habilitarán al aprobarse.'}
+            </motion.div>
+          )}
+
           {/* Estadísticas */}
           <motion.section
             className={styles.stats}
@@ -138,18 +195,9 @@ export default function ExalumnoDashboard({
             viewport={{ once: true, margin: '-40px' }}
           >
             {STATS.map((s) => (
-              <motion.article
-                key={s.label}
-                className={styles.statCard}
-                variants={fadeItem}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              >
-                <span className={styles.statIcon}>{s.icon}</span>
-                <div>
-                  <span className={styles.statValor}>{s.valor}</span>
-                  <span className={styles.statLabel}>{s.label}</span>
-                </div>
-              </motion.article>
+              <motion.div key={s.label} variants={fadeItem}>
+                <KPICard icon={s.icon} valor={s.valor} label={s.label} />
+              </motion.div>
             ))}
           </motion.section>
 
