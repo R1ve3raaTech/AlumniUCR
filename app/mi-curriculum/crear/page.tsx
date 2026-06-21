@@ -8,13 +8,31 @@ import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 
+const ACEPTADOS = ['application/pdf', 'image/jpeg', 'image/png'];
+
 export default function CrearCurriculumPage() {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [archivo, setArchivo] = useState('');
+  const [error, setError] = useState('');
+
+  // Muestra un error que se borra solo a los 4s (no se queda pegado).
+  const mostrarError = (msg: string) => {
+    setError(msg);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setError(''), 4000);
+  };
 
   const onArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = ''; // reset: permite re-seleccionar el mismo archivo y evita que se bugee
     if (!f) return;
+    if (!ACEPTADOS.includes(f.type)) {
+      setArchivo('');
+      mostrarError(`«${f.name}» no es un formato válido. Solo se aceptan PDF, JPG o PNG.`);
+      return;
+    }
+    setError('');
     setArchivo(f.name);
     notificar(`📄 Recibido: ${f.name}`);
   };
@@ -56,22 +74,46 @@ export default function CrearCurriculumPage() {
             <input
               ref={fileRef}
               type="file"
-              accept="image/*,application/pdf"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               className="hidden"
               onChange={onArchivo}
             />
           </div>
 
-          {archivo && (
-            <p className="mt-6 inline-flex items-center gap-2 rounded-lg bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary">
-              <span className="material-symbols-outlined text-base">check_circle</span>
-              {archivo} — listo para mejorar
-            </p>
-          )}
+          {/* Estado: error (auto-desaparece) o éxito */}
+          <div className="mt-6 min-h-[2.75rem]">
+            {error ? (
+              <p className="inline-flex items-center gap-2 rounded-lg border border-error/30 bg-error/10 px-4 py-2 text-sm font-semibold text-error">
+                <span className="material-symbols-outlined text-base">error</span>
+                {error}
+              </p>
+            ) : archivo ? (
+              <p className="inline-flex items-center gap-2 rounded-lg bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary">
+                <span className="material-symbols-outlined text-base">check_circle</span>
+                {archivo} — listo para mejorar
+              </p>
+            ) : null}
+          </div>
 
-          <p className="mt-8 text-xs text-on-surface-variant">
-            Formatos aceptados: PDF, JPG o PNG · desde tu galería, archivos o Drive (descargado).
-          </p>
+          {/* Formatos aceptados — con más presencia */}
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <p className="text-sm font-extrabold uppercase tracking-wider text-on-surface-variant">
+              Formatos aceptados
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {['PDF', 'JPG', 'PNG'].map((f) => (
+                <span
+                  key={f}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container px-4 py-1.5 text-sm font-bold text-primary"
+                >
+                  <span className="material-symbols-outlined text-base">description</span> {f}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs font-medium text-on-surface-variant">
+              Desde tu galería, archivos o Drive (descargado).
+            </p>
+          </div>
         </div>
       </div>
     </StudentShell>
