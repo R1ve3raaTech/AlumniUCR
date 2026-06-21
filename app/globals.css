@@ -26,6 +26,26 @@
   justify-content: center;
 }
 
+/* Impresión / exportar a PDF: imprime SOLO la vista previa del CV (#cv-preview). */
+@media print {
+  body * { visibility: hidden !important; }
+  #cv-preview, #cv-preview * { visibility: visible !important; }
+  #cv-preview {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    /* conserva los colores de marca (header teal, chips) al imprimir */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page { margin: 12mm; }
+}
+
 :root {
   /* ───────────────────────────────────────────────────────────────
      Identidad de marca Alumni UCR (usada solo en el landing público).
