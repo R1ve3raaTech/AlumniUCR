@@ -75,7 +75,7 @@ export default function CrearCurriculumPage() {
               <span className="material-symbols-outlined">upload</span> Mejorar mi currículum
             </button>
             <Link
-              href="/mi-curriculum/editor"
+              href="/mi-curriculum/plantillas"
               className="flex items-center justify-center gap-2 rounded-xl bg-secondary px-8 py-4 font-bold text-on-secondary transition-transform hover:-translate-y-0.5"
             >
               <span className="material-symbols-outlined">edit_document</span> Crear nuevo currículum
