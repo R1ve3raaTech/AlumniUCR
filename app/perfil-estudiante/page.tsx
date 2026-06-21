@@ -58,7 +58,7 @@ export default function PerfilEstudiantePage() {
               <CampoLectura label="Carné" valor="C17482" />
               <CampoLectura label="Carrera" valor="Ingeniería de Software" resaltar />
               <CampoLectura label="Sede" valor="Rodrigo Facio (Central)" />
-              <CampoLectura label="Año de Ingreso" valor="2021" />
+              <CampoLectura label="Año de Ingreso" valor="2019" />
             </div>
           </div>
 
