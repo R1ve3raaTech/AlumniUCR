@@ -8,6 +8,17 @@
 import React from 'react';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
+import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
+
+// % de perfil completado, según los campos clave de la fuente única.
+function completitud(p: PerfilEstudiante): number {
+  const checks = [
+    !!p.nombre, !!p.carne, !!p.carrera, !!p.sede, !!p.anioIngreso, !!p.beca,
+    !!p.proyectoTitulo, p.intereses.length > 0,
+    Object.values(p.apoyo).some(Boolean), !!p.habilidadesTecnicas,
+  ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
 
 const BENTO =
   'rounded-xl border border-outline-variant bg-white shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-transform hover:-translate-y-0.5';
@@ -40,6 +51,9 @@ const SOLICITUDES = [
 ];
 
 export default function MatchesEstudiante() {
+  const { perfil } = usePerfilEstudiante();
+  const pctPerfil = completitud(perfil);
+
   return (
     <StudentShell active="matches">
       <div className="mx-auto w-full max-w-[1280px] space-y-6 p-6" onClick={avisoProximamente}>
@@ -53,7 +67,7 @@ export default function MatchesEstudiante() {
             </p>
           </div>
           <span className="inline-flex items-center rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
-            <span className="material-symbols-outlined mr-1 text-sm">bolt</span> 85% Perfil Completado
+            <span className="material-symbols-outlined mr-1 text-sm">bolt</span> {pctPerfil}% Perfil Completado
           </span>
         </section>
 
@@ -73,7 +87,7 @@ export default function MatchesEstudiante() {
                 </button>
               </div>
               <p className="mb-4 text-xs italic text-on-surface-variant">
-                Relacionado a: &quot;Sistema de Gestión de Talento basado en IA&quot;
+                Relacionado a: &quot;{perfil.proyectoTitulo || 'tu proyecto de graduación'}&quot;
               </p>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {NECESIDADES.map((n) => (

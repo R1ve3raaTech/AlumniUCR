@@ -6,6 +6,11 @@
 import React from 'react';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
+import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
+import { useAuth } from '@/context/AuthContext';
+
+// Convierte un string separado por comas en lista, o un texto de respaldo.
+const lista = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
 
 const CV_SHADOW = 'shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]';
 const AI_GLOW = 'shadow-[0_0_15px_rgba(84,188,235,0.3)]';
@@ -31,6 +36,15 @@ function CVSeccion({ titulo, children }: { titulo: string; children: React.React
 }
 
 export default function MiCurriculumPage() {
+  const { perfil } = usePerfilEstudiante();
+  const { user } = useAuth();
+
+  const nombreCompleto = `${perfil.nombre} ${perfil.apellidos}`.trim();
+  const correo = user?.email || (perfil.nombre ? `${perfil.nombre.toLowerCase()}@ucr.ac.cr` : '');
+  const tecnicas = lista(perfil.habilidadesTecnicas);
+  const blandas = lista(perfil.habilidadesBlandas);
+  const idiomas = lista(perfil.idiomas);
+
   return (
     <StudentShell active="cv">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-8 p-6" onClick={avisoProximamente}>
@@ -55,15 +69,17 @@ export default function MiCurriculumPage() {
           <div className={`min-h-[1000px] border border-outline-variant/30 bg-white p-12 font-body-base ${CV_SHADOW}`}>
             {/* Encabezado */}
             <div className="mb-8 border-b-2 border-primary pb-8 text-center">
-              <h1 className="mb-1 text-3xl font-bold tracking-tight text-primary">ADRIANA SOLANO</h1>
+              <h1 className="mb-1 text-3xl font-bold uppercase tracking-tight text-primary">
+                {nombreCompleto || 'Tu nombre'}
+              </h1>
               <p className="mb-3 text-sm uppercase tracking-widest text-on-surface-variant">
-                Bachillerato en Ingeniería de Software · Universidad de Costa Rica
+                {[perfil.nivel || 'Bachillerato', perfil.carrera].filter(Boolean).join(' en ') || 'Tu carrera'} · Universidad de Costa Rica
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-xs text-on-surface-variant">
-                <span>San José, Costa Rica</span><span>•</span>
-                <span>adriana.solano@ucr.ac.cr</span><span>•</span>
-                <span>+506 8888-0000</span><span>•</span>
-                <span>linkedin.com/in/adrianasolano</span>
+                {perfil.sede && <><span>{perfil.sede}</span><span>•</span></>}
+                {correo && <><span>{correo}</span><span>•</span></>}
+                {perfil.telefono && <><span>{perfil.telefono}</span><span>•</span></>}
+                <span>{perfil.linkedin || 'linkedin.com/in/...'}</span>
               </div>
             </div>
 
@@ -114,12 +130,13 @@ export default function MiCurriculumPage() {
             <CVSeccion titulo="Educación">
               <div className="mb-1 flex items-baseline justify-between">
                 <span className="text-sm font-bold">UNIVERSIDAD DE COSTA RICA</span>
-                <span className="text-xs italic">2019 - 2024</span>
+                <span className="text-xs italic">{perfil.anioIngreso ? `${perfil.anioIngreso} - Presente` : '—'}</span>
               </div>
-              <p className="text-xs">Bachillerato en Ingeniería de Software. Graduación de Honor.</p>
-              <p className="mt-1 text-xs italic">
-                Cursos Relevantes: Inteligencia Artificial, Estructuras de Datos Complejas, Arquitectura de Computadores.
+              <p className="text-xs">
+                {[perfil.nivel, perfil.carrera].filter(Boolean).join(' en ') || 'Carrera por definir'}
+                {perfil.sede ? ` · ${perfil.sede}` : ''}.
               </p>
+              {perfil.beca && <p className="mt-1 text-xs italic">Beca socioeconómica: {perfil.beca}.</p>}
             </CVSeccion>
 
             {/* Habilidades + Proyectos */}
@@ -127,16 +144,16 @@ export default function MiCurriculumPage() {
               <div>
                 <h3 className="mb-3 border-b border-outline-variant text-sm font-bold uppercase tracking-wider text-primary">Habilidades</h3>
                 <div className="grid grid-cols-1 gap-1 text-xs">
-                  <p><span className="font-bold">Lenguajes:</span> Java, Python, Go, TypeScript, SQL.</p>
-                  <p><span className="font-bold">Frameworks:</span> Spring Boot, Node.js, React, Docker.</p>
-                  <p><span className="font-bold">IA:</span> LLMs, RAG, Análisis de Datos con Pandas.</p>
+                  <p><span className="font-bold">Técnicas:</span> {tecnicas.length ? tecnicas.join(', ') : '—'}</p>
+                  <p><span className="font-bold">Blandas:</span> {blandas.length ? blandas.join(', ') : '—'}</p>
+                  <p><span className="font-bold">Idiomas:</span> {idiomas.length ? idiomas.join(', ') : '—'}</p>
                 </div>
               </div>
               <div>
                 <h3 className="mb-3 border-b border-outline-variant text-sm font-bold uppercase tracking-wider text-primary">Proyectos Destacados</h3>
-                <p className="text-xs font-bold">Sistema de Recomendación IA (TFG)</p>
+                <p className="text-xs font-bold">{perfil.proyectoTitulo || 'Proyecto de graduación (TFG)'}</p>
                 <p className="text-xs leading-snug">
-                  Desarrollo de un motor de búsqueda semántica para la Biblioteca de la UCR utilizando embeddings vectoriales.
+                  {perfil.proyectoDescripcion || 'Describí tu proyecto de graduación en el onboarding para que aparezca aquí.'}
                 </p>
               </div>
             </div>
