@@ -136,9 +136,14 @@ export default function StudentShell({
         <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between px-8">
           <div className="max-w-xl flex-1">
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+              <svg
+                className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+              >
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+              </svg>
               <input
-                className="w-full rounded-full border-none bg-surface-container py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary"
+                className="w-full rounded-full border border-outline-variant bg-surface-container py-2 pl-11 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30"
                 placeholder="Buscar en la red UCR..."
                 type="text"
               />

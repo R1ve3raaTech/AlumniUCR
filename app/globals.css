@@ -1,7 +1,9 @@
 /* Los @import deben preceder a cualquier otra regla (requisito de CSS/PostCSS). */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+/* display=block: oculta el ícono hasta que la fuente carga (evita el "flash"
+   del texto del ligature, p. ej. la palabra "search" sobre el input). */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block');
 
 /* Elza Text — cuerpo de texto (libro de marcas). Self-hosteada desde
    public/fonts/elza-text.otf. Variante única; los pesos >400 los sintetiza el
@@ -17,6 +19,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Íconos Material Symbols: render nítido y sin desbordar (evita superposición). */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 :root {
   /* ───────────────────────────────────────────────────────────────
