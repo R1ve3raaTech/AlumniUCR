@@ -55,10 +55,14 @@ export default function AtomoImpacto() {
     logo.onload = () => { logoReady = true; };
     logo.src = '/images/alumni_mejor-removebg-preview.png';
 
+    let cssW = 0, cssH = 0;
     const resize = () => {
       const r = cv.parentElement!.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return; // layout aún no listo
       const dpr = window.devicePixelRatio || 1;
-      cv.width = r.width * dpr; cv.height = r.height * dpr;
+      cssW = r.width; cssH = r.height;
+      // Píxeles internos = tamaño CSS × dpr -> nitidez sin estiramiento.
+      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cx = r.width / 2; cy = r.height / 2;
       // autoajuste: que la órbita más grande (proyectada) quepa con margen
@@ -69,6 +73,10 @@ export default function AtomoImpacto() {
       fit = Math.max(0.4, Math.min(2.4, (half - MARGEN) / (MAXR * frontScale)));
     };
     resize();
+    // ResizeObserver: re-mide cuando el contenedor cambia (fuentes, layout,
+    // breakpoints) -> evita que el canvas quede estirado/distorsionado.
+    const ro = new ResizeObserver(resize);
+    if (cv.parentElement) ro.observe(cv.parentElement);
     window.addEventListener('resize', resize);
 
     const punto = (o: Orbita, th: number) => {
@@ -83,7 +91,7 @@ export default function AtomoImpacto() {
 
     const frame = () => {
       t += 0.016; spin += 0.016 * SPIN;
-      const w = cv.width, h = cv.height;
+      const w = cssW, h = cssH; // dimensiones CSS (el ctx ya está escalado por dpr)
       ctx.clearRect(0, 0, w, h);
 
       // sombra de contacto (ancla el átomo, suave sobre fondo claro)
@@ -168,7 +176,7 @@ export default function AtomoImpacto() {
     };
     frame();
 
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener('resize', resize); };
   }, []);
 
   return <canvas ref={ref} className={styles.atomoCanvas} aria-hidden />;
