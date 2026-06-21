@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import { obtenerPerfil } from '@/lib/auth';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
@@ -17,6 +19,7 @@ interface Perfil {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token, loading, signOut } = useAuth();
+  const { perfil: perfilEst } = usePerfilEstudiante();
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [perfilCargando, setPerfilCargando] = useState(true);
 
@@ -82,24 +85,48 @@ export default function DashboardPage() {
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // Dashboard del estudiante: EN RECONSTRUCCIÓN. Se rehará desde cero con
-  // los diseños de Stitch. Placeholder limpio para no romper el login/links.
+  // Dashboard del estudiante (placeholder). Saluda con el nombre de la fuente
+  // única e invita al onboarding si aún no lo completó.
   // ─────────────────────────────────────────────────────────────────────
-  const nombre = perfil?.nombre?.trim().split(/\s+/)[0] || correo.split('@')[0] || 'estudiante';
+  const nombre = perfilEst.nombre?.trim() || perfil?.nombre?.trim().split(/\s+/)[0] || correo.split('@')[0] || 'estudiante';
   return (
-    <div className="grid min-h-screen place-items-center bg-ucr-surface p-8 font-brand-body text-ucr-on-surface">
-      <div className="text-center">
-        <p className="font-ucr-display text-3xl font-bold text-ucr-primary">Hola, {nombre}</p>
-        <p className="mt-2 text-ucr-on-surface-variant">
-          Tu panel de estudiante está en reconstrucción.
-        </p>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="mt-6 inline-flex rounded-full border border-ucr-outline-variant px-5 py-2 text-sm font-semibold text-ucr-primary transition-colors hover:bg-ucr-surface-container"
-        >
-          Cerrar sesión
-        </button>
+    <div className="grid min-h-screen place-items-center bg-background p-8 font-body-base text-on-background">
+      <div className="max-w-md text-center">
+        <p className="font-headline-md text-3xl font-bold text-primary">Hola, {nombre}</p>
+        {perfilEst.completado ? (
+          <>
+            <p className="mt-2 text-on-surface-variant">
+              Tu perfil está cargado. Tus datos ya se reflejan en todas tus pantallas.
+            </p>
+            <Link
+              href="/perfil-estudiante"
+              className="mt-6 inline-flex rounded-full bg-secondary px-5 py-2.5 text-sm font-bold text-on-secondary"
+            >
+              Ir a mi perfil
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-on-surface-variant">
+              Completá tu perfil <strong>una sola vez</strong> y se llenará automáticamente en tu perfil, CV, matches y más.
+            </p>
+            <Link
+              href="/onboarding"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-secondary px-6 py-3 text-sm font-bold text-on-secondary"
+            >
+              <span className="material-symbols-outlined text-base">rocket_launch</span> Completar mi perfil
+            </Link>
+          </>
+        )}
+        <div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="mt-4 inline-flex rounded-full border border-outline-variant px-5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-container"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
     </div>
   );

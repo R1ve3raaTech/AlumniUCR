@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
+import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
 
 // Departamentos del estudiante. Perfil, CV y Matches ya tienen diseño Stitch.
@@ -34,9 +35,12 @@ export default function StudentShell({
 }) {
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { perfil } = usePerfilEstudiante();
 
   const correo = user?.email ?? '';
-  const nombreMostrar = nombre || (correo ? correo.split('@')[0] : 'Estudiante');
+  const nombrePerfil = `${perfil.nombre} ${perfil.apellidos}`.trim();
+  const nombreMostrar = nombre || nombrePerfil || (correo ? correo.split('@')[0] : 'Estudiante');
+  const subtitulo = perfil.carrera ? `Estudiante · ${perfil.carrera}` : 'Estudiante UCR';
   const iniciales = nombreMostrar
     .split(/[.\s_-]+/)
     .map((w) => w[0])
@@ -70,7 +74,7 @@ export default function StudentShell({
             <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
           </div>
           <h2 className="font-body-semibold text-primary">{nombreMostrar}</h2>
-          <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">Estudiante UCR</p>
+          <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">{subtitulo}</p>
         </div>
 
         <nav className="flex flex-grow flex-col gap-1">

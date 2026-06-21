@@ -4,8 +4,10 @@
 // se conectarán datos reales en una etapa posterior. Layout fiel al diseño.
 
 import React from 'react';
+import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
+import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 
 // Aviso temporal: todos los botones de esta pantalla aún no tienen acción real.
 // Se captura el clic en el contenedor y se muestra un toast consistente. Cuando
@@ -37,9 +39,23 @@ function CampoLectura({ label, valor, resaltar }: { label: string; valor: string
 }
 
 export default function PerfilEstudiantePage() {
+  const { perfil } = usePerfilEstudiante();
+  const o = (v: string, d = '—') => (v && v.trim() ? v : d);
+
   return (
     <StudentShell active="perfil">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-6 p-8" onClick={avisoProximamente}>
+        {/* Aviso: si no completó el onboarding, invitarlo (humaniza la conexión inicial) */}
+        {!perfil.completado && (
+          <div className="col-span-12 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-secondary/30 bg-secondary/5 p-4">
+            <p className="text-sm text-on-surface">
+              <strong>Completá tu perfil una vez</strong> y se reflejará automáticamente en todas tus pantallas.
+            </p>
+            <Link href="/onboarding" data-real className="rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-on-secondary">
+              Completar ahora
+            </Link>
+          </div>
+        )}
         {/* ── Columna central (gestión central) ── */}
         <section className="col-span-12 flex flex-col gap-6 lg:col-span-8">
           {/* Información Académica */}
@@ -55,10 +71,10 @@ export default function PerfilEstudiantePage() {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <CampoLectura label="Carné" valor="C17482" />
-              <CampoLectura label="Carrera" valor="Ingeniería de Software" resaltar />
-              <CampoLectura label="Sede" valor="Rodrigo Facio (Central)" />
-              <CampoLectura label="Año de Ingreso" valor="2019" />
+              <CampoLectura label="Carné" valor={o(perfil.carne)} />
+              <CampoLectura label="Carrera" valor={o(perfil.carrera)} resaltar />
+              <CampoLectura label="Sede" valor={o(perfil.sede)} />
+              <CampoLectura label="Año de Ingreso" valor={o(perfil.anioIngreso)} />
             </div>
           </div>
 
@@ -78,19 +94,22 @@ export default function PerfilEstudiantePage() {
                 </div>
               </div>
               <p className="mb-4 font-body-semibold text-lg leading-tight">
-                Sistema de Gestión de Talento basado en IA para la Red Alumni UCR
+                {o(perfil.proyectoTitulo, 'Aún no registraste tu proyecto de graduación')}
               </p>
               <div className="mb-6">
                 <div className="mb-1 flex justify-between text-xs">
                   <span>Progreso de Desarrollo</span>
-                  <span className="font-bold">75%</span>
+                  <span className="font-bold">{perfil.proyectoAvance}%</span>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-primary-container">
-                  <div className="h-full w-3/4 rounded-full bg-secondary-container shadow-[0_0_12px_rgba(106,207,255,0.6)]" />
+                  <div
+                    className="h-full rounded-full bg-secondary-container shadow-[0_0_12px_rgba(106,207,255,0.6)]"
+                    style={{ width: `${perfil.proyectoAvance}%` }}
+                  />
                 </div>
               </div>
               <div className="flex flex-wrap gap-1">
-                {['Data Science', 'Web Dev', 'IA/ML'].map((t) => (
+                {(perfil.proyectoAreas.length ? perfil.proyectoAreas : ['Sin áreas aún']).map((t) => (
                   <span key={t} className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase">{t}</span>
                 ))}
               </div>
@@ -219,7 +238,7 @@ export default function PerfilEstudiantePage() {
             <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-4">
               <div className="flex flex-col">
                 <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Asignada</span>
-                <span className="text-xl font-bold text-primary">Tipo 5</span>
+                <span className="text-xl font-bold text-primary">{o(perfil.beca, 'Sin asignar')}</span>
               </div>
               <div className="rounded-full bg-primary/10 p-2 text-primary">
                 <span className="material-symbols-outlined">workspace_premium</span>
@@ -238,12 +257,13 @@ export default function PerfilEstudiantePage() {
             </div>
             <div className="flex flex-col gap-2">
               {[
-                { label: 'Mentoría Técnica', checked: true },
-                { label: 'Ofertas de Empleo', checked: false },
-                { label: 'Pasantía Académica', checked: true },
+                { label: 'Mentoría', checked: perfil.apoyo.mentoria },
+                { label: 'Ofertas de Empleo', checked: perfil.apoyo.empleo },
+                { label: 'Pasantía Académica', checked: perfil.apoyo.pasantia },
+                { label: 'Financiamiento', checked: perfil.apoyo.financiamiento },
               ].map((a) => (
                 <label key={a.label} className="flex cursor-pointer items-center gap-2 rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-2 transition-colors hover:border-secondary">
-                  <input type="checkbox" defaultChecked={a.checked} className="rounded border-outline-variant accent-secondary" />
+                  <input type="checkbox" checked={a.checked} readOnly className="rounded border-outline-variant accent-secondary" />
                   <span className="font-body-semibold text-sm">{a.label}</span>
                 </label>
               ))}
@@ -260,13 +280,11 @@ export default function PerfilEstudiantePage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {['tecnología', 'ingeniería'].map((i) => (
-                <span key={i} className="flex cursor-pointer items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 font-body-semibold text-xs text-primary hover:bg-primary/10">
-                  {i} <span className="material-symbols-outlined text-xs">close</span>
-                </span>
-              ))}
-              {['salud', 'ambiente'].map((i) => (
-                <span key={i} className="cursor-pointer rounded-full border border-outline-variant/30 bg-surface-container-low px-3 py-1.5 font-body-semibold text-xs text-on-surface-variant">
+              {perfil.intereses.length === 0 && (
+                <span className="text-xs italic text-on-surface-variant">Sin intereses aún.</span>
+              )}
+              {perfil.intereses.map((i) => (
+                <span key={i} className="flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 font-body-semibold text-xs text-primary">
                   {i}
                 </span>
               ))}
