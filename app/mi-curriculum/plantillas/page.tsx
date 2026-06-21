@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StudentShell from '@/components/student/StudentShell';
+import PasosCV from '@/components/student/PasosCV';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 
@@ -108,15 +109,9 @@ export default function PlantillasCVPage() {
   return (
     <StudentShell active="cv">
       <div className="mx-auto max-w-[1100px] p-8">
-        {/* Indicador de pasos */}
-        <div className="mb-10 flex items-center justify-center">
-          <div className="flex items-center gap-3 text-sm">
-            <Paso n="1" label="Elegir plantilla" activo />
-            <span className="h-px w-12 bg-outline-variant" />
-            <Paso n="2" label="Ingresá tus datos" />
-            <span className="h-px w-12 bg-outline-variant" />
-            <Paso n="3" label="Descargar currículum" />
-          </div>
+        {/* Indicador de pasos (compartido) */}
+        <div className="mb-10">
+          <PasosCV activo={1} />
         </div>
 
         {/* Encabezado con IA */}
@@ -248,13 +243,3 @@ export default function PlantillasCVPage() {
   );
 }
 
-function Paso({ n, label, activo }: { n: string; label: string; activo?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className={`grid h-8 w-8 place-items-center rounded-full text-sm font-bold ${activo ? 'bg-primary text-on-primary' : 'border border-outline-variant bg-surface-container-high text-outline'}`}>
-        {n}
-      </div>
-      <span className={activo ? 'font-body-semibold text-primary' : 'text-outline'}>{label}</span>
-    </div>
-  );
-}
