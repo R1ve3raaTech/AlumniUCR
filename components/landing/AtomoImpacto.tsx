@@ -59,7 +59,9 @@ export default function AtomoImpacto() {
     const resize = () => {
       const r = cv.parentElement!.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return; // layout aún no listo
-      const dpr = window.devicePixelRatio || 1;
+      // devicePixelRatio acotado: nitidez en pantallas retina sin generar un
+      // canvas gigante en pantallas 3x/4x (que también provoca distorsión).
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
       cssW = r.width; cssH = r.height;
       // Píxeles internos = tamaño CSS × dpr -> nitidez sin estiramiento.
       cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
@@ -78,6 +80,17 @@ export default function AtomoImpacto() {
     const ro = new ResizeObserver(resize);
     if (cv.parentElement) ro.observe(cv.parentElement);
     window.addEventListener('resize', resize);
+
+    // Re-aplica devicePixelRatio cuando cambia (zoom del navegador o mover la
+    // ventana a un monitor con distinta densidad), caso que 'resize' no cubre.
+    let mql: MediaQueryList | null = null;
+    const onDpr = () => { resize(); watchDpr(); };
+    const watchDpr = () => {
+      mql?.removeEventListener('change', onDpr);
+      mql = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      mql.addEventListener('change', onDpr);
+    };
+    watchDpr();
 
     const punto = (o: Orbita, th: number) => {
       const rr = o.radius * CFG.rad * fit;
@@ -176,7 +189,12 @@ export default function AtomoImpacto() {
     };
     frame();
 
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener('resize', resize); };
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener('resize', resize);
+      mql?.removeEventListener('change', onDpr);
+    };
   }, []);
 
   return <canvas ref={ref} className={styles.atomoCanvas} aria-hidden />;
