@@ -6,7 +6,6 @@ import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import StudentNav from '@/components/StudentNav';
 import ReportarPerfil from '@/components/ReportarPerfil';
-import { fotoPorNombre, FOTO_FALLBACK } from '@/lib/fotosDemo';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
@@ -248,20 +247,9 @@ export default function MisMatchesPage() {
                       {/* Cabecera */}
                       <div className="mb-3 flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          {fotoPorNombre(est.nombre) ? (
-                            <img
-                              src={fotoPorNombre(est.nombre)}
-                              alt={est.nombre}
-                              className="h-11 w-11 shrink-0 rounded-full object-cover object-top"
-                              onError={(ev) => {
-                                (ev.currentTarget as HTMLImageElement).src = FOTO_FALLBACK;
-                              }}
-                            />
-                          ) : (
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                              {iniciales(est.nombre)}
-                            </div>
-                          )}
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                            {iniciales(est.nombre)}
+                          </div>
                           <div>
                             <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{est.nombre}</h3>
                             <span className="text-xs text-ucr-on-surface-variant">{est.carreras[0] || '?'}{est.facultades[0] ? ` - ${est.facultades[0]}` : ''}</span>
