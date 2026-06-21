@@ -7,6 +7,9 @@ const autenticarUsuario = require('../middlewares/auth.middleware');
 // Perfil del usuario autenticado (incluye su rol).
 router.get('/perfil', autenticarUsuario, authController.obtenerPerfil);
 
+// Verifica si un correo ya está registrado (público; usado por el formulario de registro).
+router.get('/correo-existe', authController.verificarCorreoExiste);
+
 router.post('/register/estudiante', authController.registerEstudiante);
 router.post('/register/exalumno', authController.registerExalumno);
 router.post('/login', authController.login);

@@ -1,7 +1,5 @@
-/* Los @import deben preceder a cualquier otra regla (requisito de CSS/PostCSS). */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+/* Las fuentes de Google (Barlow, Work Sans, Inter, Material Symbols) se cargan
+   con <link> en el <head> (app/layout.tsx), más confiable que @import. */
 
 /* Elza Text — cuerpo de texto (libro de marcas). Self-hosteada desde
    public/fonts/elza-text.otf. Variante única; los pesos >400 los sintetiza el
@@ -17,6 +15,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Íconos Material Symbols: render nítido y sin desbordar (evita superposición). */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Impresión / exportar a PDF: imprime SOLO el CV (#cv-print). */
+@media print {
+  body * { visibility: hidden !important; }
+  #cv-print, #cv-print * { visibility: visible !important; }
+  #cv-print {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    /* conserva los colores de marca (header teal, chips) al imprimir */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page { margin: 12mm; }
+}
 
 :root {
   /* ───────────────────────────────────────────────────────────────

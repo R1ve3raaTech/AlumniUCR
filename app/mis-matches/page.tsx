@@ -6,13 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import StudentNav from '@/components/StudentNav';
 import ReportarPerfil from '@/components/ReportarPerfil';
-import { fotoPorNombre, FOTO_FALLBACK } from '@/lib/fotosDemo';
+import MatchesEstudiante from '@/components/student/MatchesEstudiante';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
   solicitarContacto,
-  obtenerSolicitudesRecibidas,
-  responderSolicitudContacto,
   calcularScore,
   estadoMatch,
 } from '@/lib/misMatches';
@@ -38,14 +36,6 @@ interface ExalumnoDir {
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; colaboracion: boolean; donacion: boolean };
   correo?: string | null;
 }
-interface SolicitudRecibida {
-  id: string;
-  nombre_exalumno: string;
-  mensaje: string;
-  estado: 'pendiente' | 'aceptada' | 'rechazada';
-  correo_exalumno?: string | null;
-}
-
 export default function MisMatchesPage() {
   const router = useRouter();
   const { token, user, loading: authLoading, signOut } = useAuth();
@@ -55,7 +45,6 @@ export default function MisMatchesPage() {
 
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [miPerfilExa, setMiPerfilExa] = useState<ExalumnoDir | null>(null);
-  const [recibidas, setRecibidas] = useState<SolicitudRecibida[]>([]);
 
   useEffect(() => {
     if (!authLoading && !token) router.replace('/login');
@@ -80,10 +69,8 @@ export default function MisMatchesPage() {
           setEstudiantes(dirEst?.data ?? []);
           const yo = (dirExa?.data ?? []).find((e: ExalumnoDir) => e.id === user.id) ?? null;
           setMiPerfilExa(yo);
-        } else if (r === 'estudiante') {
-          const sol = await obtenerSolicitudesRecibidas(token);
-          if (activo) setRecibidas(sol?.data ?? []);
         }
+        // El estudiante usa la pantalla rediseñada (MatchesEstudiante), estática.
       } catch {
         /* simple */
       } finally {
@@ -111,16 +98,6 @@ export default function MisMatchesPage() {
     }
   }
 
-  async function responder(id: string, aceptar: boolean) {
-    setEnviando(id);
-    try {
-      await responderSolicitudContacto(token as string, id, aceptar);
-      setRecibidas((l) => l.map((s) => (s.id === id ? { ...s, estado: aceptar ? 'aceptada' : 'rechazada' } : s)));
-    } finally {
-      setEnviando(null);
-    }
-  }
-
   function handleSignOut() {
     signOut();
     router.replace('/login');
@@ -128,8 +105,8 @@ export default function MisMatchesPage() {
 
   const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
-  const pendientes = recibidas.filter((s) => s.estado === 'pendiente');
-  const respondidas = recibidas.filter((s) => s.estado !== 'pendiente');
+  // El estudiante ve la pantalla rediseñada (Stitch); el exalumno mantiene su vista.
+  if (rol === 'estudiante') return <MatchesEstudiante />;
 
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
@@ -140,98 +117,13 @@ export default function MisMatchesPage() {
         <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
           <h1 className="font-ucr-display text-3xl font-bold tracking-tight sm:text-4xl">Mis Matches</h1>
           <p className="mt-2 text-sm text-white/80">
-            {rol === 'estudiante'
-              ? 'Solicitudes de conexion que recibiste de exalumnos. Acepta para revelar tu contacto.'
-              : 'Estudiantes sugeridos segun tu carrera, areas de interes, sector y tipo de apoyo. Ordenados por compatibilidad.'}
+            Estudiantes sugeridos segun tu carrera, areas de interes, sector y tipo de apoyo. Ordenados por compatibilidad.
           </p>
         </section>
 
         <div className="mt-6">
           {cargando ? (
             <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Calculando tus matches...</p>
-
-          /* ── VISTA ESTUDIANTE ── */
-          ) : rol === 'estudiante' ? (
-            recibidas.length === 0 ? (
-              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Todavia no recibiste solicitudes de conexion.</p>
-            ) : (
-              <div className="flex flex-col gap-8">
-                {/* Pendientes */}
-                {pendientes.length > 0 && (
-                  <div>
-                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">
-                      Pendientes de respuesta
-                      <span className="ml-2 rounded-full bg-ucr-secondary px-2.5 py-0.5 text-xs font-semibold text-white">{pendientes.length}</span>
-                    </h2>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {pendientes.map((s) => (
-                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-2 ring-ucr-secondary/20">
-                          <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                              {iniciales(s.nombre_exalumno)}
-                            </div>
-                            <div>
-                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
-                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
-                            </div>
-                          </div>
-                          {s.mensaje && <p className="mb-4 text-sm italic text-ucr-on-surface-variant">"{s.mensaje}"</p>}
-                          <div className="mt-auto flex gap-2">
-                            <button onClick={() => responder(s.id, true)} disabled={enviando === s.id}
-                              className="flex-1 rounded-2xl bg-ucr-secondary py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
-                              {enviando === s.id ? 'Guardando...' : 'Aceptar'}
-                            </button>
-                            <button onClick={() => responder(s.id, false)} disabled={enviando === s.id}
-                              className="flex-1 rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface-variant transition hover:bg-ucr-surface-container disabled:opacity-60">
-                              Rechazar
-                            </button>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Respondidas */}
-                {respondidas.length > 0 && (
-                  <div>
-                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">Historial</h2>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {respondidas.map((s) => (
-                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm opacity-90">
-                          <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                              {iniciales(s.nombre_exalumno)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
-                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
-                            </div>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                              s.estado === 'aceptada'
-                                ? 'bg-ucr-esmeralda/10 text-ucr-esmeralda'
-                                : 'bg-ucr-surface-container text-ucr-outline'
-                            }`}>
-                              {s.estado === 'aceptada' ? 'Activa' : 'Rechazada'}
-                            </span>
-                          </div>
-                          {s.estado === 'aceptada' && s.correo_exalumno && (
-                            <a href={`mailto:${s.correo_exalumno}`}
-                              className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
-                              <span className="material-symbols-outlined text-base">mail</span>
-                              {s.correo_exalumno}
-                            </a>
-                          )}
-                          {s.estado === 'aceptada' && !s.correo_exalumno && (
-                            <p className="mt-1 text-xs text-ucr-on-surface-variant">Conexion activa — contacto disponible pronto.</p>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
 
           /* ── VISTA EXALUMNO ── */
           ) : rol === 'exalumno' ? (
@@ -248,20 +140,9 @@ export default function MisMatchesPage() {
                       {/* Cabecera */}
                       <div className="mb-3 flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          {fotoPorNombre(est.nombre) ? (
-                            <img
-                              src={fotoPorNombre(est.nombre)}
-                              alt={est.nombre}
-                              className="h-11 w-11 shrink-0 rounded-full object-cover object-top"
-                              onError={(ev) => {
-                                (ev.currentTarget as HTMLImageElement).src = FOTO_FALLBACK;
-                              }}
-                            />
-                          ) : (
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                              {iniciales(est.nombre)}
-                            </div>
-                          )}
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
+                            {iniciales(est.nombre)}
+                          </div>
                           <div>
                             <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{est.nombre}</h3>
                             <span className="text-xs text-ucr-on-surface-variant">{est.carreras[0] || '?'}{est.facultades[0] ? ` - ${est.facultades[0]}` : ''}</span>
