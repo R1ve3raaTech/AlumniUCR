@@ -9,15 +9,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
+import Toast, { notificar } from '@/components/student/Toast';
 
+// Departamentos del estudiante. Perfil, CV y Matches ya tienen diseño Stitch.
+// Directorio, Comunidad y Reportes están por crear → marcados 'proximamente'.
 const NAV = [
   { key: 'dashboard', href: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
   { key: 'perfil', href: '/perfil-estudiante', icon: 'person', label: 'Mi Perfil' },
   { key: 'cv', href: '/mi-curriculum', icon: 'description', label: 'CV + IA' },
   { key: 'matches', href: '/mis-matches', icon: 'handshake', label: 'Matches' },
-  { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio' },
-  { key: 'comunidad', href: '#', icon: 'group', label: 'Comunidad' },
-  { key: 'reportes', href: '#', icon: 'report', label: 'Reportes' },
+  { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio', proximamente: true },
+  { key: 'comunidad', href: '#', icon: 'group', label: 'Comunidad', proximamente: true },
+  { key: 'reportes', href: '#', icon: 'report', label: 'Reportes', proximamente: true },
 ];
 
 export default function StudentShell({
@@ -73,16 +76,30 @@ export default function StudentShell({
         <nav className="flex flex-grow flex-col gap-1">
           {NAV.map((item) => {
             const activo = item.key === active;
+            const claseBase = activo
+              ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
+              : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface';
+
+            // Departamentos por crear: botón con aviso, sin navegar a un link muerto.
+            if (item.proximamente) {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => notificar('🚧 Departamento en desarrollo')}
+                  className={`${claseBase} text-left`}
+                >
+                  <span className="material-symbols-outlined">{item.icon}</span>
+                  <span className="font-body-semibold">{item.label}</span>
+                  <span className="ml-auto rounded-full bg-surface-variant px-2 py-0.5 text-[11px] font-bold uppercase text-on-surface-variant">
+                    Pronto
+                  </span>
+                </button>
+              );
+            }
+
             return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={
-                  activo
-                    ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
-                    : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface'
-                }
-              >
+              <Link key={item.key} href={item.href} className={claseBase}>
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span className="font-body-semibold">{item.label}</span>
               </Link>
@@ -91,10 +108,14 @@ export default function StudentShell({
         </nav>
 
         <div className="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-6">
-          <Link href="#" className="flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface">
+          <button
+            type="button"
+            onClick={() => notificar('🚧 Función en desarrollo')}
+            className="flex items-center gap-4 rounded-lg p-4 text-left text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface"
+          >
             <span className="material-symbols-outlined">settings</span>
             <span className="font-body-semibold">Configuración</span>
-          </Link>
+          </button>
           <button
             type="button"
             onClick={salir}
@@ -120,7 +141,11 @@ export default function StudentShell({
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <button className="relative rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-variant">
+            <button
+              type="button"
+              onClick={() => notificar('🔔 No tenés notificaciones nuevas')}
+              className="relative rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-variant"
+            >
               <span className="material-symbols-outlined">notifications</span>
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error" />
             </button>
@@ -136,6 +161,8 @@ export default function StudentShell({
 
       {/* Main */}
       <main className="ml-64 min-h-screen pt-16">{children}</main>
+
+      <Toast />
     </div>
   );
 }

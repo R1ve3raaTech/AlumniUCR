@@ -3,7 +3,20 @@
 // Mi Perfil (estudiante) — rediseño Stitch (estático). Contenido de ejemplo;
 // se conectarán datos reales en una etapa posterior. Layout fiel al diseño.
 
+import React from 'react';
 import StudentShell from '@/components/student/StudentShell';
+import { notificar } from '@/components/student/Toast';
+
+// Aviso temporal: todos los botones de esta pantalla aún no tienen acción real.
+// Se captura el clic en el contenedor y se muestra un toast consistente. Cuando
+// se cablee una acción real, ese botón lleva data-real para excluirse de aquí.
+function avisoProximamente(e: React.MouseEvent) {
+  const el = (e.target as HTMLElement).closest('button, a[href="#"]');
+  if (el && !el.hasAttribute('data-real')) {
+    e.preventDefault();
+    notificar('🚧 Función en desarrollo');
+  }
+}
 
 const SHADOW = 'shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]';
 const CARD = `rounded-xl border border-outline-variant bg-surface-container-lowest p-8 ${SHADOW}`;
@@ -26,7 +39,7 @@ function CampoLectura({ label, valor, resaltar }: { label: string; valor: string
 export default function PerfilEstudiantePage() {
   return (
     <StudentShell active="perfil">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-6 p-8">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-6 p-8" onClick={avisoProximamente}>
         {/* ── Columna central (gestión central) ── */}
         <section className="col-span-12 flex flex-col gap-6 lg:col-span-8">
           {/* Información Académica */}
@@ -58,7 +71,7 @@ export default function PerfilEstudiantePage() {
               <div className="mb-6 flex items-center justify-between gap-3">
                 <h3 className="font-headline-md text-xl">Proyecto de Graduación (TFG)</h3>
                 <div className="flex items-center gap-3">
-                  <span className="rounded bg-white/10 px-2 py-1 text-[10px] font-bold">ACTUALIZADO HOY</span>
+                  <span className="rounded bg-white/10 px-2 py-1 text-xs font-bold">ACTUALIZADO HOY</span>
                   <button className="text-on-primary/80 transition-colors hover:text-on-primary">
                     <span className="material-symbols-outlined text-lg">edit</span>
                   </button>
@@ -78,7 +91,7 @@ export default function PerfilEstudiantePage() {
               </div>
               <div className="flex flex-wrap gap-1">
                 {['Data Science', 'Web Dev', 'IA/ML'].map((t) => (
-                  <span key={t} className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase">{t}</span>
+                  <span key={t} className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase">{t}</span>
                 ))}
               </div>
             </div>
@@ -111,7 +124,7 @@ export default function PerfilEstudiantePage() {
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-container">
                   <div className="h-full w-3/5 bg-tertiary" />
                 </div>
-                <span className="text-[10px] font-bold text-tertiary">60% COMPLETO</span>
+                <span className="text-xs font-bold text-tertiary">60% COMPLETO</span>
               </div>
               <button className="mt-auto rounded-lg border border-tertiary py-2 text-center font-bold text-sm text-tertiary transition-colors hover:bg-tertiary/5">
                 Ver Mapa de Carrera
@@ -177,8 +190,8 @@ export default function PerfilEstudiantePage() {
                     <div>
                       <p className="font-body-semibold text-sm">{p.titulo}</p>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${p.estadoCls}`}>{p.estado}</span>
-                        <span className="text-[10px] text-on-surface-variant">{p.fecha}</span>
+                        <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${p.estadoCls}`}>{p.estado}</span>
+                        <span className="text-xs text-on-surface-variant">{p.fecha}</span>
                       </div>
                     </div>
                   </div>
@@ -272,11 +285,11 @@ export default function PerfilEstudiantePage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-transparent bg-surface-container p-2 transition-all hover:border-secondary">
                 <span className="material-symbols-outlined text-3xl text-secondary">folder</span>
-                <span className="text-center text-[10px] font-bold uppercase">Info Educativa</span>
+                <span className="text-center text-xs font-bold uppercase">Info Educativa</span>
               </div>
               <div className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-transparent bg-surface-container p-2 transition-all hover:border-secondary">
                 <span className="material-symbols-outlined text-3xl text-primary">collections</span>
-                <span className="text-center text-[10px] font-bold uppercase">Galería TFG</span>
+                <span className="text-center text-xs font-bold uppercase">Galería TFG</span>
               </div>
             </div>
           </div>
@@ -293,19 +306,19 @@ export default function PerfilEstudiantePage() {
             <div className="space-y-4">
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-2">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-secondary/10 px-1 text-[10px] font-bold uppercase text-secondary">NOTICIA</span>
-                  <span className="text-[10px] text-on-surface-variant">Hace 2 días</span>
+                  <span className="rounded bg-secondary/10 px-1 text-xs font-bold uppercase text-secondary">NOTICIA</span>
+                  <span className="text-xs text-on-surface-variant">Hace 2 días</span>
                 </div>
                 <p className="line-clamp-2 font-body-semibold text-xs">Nuevos avances en el Sistema de Gestión de Talento IA</p>
-                <div className="mt-2 flex items-center gap-2 text-[10px] font-bold text-on-surface-variant">
+                <div className="mt-2 flex items-center gap-2 text-xs font-bold text-on-surface-variant">
                   <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-xs">favorite</span> 24</span>
                   <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-xs">chat_bubble</span> 8</span>
                 </div>
               </div>
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-2">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-tertiary/10 px-1 text-[10px] font-bold uppercase text-tertiary">EVENTO</span>
-                  <span className="text-[10px] text-on-surface-variant">12 Oct</span>
+                  <span className="rounded bg-tertiary/10 px-1 text-xs font-bold uppercase text-tertiary">EVENTO</span>
+                  <span className="text-xs text-on-surface-variant">12 Oct</span>
                 </div>
                 <p className="line-clamp-1 font-body-semibold text-xs">Feria Tecnológica Sede Central</p>
               </div>
@@ -323,13 +336,13 @@ export default function PerfilEstudiantePage() {
             </div>
             <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-2">
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase text-primary">Estado de Cuenta</span>
-                <span className="rounded bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-500">SEGURO</span>
+                <span className="text-xs font-bold uppercase text-primary">Estado de Cuenta</span>
+                <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-bold text-green-500">SEGURO</span>
               </div>
               <p className="text-xs text-on-surface-variant">Tu cuenta está en buen estado. 0 reportes acumulados.</p>
             </div>
             <div className="space-y-2">
-              <p className="text-[10px] italic leading-tight text-on-surface-variant">
+              <p className="text-xs italic leading-tight text-on-surface-variant">
                 Cualquier usuario puede reportar un perfil. 3 reportes generan una suspensión automática temporal. Los reportes son 100% anónimos.
               </p>
               <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-error py-2 text-center font-bold text-sm text-error transition-colors hover:bg-error/5">
