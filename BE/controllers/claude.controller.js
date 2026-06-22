@@ -3,6 +3,7 @@
  */
 const supabase = require('../config/supabase');
 const claudeService = require('../services/claude.service');
+const perfilOnboardingService = require('../services/perfilOnboarding.service');
 
 /**
  * Helper para validar el token Bearer opcionalmente y obtener el usuario.
@@ -76,7 +77,28 @@ const chatSoporte = async (req, res, next) => {
   }
 };
 
+/**
+ * Endpoint para generar el análisis de carrera del estudiante.
+ * POST /api/claude/career-analysis
+ */
+const careerAnalysis = async (req, res, next) => {
+  try {
+    const idUsuario = req.user.id;
+    const perfil = await perfilOnboardingService.obtener(idUsuario);
+
+    const respuesta = await claudeService.generarAnalisisCarrera(perfil);
+
+    return res.status(200).json({
+      success: true,
+      data: respuesta,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   chatSoporte,
+  careerAnalysis,
 };
 

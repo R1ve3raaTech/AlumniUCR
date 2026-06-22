@@ -3,6 +3,7 @@
  * Selecciona dinámicamente el Prompt de Sistema según el rol y pathname del usuario.
  */
 const claude = require('../config/claude');
+const supabase = require('../config/supabase');
 
 // ─── Catálogo de Prompts de Sistema para cada Contexto ──────────────────
 const PROMPTS = {
@@ -98,6 +99,20 @@ SOPORTE DETALLADO Y ESPECIFICACIONES TÉCNICAS/OPERATIVAS QUE DEBES PROVEER:
 - Mantenimiento de Tablas Maestras: Explicar el soporte CRUD para tablas de control como facultades, sedes UCR, carreras, sectores de empleo y tipos de proyecto.
 
 Responde de forma ejecutiva, técnica, analítica, directa y altamente eficiente, brindando un soporte enriquecedor y exhaustivo acorde a su alto rango.
+`,
+
+  // 7. Estudiante - Sección de Currículum (CV / Career Assistant Advisor)
+  ESTUDIANTE_CV: `
+Eres el asesor de carrera y optimización de currículum (CV Advisor) oficial de Alumni UCR. Te estás comunicando con un ESTUDIANTE en la sección de su currículum.
+
+PUNTOS CLAVE QUE PUEDES EXPLICAR Y ASISTIR:
+1. Optimizar para Vacantes: Enseña cómo adaptar el título profesional, el resumen y las viñetas (bullets) de experiencia usando verbos de acción y resultados cuantificables.
+2. Sugerir Certificaciones: Recomienda certificaciones reales e importantes del sector del estudiante (ej: AWS, Scrum, PMI, idiomas, tecnologías específicas) para mejorar su competitividad.
+3. Actualizar Logros: Enseña al estudiante a redactar logros bajo la metodología STAR (Situación, Tarea, Acción, Resultado) y a evitar viñetas pasivas o descriptivas.
+4. Diseño y PDF: Indícales que pueden descargar su CV en PDF estilo Harvard haciendo clic en el botón "Exportar PDF" en el panel.
+
+REGLA DE SEGURIDAD ESTRICTA SOBRE ROLES:
+- Tienes estrictamente PROHIBIDO realizar tareas administrativas reservadas para el rol 'admin', tales como: aprobación de cuentas de exalumnos o mentores, auditoría de donaciones, gestión de reportes de comportamiento de usuarios, eliminación de puestos de empleo o edición de tablas maestras.
 `
 };
 
@@ -120,6 +135,10 @@ const obtenerPromptDeSistema = (contexto) => {
 
   // Caso 3: Estudiante
   if (rol === 'estudiante') {
+    // Si está en la sección de su currículum
+    if (pathname.includes('/mi-curriculum')) {
+      return PROMPTS.ESTUDIANTE_CV;
+    }
     // Si está editando proyectos, completando perfil académico o en la sección de proyectos
     if (
       pathname.includes('/proyectos') ||
@@ -170,6 +189,78 @@ const obtenerPerfilExalumno = async (idExalumno) => {
 };
 
 /**
+ * Helper para formatear el currículum (CV) del estudiante de forma legible para el prompt de Claude.
+ */
+const formatearCvParaPrompt = (cv) => {
+  if (!cv) return 'Sin currículum registrado en el sistema.';
+  
+  const academica = cv.seccion1_academica ? `
+- Promedio ponderado: ${cv.seccion1_academica.promedio_ponderado || 'No especificado'}
+- Cursos relevantes: ${cv.seccion1_academica.cursos_relevantes || 'No especificados'}
+  ` : 'No especificada.';
+
+  const experiencias = (cv.seccion2_experiencias || []).map(e => {
+    let bullets = [];
+    try {
+      if (e.bullets) {
+        bullets = typeof e.bullets === 'string' ? JSON.parse(e.bullets) : e.bullets;
+      }
+    } catch (err) {}
+    return `
+* Rol: ${e.titulo} en ${e.organizacion || 'N/A'}
+  - Tipo: ${e.tipo}
+  - Periodo: ${e.fecha_inicio} - ${e.fecha_fin || 'actual'}
+  - Descripción: ${e.descripcion || ''}
+  - Logros: ${bullets.length > 0 ? bullets.join(', ') : 'Ninguno'}
+    `;
+  }).join('\n') || 'Ninguna registrada.';
+
+  const habs = cv.seccion3_habilidades;
+  let tecnicas = 'No especificadas';
+  let blandas = 'No especificadas';
+  let idiomas = 'No específicos';
+  if (habs) {
+    try {
+      if (habs.tecnicas) {
+        const tObj = typeof habs.tecnicas === 'string' ? JSON.parse(habs.tecnicas) : habs.tecnicas;
+        tecnicas = Array.isArray(tObj) ? tObj.map(h => `${h.nombre} (${h.nivel})`).join(', ') : JSON.stringify(tObj);
+      }
+    } catch (err) {}
+    try {
+      blandas = habs.blandas || 'No especificadas';
+    } catch (err) {}
+    try {
+      if (habs.idiomas) {
+        const iObj = typeof habs.idiomas === 'string' ? JSON.parse(habs.idiomas) : habs.idiomas;
+        idiomas = Array.isArray(iObj) ? iObj.map(i => `${i.idioma} (${i.nivel})`).join(', ') : JSON.stringify(iObj);
+      }
+    } catch (err) {}
+  }
+
+  const certificaciones = (cv.seccion4_certificaciones || []).map(c => `
+- Certificación: ${c.nombre} por ${c.institucion || ''} (${c.fecha || ''})
+  `).join('\n') || 'Ninguna registrada.';
+
+  return `
+--- DETALLES DEL CURRÍCULUM DEL ESTUDIANTE ---
+ACADÉMICO:
+${academica}
+
+EXPERIENCIA LABORAL Y PROYECTOS:
+${experiencias}
+
+HABILIDADES:
+- Técnicas: ${tecnicas}
+- Blandas: ${blandas}
+- Idiomas: ${idiomas}
+
+CERTIFICACIONES Y LOGROS:
+${certificaciones}
+---------------------------------------------
+  `;
+};
+
+/**
  * Busca a un estudiante por aproximación de nombre y obtiene su perfil.
  */
 const buscarEstudiantePorNombre = async (nombreBuscado) => {
@@ -206,12 +297,22 @@ const buscarEstudiantePorNombre = async (nombreBuscado) => {
       .eq('id_estudiante', match.id)
       .maybeSingle();
 
+    // Cargar CV completo
+    let cv = null;
+    try {
+      const cvService = require('./cv.service');
+      cv = await cvService.obtenerCvCompleto(match.id);
+    } catch (cvError) {
+      console.warn('⚠️ No se pudo obtener el CV del estudiante:', cvError.message);
+    }
+
     return {
       id: match.id,
       nombre: match.nombre,
       correo: match.correo_electronico,
       onboarding: onboarding?.datos || {},
-      proyecto: proyecto || {}
+      proyecto: proyecto || {},
+      cv: cv || {}
     };
   } catch (e) {
     console.error('Error al buscar estudiante por nombre:', e);
@@ -289,7 +390,7 @@ const generarRespuestaSoporte = async (historial, contexto, usuarioAutenticado) 
 Eres el asesor virtual oficial de "Alumni UCR — Conectando Talento", especializado en mentoría y orientación profesional.
 Te estás comunicando con el exalumno y mentor verificado: ${usuarioAutenticado.profile?.nombre || 'Exalumno/Mentor'}.
 
-Has recibido la solicitud de analizar el perfil y el match con el/la siguiente estudiante:
+Has recibido la solicitud de analizar el perfil y la compatibilidad con el/la siguiente estudiante:
 - Nombre Completo: ${estudiante.nombre}
 - Carrera cursada: ${estudiante.onboarding.carrera || estudiante.proyecto.carrera || 'No especificada'}
 - Sede: ${estudiante.onboarding.sede || 'No especificada'}
@@ -301,11 +402,13 @@ INFORMACIÓN DEL PROYECTO ACTUAL DEL ESTUDIANTE:
 - Porcentaje de Avance: ${estudiante.proyecto.porcentaje_avance || estudiante.onboarding.proyectoAvance || 0}%
 - Áreas Temáticas: ${(estudiante.onboarding.proyectoAreas || []).join(', ') || 'No especificadas'}
 
-GUSTOS, INTERESES Y HABILIDADES DEL ESTUDIANTE:
+GUSTOS, INTERESES Y HABILIDADES GENERALES:
 - Intereses Personales y Hobbies: ${(estudiante.onboarding.intereses || []).join(', ') || 'No especificados'}
-- Habilidades Técnicas: ${estudiante.onboarding.habilidadesTecnicas || 'No especificadas'}
-- Habilidades Blandas (Perfil Emocional): ${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}
+- Habilidades Técnicas (Generales): ${estudiante.onboarding.habilidadesTecnicas || 'No especificadas'}
+- Habilidades Blandas (Generales): ${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}
 - Biografía / Resumen: ${estudiante.onboarding.resumen || 'No especificado'}
+
+${formatearCvParaPrompt(estudiante.cv)}
 
 PERFIL DEL MENTOR EXALUMNO (TÚ):
 - Empresa: ${exalumno?.empresa || 'No especificada'}
@@ -316,14 +419,24 @@ PERFIL DEL MENTOR EXALUMNO (TÚ):
 - Biografía/Trayectoria: ${exalumno?.biografia || 'No especificada'}
 
 TU MISIÓN:
-Genera un informe detallado, cálido, estructurado y sumamente motivador para el exalumno. Analiza las sinergias emocionales y profesionales entre ambos.
+Genera un informe detallado, estructurado y sumamente motivador para el exalumno. Realiza un análisis profundo basado en la Habilidad de Compatibilidad (Match) evaluando las 4 dimensiones clave de afinidad:
+1. Alineación Académica (hasta 25 pts)
+2. Sinergia del Proyecto y Habilidades Técnicas (hasta 25 pts)
+3. Ajuste de Rol Profesional (hasta 25 pts)
+4. Lado Humano (Habilidades Blandas e Intereses) (hasta 25 pts)
+
+Asigna una puntuación (0 a 25) a cada una de ellas y muestra la puntuación total de compatibilidad sobre 100.
 
 DEBES SEGUIR ESTRICTAMENTE ESTA ESTRUCTURA EN TU RESPUESTA:
-1. **Presentación de la Ficha del Estudiante**: Breve resumen de quién es, su carrera, sede y su proyecto de graduación (TFG) actual.
-2. **Gustos y Aficiones (El lado humano)**: Describe en detalle los intereses personales y gustos del estudiante (${(estudiante.onboarding.intereses || []).join(', ') || 'No especificados'}). Destaca sus pasiones extralaborales y qué le gusta hacer en su tiempo libre.
-3. **Match Emocional y de Habilidades Blandas**: Analiza la afinidad de personalidad y compatibilidad emocional. Cruza las habilidades blandas del estudiante (${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}) con tu biografía y experiencia como mentor. Explica el tipo de relación constructiva, empática y de apoyo mutuo que pueden formar.
-4. **Sinergia Profesional y Propuesta de Mentoría**: Analiza la compatibilidad técnica y profesional. ¿Cómo tus conocimientos en ${exalumno?.areas?.join(', ') || 'tus especialidades'} y tu puesto de ${exalumno?.cargo || 'profesional'} en ${exalumno?.empresa || 'tu empresa'} pueden ayudar de manera directa a este estudiante en su proyecto de graduación y en su futura inserción laboral?
-5. **Cómo Contactar**: Indica amigablemente que si la afinidad es alta, puede presionar el botón **"Ofrecer apoyo"** en la tarjeta del estudiante dentro del directorio para enviarle una solicitud de contacto formal y poder revelar su información de beca y correo electrónico.
+1. **🌟 Ficha del Match**: Resumen rápido de quién es el estudiante, su carrera y sede.
+2. **Score de Compatibilidad Total**: Mostrar el puntaje global calculado sobre 100, desglosado en las 4 dimensiones (Alineación Académica, Sinergia Técnica, Proyección Profesional, y Lado Humano) con su respectiva justificación de puntos.
+3. **Análisis Detallado de Afinidad**:
+   - **Alineamiento Académico e Interdisciplinariedad**: Cruce de carreras, facultad y sede UCR.
+   - **Sinergia del Proyecto y Habilidades del CV**: Análisis cruzado de su TFG e historial de tecnologías y certificaciones en el currículum con tu área.
+   - **Inserción y Proyección Laboral**: Cómo tu cargo actual y experiencia en ${exalumno?.empresa || 'tu industria'} apoyan las aspiraciones de cargo deseado del estudiante.
+   - **Compatibilidad Personal (El lado humano)**: Intereses compartidos y habilidades blandas complementarias.
+4. **🛠️ Plan de Mentoría y Temas Sugeridos**: 2 o 3 temas clave en los que pueden enfocarse según sus perfiles y CVs.
+5. **Cómo Contactar**: Indica amigablemente que si la afinidad es alta, puede presionar el botón **"Ofrecer apoyo"** en la tarjeta del estudiante dentro del directorio para enviarle una solicitud de contacto formal.
 
 Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sumamente empático, integrador y entusiasta.
 `;
@@ -394,6 +507,127 @@ Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sum
   }
 };
 
+const PROMPT_ANALISIS_CARRERA = `Eres una IA experta en desarrollo profesional y reclutamiento en Costa Rica (Mercado laboral de la Universidad de Costa Rica - UCR).
+Analiza el currículum del estudiante (su carrera, cargo deseado, habilidades, experiencias, y proyecto de graduación) y genera un análisis de carrera realista, detallado, motivador y sumamente profesional adaptado a su perfil.
+Si el estudiante tiene poca información en su perfil o CV, asume información inicial basada en su carrera/área académica de la UCR para darle un punto de partida e invitarlo a completar más datos.
+
+Debes responder ÚNICAMENTE con un objeto JSON válido (sin formato markdown ni backticks, solo el texto crudo del JSON):
+{
+  "estadoActual": "Resumen en una frase del estado actual del análisis (ej: 'Analizando tendencias del mercado para optimizar tu perfil en Ingeniería de Software junior...')",
+  "benchmarkingSalarial": {
+    "cargo": "Nombre del rol o cargo analizado",
+    "porcentaje": 75,
+    "mensaje": "Mensaje corto sobre la competitividad de su perfil en el mercado costarricense."
+  },
+  "tendencias": [
+    {
+      "titulo": "Título de la tendencia 1 (corto)",
+      "descripcion": "Descripción breve y realista de la tendencia laboral en Costa Rica relacionada a su área."
+    },
+    {
+      "titulo": "Título de la tendencia 2 (corto)",
+      "descripcion": "Descripción breve de otra tendencia o demanda relevante (ej: idiomas, habilidades técnicas)."
+    }
+  ],
+  "proyecciones": [
+    {
+      "puesto": "Nombre de un puesto o rol idóneo en una empresa real o representativa (ej: Desarrollador React Junior @ Gorilla Logic)",
+      "porcentaje": 90,
+      "explicacion": "Explicación breve de por qué encaja y qué palabra clave o habilidad del perfil destaca para este rol."
+    },
+    {
+      "puesto": "Nombre de otro puesto idóneo (ej: Analista de Sistemas @ Amazon)",
+      "porcentaje": 80,
+      "explicacion": "Explicación de la coincidencia y qué debería enfatizar en su perfil."
+    }
+  ],
+  "sugerenciaCertificacion": "Sugerencia específica en una frase (ej: 'Sugerencia IA: Obtén la certificación AWS Cloud Practitioner para llegar al 95% de match.')"
+}`;
+
+/**
+ * Genera un análisis de carrera personalizado basado en el perfil del estudiante.
+ */
+const generarAnalisisCarrera = async (perfil) => {
+  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+  const datosPerfil = perfil || {};
+
+  const contentPrompt = `
+PERFIL DEL ESTUDIANTE A ANALIZAR:
+- Nombre: ${datosPerfil.nombre || ''} ${datosPerfil.apellidos || ''}
+- Carrera: ${datosPerfil.carrera || 'No especificada'}
+- Cargo Deseado/Objetivo: ${datosPerfil.cargoDeseado || 'No especificado'}
+- Ubicación: ${datosPerfil.ubicacion || 'No especificada'}
+- Resumen Profesional: ${datosPerfil.resumen || 'No especificado'}
+- Habilidades Técnicas: ${datosPerfil.habilidadesTecnicas || 'No especificadas'}
+- Habilidades Blandas: ${datosPerfil.habilidadesBlandas || 'No especificadas'}
+- Idiomas: ${datosPerfil.idiomas || 'No especificados'}
+- Proyecto de Graduación/TFG:
+  * Título: ${datosPerfil.proyectoTitulo || 'No especificado'}
+  * Descripción: ${datosPerfil.proyectoDescripcion || 'No especificada'}
+  * Avance: ${datosPerfil.proyectoAvance || 0}%
+  * Áreas: ${(datosPerfil.proyectoAreas || []).join(', ') || 'No especificadas'}
+- Experiencias Laborales/Proyectos:
+  ${(datosPerfil.experiencias || []).map(e => `- ${e.puesto} en ${e.empresa} (${e.periodo}): ${e.descripcion}`).join('\n  ') || 'Sin experiencias registradas.'}
+
+Por favor, analiza el perfil anterior y genera la respuesta JSON solicitada.
+`;
+
+  try {
+    const response = await claude.messages.create({
+      model: model,
+      max_tokens: 1200,
+      system: PROMPT_ANALISIS_CARRERA,
+      temperature: 0.3,
+      messages: [{ role: 'user', content: contentPrompt }],
+    });
+
+    if (
+      response.content &&
+      response.content.length > 0 &&
+      response.content[0].text
+    ) {
+      let rawText = response.content[0].text.trim();
+      // Limpiar posibles bloques de código markdown que Claude a veces añade por error
+      rawText = rawText.replace(/```json/i, '').replace(/```/g, '').trim();
+
+      const parsed = JSON.parse(rawText);
+      return parsed;
+    }
+
+    throw new Error('No se pudo obtener el análisis de la IA.');
+  } catch (error) {
+    console.error('🔴 Error al generar análisis de carrera con Claude:', error);
+    // Devolver un fallback amigable en caso de que falle o se agote la cuota
+    return {
+      estadoActual: "Proyectando tu perfil para vacantes de tu carrera...",
+      benchmarkingSalarial: {
+        cargo: datosPerfil.cargoDeseado || datosPerfil.carrera || "Tu Perfil Profesional",
+        porcentaje: 65,
+        mensaje: "Completa más datos de tu CV y proyecto de graduación para recibir una puntuación precisa."
+      },
+      tendencias: [
+        {
+          titulo: "Certificaciones Técnicas",
+          descripcion: "Los reclutadores en Costa Rica valoran enormemente las certificaciones en metodologías ágiles y nubes públicas."
+        },
+        {
+          titulo: "Segundo Idioma",
+          descripcion: "El dominio del inglés (B2 o superior) incrementa el rango salarial en un 40% para recién graduados."
+        }
+      ],
+      proyecciones: [
+        {
+          puesto: `Puesto Junior en ${datosPerfil.carrera || "tu carrera"}`,
+          porcentaje: 75,
+          explicacion: "Coincidencia basada en tus estudios en la Universidad de Costa Rica (UCR)."
+        }
+      ],
+      sugerenciaCertificacion: "Sugerencia IA: Completa tus habilidades de idiomas y técnicas para optimizar tu proyección."
+    };
+  }
+};
+
 module.exports = {
   generarRespuestaSoporte,
+  generarAnalisisCarrera,
 };

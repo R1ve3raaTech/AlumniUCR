@@ -49,6 +49,21 @@ const obtenerDonacionPorId = async (id) => {
 
 const crearDonacion = async (donacionData) => {
 
+    // Validar que el número de referencia sea único
+    if (donacionData.numero_referencia) {
+        const { data: refExistente } = await supabase
+            .from(TABLA)
+            .select('id')
+            .eq('numero_referencia', donacionData.numero_referencia.trim())
+            .maybeSingle();
+
+        if (refExistente) {
+            const error = new Error('El número de referencia ya ha sido registrado en otra transacción de la plataforma.');
+            error.statusCode = 400;
+            throw error;
+        }
+    }
+
     const nuevaDonacion = {
         id_usuario_exalumno: donacionData.id_usuario_exalumno,
         id_tipo_pago: donacionData.id_tipo_pago,
@@ -97,6 +112,22 @@ const crearDonacion = async (donacionData) => {
 // ======================================================
 
 const actualizarDonacion = async (id, donacionData) => {
+
+    // Validar que el número de referencia sea único al actualizar
+    if (donacionData.numero_referencia) {
+        const { data: refExistente } = await supabase
+            .from(TABLA)
+            .select('id')
+            .eq('numero_referencia', donacionData.numero_referencia.trim())
+            .neq('id', id)
+            .maybeSingle();
+
+        if (refExistente) {
+            const error = new Error('El número de referencia ya ha sido registrado en otra transacción de la plataforma.');
+            error.statusCode = 400;
+            throw error;
+        }
+    }
 
     const datosActualizar = Object.assign({}, donacionData, { updated_at: new Date() });
 
