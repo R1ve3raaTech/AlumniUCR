@@ -347,12 +347,19 @@ function MentoriasContent() {
     }
   }, [isExpanded]);
 
+  // ─── Acceso del usuario (mismo criterio para CTA y buscador) ──────────
+  const tieneAcceso = !!(user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario));
+
   // ─── Manejadores de Acción ──────────────────────────────────────────
   const handleCta = (e: React.MouseEvent) => {
     e.preventDefault();
-    const tieneAcceso = user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario);
     if (!tieneAcceso) { abrirModal(); return; }
     // Aquí iría la lógica real si tiene acceso
+  };
+
+  // ─── Guard del buscador: sin acceso → mismo modal de "Cuenta requerida" ─
+  const handleBuscarGuard = (e: React.SyntheticEvent) => {
+    if (!tieneAcceso) { e.preventDefault(); abrirModal(); return; }
   };
 
   const handleTagClick = (tag: string) => {
@@ -425,7 +432,13 @@ function MentoriasContent() {
                 placeholder="Buscar mentor por nombre, especialidad..."
                 aria-label="Buscar mentor"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                readOnly={!tieneAcceso}
+                onMouseDown={handleBuscarGuard}
+                onFocus={handleBuscarGuard}
+                onChange={(e) => {
+                  if (!tieneAcceso) { abrirModal(); return; }
+                  setQuery(e.target.value);
+                }}
               />
             </div>
             <div className={styles.selects}>
