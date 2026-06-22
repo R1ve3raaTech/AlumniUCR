@@ -22,7 +22,7 @@ const NAV = [
   { key: 'matches', href: '/mis-matches', icon: 'handshake', label: 'Matches' },
   { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio', proximamente: true },
   { key: 'comunidad', href: '#', icon: 'group', label: 'Comunidad', proximamente: true },
-  { key: 'reportes', href: '#', icon: 'report', label: 'Reportes', proximamente: true },
+  { key: 'reportes', href: '/reportes', icon: 'report', label: 'Reportes' },
 ];
 
 export default function StudentShell({

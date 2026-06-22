@@ -8,6 +8,7 @@ import AdminSolicitudes from './AdminSolicitudes';
 import AdminConsultas from './AdminConsultas';
 import AdminExalumnosPendientes from './AdminExalumnosPendientes';
 import AdminDonacionesPendientes from './AdminDonacionesPendientes';
+import AdminReportesAnomalias from './AdminReportesAnomalias';
 import KPICard from './ui/KPICard';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
@@ -298,6 +299,21 @@ export default function AdminDashboard({
               <span className={styles.bloqueHint}>Voluntarios externos y accesos</span>
             </div>
             {token && <AdminSolicitudes token={token} />}
+          </motion.section>
+
+          {/* Reportes: denuncias / quejas / sugerencias de estudiantes */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Reportes y denuncias</h2>
+              <span className={styles.bloqueHint}>Denuncias, quejas y sugerencias enviadas por estudiantes</span>
+            </div>
+            {token && <AdminReportesAnomalias token={token} />}
           </motion.section>
 
           {/* Consultas de soporte (enviadas desde el Centro de Ayuda) */}
