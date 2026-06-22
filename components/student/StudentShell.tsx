@@ -58,13 +58,13 @@ export default function StudentShell({
     <div className="bg-background text-on-background font-body-base antialiased">
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6">
-        <div className="mb-8 flex w-full items-center justify-center py-2">
+        <div className="mb-8 flex w-full shrink-0 items-center justify-center py-2">
           <Link href="/dashboard" aria-label="UCR Conecta — inicio">
             <AlumniLogo height={56} />
           </Link>
         </div>
 
-        <div className="mb-8 flex flex-col items-center px-4">
+        <div className="mb-8 flex shrink-0 flex-col items-center px-4">
           <div className="relative mb-4">
             {perfil.foto ? (
               <img
@@ -93,7 +93,7 @@ export default function StudentShell({
           <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">{subtitulo}</p>
         </div>
 
-        <nav className="flex flex-grow flex-col gap-1">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
           {NAV.map((item) => {
             const activo = item.key === active;
             const claseBase = activo
@@ -127,7 +127,7 @@ export default function StudentShell({
           })}
         </nav>
 
-        <div className="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-6">
+        <div className="flex shrink-0 flex-col gap-1 border-t border-outline-variant pt-6">
           <button
             type="button"
             onClick={() => notificar('🚧 Función en desarrollo')}
