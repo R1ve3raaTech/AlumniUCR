@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service');
+const usuarioService = require('../services/usuarioService');
 const {
   validarCorreoUCR,
   validarCorreo,
@@ -6,6 +7,21 @@ const {
   validarNombre,
   validarContrasena,
 } = require('../utils/validaciones');
+
+// Verifica (público, sin sesión) si ya existe una cuenta con ese correo. Se usa
+// en el registro para avisar que la persona ya está registrada y ofrecer login.
+const verificarCorreoExiste = async (req, res, next) => {
+  try {
+    const correo = String(req.query.correo || '').trim().toLowerCase();
+    if (!correo) {
+      return res.status(400).json({ success: false, message: 'Correo requerido' });
+    }
+    const usuario = await usuarioService.obtenerUsuarioPorCorreo(correo);
+    res.status(200).json({ success: true, existe: Boolean(usuario) });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Lanza un error 400 con el mensaje dado (lo formatea el error.middleware).
 const errorValidacion = (mensaje) => {
@@ -26,11 +42,13 @@ const solicitarMagicLink = async (req, res, next) => {
     const errorCorreo = validarCorreoPorRol(correo, rolNormalizado);
     if (errorCorreo) throw errorValidacion(errorCorreo);
 
-    await authService.solicitarMagicLink(correo.trim(), rolNormalizado);
+    const resultado = await authService.solicitarMagicLink(correo.trim(), rolNormalizado);
 
     res.status(200).json({
       success: true,
       mensaje: 'Te enviamos un enlace de verificación a tu correo.',
+      // En desarrollo se incluye para confirmar sin depender del correo.
+      token_hash: resultado?.token_hash ?? null,
     });
   } catch (error) {
     next(error);
@@ -313,6 +331,7 @@ const login = async (req, res, next) => {
 };
 
 module.exports = {
+  verificarCorreoExiste,
   registerEstudiante,
   registerExalumno,
   login,

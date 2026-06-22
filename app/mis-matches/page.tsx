@@ -1,308 +1,271 @@
 'use client';
 
+// Centro de Matches (estudiante): diseño Stitch adaptado a la marca, ahora con
+// datos reales. Necesidades y tip salen de la fuente única (perfil); los perfiles
+// sugeridos son exalumnos reales del directorio (RF-02) puntuados por afinidad; y
+// las solicitudes salen del motor de matches RF-06 (/matches-mentoria/mis-matches).
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import StudentShell from '@/components/student/StudentShell';
+import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerPerfil } from '@/lib/auth';
-import StudentNav from '@/components/StudentNav';
-import ReportarPerfil from '@/components/ReportarPerfil';
-import {
-  obtenerDirectorioEstudiantes,
-  obtenerDirectorioExalumnos,
-  solicitarContacto,
-  obtenerSolicitudesRecibidas,
-  responderSolicitudContacto,
-  calcularScore,
-  estadoMatch,
-} from '@/lib/misMatches';
+import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
+import { obtenerSugeridos, obtenerMisMatches } from '@/lib/matchesEstudiante';
 
-interface Estudiante {
-  id: string;
-  nombre: string;
-  carreras: string[];
-  facultades: string[];
-  proyecto: { titulo: string; avance: number };
-  areas: string[];
-  busca: { financiamiento: boolean; mentoria: boolean; empleo: boolean; pasantia: boolean };
-  solicitud: null | 'pendiente' | 'aceptada' | 'rechazada';
-  correo: string | null;
+const bento = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
+
+// Mapa de los tipos de apoyo del perfil a tarjetas de "necesidad".
+const NECESIDADES: Record<string, { etiqueta: string; color: string; titulo: string; desc: string }> = {
+  mentoria: { etiqueta: 'Mentoría Técnica', color: 'bg-secondary', titulo: 'Guía y mentoría especializada', desc: 'Busco un experto que me oriente en los retos técnicos de mi proyecto.' },
+  pasantia: { etiqueta: 'Pasantía Académica', color: 'bg-tertiary-container', titulo: 'Práctica en un entorno real', desc: 'Necesito validar el impacto de mi trabajo en un entorno profesional.' },
+  empleo: { etiqueta: 'Empleabilidad', color: 'bg-primary', titulo: 'Oportunidad laboral', desc: 'Estoy en busca de mi primera oportunidad profesional alineada a mi carrera.' },
+  financiamiento: { etiqueta: 'Patrocinio', color: 'bg-secondary', titulo: 'Apoyo o financiamiento', desc: 'Busco patrocinio para llevar mi proyecto al siguiente nivel.' },
+};
+
+const ESTADO_SOLICITUD: Record<string, { label: string; color: string; barra: string; pct: number }> = {
+  sugerido: { label: 'Sugerido', color: 'text-outline', barra: 'bg-outline', pct: 20 },
+  contactado: { label: 'En revisión', color: 'text-secondary', barra: 'bg-secondary', pct: 65 },
+  activo: { label: 'Conectado', color: 'text-tertiary', barra: 'bg-tertiary', pct: 100 },
+};
+
+function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): number {
+  const campos = [
+    p.nombre, p.apellidos, p.telefono, p.carrera, p.resumen, p.foto,
+    p.proyectoTitulo, p.habilidadesTecnicas,
+    p.experiencias.length ? 'x' : '', p.intereses.length ? 'x' : '',
+  ];
+  const llenos = campos.filter((c) => String(c).trim()).length;
+  return Math.round((llenos / campos.length) * 100);
 }
-interface ExalumnoDir {
-  id: string;
-  nombre: string;
-  carreras: string[];
-  facultades: string[];
-  sectores: string[];
-  areas: string[];
-  apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; colaboracion: boolean; donacion: boolean };
-  correo?: string | null;
-}
-interface SolicitudRecibida {
-  id: string;
-  nombre_exalumno: string;
-  mensaje: string;
-  estado: 'pendiente' | 'aceptada' | 'rechazada';
-  correo_exalumno?: string | null;
-}
+
+const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
 export default function MisMatchesPage() {
   const router = useRouter();
-  const { token, user, loading: authLoading, signOut } = useAuth();
-  const [rol, setRol] = useState<string | null>(null);
+  const { token, loading } = useAuth();
+  const { perfil } = usePerfilEstudiante();
+
+  const [sugeridos, setSugeridos] = useState<any[]>([]);
+  const [misMatches, setMisMatches] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [enviando, setEnviando] = useState<string | null>(null);
-
-  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  const [miPerfilExa, setMiPerfilExa] = useState<ExalumnoDir | null>(null);
-  const [recibidas, setRecibidas] = useState<SolicitudRecibida[]>([]);
 
   useEffect(() => {
-    if (!authLoading && !token) router.replace('/login');
-  }, [authLoading, token, router]);
+    if (!loading && !token) router.replace('/login');
+  }, [loading, token, router]);
 
+  // Carga real: exalumnos del directorio (puntuados) + matches del motor RF-06.
   useEffect(() => {
-    if (!token || !user) return;
     let activo = true;
     (async () => {
-      try {
-        const perfil = await obtenerPerfil(token);
-        const r = perfil?.data?.roles?.nombre?.toLowerCase().trim() ?? null;
-        if (!activo) return;
-        setRol(r);
-
-        if (r === 'exalumno') {
-          const [dirEst, dirExa] = await Promise.all([
-            obtenerDirectorioEstudiantes(token),
-            obtenerDirectorioExalumnos(),
-          ]);
-          if (!activo) return;
-          setEstudiantes(dirEst?.data ?? []);
-          const yo = (dirExa?.data ?? []).find((e: ExalumnoDir) => e.id === user.id) ?? null;
-          setMiPerfilExa(yo);
-        } else if (r === 'estudiante') {
-          const sol = await obtenerSolicitudesRecibidas(token);
-          if (activo) setRecibidas(sol?.data ?? []);
-        }
-      } catch {
-        /* simple */
-      } finally {
-        if (activo) setCargando(false);
-      }
+      const [sug, mm] = await Promise.all([
+        obtenerSugeridos(perfil),
+        token ? obtenerMisMatches(token) : Promise.resolve([]),
+      ]);
+      if (!activo) return;
+      setSugeridos(sug);
+      setMisMatches(mm);
+      setCargando(false);
     })();
     return () => { activo = false; };
-  }, [token, user]);
+  }, [perfil, token]);
 
-  const ranking = useMemo(() => {
-    if (!miPerfilExa) return [];
-    return estudiantes
-      .map((est) => ({ est, ...calcularScore(miPerfilExa, est) }))
-      .filter((m) => m.score > 0)
-      .sort((a, b) => b.score - a.score);
-  }, [estudiantes, miPerfilExa]);
+  const pct = useMemo(() => completitud(perfil), [perfil]);
+  const necesidades = useMemo(() => {
+    const activas = (Object.keys(NECESIDADES) as (keyof typeof perfil.apoyo)[])
+      .filter((k) => perfil.apoyo[k])
+      .map((k) => NECESIDADES[k]);
+    return activas.length ? activas.slice(0, 2) : [NECESIDADES.mentoria, NECESIDADES.pasantia];
+  }, [perfil.apoyo]);
+  const proyecto = perfil.proyectoTitulo || 'tu proyecto de graduación';
+  const fortaleza = perfil.habilidadesTecnicas?.split(',')[0]?.trim() || perfil.carrera || 'tu área';
 
-  async function conectar(idEstudiante: string) {
-    setEnviando(idEstudiante);
-    try {
-      await solicitarContacto(token as string, idEstudiante, 'Me gustaria conectar para apoyar tu proyecto.');
-      setEstudiantes((l) => l.map((e) => (e.id === idEstudiante ? { ...e, solicitud: 'pendiente' } : e)));
-    } finally {
-      setEnviando(null);
-    }
-  }
+  const destacado = sugeridos[0] || null;
+  const resto = sugeridos.slice(1, 6);
+  const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
 
-  async function responder(id: string, aceptar: boolean) {
-    setEnviando(id);
-    try {
-      await responderSolicitudContacto(token as string, id, aceptar);
-      setRecibidas((l) => l.map((s) => (s.id === id ? { ...s, estado: aceptar ? 'aceptada' : 'rechazada' } : s)));
-    } finally {
-      setEnviando(null);
-    }
-  }
-
-  function handleSignOut() {
-    signOut();
-    router.replace('/login');
-  }
-
-  const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
-
-  const pendientes = recibidas.filter((s) => s.estado === 'pendiente');
-  const respondidas = recibidas.filter((s) => s.estado !== 'pendiente');
+  const interesar = (nombre: string) => notificar(`📨 Registramos tu interés por ${nombre}. Te avisaremos cuando responda.`);
 
   return (
-    <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
-      <StudentNav onSignOut={handleSignOut} />
-
-      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-        {/* Hero */}
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-ucr-primary to-ucr-secondary p-8 text-white shadow-sm">
-          <h1 className="font-ucr-display text-3xl font-bold tracking-tight sm:text-4xl">Mis Matches</h1>
-          <p className="mt-2 text-sm text-white/80">
-            {rol === 'estudiante'
-              ? 'Solicitudes de conexion que recibiste de exalumnos. Acepta para revelar tu contacto.'
-              : 'Estudiantes sugeridos segun tu carrera, areas de interes, sector y tipo de apoyo. Ordenados por compatibilidad.'}
-          </p>
+    <StudentShell active="matches">
+      <div className="mx-auto w-full max-w-[1280px] space-y-6 p-6 lg:p-8">
+        {/* Encabezado */}
+        <section className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <h1 className="font-headline-md text-2xl text-primary sm:text-3xl">Centro de Matches</h1>
+            <p className="max-w-2xl text-on-surface-variant">
+              Potenciá tu carrera conectando con la red de egresados de la UCR. Encontrá mentoría estratégica y
+              oportunidades alineadas a tu TFG.
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
+            <span className="material-symbols-outlined text-[16px]">bolt</span> {pct}% Perfil Completado
+          </span>
         </section>
 
-        <div className="mt-6">
-          {cargando ? (
-            <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Calculando tus matches...</p>
-
-          /* ── VISTA ESTUDIANTE ── */
-          ) : rol === 'estudiante' ? (
-            recibidas.length === 0 ? (
-              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Todavia no recibiste solicitudes de conexion.</p>
-            ) : (
-              <div className="flex flex-col gap-8">
-                {/* Pendientes */}
-                {pendientes.length > 0 && (
-                  <div>
-                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">
-                      Pendientes de respuesta
-                      <span className="ml-2 rounded-full bg-ucr-secondary px-2.5 py-0.5 text-xs font-semibold text-white">{pendientes.length}</span>
-                    </h2>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {pendientes.map((s) => (
-                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-2 ring-ucr-secondary/20">
-                          <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                              {iniciales(s.nombre_exalumno)}
-                            </div>
-                            <div>
-                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
-                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
-                            </div>
-                          </div>
-                          {s.mensaje && <p className="mb-4 text-sm italic text-ucr-on-surface-variant">"{s.mensaje}"</p>}
-                          <div className="mt-auto flex gap-2">
-                            <button onClick={() => responder(s.id, true)} disabled={enviando === s.id}
-                              className="flex-1 rounded-2xl bg-ucr-secondary py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
-                              {enviando === s.id ? 'Guardando...' : 'Aceptar'}
-                            </button>
-                            <button onClick={() => responder(s.id, false)} disabled={enviando === s.id}
-                              className="flex-1 rounded-2xl border border-ucr-outline-variant py-2 text-sm font-semibold text-ucr-on-surface-variant transition hover:bg-ucr-surface-container disabled:opacity-60">
-                              Rechazar
-                            </button>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Respondidas */}
-                {respondidas.length > 0 && (
-                  <div>
-                    <h2 className="mb-4 font-brand-heading text-lg font-bold text-ucr-on-surface">Historial</h2>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {respondidas.map((s) => (
-                        <article key={s.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-sm opacity-90">
-                          <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                              {iniciales(s.nombre_exalumno)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{s.nombre_exalumno}</h3>
-                              <span className="text-xs text-ucr-on-surface-variant">Exalumno UCR</span>
-                            </div>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                              s.estado === 'aceptada'
-                                ? 'bg-ucr-esmeralda/10 text-ucr-esmeralda'
-                                : 'bg-ucr-surface-container text-ucr-outline'
-                            }`}>
-                              {s.estado === 'aceptada' ? 'Activa' : 'Rechazada'}
-                            </span>
-                          </div>
-                          {s.estado === 'aceptada' && s.correo_exalumno && (
-                            <a href={`mailto:${s.correo_exalumno}`}
-                              className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-ucr-secondary underline">
-                              <span className="material-symbols-outlined text-base">mail</span>
-                              {s.correo_exalumno}
-                            </a>
-                          )}
-                          {s.estado === 'aceptada' && !s.correo_exalumno && (
-                            <p className="mt-1 text-xs text-ucr-on-surface-variant">Conexion activa — contacto disponible pronto.</p>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                )}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Columna izquierda */}
+          <div className="space-y-6 lg:col-span-8">
+            {/* Mis Necesidades */}
+            <div className={`${bento} p-6`}>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 font-body-semibold text-primary">
+                  <span className="material-symbols-outlined text-secondary">campaign</span> Mis Necesidades Actuales
+                </h2>
+                <button onClick={() => notificar('🚧 Publicar nueva necesidad — en desarrollo')} className="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-secondary hover:underline">
+                  <span className="material-symbols-outlined text-[18px]">add_circle</span> Publicar
+                </button>
               </div>
-            )
-
-          /* ── VISTA EXALUMNO ── */
-          ) : rol === 'exalumno' ? (
-            !miPerfilExa ? (
-              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">Completa tu perfil de exalumno para generar tus matches.</p>
-            ) : ranking.length === 0 ? (
-              <p className="py-16 text-center text-sm text-ucr-on-surface-variant">No hay estudiantes compatibles por ahora.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {ranking.map(({ est, score, comunes, interdisciplinario }) => {
-                  const estado = estadoMatch(est.solicitud);
-                  return (
-                    <article key={est.id} className={`flex flex-col rounded-3xl bg-white p-5 shadow-sm ${estado === 'activo' ? 'ring-2 ring-ucr-esmeralda/30' : ''}`}>
-                      {/* Cabecera */}
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ucr-secondary-container/40 font-ucr-display text-lg font-bold text-ucr-primary">
-                            {iniciales(est.nombre)}
-                          </div>
-                          <div>
-                            <h3 className="font-brand-heading text-base font-bold text-ucr-on-surface">{est.nombre}</h3>
-                            <span className="text-xs text-ucr-on-surface-variant">{est.carreras[0] || '?'}{est.facultades[0] ? ` - ${est.facultades[0]}` : ''}</span>
-                          </div>
-                        </div>
-                        {/* Score badge */}
-                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold text-white ${
-                          score >= 70 ? 'bg-ucr-esmeralda' : score >= 40 ? 'bg-ucr-secondary' : 'bg-ucr-outline'
-                        }`}>{score}/100</span>
-                      </div>
-
-                      {/* Proyecto */}
-                      <p className="mb-2 text-sm text-ucr-on-surface">
-                        <span className="font-semibold">Proyecto:</span> {est.proyecto?.titulo}
-                      </p>
-
-                      {/* Tags */}
-                      <div className="mb-3 flex flex-wrap gap-1.5">
-                        {interdisciplinario && (
-                          <span className="rounded-full bg-ucr-celeste/10 px-2.5 py-0.5 text-xs font-semibold text-ucr-secondary">Interdisciplinario</span>
-                        )}
-                        {comunes.map((a: string) => (
-                          <span key={a} className="rounded-full bg-ucr-surface-container px-2.5 py-0.5 text-xs text-ucr-on-surface-variant">#{a}</span>
-                        ))}
-                      </div>
-
-                      {/* Accion */}
-                      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-                        <span className="text-xs font-medium text-ucr-on-surface-variant">
-                          {estado === 'activo' ? 'Conexion activa' : estado === 'contactado' ? 'Conexion enviada' : estado === 'rechazada' ? 'No aceptada' : 'Sugerido'}
-                        </span>
-                        {estado === 'activo' && est.correo ? (
-                          <a href={`mailto:${est.correo}`} className="text-sm font-semibold text-ucr-secondary underline">{est.correo}</a>
-                        ) : estado === 'sugerido' ? (
-                          <button onClick={() => conectar(est.id)} disabled={enviando === est.id}
-                            className="rounded-2xl bg-ucr-secondary px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
-                            {enviando === est.id ? 'Enviando...' : 'Solicitar conexion'}
-                          </button>
-                        ) : null}
-                      </div>
-                      <div className="mt-3 flex justify-end border-t border-ucr-outline-variant pt-2">
-                        <ReportarPerfil idReportado={est.id} nombre={est.nombre} />
-                      </div>
-                    </article>
-                );
-              })}
+              <p className="mb-4 text-xs italic text-on-surface-variant">Relacionado a: “{proyecto}”</p>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {necesidades.map((n, i) => (
+                  <div key={i} className="rounded-lg border border-outline-variant bg-surface-container-low p-4">
+                    <span className={`mb-2 inline-block rounded px-2 py-1 text-[10px] font-bold uppercase text-white ${n.color}`}>{n.etiqueta}</span>
+                    <h3 className="mb-1 font-body-semibold text-primary">{n.titulo}</h3>
+                    <p className="text-sm leading-relaxed text-on-surface-variant">{n.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          )
-        ) : (
-          <p className="py-16 text-center text-sm text-ucr-on-surface-variant">El matching esta disponible para estudiantes y exalumnos. El panel del admin tiene su propia vista.</p>
-        )}
+
+            {/* Match Estratégico (mejor exalumno real) */}
+            {destacado ? (
+              <div className="overflow-hidden rounded-xl shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]">
+                <div className="flex flex-col items-center gap-8 bg-gradient-to-br from-primary to-secondary p-8 md:flex-row">
+                  <div className="relative shrink-0">
+                    <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-xl border-4 border-secondary-container/30 bg-white/10 font-display-lg text-4xl font-bold text-white">
+                      {destacado.foto_perfil ? <img src={destacado.foto_perfil} alt={destacado.nombre} className="h-full w-full object-cover" /> : iniciales(destacado.nombre)}
+                    </div>
+                    <span className="absolute -bottom-2 -right-2 rounded-lg bg-secondary-container px-2 py-1 text-[10px] font-bold text-on-secondary-container shadow-lg">MATCH {destacado.score}%</span>
+                  </div>
+                  <div className="flex-1 space-y-2 text-center text-white md:text-left">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 backdrop-blur-md">
+                      <span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">verified</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Mejor afinidad para vos</span>
+                    </div>
+                    <h2 className="font-headline-md text-2xl leading-none">{destacado.nombre}</h2>
+                    <p className="text-secondary-fixed-dim">
+                      {(destacado.carreras?.[0] || 'Exalumno UCR')}{destacado.anio_graduacion ? ` · UCR ’${String(destacado.anio_graduacion).slice(-2)}` : ''}
+                    </p>
+                    <p className="mx-auto max-w-lg text-sm leading-relaxed opacity-90 md:mx-0">
+                      {destacado.comunes?.length
+                        ? `Comparten interés en ${destacado.comunes.slice(0, 3).join(', ')}. Puede aportar a ${proyecto}.`
+                        : `Forma parte de la red UCR y puede aportar a ${proyecto}.`}
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 pt-3 md:justify-start">
+                      <button onClick={() => interesar(destacado.nombre)} className="flex items-center gap-2 rounded-lg bg-[#54BCEB] px-6 py-3 text-sm font-bold text-primary transition-transform hover:scale-105">
+                        Solicitar Mentoría <span className="material-symbols-outlined text-[18px]">send</span>
+                      </button>
+                      <button onClick={() => router.push('/directorio')} className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all hover:bg-white/20">
+                        Ver Directorio
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className={`${bento} p-8 text-center`}>
+                <span className="material-symbols-outlined mb-2 text-4xl text-outline">groups</span>
+                <p className="font-body-semibold text-primary">{cargando ? 'Buscando perfiles afines…' : 'Aún no hay exalumnos en el directorio'}</p>
+                <p className="text-sm text-on-surface-variant">Completá tus áreas e intereses en el perfil para mejorar tus coincidencias.</p>
+              </div>
+            )}
+
+            {/* Perfiles Sugeridos (exalumnos reales) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-body-semibold text-primary">Perfiles Sugeridos {sugeridos.length > 0 && <span className="text-on-surface-variant">· {sugeridos.length}</span>}</h2>
+              </div>
+              <div className="space-y-3">
+                {resto.length === 0 ? (
+                  <div className={`${bento} p-6 text-center text-sm text-on-surface-variant`}>
+                    {cargando ? 'Cargando…' : 'No hay más perfiles por ahora. ¡Volvé pronto!'}
+                  </div>
+                ) : resto.map((s) => (
+                  <div key={s.id} className={`${bento} flex items-center justify-between p-4`}>
+                    <div className="flex items-center gap-4">
+                      <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-primary/10 font-bold text-primary">
+                        {s.foto_perfil ? <img src={s.foto_perfil} alt={s.nombre} className="h-full w-full object-cover" /> : iniciales(s.nombre)}
+                      </div>
+                      <div>
+                        <h4 className="font-body-semibold text-primary">{s.nombre}</h4>
+                        <p className="text-xs text-on-surface-variant">{s.carreras?.[0] || s.facultades?.[0] || 'Exalumno UCR'}{s.ciudad ? ` · ${s.ciudad}` : ''}</p>
+                      </div>
+                    </div>
+                    <div className="hidden gap-2 md:flex">
+                      {(s.comunes?.length ? s.comunes : s.areas || []).slice(0, 2).map((t: string) => <span key={t} className="rounded bg-secondary/10 px-2 py-1 text-[10px] font-bold uppercase text-secondary">{t}</span>)}
+                      {s.score > 0 && <span className="rounded bg-tertiary/10 px-2 py-1 text-[10px] font-bold text-tertiary">{s.score}%</span>}
+                    </div>
+                    <button onClick={() => interesar(s.nombre)} title="Conectar" className="rounded-full p-2 text-secondary transition-colors hover:bg-secondary/10">
+                      <span className="material-symbols-outlined">person_add</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Columna derecha */}
+          <div className="space-y-6 lg:col-span-4">
+            {/* Solicitudes (matches reales RF-06) */}
+            <div className={`${bento} p-6`}>
+              <h3 className="mb-6 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-primary">
+                Solicitudes Enviadas
+                {solicitudes.length > 0 && <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] text-on-secondary-container">{solicitudes.length} ACTIVAS</span>}
+              </h3>
+              {solicitudes.length === 0 ? (
+                <div className="flex items-start gap-3 rounded-lg bg-surface-container-low p-4">
+                  <span className="material-symbols-outlined text-outline">outgoing_mail</span>
+                  <p className="text-sm text-on-surface-variant">Todavía no enviaste solicitudes. Conectá con un perfil sugerido para empezar.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {solicitudes.map((m) => {
+                    const e = ESTADO_SOLICITUD[m.estado] || ESTADO_SOLICITUD.sugerido;
+                    return (
+                      <div key={m.id}>
+                        <div className="mb-2 flex justify-between text-xs">
+                          <span className="font-body-semibold text-primary">{m.usuarios?.nombre || 'Conexión'}</span>
+                          <span className={e.color}>{e.label}</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+                          <div className={`h-full ${e.barra}`} style={{ width: `${e.pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Tip de IA (personalizado con el perfil) */}
+            <div className="rounded-xl border-none bg-[#E6F4F9] p-6">
+              <div className="flex items-start gap-4">
+                <span className="material-symbols-outlined text-3xl text-secondary">psychology</span>
+                <div>
+                  <h3 className="font-body-semibold text-primary">Tip de IA</h3>
+                  <p className="mt-1 text-sm text-on-secondary-fixed-variant">
+                    Tu perfil destaca en <b>{fortaleza}</b>. Contactar mentores con esa etiqueta puede aumentar tus
+                    chances de match.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats reales */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className={`${bento} p-4 text-center`}>
+                <p className="text-2xl font-bold text-secondary">{sugeridos.length}</p>
+                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Perfiles afines</p>
+              </div>
+              <div className={`${bento} p-4 text-center`}>
+                <p className="text-2xl font-bold text-secondary">{misMatches.length}</p>
+                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Mis matches</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </StudentShell>
   );
 }

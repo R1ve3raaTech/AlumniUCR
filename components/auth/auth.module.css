@@ -1,176 +1,140 @@
-/* Estilos compartidos por las pantallas de autenticación (login y registro).
-   Reutilizan las variables HSL del tema definidas en app/globals.css. */
+/* Estilos compartidos de las pantallas de autenticación del flujo (AuthCard:
+   /completar-perfil y /auth/confirmar). Identidad de marca UCR con los tokens
+   --ucr-* / --brand-* / --font-* de globals.css. Responsivo. */
 
 .page {
+  position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  overflow: hidden;
+  /* Glows de marca sobre superficie clara (igual que registro / términos) */
+  background:
+    radial-gradient(55% 45% at 88% -5%, rgba(84, 188, 235, 0.16), transparent 60%),
+    radial-gradient(50% 40% at -5% 105%, rgba(0, 76, 99, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--ucr-surface) 0%, #eaf3f6 100%);
+  color: var(--ucr-on-surface);
+  font-family: var(--font-brand-body);
 }
 
 .card {
   width: 100%;
-  max-width: 420px;
-  padding: 2.5rem;
+  max-width: 460px;
+  padding: clamp(1.75rem, 1rem + 3vw, 3rem);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--ucr-outline-variant);
+  border-top: 5px solid var(--ucr-celeste);
+  border-radius: 1.25rem;
+  box-shadow: 0 30px 70px -28px rgba(0, 31, 42, 0.22);
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.brand {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  margin: 0 auto 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  color: hsl(var(--primary-foreground));
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
-  box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
-}
+.header { text-align: center; margin-bottom: 1.75rem; }
+.brand { display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 1.1rem; }
 
 .title {
-  font-size: 1.6rem;
-  margin-bottom: 0.4rem;
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 1.3rem + 1vw, 2.1rem);
+  color: var(--ucr-primary);
+  line-height: 1.1;
+  margin: 0;
 }
+.title em { font-style: normal; color: var(--ucr-celeste); }
+.accentBar { width: 5rem; height: 0.45rem; background: var(--ucr-celeste); border-radius: 3px; margin: 0.85rem auto 0; }
+.subtitle { font-size: 0.98rem; color: var(--ucr-on-surface-variant); margin: 0.9rem auto 0; max-width: 28rem; line-height: 1.5; }
 
-.subtitle {
-  font-size: 0.9rem;
-  color: hsl(var(--muted-foreground));
-}
+.form { display: flex; flex-direction: column; gap: 1.15rem; }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-/* Campo de texto reutilizable (TextField) */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-}
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+.label { font-size: 0.85rem; font-weight: 700; color: var(--ucr-primary); }
 
 .input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  color: hsl(var(--foreground));
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius-md);
+  padding: 0.8rem 1rem;
+  font-family: var(--font-brand-body);
+  font-size: 0.97rem;
+  color: var(--ucr-on-surface);
+  background: var(--ucr-surface);
+  border: 1px solid var(--ucr-outline-variant);
+  border-radius: 0.6rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.input::placeholder {
-  color: hsl(var(--muted));
-}
-
+.input::placeholder { color: var(--ucr-outline); }
 .input:focus {
   outline: none;
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 3px hsla(250, 85%, 65%, 0.25);
+  border-color: var(--brand-esmeralda);
+  box-shadow: 0 0 0 4px rgba(0, 125, 103, 0.1);
 }
 
-/* Contenedor del campo de contraseña: posiciona el botón ver/ocultar
-   superpuesto sobre el extremo derecho del input. */
-.inputWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-/* Deja espacio a la derecha para que el texto no quede bajo el botón. */
-.inputWithToggle {
-  padding-right: 4.5rem;
-}
-
+.inputWrapper { position: relative; display: flex; align-items: center; }
+.inputWithToggle { padding-right: 4.5rem; }
 .toggleVisibility {
   position: absolute;
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
-  padding: 0.25rem 0.5rem;
-  font-family: var(--font-sans);
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-brand-body);
   font-size: 0.8rem;
-  font-weight: 600;
-  color: hsl(var(--secondary));
+  font-weight: 700;
+  color: var(--ucr-outline);
   background: transparent;
   border: none;
   cursor: pointer;
   transition: color 0.2s ease;
 }
+.toggleVisibility:hover { color: var(--brand-esmeralda); }
+.toggleVisibility:focus-visible { outline: 2px solid var(--brand-esmeralda); outline-offset: 2px; border-radius: 0.4rem; }
 
-.toggleVisibility:hover {
-  color: hsl(var(--primary));
-}
+.inputError { border-color: var(--ucr-naranja); }
+.fieldError { font-size: 0.8rem; color: var(--ucr-naranja); font-weight: 600; }
 
-.toggleVisibility:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-.inputError {
-  border-color: hsl(var(--accent));
-}
-
-.fieldError {
-  font-size: 0.8rem;
-  color: hsl(var(--accent));
-}
-
-/* Mensaje de error a nivel de formulario (credenciales inválidas, etc.) */
 .formError {
-  font-size: 0.85rem;
-  color: hsl(var(--accent));
-  background: hsla(320, 85%, 60%, 0.08);
-  border: 1px solid hsla(320, 85%, 60%, 0.25);
-  border-radius: var(--radius-sm);
-  padding: 0.7rem 0.9rem;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #93000a;
+  background: #ffe2dd;
+  border: 1px solid #f3b5ab;
+  border-radius: 0.7rem;
+  padding: 0.8rem 1rem;
+  text-align: left;
 }
 
 .submit {
   width: 100%;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   margin-top: 0.4rem;
+  padding: 0.95rem 2rem;
+  background: linear-gradient(135deg, var(--brand-esmeralda), var(--ucr-primary));
+  color: #fff;
+  font-family: var(--font-ucr-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 16px 38px -10px rgba(0, 125, 103, 0.5);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.22s ease, filter 0.2s ease;
 }
+.submit:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 22px 46px -12px rgba(0, 125, 103, 0.55); }
+.submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
 
-.submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
+.footer { margin-top: 1.75rem; text-align: center; font-size: 0.9rem; color: var(--ucr-on-surface-variant); }
+.link { color: var(--brand-esmeralda); font-weight: 700; transition: color 0.2s ease; }
+.link:hover { color: var(--ucr-primary); }
 
-.footer {
-  margin-top: 1.75rem;
-  text-align: center;
-  font-size: 0.88rem;
-  color: hsl(var(--muted-foreground));
-}
-
-.link {
-  color: hsl(var(--secondary));
-  font-weight: 600;
-  transition: color 0.2s ease;
-}
-
-.link:hover {
-  color: hsl(var(--primary));
+@media (max-width: 480px) {
+  .card { max-width: 100%; }
 }

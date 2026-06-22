@@ -217,6 +217,20 @@ const solicitarMagicLink = async (correo, rol) => {
     },
   });
   if (error) throw error;
+
+  // En desarrollo, además generamos un enlace directo y devolvemos su token_hash
+  // para poder confirmar la cuenta SIN depender del correo: los clientes de
+  // correo (Gmail, antivirus) suelen "pre-cargar" el magic link de un solo uso
+  // y consumirlo antes de que la persona haga clic. No se usa en producción.
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const { data } = await supabase.auth.admin.generateLink({ type: 'magiclink', email: correo });
+      const tokenHash = data?.properties?.hashed_token;
+      if (tokenHash) return { enviado: true, token_hash: tokenHash };
+    } catch {
+      // Si falla, se mantiene el flujo normal por correo.
+    }
+  }
   return { enviado: true };
 };
 

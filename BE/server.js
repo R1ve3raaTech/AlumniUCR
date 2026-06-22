@@ -70,6 +70,7 @@ const tipoProyectoRoutes = require('./routes/tipo.proyecto.routes');
 const usersRoutes = require('./routes/users.routes');
 const cvRoutes = require('./routes/cv.routes');
 const voluntariosRoutes = require('./routes/voluntarios.routes');
+const consultasRoutes = require('./routes/consultas.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const claudeRoutes = require('./routes/claude.routes');
 const matchesMentoriaRoutes = require('./routes/matches.mentoria.routes');
@@ -113,6 +114,7 @@ app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/voluntarios', voluntariosRoutes);
+app.use('/api/consultas-soporte', consultasRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/claude', claudeRoutes);
 app.use('/api/matches-mentoria', matchesMentoriaRoutes);
@@ -121,6 +123,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
 app.use('/api/estudiantes', directorioEstudiantesRoutes);
 app.use('/api/comprobantes', comprobantesRoutes);
+app.use('/api/perfil-onboarding', require('./routes/perfilOnboarding.routes'));
+app.use('/api/reportes-anomalias', require('./routes/reportes.routes'));
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {
