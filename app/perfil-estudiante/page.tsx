@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
+import { useRequireRole } from '@/lib/useRequireRole';
 import StudentNav from '@/components/StudentNav';
 import perfilStyles from '@/components/perfil/perfil.module.css';
 import { obtenerInformacionEstudiante } from '@/lib/perfilAcademico';
@@ -35,6 +36,7 @@ const SolicitudesContacto = dynamic(() => import('@/components/perfil/Solicitude
 export default function PerfilEstudiantePage() {
   const router = useRouter();
   const { token, user, loading, signOut } = useAuth();
+  const { verificando, autorizado } = useRequireRole(['estudiante']);
 
   const [verificandoPerfil, setVerificandoPerfil] = useState(true);
   const [perfilAcademicoListo, setPerfilAcademicoListo] = useState(false);
@@ -42,14 +44,8 @@ export default function PerfilEstudiantePage() {
   // "el perfil incompleto no aparece en el directorio".
   const [estado, setEstado] = useState({ academica: false, proyecto: false, habilidades: false });
 
-  useEffect(() => {
-    if (!loading && !token) {
-      router.replace('/login');
-    }
-  }, [loading, token, router]);
-
   const refrescarEstado = useCallback(async () => {
-    if (!token || !user?.id) return;
+    if (!token || !user?.id || !autorizado) return;
     const [info, proyecto, habilidades] = await Promise.all([
       obtenerInformacionEstudiante(token, user.id).catch(() => null),
       obtenerProyectoDelEstudiante(token, user.id).catch(() => null),
@@ -63,13 +59,13 @@ export default function PerfilEstudiantePage() {
     setEstado({ academica, proyecto: proyectoOk, habilidades: habilidadesOk });
     setPerfilAcademicoListo(academica);
     setVerificandoPerfil(false);
-  }, [token, user?.id]);
+  }, [token, user?.id, autorizado]);
 
   useEffect(() => {
     let activo = true;
-    if (token && user?.id) refrescarEstado().finally(() => { if (!activo) return; });
+    if (token && user?.id && autorizado) refrescarEstado().finally(() => { if (!activo) return; });
     return () => { activo = false; };
-  }, [token, user?.id, refrescarEstado]);
+  }, [token, user?.id, autorizado, refrescarEstado]);
 
   // % de completitud del perfil (3 secciones obligatorias del RF-03).
   const completadas = [estado.academica, estado.proyecto, estado.habilidades].filter(Boolean).length;
@@ -80,7 +76,7 @@ export default function PerfilEstudiantePage() {
     router.replace('/login');
   }
 
-  if (loading || !token) {
+  if (loading || !token || verificando || !autorizado) {
     return <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">Cargando…</div>;
   }
 

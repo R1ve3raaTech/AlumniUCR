@@ -16,6 +16,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useRequireRole } from '@/lib/useRequireRole';
 import AlumniLogo from '@/components/AlumniLogo';
 import { crearDonacion, obtenerTiposPago, obtenerProyectos, subirComprobante } from '@/lib/donaciones';
 import styles from './donaciones.module.css';
@@ -26,7 +27,8 @@ const arr = (res: unknown) => (Array.isArray(res) ? res : (res as { data?: unkno
 
 export default function DonacionesPage() {
   const router = useRouter();
-  const { token, user, loading: authLoading } = useAuth();
+  const { token, user } = useAuth();
+  const { verificando, autorizado } = useRequireRole(['exalumno']);
 
   const [tiposPago, setTiposPago] = useState<Opcion[]>([]);
   const [proyectos, setProyectos] = useState<Opcion[]>([]);
@@ -47,11 +49,7 @@ export default function DonacionesPage() {
   const [archivo, setArchivo] = useState<File | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !token) router.replace('/login');
-  }, [authLoading, token, router]);
-
-  useEffect(() => {
-    if (!token) return;
+    if (!token || !autorizado) return;
     let activo = true;
     (async () => {
       try {
@@ -66,7 +64,7 @@ export default function DonacionesPage() {
       }
     })();
     return () => { activo = false; };
-  }, [token]);
+  }, [token, autorizado]);
 
   const setCampo = (campo: keyof typeof form, valor: string) => setForm((f) => ({ ...f, [campo]: valor }));
 
@@ -101,6 +99,10 @@ export default function DonacionesPage() {
     } finally {
       setEnviando(false);
     }
+  }
+
+  if (verificando || !autorizado) {
+    return <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">Cargando…</div>;
   }
 
   return (

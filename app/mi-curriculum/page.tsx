@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useRequireRole } from '@/lib/useRequireRole';
 import StudentNav from '@/components/StudentNav';
 import {
   obtenerMiCurriculum, calcularCompletitud, parseJsonArray, toJsonString,
@@ -38,7 +39,8 @@ const fmtMes = (f: string) => (f ? new Date(f + 'T00:00:00').toLocaleDateString(
 
 export default function MiCurriculumPage() {
   const router = useRouter();
-  const { token, loading: authLoading, signOut } = useAuth();
+  const { token, signOut } = useAuth();
+  const { verificando, autorizado } = useRequireRole(['estudiante']);
   const [cv, setCv] = useState<any>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -56,10 +58,6 @@ export default function MiCurriculumPage() {
   const [guardandoHab, setGuardandoHab] = useState(false);
   const [habGuardado, setHabGuardado] = useState(false);
   const [versiones, setVersiones] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!authLoading && !token) router.replace('/login');
-  }, [authLoading, token, router]);
 
   async function recargar() {
     const [data, vers] = await Promise.all([
@@ -81,7 +79,7 @@ export default function MiCurriculumPage() {
   }
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !autorizado) return;
     let activo = true;
     (async () => {
       try { if (activo) await recargar(); }
@@ -89,7 +87,7 @@ export default function MiCurriculumPage() {
       finally { if (activo) setCargando(false); }
     })();
     return () => { activo = false; };
-  }, [token]);
+  }, [token, autorizado]);
 
   const completitud = useMemo(() => calcularCompletitud(cv), [cv]);
   function handleSignOut() { signOut(); router.replace('/login'); }
@@ -158,6 +156,10 @@ export default function MiCurriculumPage() {
   const proyecto = cv?.seccion1_proyecto;
   const experiencias: Experiencia[] = cv?.seccion2_experiencias || [];
   const certificaciones: Certificacion[] = cv?.seccion4_certificaciones || [];
+
+  if (verificando || !autorizado) {
+    return <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">Cargando…</div>;
+  }
 
   return (
     <div className={styles.page}>

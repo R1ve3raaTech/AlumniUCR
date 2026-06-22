@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useRequireRole } from '@/lib/useRequireRole';
 import StudentNav from '@/components/StudentNav';
 import { obtenerMisAplicaciones, retirarAplicacion } from '@/lib/aplicaciones';
 import styles from './mis-aplicaciones.module.css';
@@ -41,18 +42,15 @@ const ESTADO_LABEL: Record<string, { label: string; clase: string }> = {
 
 export default function MisAplicacionesPage() {
   const router = useRouter();
-  const { token, loading: authLoading, signOut } = useAuth();
+  const { token, signOut } = useAuth();
+  const { verificando, autorizado } = useRequireRole(['estudiante']);
   const [lista, setLista] = useState<Aplicacion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [accion, setAccion] = useState<string | number | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !token) router.replace('/login');
-  }, [authLoading, token, router]);
-
-  useEffect(() => {
-    if (!token) return;
+    if (!token || !autorizado) return;
     let activo = true;
     (async () => {
       try {
@@ -65,7 +63,7 @@ export default function MisAplicacionesPage() {
       }
     })();
     return () => { activo = false; };
-  }, [token]);
+  }, [token, autorizado]);
 
   const ordenadas = useMemo(
     () => [...lista].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
@@ -85,6 +83,10 @@ export default function MisAplicacionesPage() {
     } finally {
       setAccion(null);
     }
+  }
+
+  if (verificando || !autorizado) {
+    return <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">Cargando…</div>;
   }
 
   return (
