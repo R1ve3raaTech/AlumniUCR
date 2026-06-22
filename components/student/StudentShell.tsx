@@ -6,7 +6,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
@@ -33,8 +32,7 @@ export default function StudentShell({
   nombre?: string;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { perfil, actualizar } = usePerfilEstudiante();
   const [editorFoto, setEditorFoto] = useState(false);
 
@@ -48,11 +46,6 @@ export default function StudentShell({
     .slice(0, 2)
     .join('')
     .toUpperCase();
-
-  const salir = () => {
-    signOut();
-    router.replace('/login');
-  };
 
   return (
     <div className="bg-background text-on-background font-body-base antialiased">
@@ -128,22 +121,17 @@ export default function StudentShell({
         </nav>
 
         <div className="flex shrink-0 flex-col gap-1 border-t border-outline-variant pt-6">
-          <button
-            type="button"
-            onClick={() => notificar('🚧 Función en desarrollo')}
-            className="flex items-center gap-4 rounded-lg p-4 text-left text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface"
+          <Link
+            href="/configuracion"
+            className={
+              active === 'configuracion'
+                ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
+                : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface'
+            }
           >
             <span className="material-symbols-outlined">settings</span>
             <span className="font-body-semibold">Configuración</span>
-          </button>
-          <button
-            type="button"
-            onClick={salir}
-            className="flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-error/10 hover:text-error"
-          >
-            <span className="material-symbols-outlined">logout</span>
-            <span className="font-body-semibold">Salir</span>
-          </button>
+          </Link>
         </div>
       </aside>
 
