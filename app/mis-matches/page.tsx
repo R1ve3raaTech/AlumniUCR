@@ -6,7 +6,6 @@ import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import StudentNav from '@/components/StudentNav';
 import ReportarPerfil from '@/components/ReportarPerfil';
-import MatchesEstudiante from '@/components/student/MatchesEstudiante';
 import {
   obtenerDirectorioEstudiantes,
   obtenerDirectorioExalumnos,
@@ -70,7 +69,6 @@ export default function MisMatchesPage() {
           const yo = (dirExa?.data ?? []).find((e: ExalumnoDir) => e.id === user.id) ?? null;
           setMiPerfilExa(yo);
         }
-        // El estudiante usa la pantalla rediseñada (MatchesEstudiante), estática.
       } catch {
         /* simple */
       } finally {
@@ -104,9 +102,6 @@ export default function MisMatchesPage() {
   }
 
   const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
-
-  // El estudiante ve la pantalla rediseñada (Stitch); el exalumno mantiene su vista.
-  if (rol === 'estudiante') return <MatchesEstudiante />;
 
   return (
     <div className="min-h-screen bg-ucr-surface font-brand-body text-ucr-on-surface">
