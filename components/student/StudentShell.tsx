@@ -13,15 +13,15 @@ import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
 import AvatarUploader from '@/components/student/AvatarUploader';
 
-// Departamentos del estudiante. Dashboard, Perfil, CV, Matches y Reportes activos.
-// Directorio y Comunidad están por crear → marcados 'proximamente'.
+// Departamentos del estudiante. Dashboard, Perfil, CV, Matches, Comunidad y
+// Reportes están activos. Directorio está por crear → marcado 'proximamente'.
 const NAV = [
   { key: 'dashboard', href: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
   { key: 'perfil', href: '/perfil-estudiante', icon: 'person', label: 'Mi Perfil' },
   { key: 'cv', href: '/mi-curriculum', icon: 'description', label: 'CV + IA' },
   { key: 'matches', href: '/mis-matches', icon: 'handshake', label: 'Matches' },
   { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio', proximamente: true },
-  { key: 'comunidad', href: '#', icon: 'group', label: 'Comunidad', proximamente: true },
+  { key: 'comunidad', href: '/comunidad', icon: 'group', label: 'Comunidad' },
   { key: 'reportes', href: '/reportes', icon: 'report', label: 'Reportes' },
 ];
 
