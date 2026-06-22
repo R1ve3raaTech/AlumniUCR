@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { enviarConsultaSoporte } from '@/lib/consultasSoporte';
+import { obtenerFaqs } from '@/lib/faqs';
 import styles from './ayuda.module.css';
 
 // Registro de plugins GSAP
@@ -35,27 +36,41 @@ const ITicket = ({ style }: { style?: React.CSSProperties }) => (<svg style={sty
 const IMessageSquare = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (<svg className={className} style={style} {...base}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>);
 
 // ─── Datos ────────────────────────────────────────────────────────────────
-const CATEGORIAS = [
-  { icon: <IProfile />, titulo: 'Gestión de Perfil', texto: 'Actualiza tu información académica y profesional.' },
-  { icon: <ISchool />, titulo: 'Mentorías', texto: 'Guía para mentores y mentees sobre el proceso.' },
-  { icon: <IHub />, titulo: 'Proyectos', texto: 'Colaboración y publicación de iniciativas Alumni.' },
-  { icon: <ICalendar />, titulo: 'Eventos y Red', texto: 'Gestión de inscripciones y networking regional.' },
-  { icon: <IShield />, titulo: 'Seguridad', texto: 'Recuperación de cuenta y privacidad de datos.' },
-];
+// Las preguntas y categorías vienen del backend (fuente única versionada,
+// /api/faqs). Aquí solo mapeamos el ícono de cada gestión por su título.
+interface Faq { categoria: string; pregunta: string; respuesta: string; }
+interface Categoria { key: string; titulo: string; texto: string; }
 
-const FAQS = [
-  { categoria: 'Mentorías', pregunta: '¿Cómo me convierto en mentor?', respuesta: 'Para convertirte en mentor, debes ir a tu perfil, seleccionar la pestaña "Mentorías" y completar el formulario de postulación. Revisaremos tu trayectoria profesional y académica en la UCR para validar tu perfil.' },
-  { categoria: 'Proyectos', pregunta: '¿Quién puede ver mis proyectos?', respuesta: 'Tú controlas la visibilidad. Por defecto, los proyectos son visibles para la red verificada de Alumni UCR. Puedes ajustar la privacidad para que solo usuarios con intereses específicos puedan ver tus colaboraciones activas.' },
-  { categoria: 'Seguridad', pregunta: '¿Cómo recupero mi cuenta institucional?', respuesta: 'Si has perdido acceso a tu cuenta, usa la opción "¿Olvidaste tu contraseña?" en la pantalla de inicio de sesión para recibir un enlace de restablecimiento. Si el problema persiste con tu correo @ucr.ac.cr, contacta al Centro de Informática.' },
-  { categoria: 'Gestión de Perfil', pregunta: '¿Cómo actualizo mi currículum?', respuesta: 'Dirígete a la configuración de tu cuenta y haz clic en "Perfil Profesional". Allí podrás subir un nuevo documento PDF o enlazar directamente tu perfil de LinkedIn.' },
-  { categoria: 'Eventos y Red', pregunta: '¿Dónde encuentro eventos de networking?', respuesta: 'Todos los eventos presenciales y virtuales organizados por Alumni UCR se publican en el boletín semanal y en la pestaña "Eventos" del Navbar principal.' },
-  { categoria: 'Mentorías', pregunta: '¿Puedo tener más de un mentor?', respuesta: 'Actualmente, el sistema permite conectar activamente con un máximo de 2 mentores simultáneamente para asegurar la calidad y el compromiso en el proceso de guía.' },
-];
+const ICONOS: Record<string, React.ReactNode> = {
+  'Registro y Cuenta': <IProfile />,
+  'Estudiantes y Becas': <ISchool />,
+  'Exalumnos y Mentorías': <IHub />,
+  'Proyectos y Financiamiento': <ICalendar />,
+  'Donaciones': <ITicket />,
+  'Seguridad y Privacidad': <IShield />,
+};
+const ICONO_DEFECTO = <IHub />;
 
 export default function AyudaPage() {
   const [busqueda, setBusqueda] = useState('');
   const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
   const [abierto, setAbierto] = useState<number | null>(null);
+
+  // ─── Preguntas frecuentes (desde el backend, con caché de resiliencia) ──
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [cargandoFaqs, setCargandoFaqs] = useState(true);
+
+  useEffect(() => {
+    let activo = true;
+    obtenerFaqs().then((d) => {
+      if (!activo) return;
+      setCategorias(d?.categorias ?? []);
+      setFaqs(d?.faqs ?? []);
+      setCargandoFaqs(false);
+    });
+    return () => { activo = false; };
+  }, []);
 
   // ─── Consulta directa al administrador (Centro de Soporte) ──────────────
   const [consulta, setConsulta] = useState({ nombre: '', apellidos: '', cedula: '', telefono: '', mensaje: '' });
@@ -101,7 +116,7 @@ export default function AyudaPage() {
 
   // ─── Filtrado Predictivo ──────────────────────────────────────────────
   const faqsFiltradas = useMemo(() => {
-    let filtradas = FAQS;
+    let filtradas = faqs;
     // 1. Filtro por categoría (clic en tarjeta)
     if (categoriaActiva) {
       filtradas = filtradas.filter(f => f.categoria === categoriaActiva);
@@ -114,7 +129,7 @@ export default function AyudaPage() {
       );
     }
     return filtradas;
-  }, [busqueda, categoriaActiva]);
+  }, [busqueda, categoriaActiva, faqs]);
 
   // ─── Animación GSAP: Ocultar/Mostrar Categorías al Buscar ─────────────
   useEffect(() => {
@@ -286,28 +301,36 @@ export default function AyudaPage() {
         </section>
 
         {/* Categorías de soporte (Desaparecen al buscar) */}
-        <section className={styles.categorias} ref={categoriasRef}>
-          {CATEGORIAS.map((c) => {
+        <section className={styles.categorias} ref={categoriasRef} aria-label="Categorías de ayuda">
+          {categorias.map((c) => {
             const isActive = categoriaActiva === c.titulo;
             return (
-              <article 
-                key={c.titulo} 
+              <article
+                key={c.titulo}
                 className={styles.card}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isActive}
+                aria-label={`Filtrar preguntas de ${c.titulo}`}
                 onClick={() => handleCardClick(c.titulo)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(c.titulo); }
+                }}
                 style={{
                   borderColor: isActive ? 'var(--brand-esmeralda)' : 'rgba(0, 76, 99, 0.1)',
                   boxShadow: isActive ? '0 12px 30px -10px rgba(0, 102, 135, 0.3)' : '',
                   transform: isActive ? 'translateY(-0.5rem)' : '',
                 }}
               >
-                <span 
+                <span
                   className={styles.cardIcon}
+                  aria-hidden
                   style={{
                     backgroundColor: isActive ? 'var(--brand-esmeralda)' : '',
                     color: isActive ? 'var(--brand-blanco)' : '',
                   }}
                 >
-                  {c.icon}
+                  {ICONOS[c.titulo] ?? ICONO_DEFECTO}
                 </span>
                 <h3 className={styles.cardTitle}>{c.titulo}</h3>
                 <p className={styles.cardText}>{c.texto}</p>
@@ -327,7 +350,11 @@ export default function AyudaPage() {
             </div>
 
             <div className={styles.faqList}>
-              {faqsFiltradas.length === 0 ? (
+              {cargandoFaqs ? (
+                <p role="status" aria-live="polite" style={{ padding: '2.5rem 0', textAlign: 'center', color: 'var(--ucr-on-surface-variant)', fontWeight: 600 }}>
+                  Cargando preguntas frecuentes…
+                </p>
+              ) : faqsFiltradas.length === 0 ? (
                 <div ref={noResultsRef} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', background: 'var(--ucr-surface)', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.5rem', padding: '1rem 1.5rem', marginTop: '1rem', boxShadow: '0 4px 15px -5px rgba(0,0,0,0.05)', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div className="no-results-alert-icon" style={{ background: 'rgba(243, 75, 38, 0.1)', color: 'var(--brand-naranja)', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
@@ -365,20 +392,26 @@ export default function AyudaPage() {
                     >
                       <button
                         type="button"
+                        id={`faq-q-${i}`}
                         className={styles.accordionBtn}
                         onClick={() => toggle(i)}
                         aria-expanded={activo}
+                        aria-controls={`faq-a-${i}`}
                       >
                         <span className={styles.accordionQ}>{f.pregunta}</span>
-                        <IChevron 
-                          className={styles.chevron} 
-                          style={{ 
-                            transform: activo ? 'rotate(180deg)' : 'none', 
-                            color: activo ? 'var(--brand-esmeralda)' : '' 
-                          }} 
+                        <IChevron
+                          className={styles.chevron}
+                          style={{
+                            transform: activo ? 'rotate(180deg)' : 'none',
+                            color: activo ? 'var(--brand-esmeralda)' : ''
+                          }}
                         />
                       </button>
-                      <div 
+                      <div
+                        id={`faq-a-${i}`}
+                        role="region"
+                        aria-labelledby={`faq-q-${i}`}
+                        aria-hidden={!activo}
                         className={styles.accordionContent}
                         ref={(el) => { contentRefs.current[i] = el; }}
                       >
