@@ -28,6 +28,7 @@ const NAV = [
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
   { key: 'donaciones', icon: 'volunteer_activism', label: 'Donaciones', href: '/donaciones' },
   { key: 'posiciones', icon: 'work', label: 'Posiciones', href: '/mis-posiciones' },
+  { key: 'comunidad', icon: 'forum', label: 'Comunidad', href: '/blog' },
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
 ];
 
