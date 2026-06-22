@@ -1,9 +1,9 @@
 'use client';
 
-// Editor de foto de perfil del estudiante: subir desde galería/archivo (Drive
-// descargado) o pegar una URL de internet, ajustar al círculo (zoom + arrastrar)
-// y guardar. Devuelve un data URL recortado (256×256) que se guarda en la fuente
-// única (y de ahí a Supabase), vinculado a la persona.
+// Editor de foto de perfil del estudiante: subir desde galería/archivo,
+// ajustar al círculo (zoom + arrastrar) y guardar, o eliminar la foto actual.
+// Devuelve un data URL recortado (256×256) que se guarda en la fuente única
+// (y de ahí a Supabase), vinculado a la persona.
 
 import React, { useRef, useState } from 'react';
 
@@ -22,7 +22,6 @@ export default function AvatarUploader({
   onCerrar: () => void;
 }) {
   const [src, setSrc] = useState('');
-  const [url, setUrl] = useState('');
   const [base, setBase] = useState({ w: S, h: S });
   const [zoom, setZoom] = useState(1);
   const [off, setOff] = useState({ x: 0, y: 0 });
@@ -109,6 +108,11 @@ export default function AvatarUploader({
     onCerrar();
   };
 
+  const eliminar = () => {
+    onGuardar('');
+    onCerrar();
+  };
+
   return (
     <div className="fixed inset-0 z-[120] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal>
       <div className="w-full max-w-md rounded-2xl bg-surface-container-lowest p-6 shadow-2xl">
@@ -151,36 +155,31 @@ export default function AvatarUploader({
               <span className="material-symbols-outlined text-on-surface-variant">zoom_in</span>
             </div>
           )}
-          <p className="text-xs text-on-surface-variant">{src ? 'Arrastrá para reposicionar · deslizá para hacer zoom' : 'Subí una foto o pegá una URL de internet'}</p>
+          <p className="text-xs text-on-surface-variant">{src ? 'Arrastrá para reposicionar · deslizá para hacer zoom' : 'Subí una foto desde tu galería o archivo'}</p>
         </div>
 
-        {/* Fuentes */}
+        {/* Fuente */}
         <div className="mt-4 space-y-3">
           <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-bold text-on-secondary">
             <span className="material-symbols-outlined text-base">upload</span> Subir desde galería / archivo
             <input type="file" accept="image/*" className="hidden" onChange={onArchivo} />
           </label>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="o pegá una URL de internet…"
-              className="flex-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30"
-            />
-            <button type="button" onClick={() => url.trim() && cargarImagen(url.trim(), true)} className="rounded-lg border border-outline-variant px-3 py-2 text-sm font-bold text-primary">
-              Cargar
-            </button>
-          </div>
           {error && <p className="text-xs text-error">{error}</p>}
         </div>
 
         {/* Acciones */}
-        <div className="mt-6 flex justify-end gap-2">
-          <button type="button" onClick={onCerrar} className="rounded-lg px-4 py-2 text-sm font-bold text-on-surface-variant">Cancelar</button>
-          <button type="button" onClick={guardar} disabled={!src} className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-bold text-on-primary disabled:opacity-40">
-            <span className="material-symbols-outlined text-base">check</span> Guardar foto
-          </button>
+        <div className="mt-6 flex items-center justify-between gap-2">
+          {fotoActual && !src && (
+            <button type="button" onClick={eliminar} className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-error hover:bg-error/10">
+              <span className="material-symbols-outlined text-base">delete</span> Eliminar foto
+            </button>
+          )}
+          <div className="ml-auto flex gap-2">
+            <button type="button" onClick={onCerrar} className="rounded-lg px-4 py-2 text-sm font-bold text-on-surface-variant">Cancelar</button>
+            <button type="button" onClick={guardar} disabled={!src} className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-bold text-on-primary disabled:opacity-40">
+              <span className="material-symbols-outlined text-base">check</span> Guardar foto
+            </button>
+          </div>
         </div>
       </div>
     </div>
