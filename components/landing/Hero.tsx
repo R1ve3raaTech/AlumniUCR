@@ -16,7 +16,7 @@ export default function Hero() {
     <section id="inicio" className={styles.hero}>
       <video
         className={styles.heroBgVideo}
-        src="/images/video-ucr.mp4"
+        src="/images/UCR.mp4"
         autoPlay
         loop
         muted
