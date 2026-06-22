@@ -24,7 +24,7 @@ const GUSTAVO = {
   nombre: 'Gustavo Machado',
 };
 const ID_ROL_EXALUMNO = 2;
-const FOTO = '/images/gustavo-machado.jpg'; // archivo a colocar en FE public/images
+const FOTO = '/images/gustavo-machado.png'; // archivo en FE public/images
 
 // ─── Helpers de catálogo (elige por nombre, con respaldo) ──────────────────
 const buscar = (lista, claves) => {
