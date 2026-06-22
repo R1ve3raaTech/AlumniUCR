@@ -154,7 +154,7 @@ const confirmarExalumno = async (userId, token) => {
 
   const { data: perfil, error } = await supabase
     .from('usuarios')
-    .update({ confirmado: true, estado: 'activo' })
+    .update({ confirmado: true, estado: 'pendiente' })
     .eq('id', userId)
     .select('nombre, correo_electronico')
     .maybeSingle();

@@ -68,6 +68,11 @@ export default function GlobalChatbot() {
   const [cargando, setCargando] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const estadoRef = useRef({ token, rol, pathname, mensajes, cargando });
+
+  useEffect(() => {
+    estadoRef.current = { token, rol, pathname, mensajes, cargando };
+  }, [token, rol, pathname, mensajes, cargando]);
 
   // 1. Obtener y actualizar el rol del usuario en base a su sesión activa
   useEffect(() => {
@@ -102,43 +107,34 @@ export default function GlobalChatbot() {
     });
   }, [rol, pathname]);
 
-  // 3. Listener para abrir el chatbot desde botones de páginas específicas (ej. ayuda)
-  useEffect(() => {
-    const handleToggle = () => setChatAbierto(true);
-    window.addEventListener('open-global-chatbot', handleToggle);
-    return () => window.removeEventListener('open-global-chatbot', handleToggle);
-  }, []);
+  const enviarMensajeEspecifico = async (texto: string) => {
+    const { token: t, rol: r, pathname: p, mensajes: m, cargando: c } = estadoRef.current;
+    if (!texto.trim() || c) return;
 
-  // 4. Scroll automático a los nuevos mensajes
-  useEffect(() => {
-    if (chatAbierto) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [mensajes, cargando, chatAbierto]);
+    const msgUsuario = texto.trim();
+    let histActualizado: Array<{ role: 'user' | 'assistant'; text: string }> = [];
 
-  const enviarMensaje = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nuevoMensaje.trim() || cargando) return;
+    setMensajes((actual) => {
+      histActualizado = [...actual, { role: 'user' as const, text: msgUsuario }];
+      return histActualizado;
+    });
 
-    const msgUsuario = nuevoMensaje.trim();
-    setNuevoMensaje('');
-
-    // Actualizar historial local
-    const nuevoHistorial = [...mensajes, { role: 'user' as const, text: msgUsuario }];
-    setMensajes(nuevoHistorial);
     setCargando(true);
 
     try {
-      // Llamar al backend pasando el historial y el contexto dinámico actual
+      // Pequeño retardo para asegurar que la actualización de estado ha finalizado
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       const data = await apiFetch('/claude/chat', {
         method: 'POST',
         body: {
-          historial: nuevoHistorial,
+          historial: histActualizado.length > 0 ? histActualizado : [...m, { role: 'user' as const, text: msgUsuario }],
           contexto: {
-            rol: rol,
-            pathname: pathname,
+            rol: r,
+            pathname: p,
           },
         },
+        token: t || undefined,
       });
 
       if (data && data.success) {
@@ -158,6 +154,37 @@ export default function GlobalChatbot() {
     } finally {
       setCargando(false);
     }
+  };
+
+  // 3. Listener para abrir el chatbot desde botones de páginas específicas (ej. ayuda, directorio)
+  useEffect(() => {
+    const handleToggle = (e: Event) => {
+      setChatAbierto(true);
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.mensaje) {
+        setTimeout(() => {
+          enviarMensajeEspecifico(customEvent.detail.mensaje);
+        }, 100);
+      }
+    };
+    window.addEventListener('open-global-chatbot', handleToggle);
+    return () => window.removeEventListener('open-global-chatbot', handleToggle);
+  }, []);
+
+  // 4. Scroll automático a los nuevos mensajes
+  useEffect(() => {
+    if (chatAbierto) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [mensajes, cargando, chatAbierto]);
+
+  const enviarMensaje = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoMensaje.trim() || cargando) return;
+
+    const msg = nuevoMensaje;
+    setNuevoMensaje('');
+    await enviarMensajeEspecifico(msg);
   };
 
   // Parsea negritas básicas **texto** y saltos de línea del markdown
