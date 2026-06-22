@@ -46,6 +46,7 @@ export default function ExalumnoDashboard({
   const [full, setFull] = useState<any | null>(null);
   const [cat, setCat] = useState<any | null>(null);
   const [donaciones, setDonaciones] = useState<Donacion[] | null>(null);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -98,7 +99,10 @@ export default function ExalumnoDashboard({
   return (
     <div className="min-h-screen bg-background font-body-base text-on-background antialiased">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6">
+      {menuAbierto && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
+      )}
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
         <Link href="/" className="mb-8 flex items-center justify-center py-2" aria-label="Alumni UCR — inicio">
           <AlumniLogo height={52} />
         </Link>
@@ -135,8 +139,16 @@ export default function ExalumnoDashboard({
       </aside>
 
       {/* Header */}
-      <header className="fixed left-64 right-0 top-0 z-40 h-16 border-b border-outline-variant bg-surface-container-lowest">
-        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-8">
+      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
+        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-8">
+          <button
+            type="button"
+            onClick={() => setMenuAbierto(true)}
+            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-variant lg:hidden"
+            aria-label="Abrir menú"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
           <div className="hidden max-w-md flex-1 items-center gap-2 rounded-full bg-surface-container px-4 py-2 md:flex">
             <span className="material-symbols-outlined text-on-surface-variant">search</span>
             <input className="w-full border-none bg-transparent text-sm outline-none placeholder:text-on-surface-variant" placeholder="Buscar mentores, egresados o eventos..." />
@@ -155,7 +167,7 @@ export default function ExalumnoDashboard({
       </header>
 
       {/* Main */}
-      <main className="ml-64 min-h-screen px-8 pb-12 pt-24">
+      <main className="ml-0 min-h-screen px-4 pb-12 pt-24 sm:px-8 lg:ml-64">
         <div className="mx-auto max-w-[1440px] space-y-6">
           {/* Aviso de aprobación */}
           {!aprobado && (
@@ -331,7 +343,7 @@ export default function ExalumnoDashboard({
         </div>
       </main>
 
-      <footer className="ml-64 flex items-center justify-center gap-3 border-t border-outline-variant bg-surface-container-lowest py-5 text-xs text-on-surface-variant">
+      <footer className="ml-0 flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant bg-surface-container-lowest py-5 text-center text-xs text-on-surface-variant lg:ml-64">
         <AlumniLogo height={26} /> © 2026 Alumni UCR · Universidad de Costa Rica
       </footer>
     </div>

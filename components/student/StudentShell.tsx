@@ -35,6 +35,7 @@ export default function StudentShell({
   const { user } = useAuth();
   const { perfil, actualizar } = usePerfilEstudiante();
   const [editorFoto, setEditorFoto] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const correo = user?.email ?? '';
   const nombrePerfil = `${perfil.nombre} ${perfil.apellidos}`.trim();
@@ -50,7 +51,12 @@ export default function StudentShell({
   return (
     <div className="bg-background text-on-background font-body-base antialiased">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6">
+      {/* Overlay para cerrar el menú en móvil */}
+      {menuAbierto && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
+      )}
+
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="mb-8 flex w-full shrink-0 items-center justify-center py-2">
           <Link href="/dashboard" aria-label="UCR Conecta — inicio">
             <AlumniLogo height={56} />
@@ -136,9 +142,17 @@ export default function StudentShell({
       </aside>
 
       {/* Header */}
-      <header className="fixed left-64 right-0 top-0 z-40 h-16 border-b border-outline-variant bg-surface-container-lowest">
-        <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between px-8">
-          <div className="max-w-xl flex-1">
+      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
+        <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between gap-2 px-4 sm:px-8">
+          <button
+            type="button"
+            onClick={() => setMenuAbierto(true)}
+            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-variant lg:hidden"
+            aria-label="Abrir menú"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+          <div className="hidden max-w-xl flex-1 sm:block">
             <div className="relative">
               <svg
                 className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
@@ -173,7 +187,7 @@ export default function StudentShell({
       </header>
 
       {/* Main */}
-      <main className="ml-64 min-h-screen pt-16">{children}</main>
+      <main className="ml-0 min-h-screen pt-16 lg:ml-64">{children}</main>
 
       <AvatarUploader
         abierto={editorFoto}
