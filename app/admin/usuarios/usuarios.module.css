@@ -257,23 +257,23 @@
 /* ── Modal de detalle completo ───────────────────────── */
 .modalDetalle {
   background: #fff;
-  border-radius: 18px;
-  width: min(520px, 96vw);
+  border-radius: 16px;
+  width: min(340px, 96vw);
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,30,45,.3);
+  box-shadow: 0 16px 40px rgba(0,30,45,.25);
 }
 
 .detalleBody {
-  padding: 32px 28px 24px;
+  padding: 16px 14px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .detalleAvatar {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--ucr-celeste), var(--ucr-primary));
   display: flex;
@@ -282,19 +282,19 @@
   color: #fff;
   font-family: var(--font-ucr-display);
   font-weight: 800;
-  font-size: 1.6rem;
-  margin-bottom: 8px;
-  box-shadow: 0 8px 20px rgba(84,188,235,.35);
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 12px rgba(84,188,235,.3);
 }
 
 .detalleNombre {
   font-family: var(--font-ucr-display);
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   color: var(--ucr-primary);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   justify-content: center;
   text-align: center;
@@ -305,9 +305,9 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 20px;
+  margin-top: 12px;
   border: 1px solid var(--ucr-surface-variant);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -315,8 +315,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  font-size: .9rem;
+  padding: 8px 12px;
+  font-size: .8rem;
   border-bottom: 1px solid var(--ucr-surface-variant);
 }
 .detalleItem:last-child { border-bottom: none; }
@@ -324,16 +324,16 @@
 
 .detalleLabel { color: var(--ucr-on-surface-variant); font-weight: 500; }
 .detalleVal { color: var(--ucr-on-surface); font-weight: 600; text-align: right; word-break: break-all; }
-.detalleValMono { font-family: monospace; font-size: .8rem; color: var(--ucr-on-surface-variant); text-align: right; word-break: break-all; }
+.detalleValMono { font-family: monospace; font-size: .7rem; color: var(--ucr-on-surface-variant); text-align: right; word-break: break-all; }
 
 /* ── Resumen IA ─────────────────────────────────────── */
 .resumenIA {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 12px;
   background: linear-gradient(135deg, rgba(0, 52, 69, 0.04) 0%, rgba(84, 188, 235, 0.06) 100%);
   border: 1px solid rgba(84, 188, 235, 0.25);
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 12px;
+  padding: 12px;
   position: relative;
   overflow: hidden;
 }
@@ -350,13 +350,13 @@
 .resumenIAHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 8px;
   font-family: var(--font-ucr-display);
-  font-size: .8rem;
+  font-size: .7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--ucr-primary);
 }
 
@@ -369,9 +369,9 @@
 }
 
 .resumenTexto {
-  font-size: .9rem;
+  font-size: .8rem;
   color: var(--ucr-on-surface);
-  line-height: 1.7;
+  line-height: 1.5;
   margin: 0;
   font-style: italic;
 }
