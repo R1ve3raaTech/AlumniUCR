@@ -3,6 +3,7 @@
  * Selecciona dinámicamente el Prompt de Sistema según el rol y pathname del usuario.
  */
 const claude = require('../config/claude');
+const supabase = require('../config/supabase');
 
 // ─── Catálogo de Prompts de Sistema para cada Contexto ──────────────────
 const PROMPTS = {
@@ -188,6 +189,78 @@ const obtenerPerfilExalumno = async (idExalumno) => {
 };
 
 /**
+ * Helper para formatear el currículum (CV) del estudiante de forma legible para el prompt de Claude.
+ */
+const formatearCvParaPrompt = (cv) => {
+  if (!cv) return 'Sin currículum registrado en el sistema.';
+  
+  const academica = cv.seccion1_academica ? `
+- Promedio ponderado: ${cv.seccion1_academica.promedio_ponderado || 'No especificado'}
+- Cursos relevantes: ${cv.seccion1_academica.cursos_relevantes || 'No especificados'}
+  ` : 'No especificada.';
+
+  const experiencias = (cv.seccion2_experiencias || []).map(e => {
+    let bullets = [];
+    try {
+      if (e.bullets) {
+        bullets = typeof e.bullets === 'string' ? JSON.parse(e.bullets) : e.bullets;
+      }
+    } catch (err) {}
+    return `
+* Rol: ${e.titulo} en ${e.organizacion || 'N/A'}
+  - Tipo: ${e.tipo}
+  - Periodo: ${e.fecha_inicio} - ${e.fecha_fin || 'actual'}
+  - Descripción: ${e.descripcion || ''}
+  - Logros: ${bullets.length > 0 ? bullets.join(', ') : 'Ninguno'}
+    `;
+  }).join('\n') || 'Ninguna registrada.';
+
+  const habs = cv.seccion3_habilidades;
+  let tecnicas = 'No especificadas';
+  let blandas = 'No especificadas';
+  let idiomas = 'No específicos';
+  if (habs) {
+    try {
+      if (habs.tecnicas) {
+        const tObj = typeof habs.tecnicas === 'string' ? JSON.parse(habs.tecnicas) : habs.tecnicas;
+        tecnicas = Array.isArray(tObj) ? tObj.map(h => `${h.nombre} (${h.nivel})`).join(', ') : JSON.stringify(tObj);
+      }
+    } catch (err) {}
+    try {
+      blandas = habs.blandas || 'No especificadas';
+    } catch (err) {}
+    try {
+      if (habs.idiomas) {
+        const iObj = typeof habs.idiomas === 'string' ? JSON.parse(habs.idiomas) : habs.idiomas;
+        idiomas = Array.isArray(iObj) ? iObj.map(i => `${i.idioma} (${i.nivel})`).join(', ') : JSON.stringify(iObj);
+      }
+    } catch (err) {}
+  }
+
+  const certificaciones = (cv.seccion4_certificaciones || []).map(c => `
+- Certificación: ${c.nombre} por ${c.institucion || ''} (${c.fecha || ''})
+  `).join('\n') || 'Ninguna registrada.';
+
+  return `
+--- DETALLES DEL CURRÍCULUM DEL ESTUDIANTE ---
+ACADÉMICO:
+${academica}
+
+EXPERIENCIA LABORAL Y PROYECTOS:
+${experiencias}
+
+HABILIDADES:
+- Técnicas: ${tecnicas}
+- Blandas: ${blandas}
+- Idiomas: ${idiomas}
+
+CERTIFICACIONES Y LOGROS:
+${certificaciones}
+---------------------------------------------
+  `;
+};
+
+/**
  * Busca a un estudiante por aproximación de nombre y obtiene su perfil.
  */
 const buscarEstudiantePorNombre = async (nombreBuscado) => {
@@ -224,12 +297,22 @@ const buscarEstudiantePorNombre = async (nombreBuscado) => {
       .eq('id_estudiante', match.id)
       .maybeSingle();
 
+    // Cargar CV completo
+    let cv = null;
+    try {
+      const cvService = require('./cv.service');
+      cv = await cvService.obtenerCvCompleto(match.id);
+    } catch (cvError) {
+      console.warn('⚠️ No se pudo obtener el CV del estudiante:', cvError.message);
+    }
+
     return {
       id: match.id,
       nombre: match.nombre,
       correo: match.correo_electronico,
       onboarding: onboarding?.datos || {},
-      proyecto: proyecto || {}
+      proyecto: proyecto || {},
+      cv: cv || {}
     };
   } catch (e) {
     console.error('Error al buscar estudiante por nombre:', e);
@@ -307,7 +390,7 @@ const generarRespuestaSoporte = async (historial, contexto, usuarioAutenticado) 
 Eres el asesor virtual oficial de "Alumni UCR — Conectando Talento", especializado en mentoría y orientación profesional.
 Te estás comunicando con el exalumno y mentor verificado: ${usuarioAutenticado.profile?.nombre || 'Exalumno/Mentor'}.
 
-Has recibido la solicitud de analizar el perfil y el match con el/la siguiente estudiante:
+Has recibido la solicitud de analizar el perfil y la compatibilidad con el/la siguiente estudiante:
 - Nombre Completo: ${estudiante.nombre}
 - Carrera cursada: ${estudiante.onboarding.carrera || estudiante.proyecto.carrera || 'No especificada'}
 - Sede: ${estudiante.onboarding.sede || 'No especificada'}
@@ -319,11 +402,13 @@ INFORMACIÓN DEL PROYECTO ACTUAL DEL ESTUDIANTE:
 - Porcentaje de Avance: ${estudiante.proyecto.porcentaje_avance || estudiante.onboarding.proyectoAvance || 0}%
 - Áreas Temáticas: ${(estudiante.onboarding.proyectoAreas || []).join(', ') || 'No especificadas'}
 
-GUSTOS, INTERESES Y HABILIDADES DEL ESTUDIANTE:
+GUSTOS, INTERESES Y HABILIDADES GENERALES:
 - Intereses Personales y Hobbies: ${(estudiante.onboarding.intereses || []).join(', ') || 'No especificados'}
-- Habilidades Técnicas: ${estudiante.onboarding.habilidadesTecnicas || 'No especificadas'}
-- Habilidades Blandas (Perfil Emocional): ${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}
+- Habilidades Técnicas (Generales): ${estudiante.onboarding.habilidadesTecnicas || 'No especificadas'}
+- Habilidades Blandas (Generales): ${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}
 - Biografía / Resumen: ${estudiante.onboarding.resumen || 'No especificado'}
+
+${formatearCvParaPrompt(estudiante.cv)}
 
 PERFIL DEL MENTOR EXALUMNO (TÚ):
 - Empresa: ${exalumno?.empresa || 'No especificada'}
@@ -334,14 +419,24 @@ PERFIL DEL MENTOR EXALUMNO (TÚ):
 - Biografía/Trayectoria: ${exalumno?.biografia || 'No especificada'}
 
 TU MISIÓN:
-Genera un informe detallado, cálido, estructurado y sumamente motivador para el exalumno. Analiza las sinergias emocionales y profesionales entre ambos.
+Genera un informe detallado, estructurado y sumamente motivador para el exalumno. Realiza un análisis profundo basado en la Habilidad de Compatibilidad (Match) evaluando las 4 dimensiones clave de afinidad:
+1. Alineación Académica (hasta 25 pts)
+2. Sinergia del Proyecto y Habilidades Técnicas (hasta 25 pts)
+3. Ajuste de Rol Profesional (hasta 25 pts)
+4. Lado Humano (Habilidades Blandas e Intereses) (hasta 25 pts)
+
+Asigna una puntuación (0 a 25) a cada una de ellas y muestra la puntuación total de compatibilidad sobre 100.
 
 DEBES SEGUIR ESTRICTAMENTE ESTA ESTRUCTURA EN TU RESPUESTA:
-1. **Presentación de la Ficha del Estudiante**: Breve resumen de quién es, su carrera, sede y su proyecto de graduación (TFG) actual.
-2. **Gustos y Aficiones (El lado humano)**: Describe en detalle los intereses personales y gustos del estudiante (${(estudiante.onboarding.intereses || []).join(', ') || 'No especificados'}). Destaca sus pasiones extralaborales y qué le gusta hacer en su tiempo libre.
-3. **Match Emocional y de Habilidades Blandas**: Analiza la afinidad de personalidad y compatibilidad emocional. Cruza las habilidades blandas del estudiante (${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}) con tu biografía y experiencia como mentor. Explica el tipo de relación constructiva, empática y de apoyo mutuo que pueden formar.
-4. **Sinergia Profesional y Propuesta de Mentoría**: Analiza la compatibilidad técnica y profesional. ¿Cómo tus conocimientos en ${exalumno?.areas?.join(', ') || 'tus especialidades'} y tu puesto de ${exalumno?.cargo || 'profesional'} en ${exalumno?.empresa || 'tu empresa'} pueden ayudar de manera directa a este estudiante en su proyecto de graduación y en su futura inserción laboral?
-5. **Cómo Contactar**: Indica amigablemente que si la afinidad es alta, puede presionar el botón **"Ofrecer apoyo"** en la tarjeta del estudiante dentro del directorio para enviarle una solicitud de contacto formal y poder revelar su información de beca y correo electrónico.
+1. **🌟 Ficha del Match**: Resumen rápido de quién es el estudiante, su carrera y sede.
+2. **Score de Compatibilidad Total**: Mostrar el puntaje global calculado sobre 100, desglosado en las 4 dimensiones (Alineación Académica, Sinergia Técnica, Proyección Profesional, y Lado Humano) con su respectiva justificación de puntos.
+3. **Análisis Detallado de Afinidad**:
+   - **Alineamiento Académico e Interdisciplinariedad**: Cruce de carreras, facultad y sede UCR.
+   - **Sinergia del Proyecto y Habilidades del CV**: Análisis cruzado de su TFG e historial de tecnologías y certificaciones en el currículum con tu área.
+   - **Inserción y Proyección Laboral**: Cómo tu cargo actual y experiencia en ${exalumno?.empresa || 'tu industria'} apoyan las aspiraciones de cargo deseado del estudiante.
+   - **Compatibilidad Personal (El lado humano)**: Intereses compartidos y habilidades blandas complementarias.
+4. **🛠️ Plan de Mentoría y Temas Sugeridos**: 2 o 3 temas clave en los que pueden enfocarse según sus perfiles y CVs.
+5. **Cómo Contactar**: Indica amigablemente que si la afinidad es alta, puede presionar el botón **"Ofrecer apoyo"** en la tarjeta del estudiante dentro del directorio para enviarle una solicitud de contacto formal.
 
 Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sumamente empático, integrador y entusiasta.
 `;
