@@ -159,15 +159,11 @@ export default function StudentShell({
       {/* Header */}
       <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
         <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between gap-2 px-4 sm:px-8">
-          <button
-            type="button"
-            onClick={() => setMenuAbierto(true)}
-            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-variant lg:hidden"
-            aria-label="Abrir menú"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <div className="hidden max-w-xl flex-1 sm:block">
+          {/* En móvil el logo va en el header (el sidebar está oculto). */}
+          <Link href="/dashboard" className="lg:hidden" aria-label="Inicio">
+            <AlumniLogo className="!h-8 w-auto" />
+          </Link>
+          <div className="hidden max-w-xl flex-1 lg:block">
             <div className="relative">
               <svg
                 className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
@@ -202,7 +198,35 @@ export default function StudentShell({
       </header>
 
       {/* Main */}
-      <main className="ml-0 min-h-screen pt-16 lg:ml-64">{children}</main>
+      <main className="ml-0 min-h-screen pb-16 pt-16 lg:ml-64 lg:pb-0">{children}</main>
+
+      {/* Barra inferior estilo app (solo móvil): SOLO íconos. El resto de
+          opciones vive en el menú (Menú → drawer). En escritorio no aparece. */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-stretch justify-around border-t border-outline-variant bg-surface-container-lowest lg:hidden">
+        {NAV.slice(0, 4).map((item) => {
+          const activo = item.key === active;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              aria-label={item.label}
+              className={`flex flex-1 flex-col items-center justify-center gap-1 ${activo ? 'text-primary' : 'text-on-surface-variant'}`}
+            >
+              <span className="material-symbols-outlined" style={activo ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
+              <span className={`h-1 w-1 rounded-full ${activo ? 'bg-primary' : 'bg-transparent'}`} />
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setMenuAbierto(true)}
+          aria-label="Más opciones"
+          className="flex flex-1 flex-col items-center justify-center gap-1 text-on-surface-variant"
+        >
+          <span className="material-symbols-outlined">menu</span>
+          <span className="h-1 w-1 rounded-full bg-transparent" />
+        </button>
+      </nav>
 
       <AvatarUploader
         abierto={editorFoto}
