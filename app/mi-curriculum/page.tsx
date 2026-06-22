@@ -7,6 +7,7 @@ import React from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import CvDocumento from '@/components/student/CvDocumento';
+import PasosCV from '@/components/student/PasosCV';
 import { notificar } from '@/components/student/Toast';
 
 const AI_GLOW = 'shadow-[0_0_15px_rgba(84,188,235,0.3)]';
@@ -23,7 +24,11 @@ function avisoProximamente(e: React.MouseEvent) {
 export default function MiCurriculumPage() {
   return (
     <StudentShell active="cv">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-8 p-6" onClick={avisoProximamente}>
+      {/* Indicador de pasos (compartido): aquí es el paso 3 (descargar) */}
+      <div className="mx-auto max-w-[1280px] px-6 pt-6 print:hidden">
+        <PasosCV activo={3} />
+      </div>
+      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-8 px-6 pb-6 pt-6" onClick={avisoProximamente}>
         {/* ── CV (izquierda/centro) ── */}
         <section className="col-span-12 lg:col-span-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import AvatarUploader from '@/components/student/AvatarUploader';
 import CvDocumento from '@/components/student/CvDocumento';
+import PasosCV from '@/components/student/PasosCV';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type Experiencia } from '@/context/PerfilEstudianteContext';
 import { useAuth } from '@/context/AuthContext';
@@ -96,6 +97,11 @@ export default function EditorCurriculumPage() {
           {guardando ? 'Guardando…' : 'Guardado automático'}
         </span>
       </header>
+
+      {/* Indicador de pasos (compartido) */}
+      <div className="shrink-0 border-b border-outline-variant bg-surface py-3">
+        <PasosCV activo={2} />
+      </div>
 
       <div className="flex min-h-0 flex-1">
         {/* Izquierda: secciones + progreso */}
