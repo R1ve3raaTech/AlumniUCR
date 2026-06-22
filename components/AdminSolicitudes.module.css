@@ -160,6 +160,24 @@
 .generar:active { transform: scale(0.98); }
 .generar:disabled { opacity: 0.7; cursor: not-allowed; }
 
+/* Botón secundario destructivo (rechazar), usado en las colas de aprobación. */
+.rechazar {
+  background: transparent;
+  color: #ba1a1a;
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid rgba(186, 26, 26, 0.4);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+.rechazar:hover { background: rgba(186, 26, 26, 0.08); }
+.rechazar:active { transform: scale(0.98); }
+.rechazar:disabled { opacity: 0.7; cursor: not-allowed; }
+
 .ok {
   font-size: 0.85rem;
   color: var(--ucr-esmeralda);
