@@ -234,24 +234,45 @@ export default function MiCurriculumPage() {
                 <div className="flex flex-col gap-2">
                   <button
                     data-real
-                    onClick={() => abrirChatconPrompt("¡Hola! Quiero que me ayudes a optimizar mi perfil y CV para postularme a una vacante. ¿Qué me recomiendas?")}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-secondary-fixed py-3 text-sm font-bold text-primary transition-all hover:scale-[1.02] active:scale-95"
+                    onClick={() => abrirChatconPrompt("¡Hola! Quiero que me ayudes a optimizar mi perfil y CV para postularme a una vacante específica. ¿Qué me recomiendas primero?")}
+                    className="flex w-full items-center gap-3 rounded-lg bg-secondary-fixed py-3 px-4 text-sm font-bold text-primary transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    <span className="material-symbols-outlined text-sm">rocket_launch</span> Optimizar para Vacante
+                    <span className="text-base">🚀</span> Optimizar para una Vacante
                   </button>
                   <button
                     data-real
-                    onClick={() => abrirChatconPrompt("¡Hola! ¿Qué logros o experiencias debería actualizar en mi CV para que sea más competitivo en mi área?")}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 py-3 text-sm font-bold text-white transition-all hover:bg-white/20"
+                    onClick={() => abrirChatconPrompt("¡Hola! Explícame la metodología STAR para redactar mis logros y dame un ejemplo aplicado a mi área.")}
+                    className="flex w-full items-center gap-3 rounded-lg bg-white/10 py-3 px-4 text-sm font-bold text-white transition-all hover:bg-white/20"
                   >
-                    <span className="material-symbols-outlined text-sm">update</span> Actualizar Logros
+                    <span className="text-base">⭐</span> Redactar Logros con STAR
                   </button>
                   <button
                     data-real
-                    onClick={() => abrirChatconPrompt("¡Hola! Recomiéndame certificaciones que puedan mejorar mi perfil para las proyecciones sugeridas.")}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 py-3 text-sm font-bold text-white transition-all hover:bg-white/20"
+                    onClick={() => abrirChatconPrompt("¡Hola! Dame una lista de verbos de acción profesionales para mi área de estudio o trabajo.")}
+                    className="flex w-full items-center gap-3 rounded-lg bg-white/10 py-3 px-4 text-sm font-bold text-white transition-all hover:bg-white/20"
                   >
-                    <span className="material-symbols-outlined text-sm">workspace_premium</span> Sugerir Certificaciones
+                    <span className="text-base">🔑</span> Verbos de Acción Profesionales
+                  </button>
+                  <button
+                    data-real
+                    onClick={() => abrirChatconPrompt("¡Hola! Revisa la estructura general de mi CV y dime qué secciones me faltan o puedo mejorar.")}
+                    className="flex w-full items-center gap-3 rounded-lg bg-white/10 py-3 px-4 text-sm font-bold text-white transition-all hover:bg-white/20"
+                  >
+                    <span className="text-base">📋</span> Revisar Estructura de mi CV
+                  </button>
+                  <button
+                    data-real
+                    onClick={() => abrirChatconPrompt("¡Hola! Recomiéndame certificaciones específicas y gratuitas o accesibles para mi área de estudio o trabajo en Costa Rica.")}
+                    className="flex w-full items-center gap-3 rounded-lg bg-white/10 py-3 px-4 text-sm font-bold text-white transition-all hover:bg-white/20"
+                  >
+                    <span className="text-base">🎓</span> Sugerir Certificaciones por Área
+                  </button>
+                  <button
+                    data-real
+                    onClick={() => abrirChatconPrompt("¡Hola! Ayúdame a redactar o mejorar mi resumen profesional o perfil de CV en 3-5 líneas impactantes.")}
+                    className="flex w-full items-center gap-3 rounded-lg bg-white/10 py-3 px-4 text-sm font-bold text-white transition-all hover:bg-white/20"
+                  >
+                    <span className="text-base">✍️</span> Mejorar mi Resumen Profesional
                   </button>
                 </div>
               </div>
@@ -315,6 +336,58 @@ export default function MiCurriculumPage() {
                     &quot;{data.sugerenciaCertificacion}&quot;
                   </p>
                 </div>
+              </div>
+            </div>
+            {/* Sección FAQ de CV (Preguntas Frecuentes Colapsables) */}
+            <div className="rounded-xl border border-outline-variant/30 bg-surface p-6 shadow-sm">
+              <h4 className="mb-4 flex items-center gap-2 font-bold text-primary">
+                <span className="material-symbols-outlined">help</span> Preguntas Frecuentes de CV
+              </h4>
+              <div className="space-y-2">
+                {[
+                  {
+                    pregunta: '¿Cuántas páginas debe tener mi CV?',
+                    respuesta: 'Lo ideal es 1 página para recién graduados. Máximo 2 si tienes más de 3 años de experiencia.',
+                  },
+                  {
+                    pregunta: '¿Debo incluir foto en mi CV?',
+                    respuesta: 'En Costa Rica es opcional. Para empresas multinacionales, evítala para prevenir sesgos inconscientes.',
+                  },
+                  {
+                    pregunta: '¿Qué es la metodología STAR?',
+                    respuesta: 'Situación → Tarea → Acción → Resultado. Una fórmula para redactar bullets de impacto cuantificables.',
+                  },
+                  {
+                    pregunta: '¿Qué significa ATS y por qué importa?',
+                    respuesta: 'Applicant Tracking System — filtros automáticos que usan las empresas. Usar keywords del puesto aumenta tus chances.',
+                  },
+                  {
+                    pregunta: '¿Puedo listar mi TFG como experiencia?',
+                    respuesta: 'Sí. Agrégalo como "Proyectos Relevantes" con título, descripción y tecnologías usadas.',
+                  },
+                  {
+                    pregunta: '¿Cómo optimizo mi CV si tengo poca experiencia?',
+                    respuesta: 'Resalta cursos relevantes, proyectos universitarios, voluntariados y tu promedio ponderado si es alto.',
+                  },
+                ].map((faq, idx) => (
+                  <details key={idx} className="group rounded-lg border border-outline-variant/20 bg-surface-container-low">
+                    <summary className="flex cursor-pointer list-none items-center justify-between p-3 font-medium text-sm text-on-surface select-none">
+                      <span>{faq.pregunta}</span>
+                      <span className="material-symbols-outlined text-sm text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div className="border-t border-outline-variant/20 px-3 pb-3 pt-2">
+                      <p className="text-xs leading-relaxed text-on-surface-variant">{faq.respuesta}</p>
+                      <button
+                        data-real
+                        onClick={() => abrirChatconPrompt(faq.pregunta)}
+                        className="mt-2 flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                      >
+                        <span className="material-symbols-outlined text-xs">chat</span>
+                        Preguntar al asistente
+                      </button>
+                    </div>
+                  </details>
+                ))}
               </div>
             </div>
           </section>
