@@ -20,7 +20,7 @@ const NAV = [
   { key: 'perfil', href: '/perfil-estudiante', icon: 'person', label: 'Mi Perfil' },
   { key: 'cv', href: '/mi-curriculum', icon: 'description', label: 'CV + IA' },
   { key: 'matches', href: '/mis-matches', icon: 'handshake', label: 'Matches' },
-  { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio' },
+  { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio', proximamente: true },
   { key: 'comunidad', href: '#', icon: 'group', label: 'Comunidad', proximamente: true },
   { key: 'reportes', href: '/reportes', icon: 'report', label: 'Reportes' },
 ];

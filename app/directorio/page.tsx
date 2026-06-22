@@ -8,9 +8,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AlumniLogo from '@/components/AlumniLogo';
 import ReportarPerfil from '@/components/ReportarPerfil';
-import DirectorioTalento from '@/components/student/DirectorioTalento';
-import { useAuth } from '@/context/AuthContext';
-import { obtenerPerfil } from '@/lib/auth';
 import { obtenerDirectorio } from '@/lib/perfilExalumno';
 import styles from './directorio.module.css';
 
@@ -56,23 +53,10 @@ function opcionesUnicas(lista: Exalumno[], selector: (e: Exalumno) => string[]):
 }
 
 export default function DirectorioPage() {
-  const { token } = useAuth();
-  const [rol, setRol] = useState<string | null>(null);
   const [lista, setLista] = useState<Exalumno[]>([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS);
-
-  // El estudiante ve su ficha de Directorio de Talento; el resto, el directorio
-  // de exalumnos. Se detecta el rol con la sesión (público = exalumnos).
-  useEffect(() => {
-    if (!token) return;
-    let activo = true;
-    obtenerPerfil(token)
-      .then((r) => { if (activo) setRol(r?.data?.roles?.nombre?.toLowerCase().trim() ?? null); })
-      .catch(() => {});
-    return () => { activo = false; };
-  }, [token]);
 
   useEffect(() => {
     let activo = true;

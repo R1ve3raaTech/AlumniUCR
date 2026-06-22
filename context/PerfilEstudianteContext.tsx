@@ -41,7 +41,6 @@ export interface PerfilEstudiante {
   proyectoDescripcion: string;
   proyectoAvance: number;
   proyectoAreas: string[];
-  proyectoTipo: string; // TFG | TCU | Proyecto de Curso
   // Apoyo requerido
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; financiamiento: boolean };
   // Intereses
@@ -74,7 +73,6 @@ export const PERFIL_VACIO: PerfilEstudiante = {
   proyectoDescripcion: '',
   proyectoAvance: 0,
   proyectoAreas: [],
-  proyectoTipo: 'TFG (Trabajo Final de Graduación)',
   apoyo: { mentoria: false, empleo: false, pasantia: false, financiamiento: false },
   intereses: [],
   habilidadesTecnicas: '',
