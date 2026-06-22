@@ -50,6 +50,10 @@ export default function StudentShell({
     .slice(0, 2)
     .join('')
     .toUpperCase();
+  // Nombre compacto y responsivo: primer nombre + inicial del apellido (ej. "Carlos J.").
+  const primerNombre = (perfil.nombre || nombreMostrar).trim().split(/\s+/)[0] || 'Estudiante';
+  const inicialApellido = (perfil.apellidos || '').trim().charAt(0);
+  const nombreCompacto = inicialApellido ? `${primerNombre} ${inicialApellido.toUpperCase()}.` : primerNombre;
 
   return (
     <div className="bg-background text-on-background font-body-base antialiased">
@@ -60,22 +64,22 @@ export default function StudentShell({
       )}
 
       <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="mb-8 flex w-full shrink-0 items-center justify-center py-2">
+        <div className="mb-6 flex w-full shrink-0 items-center justify-center py-1 sm:mb-8 sm:py-2">
           <Link href="/dashboard" aria-label="UCR Conecta — inicio">
-            <AlumniLogo height={56} />
+            <AlumniLogo className="!h-11 w-auto sm:!h-14" />
           </Link>
         </div>
 
-        <div className="mb-8 flex shrink-0 flex-col items-center px-4">
-          <div className="relative mb-4">
+        <div className="mb-6 flex shrink-0 flex-col items-center px-2 sm:mb-8">
+          <div className="relative mb-3 sm:mb-4">
             {perfil.foto ? (
               <img
                 src={perfil.foto}
                 alt={nombreMostrar}
-                className="h-24 w-24 rounded-full border-2 border-primary object-cover object-center shadow-sm"
+                className="h-20 w-20 rounded-full border-2 border-primary object-cover object-center shadow-sm sm:h-24 sm:w-24"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm sm:h-24 sm:w-24">
                 {iniciales || 'E'}
               </div>
             )}
@@ -91,16 +95,16 @@ export default function StudentShell({
             </button>
             <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
           </div>
-          <h2 className="font-body-semibold text-primary">{nombreMostrar}</h2>
-          <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">{subtitulo}</p>
+          <h2 className="max-w-full truncate font-body-semibold text-primary" title={nombreMostrar}>{nombreCompacto}</h2>
+          <p className="max-w-full truncate text-xs font-bold uppercase tracking-tighter text-on-surface-variant" title={subtitulo}>{subtitulo}</p>
         </div>
 
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
           {NAV.map((item) => {
             const activo = item.key === active;
             const claseBase = activo
-              ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
-              : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface';
+              ? 'flex items-center gap-3 rounded-lg bg-primary-container p-3 font-bold text-on-primary-container sm:gap-4 sm:p-3.5'
+              : 'flex items-center gap-3 rounded-lg p-3 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface sm:gap-4 sm:p-3.5';
 
             // Departamentos por crear: botón con aviso, sin navegar a un link muerto.
             if (item.proximamente) {
