@@ -98,6 +98,20 @@ SOPORTE DETALLADO Y ESPECIFICACIONES TÉCNICAS/OPERATIVAS QUE DEBES PROVEER:
 - Mantenimiento de Tablas Maestras: Explicar el soporte CRUD para tablas de control como facultades, sedes UCR, carreras, sectores de empleo y tipos de proyecto.
 
 Responde de forma ejecutiva, técnica, analítica, directa y altamente eficiente, brindando un soporte enriquecedor y exhaustivo acorde a su alto rango.
+`,
+
+  // 7. Estudiante - Sección de Currículum (CV / Career Assistant Advisor)
+  ESTUDIANTE_CV: `
+Eres el asesor de carrera y optimización de currículum (CV Advisor) oficial de Alumni UCR. Te estás comunicando con un ESTUDIANTE en la sección de su currículum.
+
+PUNTOS CLAVE QUE PUEDES EXPLICAR Y ASISTIR:
+1. Optimizar para Vacantes: Enseña cómo adaptar el título profesional, el resumen y las viñetas (bullets) de experiencia usando verbos de acción y resultados cuantificables.
+2. Sugerir Certificaciones: Recomienda certificaciones reales e importantes del sector del estudiante (ej: AWS, Scrum, PMI, idiomas, tecnologías específicas) para mejorar su competitividad.
+3. Actualizar Logros: Enseña al estudiante a redactar logros bajo la metodología STAR (Situación, Tarea, Acción, Resultado) y a evitar viñetas pasivas o descriptivas.
+4. Diseño y PDF: Indícales que pueden descargar su CV en PDF estilo Harvard haciendo clic en el botón "Exportar PDF" en el panel.
+
+REGLA DE SEGURIDAD ESTRICTA SOBRE ROLES:
+- Tienes estrictamente PROHIBIDO realizar tareas administrativas reservadas para el rol 'admin', tales como: aprobación de cuentas de exalumnos o mentores, auditoría de donaciones, gestión de reportes de comportamiento de usuarios, eliminación de puestos de empleo o edición de tablas maestras.
 `
 };
 
@@ -120,6 +134,10 @@ const obtenerPromptDeSistema = (contexto) => {
 
   // Caso 3: Estudiante
   if (rol === 'estudiante') {
+    // Si está en la sección de su currículum
+    if (pathname.includes('/mi-curriculum')) {
+      return PROMPTS.ESTUDIANTE_CV;
+    }
     // Si está editando proyectos, completando perfil académico o en la sección de proyectos
     if (
       pathname.includes('/proyectos') ||
@@ -394,6 +412,127 @@ Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sum
   }
 };
 
+const PROMPT_ANALISIS_CARRERA = `Eres una IA experta en desarrollo profesional y reclutamiento en Costa Rica (Mercado laboral de la Universidad de Costa Rica - UCR).
+Analiza el currículum del estudiante (su carrera, cargo deseado, habilidades, experiencias, y proyecto de graduación) y genera un análisis de carrera realista, detallado, motivador y sumamente profesional adaptado a su perfil.
+Si el estudiante tiene poca información en su perfil o CV, asume información inicial basada en su carrera/área académica de la UCR para darle un punto de partida e invitarlo a completar más datos.
+
+Debes responder ÚNICAMENTE con un objeto JSON válido (sin formato markdown ni backticks, solo el texto crudo del JSON):
+{
+  "estadoActual": "Resumen en una frase del estado actual del análisis (ej: 'Analizando tendencias del mercado para optimizar tu perfil en Ingeniería de Software junior...')",
+  "benchmarkingSalarial": {
+    "cargo": "Nombre del rol o cargo analizado",
+    "porcentaje": 75,
+    "mensaje": "Mensaje corto sobre la competitividad de su perfil en el mercado costarricense."
+  },
+  "tendencias": [
+    {
+      "titulo": "Título de la tendencia 1 (corto)",
+      "descripcion": "Descripción breve y realista de la tendencia laboral en Costa Rica relacionada a su área."
+    },
+    {
+      "titulo": "Título de la tendencia 2 (corto)",
+      "descripcion": "Descripción breve de otra tendencia o demanda relevante (ej: idiomas, habilidades técnicas)."
+    }
+  ],
+  "proyecciones": [
+    {
+      "puesto": "Nombre de un puesto o rol idóneo en una empresa real o representativa (ej: Desarrollador React Junior @ Gorilla Logic)",
+      "porcentaje": 90,
+      "explicacion": "Explicación breve de por qué encaja y qué palabra clave o habilidad del perfil destaca para este rol."
+    },
+    {
+      "puesto": "Nombre de otro puesto idóneo (ej: Analista de Sistemas @ Amazon)",
+      "porcentaje": 80,
+      "explicacion": "Explicación de la coincidencia y qué debería enfatizar en su perfil."
+    }
+  ],
+  "sugerenciaCertificacion": "Sugerencia específica en una frase (ej: 'Sugerencia IA: Obtén la certificación AWS Cloud Practitioner para llegar al 95% de match.')"
+}`;
+
+/**
+ * Genera un análisis de carrera personalizado basado en el perfil del estudiante.
+ */
+const generarAnalisisCarrera = async (perfil) => {
+  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+  const datosPerfil = perfil || {};
+
+  const contentPrompt = `
+PERFIL DEL ESTUDIANTE A ANALIZAR:
+- Nombre: ${datosPerfil.nombre || ''} ${datosPerfil.apellidos || ''}
+- Carrera: ${datosPerfil.carrera || 'No especificada'}
+- Cargo Deseado/Objetivo: ${datosPerfil.cargoDeseado || 'No especificado'}
+- Ubicación: ${datosPerfil.ubicacion || 'No especificada'}
+- Resumen Profesional: ${datosPerfil.resumen || 'No especificado'}
+- Habilidades Técnicas: ${datosPerfil.habilidadesTecnicas || 'No especificadas'}
+- Habilidades Blandas: ${datosPerfil.habilidadesBlandas || 'No especificadas'}
+- Idiomas: ${datosPerfil.idiomas || 'No especificados'}
+- Proyecto de Graduación/TFG:
+  * Título: ${datosPerfil.proyectoTitulo || 'No especificado'}
+  * Descripción: ${datosPerfil.proyectoDescripcion || 'No especificada'}
+  * Avance: ${datosPerfil.proyectoAvance || 0}%
+  * Áreas: ${(datosPerfil.proyectoAreas || []).join(', ') || 'No especificadas'}
+- Experiencias Laborales/Proyectos:
+  ${(datosPerfil.experiencias || []).map(e => `- ${e.puesto} en ${e.empresa} (${e.periodo}): ${e.descripcion}`).join('\n  ') || 'Sin experiencias registradas.'}
+
+Por favor, analiza el perfil anterior y genera la respuesta JSON solicitada.
+`;
+
+  try {
+    const response = await claude.messages.create({
+      model: model,
+      max_tokens: 1200,
+      system: PROMPT_ANALISIS_CARRERA,
+      temperature: 0.3,
+      messages: [{ role: 'user', content: contentPrompt }],
+    });
+
+    if (
+      response.content &&
+      response.content.length > 0 &&
+      response.content[0].text
+    ) {
+      let rawText = response.content[0].text.trim();
+      // Limpiar posibles bloques de código markdown que Claude a veces añade por error
+      rawText = rawText.replace(/```json/i, '').replace(/```/g, '').trim();
+
+      const parsed = JSON.parse(rawText);
+      return parsed;
+    }
+
+    throw new Error('No se pudo obtener el análisis de la IA.');
+  } catch (error) {
+    console.error('🔴 Error al generar análisis de carrera con Claude:', error);
+    // Devolver un fallback amigable en caso de que falle o se agote la cuota
+    return {
+      estadoActual: "Proyectando tu perfil para vacantes de tu carrera...",
+      benchmarkingSalarial: {
+        cargo: datosPerfil.cargoDeseado || datosPerfil.carrera || "Tu Perfil Profesional",
+        porcentaje: 65,
+        mensaje: "Completa más datos de tu CV y proyecto de graduación para recibir una puntuación precisa."
+      },
+      tendencias: [
+        {
+          titulo: "Certificaciones Técnicas",
+          descripcion: "Los reclutadores en Costa Rica valoran enormemente las certificaciones en metodologías ágiles y nubes públicas."
+        },
+        {
+          titulo: "Segundo Idioma",
+          descripcion: "El dominio del inglés (B2 o superior) incrementa el rango salarial en un 40% para recién graduados."
+        }
+      ],
+      proyecciones: [
+        {
+          puesto: `Puesto Junior en ${datosPerfil.carrera || "tu carrera"}`,
+          porcentaje: 75,
+          explicacion: "Coincidencia basada en tus estudios en la Universidad de Costa Rica (UCR)."
+        }
+      ],
+      sugerenciaCertificacion: "Sugerencia IA: Completa tus habilidades de idiomas y técnicas para optimizar tu proyección."
+    };
+  }
+};
+
 module.exports = {
   generarRespuestaSoporte,
+  generarAnalisisCarrera,
 };
