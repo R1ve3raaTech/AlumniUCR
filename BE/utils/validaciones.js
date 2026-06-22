@@ -31,12 +31,15 @@ function validarCorreo(correo) {
   return null;
 }
 
+const STRICT_UCR_EMAIL = process.env.STRICT_UCR_EMAIL !== 'false';
+
 /**
  * Valida el correo según el rol: el estudiante debe usar @ucr.ac.cr; el
  * exalumno puede usar cualquier correo válido.
  */
 function validarCorreoPorRol(correo, rol) {
-  return rol === 'exalumno' ? validarCorreo(correo) : validarCorreoUCR(correo);
+  if (rol === 'exalumno') return validarCorreo(correo);
+  return STRICT_UCR_EMAIL ? validarCorreoUCR(correo) : validarCorreo(correo);
 }
 
 /** El nombre completo es obligatorio, con al menos 3 caracteres. */

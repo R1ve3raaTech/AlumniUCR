@@ -141,12 +141,92 @@ const obtenerPromptDeSistema = (contexto) => {
 };
 
 /**
+ * Obtiene el perfil detallado de un exalumno mentor.
+ */
+const obtenerPerfilExalumno = async (idExalumno) => {
+  try {
+    const [infoRes, carrUsuRes, areasRes] = await Promise.all([
+      supabase.from('informacion_exalumno').select('*').eq('id_usuario', idExalumno).maybeSingle(),
+      supabase.from('carreras_usuario').select('id_carrera, carreras(nombre)').eq('id_usuario', idExalumno),
+      supabase.from('areas_interes_exalumno').select('id_area_tematica, areas_interes(nombre)').eq('id_exalumno', idExalumno)
+    ]);
+
+    const info = infoRes.data || {};
+    const carreras = (carrUsuRes.data || []).map(c => c.carreras?.nombre).filter(Boolean);
+    const areas = (areasRes.data || []).map(a => a.areas_interes?.nombre).filter(Boolean);
+
+    return {
+      biografia: info.biografia || '',
+      empresa: info.empresa || '',
+      cargo: info.cargo || '',
+      anos_experiencia: info.anos_experiencia || 0,
+      carreras,
+      areas
+    };
+  } catch (e) {
+    console.error('Error al obtener perfil exalumno:', e);
+    return null;
+  }
+};
+
+/**
+ * Busca a un estudiante por aproximación de nombre y obtiene su perfil.
+ */
+const buscarEstudiantePorNombre = async (nombreBuscado) => {
+  try {
+    // Buscar todos los estudiantes activos
+    const { data: usuarios, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, correo_electronico')
+      .eq('id_rol', 1) // Rol 1 = estudiante
+      .eq('estado', 'activo');
+
+    if (error || !usuarios || usuarios.length === 0) return null;
+
+    // Buscar coincidencia por nombre
+    const query = nombreBuscado.toLowerCase().trim();
+    const match = usuarios.find(u => 
+      u.nombre.toLowerCase().includes(query) || 
+      query.includes(u.nombre.toLowerCase())
+    );
+
+    if (!match) return null;
+
+    // Cargar perfil onboarding
+    const { data: onboarding } = await supabase
+      .from('perfil_onboarding')
+      .select('datos')
+      .eq('id_usuario', match.id)
+      .maybeSingle();
+
+    // Cargar proyecto de graduación
+    const { data: proyecto } = await supabase
+      .from('proyecto_graduacion')
+      .select('*')
+      .eq('id_estudiante', match.id)
+      .maybeSingle();
+
+    return {
+      id: match.id,
+      nombre: match.nombre,
+      correo: match.correo_electronico,
+      onboarding: onboarding?.datos || {},
+      proyecto: proyecto || {}
+    };
+  } catch (e) {
+    console.error('Error al buscar estudiante por nombre:', e);
+    return null;
+  }
+};
+
+/**
  * Genera la respuesta del chatbot de soporte utilizando Claude de Anthropic adaptativo.
  * @param {Array} historial Arreglo de mensajes [{ role: 'user'|'assistant', text: '...' }]
  * @param {Object} contexto Objeto con { rol, pathname }
+ * @param {Object} usuarioAutenticado Objeto con la información del usuario autenticado (opcional)
  * @returns {Promise<string>} La respuesta generada por Claude.
  */
-const generarRespuestaSoporte = async (historial, contexto) => {
+const generarRespuestaSoporte = async (historial, contexto, usuarioAutenticado) => {
   // Configurar el modelo desde la variable de entorno o usar Claude 3.5 Sonnet por defecto
   const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
 
@@ -188,7 +268,70 @@ const generarRespuestaSoporte = async (historial, contexto) => {
   }
 
   // Obtener prompt del sistema según el rol y la ruta
-  const promptSistema = obtenerPromptDeSistema(contexto);
+  let promptSistema = obtenerPromptDeSistema(contexto);
+
+  // Lógica para detectar si es un exalumno analizando a un estudiante
+  const esExalumno = (contexto?.rol || '').toLowerCase().trim() === 'exalumno';
+  const ultimoMensajeUsuario = [...historial].reverse().find(msg => msg.role === 'user')?.text || '';
+
+  if (esExalumno && usuarioAutenticado) {
+    // Buscar patrones como "analiza a Natalia", "match con Juan", "gustos de Maria"
+    const matchAnalisis = ultimoMensajeUsuario.match(/(?:analiz(?:a|ar)|match con|gustos de|afinidad con)\s+([A-Za-záéíóúÁÉÍÓÚñÑ\s]+)/i);
+
+    if (matchAnalisis && matchAnalisis[1]) {
+      const nombreEstudiante = matchAnalisis[1].trim();
+      const estudiante = await buscarEstudiantePorNombre(nombreEstudiante);
+
+      if (estudiante) {
+        const exalumno = await obtenerPerfilExalumno(usuarioAutenticado.id);
+
+        promptSistema = `
+Eres el asesor virtual oficial de "Alumni UCR — Conectando Talento", especializado en mentoría y orientación profesional.
+Te estás comunicando con el exalumno y mentor verificado: ${usuarioAutenticado.profile?.nombre || 'Exalumno/Mentor'}.
+
+Has recibido la solicitud de analizar el perfil y el match con el/la siguiente estudiante:
+- Nombre Completo: ${estudiante.nombre}
+- Carrera cursada: ${estudiante.onboarding.carrera || estudiante.proyecto.carrera || 'No especificada'}
+- Sede: ${estudiante.onboarding.sede || 'No especificada'}
+- Nivel Académico: ${estudiante.onboarding.nivel || 'No especificado'}
+
+INFORMACIÓN DEL PROYECTO ACTUAL DEL ESTUDIANTE:
+- Título del Proyecto: ${estudiante.proyecto.titulo_proyecto || estudiante.onboarding.proyectoTitulo || 'Sin título'}
+- Descripción: ${estudiante.proyecto.descripcion || estudiante.onboarding.proyectoDescripcion || 'Sin descripción'}
+- Porcentaje de Avance: ${estudiante.proyecto.porcentaje_avance || estudiante.onboarding.proyectoAvance || 0}%
+- Áreas Temáticas: ${(estudiante.onboarding.proyectoAreas || []).join(', ') || 'No especificadas'}
+
+GUSTOS, INTERESES Y HABILIDADES DEL ESTUDIANTE:
+- Intereses Personales y Hobbies: ${(estudiante.onboarding.intereses || []).join(', ') || 'No especificados'}
+- Habilidades Técnicas: ${estudiante.onboarding.habilidadesTecnicas || 'No especificadas'}
+- Habilidades Blandas (Perfil Emocional): ${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}
+- Biografía / Resumen: ${estudiante.onboarding.resumen || 'No especificado'}
+
+PERFIL DEL MENTOR EXALUMNO (TÚ):
+- Empresa: ${exalumno?.empresa || 'No especificada'}
+- Cargo: ${exalumno?.cargo || 'No especificado'}
+- Años de Experiencia: ${exalumno?.anos_experiencia || 0} años
+- Carreras UCR: ${(exalumno?.carreras || []).join(', ') || 'No especificadas'}
+- Áreas de Especialidad: ${(exalumno?.areas || []).join(', ') || 'No especificadas'}
+- Biografía/Trayectoria: ${exalumno?.biografia || 'No especificada'}
+
+TU MISIÓN:
+Genera un informe detallado, cálido, estructurado y sumamente motivador para el exalumno. Analiza las sinergias emocionales y profesionales entre ambos.
+
+DEBES SEGUIR ESTRICTAMENTE ESTA ESTRUCTURA EN TU RESPUESTA:
+1. **Presentación de la Ficha del Estudiante**: Breve resumen de quién es, su carrera, sede y su proyecto de graduación (TFG) actual.
+2. **Gustos y Aficiones (El lado humano)**: Describe en detalle los intereses personales y gustos del estudiante (${(estudiante.onboarding.intereses || []).join(', ') || 'No especificados'}). Destaca sus pasiones extralaborales y qué le gusta hacer en su tiempo libre.
+3. **Match Emocional y de Habilidades Blandas**: Analiza la afinidad de personalidad y compatibilidad emocional. Cruza las habilidades blandas del estudiante (${estudiante.onboarding.habilidadesBlandas || 'No especificadas'}) con tu biografía y experiencia como mentor. Explica el tipo de relación constructiva, empática y de apoyo mutuo que pueden formar.
+4. **Sinergia Profesional y Propuesta de Mentoría**: Analiza la compatibilidad técnica y profesional. ¿Cómo tus conocimientos en ${exalumno?.areas?.join(', ') || 'tus especialidades'} y tu puesto de ${exalumno?.cargo || 'profesional'} en ${exalumno?.empresa || 'tu empresa'} pueden ayudar de manera directa a este estudiante en su proyecto de graduación y en su futura inserción laboral?
+5. **Cómo Contactar**: Indica amigablemente que si la afinidad es alta, puede presionar el botón **"Ofrecer apoyo"** en la tarjeta del estudiante dentro del directorio para enviarle una solicitud de contacto formal y poder revelar su información de beca y correo electrónico.
+
+Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sumamente empático, integrador y entusiasta.
+`;
+      } else {
+        return `No logré encontrar a ningún estudiante activo en el directorio que coincida con el nombre **"${nombreEstudiante}"**. Por favor, revisa que esté escrito tal como aparece en su perfil.`;
+      }
+    }
+  }
 
   try {
     const response = await claude.messages.create({
