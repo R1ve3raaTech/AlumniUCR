@@ -1,16 +1,17 @@
 'use client';
 
-// Centro de Matches (estudiante): adaptación del Stitch a la marca. Layout bento
-// con necesidades actuales (derivadas del perfil), match estratégico sugerido,
-// perfiles sugeridos, estado de solicitudes y tips de IA. Conectado a la fuente
-// única (perfil) en los datos personalizables; las sugerencias son ilustrativas.
+// Centro de Matches (estudiante): diseño Stitch adaptado a la marca, ahora con
+// datos reales. Necesidades y tip salen de la fuente única (perfil); los perfiles
+// sugeridos son exalumnos reales del directorio (RF-02) puntuados por afinidad; y
+// las solicitudes salen del motor de matches RF-06 (/matches-mentoria/mis-matches).
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
+import { obtenerSugeridos, obtenerMisMatches } from '@/lib/matchesEstudiante';
 
 const bento = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
 
@@ -22,18 +23,11 @@ const NECESIDADES: Record<string, { etiqueta: string; color: string; titulo: str
   financiamiento: { etiqueta: 'Patrocinio', color: 'bg-secondary', titulo: 'Apoyo o financiamiento', desc: 'Busco patrocinio para llevar mi proyecto al siguiente nivel.' },
 };
 
-// Perfiles sugeridos (ilustrativos; la red real se conectará al backend).
-const SUGERIDOS = [
-  { nombre: 'Lucía Méndez', rol: 'HR Director · Especialista en Selección', tags: ['Empleabilidad', 'RRHH'], ini: 'LM' },
-  { nombre: 'Carlos Vargas', rol: 'Data Scientist · Investigador UCR', tags: ['Investigación', 'Python'], ini: 'CV' },
-  { nombre: 'Marcela Ávila', rol: 'Product Lead · Exalumna UCR ’12', tags: ['Producto', 'Mentoría'], ini: 'MA' },
-];
-
-const SOLICITUDES = [
-  { titulo: 'Mentoría: Roberto Solano', estado: 'En revisión', color: 'text-secondary', barra: 'bg-secondary', pct: 65, tiempo: 'Enviado hace 2 días' },
-  { titulo: 'Pasantía: Intel CR', estado: 'Entrevista pendiente', color: 'text-tertiary', barra: 'bg-tertiary', pct: 90, tiempo: 'Enviado hace 5 días' },
-  { titulo: 'Colaboración: Ana Rojas', estado: 'Pendiente', color: 'text-outline', barra: 'bg-outline', pct: 20, tiempo: 'Enviado hace 1 hora' },
-];
+const ESTADO_SOLICITUD: Record<string, { label: string; color: string; barra: string; pct: number }> = {
+  sugerido: { label: 'Sugerido', color: 'text-outline', barra: 'bg-outline', pct: 20 },
+  contactado: { label: 'En revisión', color: 'text-secondary', barra: 'bg-secondary', pct: 65 },
+  activo: { label: 'Conectado', color: 'text-tertiary', barra: 'bg-tertiary', pct: 100 },
+};
 
 function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): number {
   const campos = [
@@ -45,17 +39,38 @@ function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): numbe
   return Math.round((llenos / campos.length) * 100);
 }
 
+const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+
 export default function MisMatchesPage() {
   const router = useRouter();
   const { token, loading } = useAuth();
   const { perfil } = usePerfilEstudiante();
 
+  const [sugeridos, setSugeridos] = useState<any[]>([]);
+  const [misMatches, setMisMatches] = useState<any[]>([]);
+  const [cargando, setCargando] = useState(true);
+
   useEffect(() => {
     if (!loading && !token) router.replace('/login');
   }, [loading, token, router]);
 
+  // Carga real: exalumnos del directorio (puntuados) + matches del motor RF-06.
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      const [sug, mm] = await Promise.all([
+        obtenerSugeridos(perfil),
+        token ? obtenerMisMatches(token) : Promise.resolve([]),
+      ]);
+      if (!activo) return;
+      setSugeridos(sug);
+      setMisMatches(mm);
+      setCargando(false);
+    })();
+    return () => { activo = false; };
+  }, [perfil, token]);
+
   const pct = useMemo(() => completitud(perfil), [perfil]);
-  const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
   const necesidades = useMemo(() => {
     const activas = (Object.keys(NECESIDADES) as (keyof typeof perfil.apoyo)[])
       .filter((k) => perfil.apoyo[k])
@@ -65,6 +80,12 @@ export default function MisMatchesPage() {
   const proyecto = perfil.proyectoTitulo || 'tu proyecto de graduación';
   const fortaleza = perfil.habilidadesTecnicas?.split(',')[0]?.trim() || perfil.carrera || 'tu área';
 
+  const destacado = sugeridos[0] || null;
+  const resto = sugeridos.slice(1, 6);
+  const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
+
+  const interesar = (nombre: string) => notificar(`📨 Registramos tu interés por ${nombre}. Te avisaremos cuando responda.`);
+
   return (
     <StudentShell active="matches">
       <div className="mx-auto w-full max-w-[1280px] space-y-6 p-6 lg:p-8">
@@ -73,8 +94,8 @@ export default function MisMatchesPage() {
           <div>
             <h1 className="font-headline-md text-2xl text-primary sm:text-3xl">Centro de Matches</h1>
             <p className="max-w-2xl text-on-surface-variant">
-              Potenciá tu carrera conectando con la red de egresados más influyente del país. Encontrá mentoría
-              estratégica y oportunidades alineadas a tu TFG.
+              Potenciá tu carrera conectando con la red de egresados de la UCR. Encontrá mentoría estratégica y
+              oportunidades alineadas a tu TFG.
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
@@ -107,63 +128,75 @@ export default function MisMatchesPage() {
               </div>
             </div>
 
-            {/* Match Estratégico */}
-            <div className="overflow-hidden rounded-xl shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]">
-              <div className="flex flex-col items-center gap-8 bg-gradient-to-br from-primary to-secondary p-8 md:flex-row">
-                <div className="relative shrink-0">
-                  <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-xl border-4 border-secondary-container/30 bg-white/10 font-display-lg text-4xl font-bold text-white">
-                    RS
+            {/* Match Estratégico (mejor exalumno real) */}
+            {destacado ? (
+              <div className="overflow-hidden rounded-xl shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]">
+                <div className="flex flex-col items-center gap-8 bg-gradient-to-br from-primary to-secondary p-8 md:flex-row">
+                  <div className="relative shrink-0">
+                    <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-xl border-4 border-secondary-container/30 bg-white/10 font-display-lg text-4xl font-bold text-white">
+                      {destacado.foto_perfil ? <img src={destacado.foto_perfil} alt={destacado.nombre} className="h-full w-full object-cover" /> : iniciales(destacado.nombre)}
+                    </div>
+                    <span className="absolute -bottom-2 -right-2 rounded-lg bg-secondary-container px-2 py-1 text-[10px] font-bold text-on-secondary-container shadow-lg">MATCH {destacado.score}%</span>
                   </div>
-                  <span className="absolute -bottom-2 -right-2 rounded-lg bg-secondary-container px-2 py-1 text-[10px] font-bold text-on-secondary-container shadow-lg">MATCH 98%</span>
-                </div>
-                <div className="flex-1 space-y-2 text-center text-white md:text-left">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 backdrop-blur-md">
-                    <span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">verified</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Match sugerido por IA</span>
-                  </div>
-                  <h2 className="font-headline-md text-2xl leading-none">Roberto Solano</h2>
-                  <p className="text-secondary-fixed-dim">Lead AI Engineer @ TechFlow · Exalumno UCR ’05</p>
-                  <p className="mx-auto max-w-lg text-sm leading-relaxed opacity-90 md:mx-0">
-                    15 años de experiencia en automatización con Machine Learning. Puede asesorarte en la validación
-                    técnica de la arquitectura de {proyecto}.
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-2 pt-3 md:justify-start">
-                    <button onClick={() => notificar('🤝 Solicitud de mentoría enviada (demo)')} className="flex items-center gap-2 rounded-lg bg-[#54BCEB] px-6 py-3 text-sm font-bold text-primary transition-transform hover:scale-105">
-                      Solicitar Mentoría <span className="material-symbols-outlined text-[18px]">send</span>
-                    </button>
-                    <button onClick={() => notificar('👤 Vista de perfil — en desarrollo')} className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all hover:bg-white/20">
-                      Ver Perfil
-                    </button>
+                  <div className="flex-1 space-y-2 text-center text-white md:text-left">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 backdrop-blur-md">
+                      <span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">verified</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Mejor afinidad para vos</span>
+                    </div>
+                    <h2 className="font-headline-md text-2xl leading-none">{destacado.nombre}</h2>
+                    <p className="text-secondary-fixed-dim">
+                      {(destacado.carreras?.[0] || 'Exalumno UCR')}{destacado.anio_graduacion ? ` · UCR ’${String(destacado.anio_graduacion).slice(-2)}` : ''}
+                    </p>
+                    <p className="mx-auto max-w-lg text-sm leading-relaxed opacity-90 md:mx-0">
+                      {destacado.comunes?.length
+                        ? `Comparten interés en ${destacado.comunes.slice(0, 3).join(', ')}. Puede aportar a ${proyecto}.`
+                        : `Forma parte de la red UCR y puede aportar a ${proyecto}.`}
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 pt-3 md:justify-start">
+                      <button onClick={() => interesar(destacado.nombre)} className="flex items-center gap-2 rounded-lg bg-[#54BCEB] px-6 py-3 text-sm font-bold text-primary transition-transform hover:scale-105">
+                        Solicitar Mentoría <span className="material-symbols-outlined text-[18px]">send</span>
+                      </button>
+                      <button onClick={() => router.push('/directorio')} className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all hover:bg-white/20">
+                        Ver Directorio
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className={`${bento} p-8 text-center`}>
+                <span className="material-symbols-outlined mb-2 text-4xl text-outline">groups</span>
+                <p className="font-body-semibold text-primary">{cargando ? 'Buscando perfiles afines…' : 'Aún no hay exalumnos en el directorio'}</p>
+                <p className="text-sm text-on-surface-variant">Completá tus áreas e intereses en el perfil para mejorar tus coincidencias.</p>
+              </div>
+            )}
 
-            {/* Perfiles Sugeridos */}
+            {/* Perfiles Sugeridos (exalumnos reales) */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-body-semibold text-primary">Perfiles Sugeridos</h2>
-                <select className="cursor-pointer border-none bg-transparent text-sm font-semibold text-secondary focus:ring-0">
-                  <option>Todas las áreas</option>
-                  <option>Tecnología</option>
-                  <option>Mentoría</option>
-                  <option>Empleo</option>
-                </select>
+                <h2 className="font-body-semibold text-primary">Perfiles Sugeridos {sugeridos.length > 0 && <span className="text-on-surface-variant">· {sugeridos.length}</span>}</h2>
               </div>
               <div className="space-y-3">
-                {SUGERIDOS.map((s) => (
-                  <div key={s.nombre} className={`${bento} flex items-center justify-between p-4`}>
+                {resto.length === 0 ? (
+                  <div className={`${bento} p-6 text-center text-sm text-on-surface-variant`}>
+                    {cargando ? 'Cargando…' : 'No hay más perfiles por ahora. ¡Volvé pronto!'}
+                  </div>
+                ) : resto.map((s) => (
+                  <div key={s.id} className={`${bento} flex items-center justify-between p-4`}>
                     <div className="flex items-center gap-4">
-                      <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/10 font-bold text-primary">{s.ini}</div>
+                      <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-primary/10 font-bold text-primary">
+                        {s.foto_perfil ? <img src={s.foto_perfil} alt={s.nombre} className="h-full w-full object-cover" /> : iniciales(s.nombre)}
+                      </div>
                       <div>
                         <h4 className="font-body-semibold text-primary">{s.nombre}</h4>
-                        <p className="text-xs text-on-surface-variant">{s.rol}</p>
+                        <p className="text-xs text-on-surface-variant">{s.carreras?.[0] || s.facultades?.[0] || 'Exalumno UCR'}{s.ciudad ? ` · ${s.ciudad}` : ''}</p>
                       </div>
                     </div>
                     <div className="hidden gap-2 md:flex">
-                      {s.tags.map((t) => <span key={t} className="rounded bg-secondary/10 px-2 py-1 text-[10px] font-bold uppercase text-secondary">{t}</span>)}
+                      {(s.comunes?.length ? s.comunes : s.areas || []).slice(0, 2).map((t: string) => <span key={t} className="rounded bg-secondary/10 px-2 py-1 text-[10px] font-bold uppercase text-secondary">{t}</span>)}
+                      {s.score > 0 && <span className="rounded bg-tertiary/10 px-2 py-1 text-[10px] font-bold text-tertiary">{s.score}%</span>}
                     </div>
-                    <button onClick={() => notificar(`➕ Solicitud enviada a ${s.nombre} (demo)`)} className="rounded-full p-2 text-secondary transition-colors hover:bg-secondary/10">
+                    <button onClick={() => interesar(s.nombre)} title="Conectar" className="rounded-full p-2 text-secondary transition-colors hover:bg-secondary/10">
                       <span className="material-symbols-outlined">person_add</span>
                     </button>
                   </div>
@@ -174,29 +207,38 @@ export default function MisMatchesPage() {
 
           {/* Columna derecha */}
           <div className="space-y-6 lg:col-span-4">
-            {/* Solicitudes Enviadas */}
+            {/* Solicitudes (matches reales RF-06) */}
             <div className={`${bento} p-6`}>
               <h3 className="mb-6 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-primary">
                 Solicitudes Enviadas
-                <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] text-on-secondary-container">3 ACTIVAS</span>
+                {solicitudes.length > 0 && <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] text-on-secondary-container">{solicitudes.length} ACTIVAS</span>}
               </h3>
-              <div className="space-y-6">
-                {SOLICITUDES.map((s) => (
-                  <div key={s.titulo}>
-                    <div className="mb-2 flex justify-between text-xs">
-                      <span className="font-body-semibold text-primary">{s.titulo}</span>
-                      <span className={s.color}>{s.estado}</span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
-                      <div className={`h-full ${s.barra}`} style={{ width: `${s.pct}%` }} />
-                    </div>
-                    <p className="mt-2 text-[10px] text-on-surface-variant">{s.tiempo}</p>
-                  </div>
-                ))}
-              </div>
+              {solicitudes.length === 0 ? (
+                <div className="flex items-start gap-3 rounded-lg bg-surface-container-low p-4">
+                  <span className="material-symbols-outlined text-outline">outgoing_mail</span>
+                  <p className="text-sm text-on-surface-variant">Todavía no enviaste solicitudes. Conectá con un perfil sugerido para empezar.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {solicitudes.map((m) => {
+                    const e = ESTADO_SOLICITUD[m.estado] || ESTADO_SOLICITUD.sugerido;
+                    return (
+                      <div key={m.id}>
+                        <div className="mb-2 flex justify-between text-xs">
+                          <span className="font-body-semibold text-primary">{m.usuarios?.nombre || 'Conexión'}</span>
+                          <span className={e.color}>{e.label}</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+                          <div className={`h-full ${e.barra}`} style={{ width: `${e.pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Tip de IA */}
+            {/* Tip de IA (personalizado con el perfil) */}
             <div className="rounded-xl border-none bg-[#E6F4F9] p-6">
               <div className="flex items-start gap-4">
                 <span className="material-symbols-outlined text-3xl text-secondary">psychology</span>
@@ -204,34 +246,25 @@ export default function MisMatchesPage() {
                   <h3 className="font-body-semibold text-primary">Tip de IA</h3>
                   <p className="mt-1 text-sm text-on-secondary-fixed-variant">
                     Tu perfil destaca en <b>{fortaleza}</b>. Contactar mentores con esa etiqueta puede aumentar tus
-                    chances de match hasta un <b>25%</b>.
+                    chances de match.
                   </p>
-                  <button onClick={() => notificar('💡 Más consejos — en desarrollo')} className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">Ver más consejos</button>
                 </div>
               </div>
             </div>
 
-            {/* Quick stats */}
+            {/* Stats reales */}
             <div className="grid grid-cols-2 gap-4">
               <div className={`${bento} p-4 text-center`}>
-                <p className="text-2xl font-bold text-secondary">14</p>
-                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Vistas Perfil</p>
+                <p className="text-2xl font-bold text-secondary">{sugeridos.length}</p>
+                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Perfiles afines</p>
               </div>
               <div className={`${bento} p-4 text-center`}>
-                <p className="text-2xl font-bold text-secondary">8</p>
-                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Conexiones</p>
+                <p className="text-2xl font-bold text-secondary">{misMatches.length}</p>
+                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Mis matches</p>
               </div>
             </div>
           </div>
         </div>
-
-        <footer className="flex items-center justify-between border-t border-outline-variant/30 px-2 py-4 text-[12px] text-on-surface-variant">
-          <p>© 2026 Alumni Universidad de Costa Rica</p>
-          <div className="flex gap-6">
-            <button onClick={() => notificar('🆘 Centro de Ayuda — en desarrollo')} className="hover:text-primary">Centro de Ayuda</button>
-            <button onClick={() => notificar('📄 Términos de Conexión — en desarrollo')} className="hover:text-primary">Términos de Conexión</button>
-          </div>
-        </footer>
       </div>
     </StudentShell>
   );
