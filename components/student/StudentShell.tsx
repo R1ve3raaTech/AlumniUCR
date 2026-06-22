@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
@@ -32,7 +33,9 @@ export default function StudentShell({
   nombre?: string;
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const salir = () => { signOut(); router.replace('/login'); };
   const { perfil, actualizar } = usePerfilEstudiante();
   const [editorFoto, setEditorFoto] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -138,6 +141,14 @@ export default function StudentShell({
             <span className="material-symbols-outlined">settings</span>
             <span className="font-body-semibold">Configuración</span>
           </Link>
+          <button
+            type="button"
+            onClick={salir}
+            className="flex items-center gap-4 rounded-lg p-4 text-left text-error transition-all hover:bg-error/10"
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-body-semibold">Cerrar sesión</span>
+          </button>
         </div>
       </aside>
 
