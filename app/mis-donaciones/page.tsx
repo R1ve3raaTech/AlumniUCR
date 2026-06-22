@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useRequireRole } from '@/lib/useRequireRole';
 import AlumniLogo from '@/components/AlumniLogo';
 import { obtenerMisDonaciones, obtenerTiposPago, obtenerProyectos, obtenerUrlComprobante } from '@/lib/donaciones';
 import styles from './mis-donaciones.module.css';
@@ -33,7 +34,8 @@ const esPdf = (url: string) => url.toLowerCase().includes('.pdf');
 
 export default function MisDonacionesPage() {
   const router = useRouter();
-  const { token, user, loading: authLoading } = useAuth();
+  const { token, user } = useAuth();
+  const { verificando, autorizado } = useRequireRole(['exalumno']);
   const [lista, setLista] = useState<Donacion[]>([]);
   const [metodos, setMetodos] = useState<Record<string, string>>({});
   const [proyectos, setProyectos] = useState<Record<string, string>>({});
@@ -41,11 +43,7 @@ export default function MisDonacionesPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !token) router.replace('/login');
-  }, [authLoading, token, router]);
-
-  useEffect(() => {
-    if (!token || !user?.id) return;
+    if (!token || !user?.id || !autorizado) return;
     let activo = true;
     (async () => {
       try {
@@ -69,7 +67,7 @@ export default function MisDonacionesPage() {
       }
     })();
     return () => { activo = false; };
-  }, [token, user?.id]);
+  }, [token, user?.id, autorizado]);
 
   // Abre el comprobante: rutas de Storage → signed URL; URLs antiguas tal cual.
   async function verComprobante(comprobante: string) {
@@ -92,6 +90,10 @@ export default function MisDonacionesPage() {
     });
     return acc;
   }, [lista]);
+
+  if (verificando || !autorizado) {
+    return <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">Cargando…</div>;
+  }
 
   return (
     <div className={styles.page}>

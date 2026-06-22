@@ -23,8 +23,16 @@ const obtenerMatchesConAlerta = async (filtros = {}) => {
         .select(`
             id, score_match, estado, iniciado_por, resultado,
             notas_admin, created_at, updated_at,
-            exalumno:usuarios!matches_mentoria_id_exalumno_fkey (id, nombre, correo_electronico),
-            estudiante:usuarios!matches_mentoria_id_estudiante_fkey (id, nombre, correo_electronico)
+            exalumno:usuarios!matches_mentoria_id_exalumno_fkey (
+                id, nombre, correo_electronico,
+                carreras:carreras_usuario(carreras(nombre)),
+                info:informacion_exalumno(ofrece_mentoria, ofrece_empleo, ofrece_pasantia, ofrece_donacion)
+            ),
+            estudiante:usuarios!matches_mentoria_id_estudiante_fkey (
+                id, nombre, correo_electronico,
+                carreras:carreras_usuario(carreras(nombre)),
+                info:informacion_estudiante(busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento)
+            )
         `)
         .order('created_at', { ascending: false });
 

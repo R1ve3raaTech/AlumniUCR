@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useRequireRole } from '@/lib/useRequireRole';
 import AlumniLogo from '@/components/AlumniLogo';
 import {
   obtenerCatalogos,
@@ -47,6 +48,7 @@ const VACIO: Form = {
 export default function PerfilExalumnoPage() {
   const router = useRouter();
   const { token, loading: authLoading } = useAuth();
+  const { verificando, autorizado } = useRequireRole(['exalumno']);
 
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -56,11 +58,7 @@ export default function PerfilExalumnoPage() {
   const [form, setForm] = useState<Form>(VACIO);
 
   useEffect(() => {
-    if (!authLoading && !token) router.replace('/login');
-  }, [authLoading, token, router]);
-
-  useEffect(() => {
-    if (!token) return;
+    if (!token || !autorizado) return;
     let activo = true;
     (async () => {
       try {
@@ -79,7 +77,7 @@ export default function PerfilExalumnoPage() {
       }
     })();
     return () => { activo = false; };
-  }, [token]);
+  }, [token, autorizado]);
 
   const set = <K extends keyof Form>(campo: K, valor: Form[K]) => {
     setForm((f) => ({ ...f, [campo]: valor }));
@@ -147,7 +145,7 @@ export default function PerfilExalumnoPage() {
     })();
   }
 
-  if (authLoading || cargando) {
+  if (authLoading || verificando || !autorizado || cargando) {
     return <div className={styles.cargando}>Cargando tu perfil…</div>;
   }
 
