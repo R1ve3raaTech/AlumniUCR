@@ -200,31 +200,25 @@ export default function StudentShell({
       {/* Main */}
       <main className="ml-0 min-h-screen pb-16 pt-16 lg:ml-64 lg:pb-0">{children}</main>
 
-      {/* Barra inferior estilo app (solo móvil): SOLO íconos. El resto de
-          opciones vive en el menú (Menú → drawer). En escritorio no aparece. */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-stretch justify-around border-t border-outline-variant bg-surface-container-lowest lg:hidden">
+      {/* Barra inferior estilo app (solo móvil): SOLO íconos, con indicador
+          activo en píldora (Material 3). El resto de opciones vive en el Menú. */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-stretch justify-around border-t border-outline-variant bg-surface-container-lowest shadow-[0_-4px_16px_-10px_rgba(0,40,55,0.25)] lg:hidden">
         {NAV.slice(0, 4).map((item) => {
           const activo = item.key === active;
           return (
-            <Link
-              key={item.key}
-              href={item.href}
-              aria-label={item.label}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 ${activo ? 'text-primary' : 'text-on-surface-variant'}`}
-            >
-              <span className="material-symbols-outlined" style={activo ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
-              <span className={`h-1 w-1 rounded-full ${activo ? 'bg-primary' : 'bg-transparent'}`} />
+            <Link key={item.key} href={item.href} aria-label={item.label} aria-current={activo ? 'page' : undefined}
+              className="flex flex-1 flex-col items-center justify-center">
+              <span className={`grid place-items-center rounded-full px-5 py-1 transition-colors ${activo ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
+                <span className="material-symbols-outlined" style={activo ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
+              </span>
             </Link>
           );
         })}
-        <button
-          type="button"
-          onClick={() => setMenuAbierto(true)}
-          aria-label="Más opciones"
-          className="flex flex-1 flex-col items-center justify-center gap-1 text-on-surface-variant"
-        >
-          <span className="material-symbols-outlined">menu</span>
-          <span className="h-1 w-1 rounded-full bg-transparent" />
+        <button type="button" onClick={() => setMenuAbierto(true)} aria-label="Más opciones"
+          className="flex flex-1 flex-col items-center justify-center">
+          <span className="grid place-items-center rounded-full px-5 py-1 text-on-surface-variant transition-colors">
+            <span className="material-symbols-outlined">menu</span>
+          </span>
         </button>
       </nav>
 
