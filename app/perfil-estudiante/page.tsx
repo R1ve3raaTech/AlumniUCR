@@ -4,9 +4,11 @@
 // poca información por defecto y se expande al tocarla, para una pantalla limpia
 // y mucho más fácil de hacer responsiva. Datos reales desde la fuente única.
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
+import Desplegable from '@/components/student/Desplegable';
+import PerfilHeader from '@/components/student/PerfilHeader';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 
@@ -17,65 +19,6 @@ function avisoProximamente(e: React.MouseEvent) {
     e.preventDefault();
     notificar('🚧 Función en desarrollo');
   }
-}
-
-const SHADOW = 'shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]';
-
-// Tonos de marca por sección (clases estáticas para que Tailwind las conserve).
-const TONOS: Record<string, { grad: string; borde: string; tinte: string; sombra: string }> = {
-  secondary: { grad: 'from-[#006687] to-[#54bceb]', borde: 'hover:border-secondary/60', tinte: 'bg-secondary/10', sombra: 'group-hover:shadow-[0_18px_40px_-16px_rgba(0,102,135,0.45)]' },
-  primary: { grad: 'from-[#003445] to-[#006687]', borde: 'hover:border-primary/60', tinte: 'bg-primary/10', sombra: 'group-hover:shadow-[0_18px_40px_-16px_rgba(0,52,69,0.5)]' },
-  tertiary: { grad: 'from-[#007d67] to-[#46c9a8]', borde: 'hover:border-tertiary/60', tinte: 'bg-tertiary/10', sombra: 'group-hover:shadow-[0_18px_40px_-16px_rgba(0,125,103,0.45)]' },
-  amber: { grad: 'from-[#a05a00] to-[#f0a823]', borde: 'hover:border-amber-500/60', tinte: 'bg-amber-500/10', sombra: 'group-hover:shadow-[0_18px_40px_-16px_rgba(176,107,0,0.45)]' },
-  error: { grad: 'from-[#ba1a1a] to-[#ff7a6e]', borde: 'hover:border-error/60', tinte: 'bg-error/10', sombra: 'group-hover:shadow-[0_18px_40px_-16px_rgba(186,26,26,0.4)]' },
-};
-
-// ── Sección desplegable (acordeón) ──────────────────────────────────────────
-function Desplegable({
-  titulo, icono, resumen, defaultOpen = false, tono = 'secondary', children,
-}: {
-  titulo: string;
-  icono?: string;
-  resumen?: string;
-  defaultOpen?: boolean;
-  tono?: keyof typeof TONOS;
-  children: React.ReactNode;
-}) {
-  const [abierto, setAbierto] = useState(defaultOpen);
-  const t = TONOS[tono] ?? TONOS.secondary;
-  return (
-    <div className={`group relative overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest ${SHADOW} ${t.sombra} ${t.borde} transition-all duration-300 hover:-translate-y-1`}>
-      {/* Barra de acento lateral con gradiente */}
-      <span className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${t.grad}`} aria-hidden />
-      {/* Ícono decorativo gigante de fondo */}
-      {icono && (
-        <span className="material-symbols-outlined pointer-events-none absolute -right-4 -top-5 select-none text-[7.5rem] leading-none text-on-surface/[0.04]" aria-hidden>{icono}</span>
-      )}
-      <button
-        type="button"
-        data-real
-        onClick={() => setAbierto((a) => !a)}
-        aria-expanded={abierto}
-        className="relative flex w-full items-center justify-between gap-3 p-4 pl-5 text-left sm:p-5 sm:pl-6"
-      >
-        <span className="flex min-w-0 items-center gap-3 sm:gap-4">
-          {icono && (
-            <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${t.grad} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}>
-              <span className="material-symbols-outlined">{icono}</span>
-            </span>
-          )}
-          <span className="flex min-w-0 flex-col">
-            <span className="truncate font-body-semibold text-on-surface">{titulo}</span>
-            {resumen && <span className="truncate text-xs text-on-surface-variant">{resumen}</span>}
-          </span>
-        </span>
-        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${t.tinte} text-on-surface-variant transition-transform duration-300 ${abierto ? 'rotate-180' : ''}`}>
-          <span className="material-symbols-outlined text-[20px]">expand_more</span>
-        </span>
-      </button>
-      <div className={abierto ? 'relative border-t border-outline-variant/40 p-4 pl-5 sm:p-5 sm:pl-6' : 'hidden'}>{children}</div>
-    </div>
-  );
 }
 
 function CampoLectura({ label, valor, resaltar }: { label: string; valor: string; resaltar?: boolean }) {
@@ -106,41 +49,19 @@ export default function PerfilEstudiantePage() {
   return (
     <StudentShell active="perfil">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-5 p-4 sm:p-8" onClick={avisoProximamente}>
-        {/* Header inmersivo + stats (estilo app, responsivo) */}
+        {/* Header inmersivo + stats (componente compartido) */}
         <div className="col-span-12">
-          <div className="relative h-60 overflow-hidden rounded-3xl sm:h-72">
-            {perfil.foto ? (
-              <img src={perfil.foto} alt={nombre} className="absolute inset-0 h-full w-full object-cover object-top" />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary" />
-            )}
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(rgba(0,76,99,0) 0%, rgba(0,76,99,0.4) 50%, rgba(0,76,99,0.92) 100%)' }} />
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <div className="mb-1 flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                <span className="text-xs font-medium uppercase tracking-widest opacity-90">En línea</span>
-              </div>
-              <h1 className="font-headline-md text-3xl font-extrabold tracking-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>{nombreCompacto}</h1>
-              <p className="text-lg font-light opacity-90">Estudiante · {o(perfil.carrera)}</p>
-            </div>
-          </div>
-          {/* Tarjeta glass de estadísticas */}
-          <div className="relative z-10 mx-4 -mt-9 flex items-center justify-around rounded-3xl border border-white/40 bg-white/70 p-4 text-center shadow-[0_10px_30px_-10px_rgba(0,76,99,0.18)] backdrop-blur-md">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">Avance</p>
-              <p className="text-xl font-bold text-primary">{perfil.proyectoAvance}%</p>
-            </div>
-            <div className="h-8 w-px bg-outline-variant/60" />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">Registros</p>
-              <p className="text-xl font-bold text-primary">{String(perfil.experiencias.length).padStart(2, '0')}</p>
-            </div>
-            <div className="h-8 w-px bg-outline-variant/60" />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">Beca</p>
-              <p className="text-xl font-bold text-primary">{o(perfil.beca, '—')}</p>
-            </div>
-          </div>
+          <PerfilHeader
+            nombre={nombre}
+            nombreCompacto={nombreCompacto}
+            subtitulo={`Estudiante · ${o(perfil.carrera)}`}
+            foto={perfil.foto}
+            stats={[
+              { label: 'Avance', valor: `${perfil.proyectoAvance}%` },
+              { label: 'Registros', valor: String(perfil.experiencias.length).padStart(2, '0') },
+              { label: 'Beca', valor: o(perfil.beca, '—') },
+            ]}
+          />
         </div>
 
         {!perfil.completado && (

@@ -1,18 +1,20 @@
 'use client';
 
-// CV + IA (estudiante) — rediseño Stitch (estático). CV estilo Harvard + columna
-// de IA Asistente de Carrera. Contenido de ejemplo; datos reales en otra etapa.
+// CV + IA (estudiante) — mismo lenguaje visual que Mi Perfil: cabecera inmersiva
+// + stats glass + tarjetas-acordeón premium. Conserva la vista previa real del CV
+// y la exportación a PDF (#cv-print + @media print).
 
 import React from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import CvDocumento from '@/components/student/CvDocumento';
 import PasosCV from '@/components/student/PasosCV';
+import Desplegable from '@/components/student/Desplegable';
+import PerfilHeader from '@/components/student/PerfilHeader';
 import { notificar } from '@/components/student/Toast';
+import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 
-const AI_GLOW = 'shadow-[0_0_15px_rgba(84,188,235,0.3)]';
-
-// Aviso temporal: los botones aún no tienen acción real (handler delegado).
+// Aviso temporal: los botones sin acción real (los reales llevan data-real).
 function avisoProximamente(e: React.MouseEvent) {
   const el = (e.target as HTMLElement).closest('button, a[href="#"]');
   if (el && !el.hasAttribute('data-real')) {
@@ -21,137 +23,111 @@ function avisoProximamente(e: React.MouseEvent) {
   }
 }
 
+const cuenta = (s: string) => (s || '').split(',').map((x) => x.trim()).filter(Boolean).length;
+
 export default function MiCurriculumPage() {
+  const { perfil } = usePerfilEstudiante();
+  const o = (v: string, d = '—') => (v && v.trim() ? v : d);
+  const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
+  const nombreCompacto = perfil.apellidos?.trim()
+    ? `${(perfil.nombre || '').trim().split(/\s+/)[0]} ${perfil.apellidos.trim().charAt(0).toUpperCase()}.`
+    : (perfil.nombre || 'Estudiante');
+  const habilidades = cuenta(perfil.habilidadesTecnicas) + cuenta(perfil.habilidadesBlandas);
+
   return (
     <StudentShell active="cv">
-      {/* Indicador de pasos (compartido): aquí es el paso 3 (descargar) */}
-      <div className="mx-auto max-w-[1280px] px-6 pt-6 print:hidden">
+      {/* Indicador de pasos (paso 3: descargar) */}
+      <div className="mx-auto max-w-[1280px] px-4 pt-6 sm:px-6 print:hidden">
         <PasosCV activo={3} />
       </div>
-      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-8 px-6 pb-6 pt-6" onClick={avisoProximamente}>
-        {/* ── CV (izquierda/centro) ── */}
-        <section className="col-span-12 lg:col-span-8">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="font-headline-md text-3xl text-primary">CV Académico</h2>
-              <p className="text-on-surface-variant">Refinado estilo Harvard · Última actualización: Hoy</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                data-real
-                onClick={() => window.print()}
-                title="Exportar o imprimir el CV (Ctrl+P)"
-                className="flex items-center gap-2 rounded-lg border border-outline px-4 py-2 font-bold text-primary transition-colors hover:bg-surface-variant"
-              >
+
+      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-5 p-4 sm:p-6 print:hidden" onClick={avisoProximamente}>
+        {/* Header inmersivo + stats */}
+        <div className="col-span-12">
+          <PerfilHeader
+            nombre={nombre}
+            nombreCompacto={nombreCompacto}
+            subtitulo={`Estudiante · ${o(perfil.carrera)}`}
+            foto={perfil.foto}
+            stats={[
+              { label: 'Experiencias', valor: String(perfil.experiencias.length).padStart(2, '0') },
+              { label: 'Habilidades', valor: String(habilidades).padStart(2, '0') },
+              { label: 'Idiomas', valor: String(cuenta(perfil.idiomas)).padStart(2, '0') },
+            ]}
+          />
+        </div>
+
+        {/* ── Izquierda: acciones + vista previa ── */}
+        <section className="col-span-12 flex flex-col gap-5 lg:col-span-8">
+          <Desplegable titulo="Acciones del CV" icono="tune" tono="secondary" resumen="Exportar · editar · plantilla" defaultOpen>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button type="button" data-real onClick={() => window.print()} className="flex items-center justify-center gap-2 rounded-xl border border-outline px-4 py-3 text-sm font-bold text-primary transition-colors hover:bg-surface-variant">
                 <span className="material-symbols-outlined">download</span> Exportar PDF
               </button>
-              <Link
-                href="/mi-curriculum/crear"
-                data-real
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-bold text-white transition-all hover:shadow-lg"
-              >
-                <span className="material-symbols-outlined">edit</span> Editar Manualmente
+              <Link href="/mi-curriculum/crear" data-real className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary px-4 py-3 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5">
+                <span className="material-symbols-outlined">edit</span> Editar
+              </Link>
+              <Link href="/mi-curriculum/plantillas" data-real className="flex items-center justify-center gap-2 rounded-xl border border-outline px-4 py-3 text-sm font-bold text-primary transition-colors hover:bg-surface-variant">
+                <span className="material-symbols-outlined">palette</span> Plantilla
               </Link>
             </div>
-          </div>
+          </Desplegable>
 
-          {/* CV editado (refleja la fuente única); id para imprimir/exportar */}
-          <div id="cv-print">
+          <Desplegable titulo="Vista previa del CV" icono="description" tono="primary" resumen="Estilo Harvard · refleja tus datos" defaultOpen>
             <CvDocumento />
-          </div>
+          </Desplegable>
         </section>
 
-        {/* ── IA Asistente de Carrera (derecha) ── */}
-        <section className="col-span-12 space-y-6 lg:col-span-4">
-          {/* Estado IA */}
-          <div className={`relative overflow-hidden rounded-xl bg-primary p-6 text-white ${AI_GLOW}`}>
-            <div className="relative z-10">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="material-symbols-outlined animate-pulse text-secondary-fixed">auto_awesome</span>
-                <h3 className="text-lg font-bold">IA Asistente de Carrera</h3>
+        {/* ── Derecha: IA de carrera ── */}
+        <section className="col-span-12 flex flex-col gap-5 lg:col-span-4">
+          <Desplegable titulo="Asistente de IA" icono="auto_awesome" tono="primary" resumen="Optimizá tu CV" defaultOpen>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-lg border border-secondary/20 bg-secondary/5 p-3">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-secondary">Estado actual</p>
+                <p className="text-sm italic text-on-surface-variant">Analizando el mercado para proyectar tu perfil hacia vacantes afines a {o(perfil.carrera, 'tu carrera')}.</p>
               </div>
-              <div className="mb-4 rounded-lg border border-secondary-fixed/30 bg-primary-container/40 p-3">
-                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-secondary-fixed">Estado Actual</p>
-                <p className="text-sm italic">
-                  &quot;Analizando tendencias del mercado y proyectando tu perfil para vacantes Senior en Cloud Computing...&quot;
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-secondary-fixed py-3 text-sm font-bold text-primary transition-all hover:scale-[1.02] active:scale-95">
-                  <span className="material-symbols-outlined text-sm">rocket_launch</span> Optimizar para Vacante
-                </button>
-                <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 py-3 text-sm font-bold text-white transition-all hover:bg-white/20">
-                  <span className="material-symbols-outlined text-sm">update</span> Actualizar Logros
-                </button>
-                <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 py-3 text-sm font-bold text-white transition-all hover:bg-white/20">
-                  <span className="material-symbols-outlined text-sm">workspace_premium</span> Sugerir Certificaciones
-                </button>
-              </div>
+              <button type="button" data-real onClick={() => window.dispatchEvent(new Event('open-global-chatbot'))} className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5">
+                <span className="material-symbols-outlined">smart_toy</span> Abrir asistente
+              </button>
+              <button className="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-2.5 text-sm font-bold text-primary"><span className="material-symbols-outlined text-base">rocket_launch</span> Optimizar para vacante</button>
+              <button className="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-2.5 text-sm font-bold text-primary"><span className="material-symbols-outlined text-base">workspace_premium</span> Sugerir certificaciones</button>
             </div>
-          </div>
+          </Desplegable>
 
-          {/* Inteligencia de Mercado */}
-          <div className="rounded-xl border border-outline-variant/30 bg-surface p-6 shadow-sm">
-            <h4 className="mb-4 flex items-center gap-2 font-bold text-primary">
-              <span className="material-symbols-outlined">query_stats</span> Inteligencia de Mercado
-            </h4>
+          <Desplegable titulo="Inteligencia de Mercado" icono="query_stats" tono="secondary" resumen="Demanda y salario">
             <div className="space-y-4">
               <div className="rounded-lg border-l-4 border-secondary bg-surface-container-low p-3">
-                <p className="mb-1 text-xs font-bold uppercase text-secondary">Benchmarking Salarial</p>
-                <p className="text-sm font-semibold">Ingeniería de Software Senior</p>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-outline-variant/30">
-                  <div className="h-full w-3/4 bg-secondary" />
-                </div>
+                <p className="mb-1 text-xs font-bold uppercase text-secondary">Benchmarking salarial</p>
+                <p className="text-sm font-semibold">{o(perfil.carrera, 'Tu carrera')} · Nivel competitivo</p>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-outline-variant/30"><div className="h-full w-3/4 bg-secondary" /></div>
                 <p className="mt-1 text-xs text-on-surface-variant">Tu perfil está en el top 15% de competitividad.</p>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined mt-1 text-sm text-secondary">trending_up</span>
-                  <div>
-                    <p className="text-xs font-bold text-on-surface">Demanda en IA crece +45%</p>
-                    <p className="text-xs leading-tight text-on-surface-variant">Las empresas en Zona Franca buscan especialistas en RAG.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined mt-1 text-sm text-secondary">newsmode</span>
-                  <div>
-                    <p className="text-xs font-bold text-on-surface">Expansión de Hub Tecnológico</p>
-                    <p className="text-xs leading-tight text-on-surface-variant">Nueva sede de Amazon anuncia 500 puestos técnicos.</p>
-                  </div>
-                </div>
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
+                <div><p className="text-xs font-bold text-on-surface">Demanda en IA crece +45%</p><p className="text-xs leading-tight text-on-surface-variant">Las empresas en Zona Franca buscan especialistas.</p></div>
               </div>
             </div>
-          </div>
+          </Desplegable>
 
-          {/* Proyección de Perfil */}
-          <div className="rounded-xl border border-outline-variant/30 bg-surface p-6 shadow-sm">
-            <h4 className="mb-4 flex items-center gap-2 font-bold text-primary">
-              <span className="material-symbols-outlined">psychology</span> Proyección de Perfil
-            </h4>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10 font-bold text-secondary">92%</div>
-                <div>
-                  <p className="text-xs font-bold">Match: Cloud Architect @ Microsoft</p>
-                  <p className="text-xs text-on-surface-variant">IA optimizó palabras clave de &apos;Back-end&apos; a &apos;Infrastructure&apos;.</p>
-                </div>
+          <Desplegable titulo="Proyección de Perfil" icono="psychology" tono="tertiary" resumen="Tus mejores matches">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-full bg-secondary/10 font-bold text-secondary">92%</span>
+                <div><p className="text-xs font-bold">Cloud Architect @ Microsoft</p><p className="text-xs text-on-surface-variant">Palabras clave optimizadas por IA.</p></div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 font-bold text-emerald-600">88%</div>
-                <div>
-                  <p className="text-xs font-bold">Match: Lead Dev @ Gorilla Logic</p>
-                  <p className="text-xs text-on-surface-variant">IA enfatizó liderazgo en proyectos de Hacienda Labs.</p>
-                </div>
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-500/10 font-bold text-emerald-600">88%</span>
+                <div><p className="text-xs font-bold">Lead Dev @ Gorilla Logic</p><p className="text-xs text-on-surface-variant">IA enfatizó tu liderazgo.</p></div>
               </div>
-              <div className="border-t border-outline-variant/20 pt-2">
-                <p className="text-xs italic text-on-surface-variant">
-                  &quot;Sugerencia IA: Obtén la certificación AWS Solutions Architect para llegar al 98% de match.&quot;
-                </p>
-              </div>
+              <p className="border-t border-outline-variant/20 pt-2 text-xs italic text-on-surface-variant">Sugerencia: obtené la certificación AWS para llegar al 98% de match.</p>
             </div>
-          </div>
+          </Desplegable>
         </section>
+      </div>
+
+      {/* Documento para impresión/exportación (solo visible al imprimir) */}
+      <div id="cv-print" className="hidden bg-white print:block">
+        <CvDocumento />
       </div>
     </StudentShell>
   );
