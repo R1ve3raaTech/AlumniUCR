@@ -154,7 +154,6 @@ export default function ExalumnoDashboard({
             <input className="w-full border-none bg-transparent text-sm outline-none placeholder:text-on-surface-variant" placeholder="Buscar mentores, egresados o eventos..." />
           </div>
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined cursor-pointer rounded-full p-2 text-on-surface-variant hover:bg-surface-container">notifications</span>
             <div className="hidden text-right lg:block">
               <p className="text-sm font-bold text-on-surface">{primerNombre} Machado</p>
               <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor Senior</p>

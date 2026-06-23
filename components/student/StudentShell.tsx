@@ -179,15 +179,6 @@ export default function StudentShell({
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={() => notificar('🔔 No tenés notificaciones nuevas')}
-              aria-label="Notificaciones"
-              className="relative rounded-full p-2 text-on-surface-variant outline-none transition-all hover:bg-surface-variant focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-surface-container-lowest bg-error" />
-            </button>
             <div className="flex cursor-pointer items-center gap-2 rounded-full p-1 outline-none transition-all hover:bg-surface-container focus-visible:ring-2 focus-visible:ring-secondary/40">
               {perfil.foto ? (
                 <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
