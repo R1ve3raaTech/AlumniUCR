@@ -33,26 +33,28 @@ function Desplegable({
 }) {
   const [abierto, setAbierto] = useState(defaultOpen);
   return (
-    <div className={`overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest ${SHADOW}`}>
+    <div className={`overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest ${SHADOW}`}>
       <button
         type="button"
         data-real
         onClick={() => setAbierto((a) => !a)}
         aria-expanded={abierto}
-        className="flex w-full items-center justify-between gap-3 p-5 text-left transition-colors hover:bg-surface-container-low"
+        className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-surface-container-low sm:p-5"
       >
-        <span className="flex min-w-0 items-center gap-2 font-headline-md text-lg text-primary">
-          {icono && <span className="material-symbols-outlined shrink-0 text-secondary">{icono}</span>}
-          <span className="truncate">{titulo}</span>
-        </span>
-        <span className="flex shrink-0 items-center gap-2">
-          {resumen && !abierto && (
-            <span className="hidden max-w-[10rem] truncate text-xs font-semibold text-on-surface-variant sm:inline">{resumen}</span>
+        <span className="flex min-w-0 items-center gap-3 sm:gap-4">
+          {icono && (
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary">
+              <span className="material-symbols-outlined">{icono}</span>
+            </span>
           )}
-          <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${abierto ? 'rotate-180' : ''}`}>expand_more</span>
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate font-body-semibold text-on-surface">{titulo}</span>
+            {resumen && <span className="truncate text-xs text-on-surface-variant">{resumen}</span>}
+          </span>
         </span>
+        <span className={`material-symbols-outlined shrink-0 text-on-surface-variant transition-transform ${abierto ? 'rotate-180' : ''}`}>expand_more</span>
       </button>
-      <div className={abierto ? 'border-t border-outline-variant/40 p-5' : 'hidden'}>{children}</div>
+      <div className={abierto ? 'border-t border-outline-variant/40 p-4 sm:p-5' : 'hidden'}>{children}</div>
     </div>
   );
 }
@@ -77,14 +79,49 @@ export default function PerfilEstudiantePage() {
     perfil.apoyo.pasantia && 'Pasantía',
     perfil.apoyo.financiamiento && 'Financiamiento',
   ].filter(Boolean) as string[];
+  const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
+  const nombreCompacto = perfil.apellidos?.trim()
+    ? `${(perfil.nombre || '').trim().split(/\s+/)[0]} ${perfil.apellidos.trim().charAt(0).toUpperCase()}.`
+    : (perfil.nombre || 'Estudiante');
 
   return (
     <StudentShell active="perfil">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-5 p-4 sm:p-8" onClick={avisoProximamente}>
-        {/* Encabezado */}
+        {/* Header inmersivo + stats (estilo app, responsivo) */}
         <div className="col-span-12">
-          <h1 className="font-headline-md text-2xl text-primary sm:text-3xl">Mi Perfil</h1>
-          <p className="text-sm text-on-surface-variant">Tocá cada sección para ver o esconder su contenido.</p>
+          <div className="relative h-60 overflow-hidden rounded-3xl sm:h-72">
+            {perfil.foto ? (
+              <img src={perfil.foto} alt={nombre} className="absolute inset-0 h-full w-full object-cover object-top" />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary" />
+            )}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(rgba(0,76,99,0) 0%, rgba(0,76,99,0.4) 50%, rgba(0,76,99,0.92) 100%)' }} />
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                <span className="text-xs font-medium uppercase tracking-widest opacity-90">En línea</span>
+              </div>
+              <h1 className="font-headline-md text-3xl font-extrabold tracking-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>{nombreCompacto}</h1>
+              <p className="text-lg font-light opacity-90">Estudiante · {o(perfil.carrera)}</p>
+            </div>
+          </div>
+          {/* Tarjeta glass de estadísticas */}
+          <div className="relative z-10 mx-4 -mt-9 flex items-center justify-around rounded-3xl border border-white/40 bg-white/70 p-4 text-center shadow-[0_10px_30px_-10px_rgba(0,76,99,0.18)] backdrop-blur-md">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">Avance</p>
+              <p className="text-xl font-bold text-primary">{perfil.proyectoAvance}%</p>
+            </div>
+            <div className="h-8 w-px bg-outline-variant/60" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">Registros</p>
+              <p className="text-xl font-bold text-primary">{String(perfil.experiencias.length).padStart(2, '0')}</p>
+            </div>
+            <div className="h-8 w-px bg-outline-variant/60" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">Beca</p>
+              <p className="text-xl font-bold text-primary">{o(perfil.beca, '—')}</p>
+            </div>
+          </div>
         </div>
 
         {!perfil.completado && (
