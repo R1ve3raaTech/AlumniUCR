@@ -140,7 +140,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Proyecto de Graduación (TFG)" icono="terminal" tono="primary" resumen={`${perfil.proyectoAvance}% avance`}>
+          <Desplegable titulo="Proyecto de Graduación (TFG)" icono="terminal" tono="primary" resumen={`${perfil.proyectoAvance}% avance`} defaultOpen>
             <div className="relative overflow-hidden rounded-xl bg-primary p-6 text-on-primary">
               <p className="mb-4 font-body-semibold text-lg leading-tight">{o(perfil.proyectoTitulo, 'Aún no registraste tu proyecto de graduación')}</p>
               <div className="mb-1 flex justify-between text-xs"><span>Progreso</span><span className="font-bold">{perfil.proyectoAvance}%</span></div>
@@ -155,7 +155,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Empleabilidad y Trayectoria" icono="work_history" tono="tertiary">
+          <Desplegable titulo="Empleabilidad y Trayectoria" icono="work_history" tono="tertiary" defaultOpen>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/40 p-4">
                 <h3 className="font-body-semibold text-primary">Portal Empleabilidad</h3>
@@ -173,7 +173,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Historial Académico y Experiencia" icono="auto_stories" resumen="2 registros">
+          <Desplegable titulo="Historial Académico y Experiencia" icono="auto_stories" resumen="2 registros" defaultOpen>
             <div className="space-y-3">
               {[
                 { icon: 'auto_stories', color: 'secondary', titulo: 'Cursos de Carrera Aprobados', sub: '32 créditos • Promedio: 9.5' },
@@ -189,7 +189,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Historial de Postulaciones" icono="assignment" tono="primary" resumen="2 postulaciones">
+          <Desplegable titulo="Historial de Postulaciones" icono="assignment" tono="primary" resumen="2 postulaciones" defaultOpen>
             <div className="space-y-3">
               {[
                 { icon: 'business_center', titulo: 'Desarrollador Fullstack — Amazon CR', estado: 'En Revisión', estadoCls: 'bg-secondary/10 text-secondary', fecha: '15 Oct 2023' },
@@ -226,7 +226,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Tipo de Beca" icono="workspace_premium" tono="amber" resumen={o(perfil.beca, 'Sin asignar')}>
+          <Desplegable titulo="Tipo de Beca" icono="workspace_premium" tono="amber" resumen={o(perfil.beca, 'Sin asignar')} defaultOpen>
             <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
               <div className="flex flex-col">
                 <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Asignada</span>
@@ -236,7 +236,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Apoyo Requerido" icono="volunteer_activism" tono="tertiary" resumen={apoyosActivos.length ? `${apoyosActivos.length} tipos` : 'Ninguno'}>
+          <Desplegable titulo="Apoyo Requerido" icono="volunteer_activism" tono="tertiary" resumen={apoyosActivos.length ? `${apoyosActivos.length} tipos` : 'Ninguno'} defaultOpen>
             <div className="flex flex-col gap-2">
               {[
                 { label: 'Mentoría', checked: perfil.apoyo.mentoria },
@@ -252,7 +252,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Intereses" icono="interests" resumen={perfil.intereses.length ? `${perfil.intereses.length}` : 'Ninguno'}>
+          <Desplegable titulo="Intereses" icono="interests" resumen={perfil.intereses.length ? `${perfil.intereses.length}` : 'Ninguno'} defaultOpen>
             <div className="flex flex-wrap items-center gap-2">
               {perfil.intereses.length === 0 && <span className="text-xs italic text-on-surface-variant">Sin intereses aún.</span>}
               {perfil.intereses.map((i) => (
@@ -261,7 +261,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Portafolio" icono="folder" tono="primary">
+          <Desplegable titulo="Portafolio" icono="folder" tono="primary" defaultOpen>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex cursor-pointer flex-col items-center gap-2 rounded-lg bg-surface-container p-3">
                 <span className="material-symbols-outlined text-3xl text-secondary">folder</span>
@@ -274,7 +274,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Comunidad" icono="forum">
+          <Desplegable titulo="Comunidad" icono="forum" defaultOpen>
             <div className="space-y-3">
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-3">
                 <div className="mb-1 flex items-center gap-2">
@@ -287,7 +287,7 @@ export default function PerfilEstudiantePage() {
             </div>
           </Desplegable>
 
-          <Desplegable titulo="Seguridad y Reportes" icono="security" tono="error" resumen="Cuenta segura">
+          <Desplegable titulo="Seguridad y Reportes" icono="security" tono="error" resumen="Cuenta segura" defaultOpen>
             <div className="flex flex-col gap-3">
               <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-3">
                 <div className="mb-1 flex items-center justify-between">
