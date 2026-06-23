@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { obtenerPerfil } from '@/lib/auth';
 import styles from './GlobalChatbot.module.css';
+import ChatbotAvatar from './ChatbotAvatar';
 
 // ─── Íconos SVG inline (patrón del proyecto: heredan currentColor) ────────
 const base = {
@@ -95,6 +96,7 @@ export default function GlobalChatbot() {
 
   // Estados del Chat
   const [chatAbierto, setChatAbierto] = useState(false);
+  const [fabHovered, setFabHovered] = useState(false);
   const [mensajes, setMensajes] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [cargando, setCargando] = useState(false);
@@ -279,6 +281,8 @@ export default function GlobalChatbot() {
     <>
       {/* Botón Flotante */}
       <button
+        onMouseEnter={() => setFabHovered(true)}
+        onMouseLeave={() => setFabHovered(false)}
         onClick={() => setChatAbierto((prev) => !prev)}
         className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
         aria-label="Abrir chat de asistencia"
@@ -286,10 +290,10 @@ export default function GlobalChatbot() {
         {chatAbierto ? (
           <IClose />
         ) : (
-          <>
-            <img src="/images/chatbot-avatar.png" alt="Abrir chat" className={styles.chatFabAvatar} />
-            <div className={styles.chatFabTrail}></div>
-          </>
+            <div className={styles.chatFabAvatar}>
+              <ChatbotAvatar animated={true} hovered={fabHovered} />
+            </div>
+
         )}
       </button>
 
@@ -298,7 +302,9 @@ export default function GlobalChatbot() {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderTitle}>
-              <img src="/images/chatbot-avatar.png" alt="Avatar" className={styles.chatHeaderAvatar} />
+              <div className={styles.chatHeaderAvatar}>
+                <ChatbotAvatar animated={false} />
+              </div>
               <span>Soporte Alumni UCR</span>
             </div>
             <button
@@ -317,11 +323,9 @@ export default function GlobalChatbot() {
                 className={msg.role === 'user' ? styles.chatUserWrapper : styles.chatAssistantWrapper}
               >
                 {msg.role !== 'user' && (
-                  <img
-                    src="/images/chatbot-avatar.png"
-                    alt="Asistente"
-                    className={styles.chatMessageAvatar}
-                  />
+                  <div className={styles.chatMessageAvatar}>
+                    <ChatbotAvatar animated={false} />
+                  </div>
                 )}
                 <div
                   className={`${styles.chatBubble} ${
@@ -334,11 +338,9 @@ export default function GlobalChatbot() {
             ))}
             {cargando && (
               <div className={styles.chatAssistantWrapper}>
-                <img
-                  src="/images/chatbot-avatar.png"
-                  alt="Asistente"
-                  className={styles.chatMessageAvatar}
-                />
+                <div className={styles.chatMessageAvatar}>
+                  <ChatbotAvatar animated={false} />
+                </div>
                 <div className={`${styles.chatBubble} ${styles.chatBubbleAssistant} ${styles.chatBubbleLoading}`}>
                   <span className={styles.chatLoadingDots}>
                     <span></span>
