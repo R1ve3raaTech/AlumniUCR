@@ -45,9 +45,13 @@ export default function CompletarPerfilPage() {
   }
 
   return (
-    <AuthCard title="Completa tu perfil" subtitle="Tu correo ya fue verificado. Define tus datos de acceso.">
+    <AuthCard title="Completá tu perfil" subtitle="Tu correo ya fue verificado. Definí tu nombre y una contraseña para entrar a la red Alumni UCR.">
       <form className={authStyles.form} onSubmit={handleSubmit} noValidate>
-        {error && <div className={authStyles.formError}>{error}</div>}
+        {error && (
+          <div className={authStyles.formError}>
+            <span aria-hidden>!</span> {error}
+          </div>
+        )}
 
         <TextField
           id="nombre"
@@ -83,7 +87,7 @@ export default function CompletarPerfilPage() {
           </p>
         </div>
 
-        <button type="submit" className={`btn-primary ${authStyles.submit}`} disabled={loading}>
+        <button type="submit" className={authStyles.submit} disabled={loading}>
           {loading ? 'Guardando…' : 'Crear mi cuenta'}
         </button>
       </form>

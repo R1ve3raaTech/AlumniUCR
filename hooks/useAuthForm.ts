@@ -22,5 +22,8 @@ export function useAuthForm() {
     }
   }, []);
 
-  return { error, loading, run };
+  // Limpia el error global (ej. al cambiar de contexto/rol en un formulario).
+  const reset = useCallback(() => setError(null), []);
+
+  return { error, loading, run, reset };
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ReportarPerfil from '@/components/ReportarPerfil';
 import StudentNav from '@/components/StudentNav';
+import ProgressBar from '@/components/ui/ProgressBar';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { apiFetch } from '@/lib/api';
 import { CARRERAS_UCR } from '@/lib/catalogoUCR';
@@ -377,12 +378,8 @@ function EstudiantesPageContent() {
                       )}
                     </div>
 
-                    <div className="mb-1 flex items-center justify-between text-xs text-ucr-on-surface-variant">
-                      <span>Avance del proyecto</span>
-                      <span className="font-semibold text-ucr-esmeralda">{e.proyecto.avance}%</span>
-                    </div>
-                    <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-ucr-surface-container">
-                      <span className="block h-full rounded-full bg-gradient-to-r from-ucr-secondary to-ucr-esmeralda" style={{ width: `${e.proyecto.avance}%` }} />
+                    <div className="mb-3">
+                      <ProgressBar value={e.proyecto.avance} label="Avance del proyecto" showValue />
                     </div>
 
                     {e.areas.length > 0 && (
