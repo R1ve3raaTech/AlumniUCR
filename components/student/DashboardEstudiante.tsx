@@ -101,7 +101,14 @@ export default function DashboardEstudiante() {
               </div>
               <div className="text-sm">
                 <p className="font-body-semibold">Perfil completo</p>
-                <Link href="/perfil-estudiante" className="text-white/80 underline hover:text-white">Completar ahora →</Link>
+                <Link
+                  href="/onboarding"
+                  aria-label="Editar mi perfil"
+                  title="Editar mi perfil"
+                  className="mt-2 inline-grid h-9 w-9 place-items-center rounded-full bg-[#54BCEB] text-primary shadow-md transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <span className="material-symbols-outlined text-[20px]">edit</span>
+                </Link>
               </div>
             </div>
           </div>
