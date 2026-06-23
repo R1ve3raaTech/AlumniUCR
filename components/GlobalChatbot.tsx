@@ -277,8 +277,13 @@ export default function GlobalChatbot() {
   // No renderizar mientras NextAuth/AuthContext se está hidratando
   if (loading) return null;
 
+  // En el perfil del estudiante el asistente no flota: se abre desde un
+  // desplegable de esa pantalla (evento 'open-global-chatbot').
+  const ocultarFab = !!pathname && pathname.startsWith('/perfil-estudiante');
+
   return (
     <>
+<<<<<<< HEAD
       {/* Botón Flotante */}
       <button
         onMouseEnter={() => setFabHovered(true)}
@@ -296,6 +301,25 @@ export default function GlobalChatbot() {
 
         )}
       </button>
+=======
+      {/* Botón Flotante (oculto donde se ofrece como opción desplegable) */}
+      {!ocultarFab && (
+        <button
+          onClick={() => setChatAbierto((prev) => !prev)}
+          className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
+          aria-label="Abrir chat de asistencia"
+        >
+          {chatAbierto ? (
+            <IClose />
+          ) : (
+            <>
+              <img src="/images/chatbot-avatar.png" alt="Abrir chat" className={styles.chatFabAvatar} />
+              <div className={styles.chatFabTrail}></div>
+            </>
+          )}
+        </button>
+      )}
+>>>>>>> 259e135b6b974e699c9adc8a3d15272804469cbc
 
       {/* Ventana de Chat */}
       {chatAbierto && (

@@ -9,6 +9,7 @@ import AdminConsultas from './AdminConsultas';
 import AdminExalumnosPendientes from './AdminExalumnosPendientes';
 import AdminDonacionesPendientes from './AdminDonacionesPendientes';
 import AdminReportesAnomalias from './AdminReportesAnomalias';
+import AdminComunidad from './AdminComunidad';
 import KPICard from './ui/KPICard';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
@@ -314,6 +315,21 @@ export default function AdminDashboard({
               <span className={styles.bloqueHint}>Denuncias, quejas y sugerencias enviadas por estudiantes</span>
             </div>
             {token && <AdminReportesAnomalias token={token} />}
+          </motion.section>
+
+          {/* Comunidad: modera blogs y gestiona eventos */}
+          <motion.section
+            className={styles.bloque}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className={styles.bloqueHead}>
+              <h2 className={styles.bloqueTitulo}>Comunidad: blogs y eventos</h2>
+              <span className={styles.bloqueHint}>Aprobá aportes de la comunidad y publicá eventos</span>
+            </div>
+            {token && <AdminComunidad token={token} />}
           </motion.section>
 
           {/* Consultas de soporte (enviadas desde el Centro de Ayuda) */}

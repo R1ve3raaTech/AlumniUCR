@@ -42,6 +42,10 @@ export interface PerfilEstudiante {
   proyectoAvance: number;
   proyectoAreas: string[];
   proyectoTipo: string; // TFG | TCU | Proyecto de Curso
+  // Adjunto del proyecto: foto (recortada), documento PDF o un enlace.
+  proyectoAdjunto: string; // data URL (imagen/pdf) o URL (link)
+  proyectoAdjuntoTipo: string; // '' | 'imagen' | 'pdf' | 'link'
+  proyectoAdjuntoNombre: string;
   // Apoyo requerido
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; financiamiento: boolean };
   // Intereses
@@ -75,6 +79,9 @@ export const PERFIL_VACIO: PerfilEstudiante = {
   proyectoAvance: 0,
   proyectoAreas: [],
   proyectoTipo: 'TFG (Trabajo Final de Graduación)',
+  proyectoAdjunto: '',
+  proyectoAdjuntoTipo: '',
+  proyectoAdjuntoNombre: '',
   apoyo: { mentoria: false, empleo: false, pasantia: false, financiamiento: false },
   intereses: [],
   habilidadesTecnicas: '',

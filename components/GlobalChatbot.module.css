@@ -425,17 +425,21 @@
   height: 20px;
 }
 
-@media (max-width: 480px) {
-  .chatWindow {
-    width: calc(100% - 2rem);
-    height: 500px;
-    bottom: 6rem;
-    right: 1rem;
-  }
+/* En móvil/tablet (< lg) existe la barra de navegación inferior (h-16 ≈ 4rem).
+   El botón flotante del chat sube por encima para no chocar con ella, y la
+   ventana del chat ocupa el ancho disponible quedando sobre la barra. */
+@media (max-width: 1023px) {
   .chatFab {
-    bottom: 1.5rem;
-    right: 1.5rem;
-    width: 3.75rem;
-    height: 3.75rem;
+    bottom: 5.25rem;
+    right: 1rem;
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .chatWindow {
+    bottom: 6.75rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    height: min(520px, calc(100vh - 9rem));
   }
 }

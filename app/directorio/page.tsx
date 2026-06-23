@@ -63,6 +63,8 @@ export default function DirectorioPage() {
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS);
+  // Fotos que fallaron al cargar → mostrar iniciales en lugar de ícono roto.
+  const [fotosRotas, setFotosRotas] = useState<Set<string>>(new Set());
 
   // El estudiante gestiona su Directorio de Talento; el resto ve el directorio
   // de exalumnos (público = exalumnos). Se espera a conocer el rol antes de
@@ -257,8 +259,8 @@ export default function DirectorioPage() {
             {filtrada.map((e) => (
               <article key={e.id} className={styles.card}>
                 <div className={styles.cardHead}>
-                  {e.foto_perfil
-                    ? <img src={e.foto_perfil} alt={e.nombre} className={styles.foto} />
+                  {e.foto_perfil && !fotosRotas.has(e.id)
+                    ? <img src={e.foto_perfil} alt={e.nombre} className={styles.foto} onError={() => setFotosRotas((s) => new Set(s).add(e.id))} />
                     : <span className={styles.fotoIni}>{iniciales(e.nombre)}</span>}
                   <div>
                     <h3 className={styles.nombre}>{e.nombre}</h3>

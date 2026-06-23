@@ -11,6 +11,8 @@ import StudentShell from '@/components/student/StudentShell';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import { misReportes } from '@/lib/reportesAnomalias';
+import { obtenerSugeridos } from '@/lib/matchesEstudiante';
+import { notificar } from '@/components/student/Toast';
 
 const card = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
 
@@ -49,10 +51,20 @@ export default function DashboardEstudiante() {
   const { token } = useAuth();
   const { perfil } = usePerfilEstudiante();
   const [reportes, setReportes] = useState<any[]>([]);
+  const [sugeridos, setSugeridos] = useState<any[]>([]);
 
   useEffect(() => {
     if (token) misReportes(token).then(setReportes).catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    let activo = true;
+    obtenerSugeridos(perfil).then((s) => { if (activo) setSugeridos(s); }).catch(() => {});
+    return () => { activo = false; };
+  }, [perfil]);
+
+  const iniciales = (n: string) => (n || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  const interesar = (n: string) => notificar(`📨 Registramos tu interés por ${n}.`);
 
   const nombre = perfil.nombre?.trim() || 'estudiante';
   const pct = completitud(perfil);
@@ -101,7 +113,14 @@ export default function DashboardEstudiante() {
               </div>
               <div className="text-sm">
                 <p className="font-body-semibold">Perfil completo</p>
-                <Link href="/perfil-estudiante" className="text-white/80 underline hover:text-white">Completar ahora →</Link>
+                <Link
+                  href="/onboarding"
+                  aria-label="Editar mi perfil"
+                  title="Editar mi perfil"
+                  className="mt-2 inline-grid h-9 w-9 place-items-center rounded-full bg-[#54BCEB] text-primary shadow-md transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <span className="material-symbols-outlined text-[20px]">edit</span>
+                </Link>
               </div>
             </div>
           </div>
@@ -137,7 +156,17 @@ export default function DashboardEstudiante() {
                 <h2 className="flex items-center gap-2 font-body-semibold text-primary">
                   <span className="material-symbols-outlined text-secondary">science</span> Mi proyecto de graduación
                 </h2>
-                <Link href="/directorio" className="text-xs font-bold uppercase text-secondary hover:underline">Gestionar</Link>
+                <div className="flex items-center gap-2">
+                  <Link href="/directorio" className="text-xs font-bold uppercase text-secondary hover:underline">Gestionar</Link>
+                  <Link
+                    href="/onboarding"
+                    aria-label="Editar proyecto"
+                    title="Editar proyecto"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                  </Link>
+                </div>
               </div>
               {perfil.proyectoTitulo ? (
                 <>
@@ -156,6 +185,55 @@ export default function DashboardEstudiante() {
                 <p className="text-sm text-on-surface-variant">Todavía no registraste tu proyecto. <Link href="/directorio" className="font-semibold text-secondary underline">Registralo</Link> para aparecer en el directorio y mejorar tus matches.</p>
               )}
             </div>
+
+            {/* Conexiones sugeridas (exalumnos reales puntuados por afinidad) */}
+            {sugeridos.length > 0 && (
+              <section className={`${card} p-6`}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-secondary">Para ti</p>
+                    <h2 className="font-headline-md text-lg text-primary">Conexiones sugeridas</h2>
+                  </div>
+                  <Link href="/mis-matches" className="flex items-center gap-1 text-xs font-bold uppercase text-secondary hover:underline">
+                    Ver todas <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {sugeridos.slice(0, 3).map((s) => {
+                    const tags = (s.comunes?.length ? s.comunes : s.areas || []).slice(0, 3);
+                    return (
+                      <article key={s.id} className="flex flex-col rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 transition-all hover:-translate-y-0.5 hover:border-secondary/50">
+                        <div className="mb-3 flex items-center gap-3">
+                          {s.foto_perfil ? (
+                            <img src={s.foto_perfil} alt={s.nombre} className="h-11 w-11 shrink-0 rounded-full object-cover" />
+                          ) : (
+                            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">{iniciales(s.nombre)}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate font-body-semibold text-primary">{s.nombre}</h3>
+                            <p className="truncate text-xs text-on-surface-variant">{s.carreras?.[0] || s.facultades?.[0] || 'Exalumno UCR'}</p>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-on-primary">{s.score}%</span>
+                        </div>
+                        {tags.length > 0 && (
+                          <div className="mb-4 flex flex-wrap gap-1.5">
+                            {tags.map((t: string) => <span key={t} className="rounded bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">{t}</span>)}
+                          </div>
+                        )}
+                        <div className="mt-auto flex gap-2">
+                          <button type="button" onClick={() => interesar(s.nombre)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-bold text-on-primary transition-colors hover:bg-secondary">
+                            <span className="material-symbols-outlined text-[18px]">diamond</span> Conectar
+                          </button>
+                          <Link href="/directorio" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
+                            <span className="material-symbols-outlined text-[18px]">person</span>
+                          </Link>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Columna derecha: avisos + bienestar */}
