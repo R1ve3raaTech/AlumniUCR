@@ -177,6 +177,20 @@ export default function PerfilEstudiantePage() {
 
         {/* ── Columna derecha ── */}
         <section className="col-span-12 flex flex-col gap-5 lg:col-span-4">
+          <Desplegable titulo="Asistente de IA" icono="smart_toy" defaultOpen>
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-on-surface-variant">Resolvé dudas sobre tu perfil, CV, matches o tu proyecto con el asistente inteligente de Alumni UCR.</p>
+              <button
+                type="button"
+                data-real
+                onClick={() => window.dispatchEvent(new Event('open-global-chatbot'))}
+                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5"
+              >
+                <span className="material-symbols-outlined">smart_toy</span> Abrir asistente
+              </button>
+            </div>
+          </Desplegable>
+
           <Desplegable titulo="Tipo de Beca" icono="workspace_premium" resumen={o(perfil.beca, 'Sin asignar')}>
             <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
               <div className="flex flex-col">
