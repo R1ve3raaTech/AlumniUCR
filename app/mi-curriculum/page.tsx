@@ -4,7 +4,7 @@
 // + stats glass + tarjetas-acordeón premium. Conserva la vista previa real del CV
 // y la exportación a PDF (#cv-print + @media print).
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import CvDocumento from '@/components/student/CvDocumento';

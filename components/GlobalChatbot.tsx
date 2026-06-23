@@ -45,6 +45,9 @@ const obtenerSaludoInicial = (rol: string, pathname: string) => {
     return '¡Hola, graduado UCR! Estoy listo para asistirte en cómo completar tus datos, postularte como mentor, registrar ofertas de empleo y gestionar tus mentorías activas.';
   }
   if (rol === 'estudiante') {
+    if (pathname.includes('/mi-curriculum')) {
+      return '¡Hola! Soy tu **CV Advisor** especializado 📋\n\nPuedo ayudarte a:\n• Redactar logros con la metodología STAR\n• Optimizar tu CV para una vacante específica\n• Sugerirte certificaciones para tu área\n• Mejorar tu resumen profesional\n\n¿Qué sección de tu CV quieres trabajar hoy?';
+    }
     if (pathname.includes('/proyectos') || pathname.includes('/perfil-estudiante') || pathname.includes('/completar-perfil')) {
       return '¡Hola! Actúo como tu Asesor de TFG virtual. Puedo guiarte a estructurar mejor tus objetivos de tesis (generales y específicos) y a elegir las áreas temáticas correctas para el matching.';
     }
@@ -56,6 +59,35 @@ const obtenerSaludoInicial = (rol: string, pathname: string) => {
   return '¡Hola! Soy el asistente de IA oficial de Alumni UCR. ¿Tienes alguna duda sobre el registro, las mentorías o los proyectos? Cuéntame y te ayudo.';
 };
 
+// Catálogo de sugerencias para el CV Advisor (type-ahead chips)
+const CV_SUGERENCIAS: string[] = [
+  // Estructura
+  '¿Cuántas páginas debe tener mi CV?',
+  '¿Qué secciones son obligatorias en un CV universitario?',
+  '¿Debo poner foto en mi CV?',
+  '¿Cuál es la diferencia entre CV y résumé?',
+  // Redacción y logros
+  '¿Cómo redacto mis logros con la metodología STAR?',
+  '¿Qué verbos de acción debo usar en mi CV?',
+  '¿Cómo cuantifico un logro si no tengo datos exactos?',
+  '¿Cómo transformo una descripción genérica en un bullet de impacto?',
+  // Mejoras específicas
+  '¿Cómo mejoro mi resumen o perfil profesional?',
+  '¿Cómo adapto mi CV para una vacante específica?',
+  '¿Cómo optimizo mi CV para pasar filtros ATS?',
+  '¿Cómo listo proyectos universitarios si no tengo experiencia laboral?',
+  // Habilidades y certificaciones
+  '¿Qué certificaciones me recomiendas para mi área?',
+  '¿Cómo agrego niveles de idioma a mi CV?',
+  '¿Qué habilidades blandas valoran más los reclutadores?',
+  '¿Cuáles son las tecnologías más demandadas en Costa Rica?',
+  // Mercado laboral
+  '¿Qué buscan los reclutadores costarricenses en un CV?',
+  '¿Qué empresas contratan egresados de la UCR?',
+  '¿Cómo postularme a Amazon, Intel o Accenture desde la UCR?',
+  '¿El inglés influye en el salario esperado?',
+];
+
 export default function GlobalChatbot() {
   const pathname = usePathname();
   const { token, loading } = useAuth();
@@ -66,6 +98,7 @@ export default function GlobalChatbot() {
   const [mensajes, setMensajes] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [sugerenciasFiltradas, setSugerenciasFiltradas] = useState<string[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const estadoRef = useRef({ token, rol, pathname, mensajes, cargando });
@@ -184,8 +217,40 @@ export default function GlobalChatbot() {
 
     const msg = nuevoMensaje;
     setNuevoMensaje('');
+    setSugerenciasFiltradas([]);
     await enviarMensajeEspecifico(msg);
   };
+
+  // Maneja el cambio del input y filtra sugerencias (type-ahead para el CV Advisor)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    setNuevoMensaje(valor);
+
+    // Solo mostrar sugerencias en la sección de CV
+    if (!pathname.includes('/mi-curriculum')) {
+      setSugerenciasFiltradas([]);
+      return;
+    }
+
+    if (valor.trim().length < 2) {
+      setSugerenciasFiltradas([]);
+      return;
+    }
+
+    const query = valor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const filtradas = CV_SUGERENCIAS.filter((s) => {
+      const sSin = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return sSin.includes(query);
+    }).slice(0, 3);
+    setSugerenciasFiltradas(filtradas);
+  };
+
+  const seleccionarSugerencia = async (sugerencia: string) => {
+    setNuevoMensaje('');
+    setSugerenciasFiltradas([]);
+    await enviarMensajeEspecifico(sugerencia);
+  };
+
 
   // Parsea negritas básicas **texto** y saltos de línea del markdown
   const formatearTextoMarkdown = (texto: string) => {
@@ -294,21 +359,59 @@ export default function GlobalChatbot() {
           </div>
 
           <form onSubmit={enviarMensaje} className={styles.chatForm}>
-            <input
-              type="text"
-              className={styles.chatInput}
-              placeholder="Escribe tu mensaje..."
-              value={nuevoMensaje}
-              onChange={(e) => setNuevoMensaje(e.target.value)}
-              disabled={cargando}
-            />
-            <button
-              type="submit"
-              className={styles.chatSendBtn}
-              disabled={!nuevoMensaje.trim() || cargando}
-            >
-              <ISend />
-            </button>
+            {/* Chips de sugerencias tipo-ahead (solo en /mi-curriculum) */}
+            {sugerenciasFiltradas.length > 0 && (
+              <div className={styles.chatSuggestions}>
+                {sugerenciasFiltradas.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.chatSuggestionChip}
+                    onClick={() => seleccionarSugerencia(s)}
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Chips de acceso rápido iniciales (solo en /mi-curriculum y sin texto) */}
+            {pathname.includes('/mi-curriculum') && !nuevoMensaje.trim() && mensajes.length <= 1 && !cargando && (
+              <div className={styles.chatSuggestions}>
+                {[
+                  '¿Cómo redacto mis logros con STAR?',
+                  '¿Qué verbos de acción usar?',
+                  '¿Qué certificaciones me recomiendas?',
+                ].map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.chatSuggestionChip}
+                    onClick={() => seleccionarSugerencia(s)}
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className={styles.chatInputRow}>
+              <input
+                type="text"
+                className={styles.chatInput}
+                placeholder={pathname.includes('/mi-curriculum') ? 'Pregunta sobre tu CV...' : 'Escribe tu mensaje...'}
+                value={nuevoMensaje}
+                onChange={handleInputChange}
+                disabled={cargando}
+              />
+              <button
+                type="submit"
+                className={styles.chatSendBtn}
+                disabled={!nuevoMensaje.trim() || cargando}
+              >
+                <ISend />
+              </button>
+            </div>
           </form>
         </div>
       )}
