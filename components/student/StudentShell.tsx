@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
@@ -32,9 +33,12 @@ export default function StudentShell({
   nombre?: string;
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const salir = () => { signOut(); router.replace('/login'); };
   const { perfil, actualizar } = usePerfilEstudiante();
   const [editorFoto, setEditorFoto] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const correo = user?.email ?? '';
   const nombrePerfil = `${perfil.nombre} ${perfil.apellidos}`.trim();
@@ -46,27 +50,36 @@ export default function StudentShell({
     .slice(0, 2)
     .join('')
     .toUpperCase();
+  // Nombre compacto y responsivo: primer nombre + inicial del apellido (ej. "Carlos J.").
+  const primerNombre = (perfil.nombre || nombreMostrar).trim().split(/\s+/)[0] || 'Estudiante';
+  const inicialApellido = (perfil.apellidos || '').trim().charAt(0);
+  const nombreCompacto = inicialApellido ? `${primerNombre} ${inicialApellido.toUpperCase()}.` : primerNombre;
 
   return (
     <div className="bg-background text-on-background font-body-base antialiased">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6">
-        <div className="mb-8 flex w-full shrink-0 items-center justify-center py-2">
+      {/* Overlay para cerrar el menú en móvil */}
+      {menuAbierto && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
+      )}
+
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="mb-6 flex w-full shrink-0 items-center justify-center py-1 sm:mb-8 sm:py-2">
           <Link href="/dashboard" aria-label="UCR Conecta — inicio">
-            <AlumniLogo height={56} />
+            <AlumniLogo className="!h-11 w-auto sm:!h-14" />
           </Link>
         </div>
 
-        <div className="mb-8 flex shrink-0 flex-col items-center px-4">
-          <div className="relative mb-4">
+        <div className="mb-6 flex shrink-0 flex-col items-center px-2 sm:mb-8">
+          <div className="relative mb-3 sm:mb-4">
             {perfil.foto ? (
               <img
                 src={perfil.foto}
                 alt={nombreMostrar}
-                className="h-24 w-24 rounded-full border-2 border-primary object-cover object-center shadow-sm"
+                className="h-20 w-20 rounded-full border-2 border-primary object-cover object-center shadow-sm sm:h-24 sm:w-24"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm sm:h-24 sm:w-24">
                 {iniciales || 'E'}
               </div>
             )}
@@ -82,16 +95,16 @@ export default function StudentShell({
             </button>
             <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
           </div>
-          <h2 className="font-body-semibold text-primary">{nombreMostrar}</h2>
-          <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">{subtitulo}</p>
+          <h2 className="max-w-full truncate font-body-semibold text-primary" title={nombreMostrar}>{nombreCompacto}</h2>
+          <p className="max-w-full truncate text-xs font-bold uppercase tracking-tighter text-on-surface-variant" title={subtitulo}>{subtitulo}</p>
         </div>
 
         <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
           {NAV.map((item) => {
             const activo = item.key === active;
             const claseBase = activo
-              ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
-              : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface';
+              ? 'flex items-center gap-3 rounded-lg bg-primary-container p-3 font-bold text-on-primary-container sm:gap-4 sm:p-3.5'
+              : 'flex items-center gap-3 rounded-lg p-3 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface sm:gap-4 sm:p-3.5';
 
             // Departamentos por crear: botón con aviso, sin navegar a un link muerto.
             if (item.proximamente) {
@@ -132,13 +145,25 @@ export default function StudentShell({
             <span className="material-symbols-outlined">settings</span>
             <span className="font-body-semibold">Configuración</span>
           </Link>
+          <button
+            type="button"
+            onClick={salir}
+            className="flex items-center gap-4 rounded-lg p-4 text-left text-error transition-all hover:bg-error/10"
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-body-semibold">Cerrar sesión</span>
+          </button>
         </div>
       </aside>
 
       {/* Header */}
-      <header className="fixed left-64 right-0 top-0 z-40 h-16 border-b border-outline-variant bg-surface-container-lowest">
-        <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between px-8">
-          <div className="max-w-xl flex-1">
+      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
+        <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between gap-2 px-4 sm:px-8">
+          {/* En móvil el logo va en el header (el sidebar está oculto). */}
+          <Link href="/dashboard" className="lg:hidden" aria-label="Inicio">
+            <AlumniLogo className="!h-8 w-auto" />
+          </Link>
+          <div className="hidden max-w-xl flex-1 lg:block">
             <div className="relative">
               <svg
                 className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
@@ -154,18 +179,14 @@ export default function StudentShell({
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={() => notificar('🔔 No tenés notificaciones nuevas')}
-              className="relative rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-variant"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error" />
-            </button>
-            <div className="flex cursor-pointer items-center gap-2 rounded-lg p-1 transition-all hover:bg-surface-container">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                {iniciales || 'E'}
-              </div>
+            <div className="flex cursor-pointer items-center gap-2 rounded-full p-1 outline-none transition-all hover:bg-surface-container focus-visible:ring-2 focus-visible:ring-secondary/40">
+              {perfil.foto ? (
+                <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {iniciales || 'E'}
+                </div>
+              )}
               <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
             </div>
           </div>
@@ -173,7 +194,29 @@ export default function StudentShell({
       </header>
 
       {/* Main */}
-      <main className="ml-64 min-h-screen pt-16">{children}</main>
+      <main className="ml-0 min-h-screen pb-16 pt-16 lg:ml-64 lg:pb-0">{children}</main>
+
+      {/* Barra inferior estilo app (solo móvil): SOLO íconos, con indicador
+          activo en píldora (Material 3). El resto de opciones vive en el Menú. */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-stretch justify-around border-t border-outline-variant bg-surface-container-lowest shadow-[0_-4px_16px_-10px_rgba(0,40,55,0.25)] lg:hidden">
+        {NAV.slice(0, 4).map((item) => {
+          const activo = item.key === active;
+          return (
+            <Link key={item.key} href={item.href} aria-label={item.label} aria-current={activo ? 'page' : undefined}
+              className="flex flex-1 flex-col items-center justify-center">
+              <span className={`grid place-items-center rounded-full px-5 py-1 transition-colors ${activo ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
+                <span className="material-symbols-outlined" style={activo ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
+              </span>
+            </Link>
+          );
+        })}
+        <button type="button" onClick={() => setMenuAbierto(true)} aria-label="Más opciones"
+          className="flex flex-1 flex-col items-center justify-center">
+          <span className="grid place-items-center rounded-full px-5 py-1 text-on-surface-variant transition-colors">
+            <span className="material-symbols-outlined">menu</span>
+          </span>
+        </button>
+      </nav>
 
       <AvatarUploader
         abierto={editorFoto}
