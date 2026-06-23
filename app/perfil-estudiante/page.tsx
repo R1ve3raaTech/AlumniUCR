@@ -40,28 +40,85 @@ export default function PerfilEstudiantePage() {
     perfil.apoyo.pasantia && 'Pasantía',
     perfil.apoyo.financiamiento && 'Financiamiento',
   ].filter(Boolean) as string[];
+  const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
+  const iniciales = nombre.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || 'E';
+  const pctCampos = [
+    perfil.nombre, perfil.apellidos, perfil.telefono, perfil.carrera, perfil.sede, perfil.resumen,
+    perfil.foto, perfil.proyectoTitulo, perfil.habilidadesTecnicas,
+    perfil.experiencias.length ? 'x' : '', perfil.intereses.length ? 'x' : '',
+  ];
+  const pct = Math.round((pctCampos.filter((c) => String(c).trim()).length / pctCampos.length) * 100);
 
   return (
     <StudentShell active="perfil">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-5 p-4 sm:p-8" onClick={avisoProximamente}>
-        {/* Encabezado simple + barra de estadísticas */}
+        {/* Tarjeta de perfil (encabezado dinámico, responsivo) */}
         <div className="col-span-12">
-          <h1 className="font-headline-md text-2xl text-primary sm:text-3xl">Mi Perfil</h1>
-          <p className="text-sm text-on-surface-variant">{`Estudiante · ${o(perfil.carrera)}`}</p>
-          <div className="mt-4 flex items-center justify-around rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]">
-            {[
-              { label: 'Avance', valor: `${perfil.proyectoAvance}%` },
-              { label: 'Registros', valor: String(perfil.experiencias.length).padStart(2, '0') },
-              { label: 'Beca', valor: o(perfil.beca, '—') },
-            ].map((s, i) => (
-              <React.Fragment key={s.label}>
-                {i > 0 && <div className="h-8 w-px bg-outline-variant/60" />}
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">{s.label}</p>
-                  <p className="text-xl font-bold text-primary">{s.valor}</p>
+          <div className="relative overflow-hidden rounded-3xl border border-outline-variant bg-surface-container-lowest p-5 shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] sm:p-7">
+            {/* Acentos decorativos */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-secondary/25 to-primary/10 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-secondary to-[#54bceb]" aria-hidden />
+
+            <div className="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6">
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                {perfil.foto ? (
+                  <img src={perfil.foto} alt={nombre} className="h-24 w-24 rounded-2xl border-2 border-white object-cover object-center shadow-md sm:h-28 sm:w-28" />
+                ) : (
+                  <div className="grid h-24 w-24 place-items-center rounded-2xl border-2 border-white bg-gradient-to-br from-primary to-secondary font-display-lg text-3xl font-bold text-white shadow-md sm:h-28 sm:w-28">{iniciales}</div>
+                )}
+                <span className="absolute -bottom-1.5 -right-1.5 grid h-7 w-7 place-items-center rounded-full border-2 border-surface-container-lowest bg-secondary text-on-secondary" title="Estudiante verificado">
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                </span>
+              </div>
+
+              {/* Identidad + chips */}
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <h1 className="truncate font-headline-md text-2xl text-primary sm:text-3xl">{nombre}</h1>
+                <p className="text-on-surface-variant">Estudiante · {o(perfil.carrera)}</p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+                  {[
+                    { icon: 'badge', txt: o(perfil.carne, 'Sin carné') },
+                    { icon: 'location_on', txt: o(perfil.sede, 'Sede pendiente') },
+                    { icon: 'workspace_premium', txt: `Beca ${o(perfil.beca, '—')}` },
+                  ].map((c) => (
+                    <span key={c.icon} className="inline-flex items-center gap-1 rounded-full bg-surface-container-low px-3 py-1 text-xs font-semibold text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[15px] text-secondary">{c.icon}</span> {c.txt}
+                    </span>
+                  ))}
                 </div>
-              </React.Fragment>
-            ))}
+              </div>
+
+              {/* Anillo de progreso + editar */}
+              <div className="flex shrink-0 flex-col items-center gap-2">
+                <div className="relative grid h-20 w-20 place-items-center rounded-full" style={{ background: `conic-gradient(#54bceb ${pct * 3.6}deg, rgba(0,76,99,0.08) 0deg)` }}>
+                  <div className="grid h-[60px] w-[60px] place-items-center rounded-full bg-surface-container-lowest">
+                    <span className="text-lg font-bold text-primary">{pct}%</span>
+                  </div>
+                </div>
+                <Link href="/onboarding" data-real className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-1.5 text-xs font-bold text-on-primary shadow-sm transition-transform hover:-translate-y-0.5">
+                  <span className="material-symbols-outlined text-[16px]">edit</span> Editar
+                </Link>
+              </div>
+            </div>
+
+            {/* Estadísticas rápidas */}
+            <div className="relative mt-6 flex items-center justify-around gap-2 border-t border-outline-variant/40 pt-5 text-center">
+              {[
+                { icon: 'science', label: 'Avance TFG', valor: `${perfil.proyectoAvance}%` },
+                { icon: 'work_history', label: 'Registros', valor: String(perfil.experiencias.length).padStart(2, '0') },
+                { icon: 'interests', label: 'Intereses', valor: String(perfil.intereses.length).padStart(2, '0') },
+              ].map((s, i) => (
+                <React.Fragment key={s.label}>
+                  {i > 0 && <div className="h-10 w-px shrink-0 bg-outline-variant/50" />}
+                  <div className="flex flex-1 flex-col items-center">
+                    <span className="material-symbols-outlined mb-0.5 text-secondary">{s.icon}</span>
+                    <p className="text-xl font-bold text-primary">{s.valor}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">{s.label}</p>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
 
