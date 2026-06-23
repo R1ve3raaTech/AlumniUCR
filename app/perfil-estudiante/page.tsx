@@ -8,7 +8,6 @@ import React from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import Desplegable from '@/components/student/Desplegable';
-import PerfilHeader from '@/components/student/PerfilHeader';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 
@@ -41,27 +40,29 @@ export default function PerfilEstudiantePage() {
     perfil.apoyo.pasantia && 'Pasantía',
     perfil.apoyo.financiamiento && 'Financiamiento',
   ].filter(Boolean) as string[];
-  const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
-  const nombreCompacto = perfil.apellidos?.trim()
-    ? `${(perfil.nombre || '').trim().split(/\s+/)[0]} ${perfil.apellidos.trim().charAt(0).toUpperCase()}.`
-    : (perfil.nombre || 'Estudiante');
 
   return (
     <StudentShell active="perfil">
       <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-5 p-4 sm:p-8" onClick={avisoProximamente}>
-        {/* Header inmersivo + stats (componente compartido) */}
+        {/* Encabezado simple + barra de estadísticas */}
         <div className="col-span-12">
-          <PerfilHeader
-            nombre={nombre}
-            nombreCompacto={nombreCompacto}
-            subtitulo={`Estudiante · ${o(perfil.carrera)}`}
-            foto={perfil.foto}
-            stats={[
+          <h1 className="font-headline-md text-2xl text-primary sm:text-3xl">Mi Perfil</h1>
+          <p className="text-sm text-on-surface-variant">{`Estudiante · ${o(perfil.carrera)}`}</p>
+          <div className="mt-4 flex items-center justify-around rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]">
+            {[
               { label: 'Avance', valor: `${perfil.proyectoAvance}%` },
               { label: 'Registros', valor: String(perfil.experiencias.length).padStart(2, '0') },
               { label: 'Beca', valor: o(perfil.beca, '—') },
-            ]}
-          />
+            ].map((s, i) => (
+              <React.Fragment key={s.label}>
+                {i > 0 && <div className="h-8 w-px bg-outline-variant/60" />}
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-primary/60">{s.label}</p>
+                  <p className="text-xl font-bold text-primary">{s.valor}</p>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
 
         {!perfil.completado && (
