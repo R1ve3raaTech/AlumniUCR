@@ -144,7 +144,17 @@ export default function DashboardEstudiante() {
                 <h2 className="flex items-center gap-2 font-body-semibold text-primary">
                   <span className="material-symbols-outlined text-secondary">science</span> Mi proyecto de graduación
                 </h2>
-                <Link href="/directorio" className="text-xs font-bold uppercase text-secondary hover:underline">Gestionar</Link>
+                <div className="flex items-center gap-2">
+                  <Link href="/directorio" className="text-xs font-bold uppercase text-secondary hover:underline">Gestionar</Link>
+                  <Link
+                    href="/onboarding"
+                    aria-label="Editar proyecto"
+                    title="Editar proyecto"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                  </Link>
+                </div>
               </div>
               {perfil.proyectoTitulo ? (
                 <>
