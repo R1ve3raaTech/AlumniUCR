@@ -4,6 +4,15 @@
  */
 const claude = require('../config/claude');
 const supabase = require('../config/supabase');
+const { FAQS } = require('../config/faqs');
+
+// Mapeo de categorías autorizadas por rol para control de seguridad
+const CATEGORIAS_PERMITIDAS = {
+  visitante: ['Registro y Cuenta', 'Seguridad y Privacidad'],
+  estudiante: ['Registro y Cuenta', 'Estudiantes y Becas', 'Proyectos y Financiamiento', 'Seguridad y Privacidad', 'Exalumnos y Mentorías'],
+  exalumno: ['Registro y Cuenta', 'Exalumnos y Mentorías', 'Proyectos y Financiamiento', 'Donaciones', 'Seguridad y Privacidad'],
+  admin: ['Registro y Cuenta', 'Estudiantes y Becas', 'Exalumnos y Mentorías', 'Proyectos y Financiamiento', 'Donaciones', 'Seguridad y Privacidad']
+};
 
 // ─── Catálogo de Prompts de Sistema para cada Contexto ──────────────────
 const PROMPTS = {
@@ -16,6 +25,7 @@ PUNTOS CLAVE DEL SISTEMA QUE PUEDES EXPLICAR:
 - Registro de Exalumnos: Cualquier correo. Deben ingresar obligatoriamente carrera cursada, facultad de procedencia y año de graduación. Queda pendiente de aprobación manual por un Administrador.
 - Recuperación de contraseña: Opción "¿Olvidaste tu contraseña?" en login.
 - Soporte: Correo soporte@ucrconnect.cr (horario L-V 8 AM a 5 PM).
+- Una explicación de como ser colaborador y poder donar a proyectos de graduación.
 
 REGLA DE SEGURIDAD ESTRICTA SOBRE ROLES:
 - Tienes estrictamente PROHIBIDO responder preguntas sobre datos internos de la plataforma, bases de datos o funcionalidades de usuarios autenticados.
@@ -185,19 +195,18 @@ REGLAS ESTRICTAS:
 const obtenerPromptDeSistema = async (contexto, usuario) => {
   const rol = (contexto?.rol || 'visitante').toLowerCase().trim();
   const pathname = (contexto?.pathname || '/').toLowerCase().trim();
+  let promptBase = '';
 
   // Caso 1: Administrador
   if (rol === 'admin') {
-    return PROMPTS.ADMIN;
+    promptBase = PROMPTS.ADMIN;
   }
-
   // Caso 2: Exalumno
-  if (rol === 'exalumno') {
-    return PROMPTS.EXALUMNO_GENERAL;
+  else if (rol === 'exalumno') {
+    promptBase = PROMPTS.EXALUMNO_GENERAL;
   }
-
   // Caso 3: Estudiante
-  if (rol === 'estudiante') {
+  else if (rol === 'estudiante') {
     // Si está en la sección de su currículum — inyectar CV personalizado en el prompt
     if (pathname.includes('/mi-curriculum')) {
       let cvContexto = 'El estudiante aún no ha registrado datos en su currículum. Motívalo a completar sus secciones de Experiencia, Habilidades y Certificaciones.';
@@ -214,27 +223,52 @@ const obtenerPromptDeSistema = async (contexto, usuario) => {
         }
       }
       // Reemplazar el placeholder con el CV real formateado
-      return PROMPTS.ESTUDIANTE_CV.replace('{cv_contexto_formateado}', cvContexto);
+      promptBase = PROMPTS.ESTUDIANTE_CV.replace('{cv_contexto_formateado}', cvContexto);
     }
     // Si está editando proyectos, completando perfil académico o en la sección de proyectos
-    if (
+    else if (
       pathname.includes('/proyectos') ||
       pathname.includes('/perfil-estudiante') ||
       pathname.includes('/completar-perfil')
     ) {
-      return PROMPTS.ESTUDIANTE_PROYECTOS;
+      promptBase = PROMPTS.ESTUDIANTE_PROYECTOS;
     }
     // Si está buscando mentores o en mentorías
-    if (pathname.includes('/mentorias')) {
-      return PROMPTS.ESTUDIANTE_MENTORIAS;
+    else if (pathname.includes('/mentorias')) {
+      promptBase = PROMPTS.ESTUDIANTE_MENTORIAS;
     }
     // Dashboard o página general de estudiante
-    return PROMPTS.ESTUDIANTE_GENERAL;
+    else {
+      promptBase = PROMPTS.ESTUDIANTE_GENERAL;
+    }
+  }
+  // Caso 4: Por defecto (Público/Visitante)
+  else {
+    promptBase = PROMPTS.PUBLICO;
   }
 
-  // Caso 4: Por defecto (Público/Visitante)
-  return PROMPTS.PUBLICO;
+  // Cargar FAQs y agregar seguridad
+  const categoriasPermitidas = CATEGORIAS_PERMITIDAS[rol] || CATEGORIAS_PERMITIDAS.visitante;
+  const faqsPermitidas = FAQS.filter(f => categoriasPermitidas.includes(f.categoria));
+  const faqsTexto = faqsPermitidas.map(f => `[Categoría: ${f.categoria}] Pregunta: ${f.pregunta}\nRespuesta: ${f.respuesta}`).join('\n\n');
+
+  const seguridadFaqs = `
+--- REGLAS DE SEGURIDAD Y RESTRICCIONES DE ACCESO POR ROL ---
+Tu rol actual en la conversación es: ${rol.toUpperCase()}.
+El usuario está interactuando desde la ruta: ${pathname}.
+Debe ser de suma importancia que valides si el usuario te hace una pregunta que corresponde a una categoría restringida para su rol. Las categorías autorizadas para el rol "${rol.toUpperCase()}" son: ${categoriasPermitidas.join(', ')}.
+
+Si el usuario pregunta sobre algún tema o funcionalidad que NO esté en sus categorías autorizadas (ej. un visitante preguntando sobre cómo se realiza el matching interdisciplinario de un estudiante, o un estudiante preguntando cómo aprobar cuentas de exalumnos o moderar reportes), debes denegar la respuesta de inmediato de manera amable y cortés diciendo:
+"Esta consulta involucra datos o funcionalidades internas de la plataforma a las que no tienes acceso con tu rol actual. Si consideras que es un error, por favor inicia sesión con una cuenta autorizada o comunícate con soporte."
+
+A continuación, se te provee la lista de Preguntas Frecuentes (FAQs) oficiales y autorizadas para el rol actual del usuario. Utilízalas como tu base de conocimiento oficial para responder consultas sobre el Centro de Ayuda:
+
+${faqsTexto || 'No hay FAQs autorizadas para este rol.'}
+`;
+
+  return `${promptBase}\n\n${seguridadFaqs}`;
 };
+
 
 /**
  * Obtiene el perfil detallado de un exalumno mentor.
