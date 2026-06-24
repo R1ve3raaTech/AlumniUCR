@@ -10,8 +10,8 @@ const exigirRol = require('../middlewares/role.middleware');
 router.get('/blogs', c.listarBlogs);
 router.get('/eventos', c.listarEventos);
 
-// Estudiantes y exalumnos publican (queda pendiente de aprobación) y ven lo suyo.
-router.post('/blogs', autenticar, exigirRol(['estudiante', 'exalumno', 'admin']), c.crearBlog);
+// Estudiantes, exalumnos y voluntarios publican (queda pendiente de aprobación) y ven lo suyo.
+router.post('/blogs', autenticar, exigirRol(['estudiante', 'exalumno', 'voluntario', 'admin']), c.crearBlog);
 router.get('/blogs/mios', autenticar, c.misBlogs);
 
 // Administración: moderación de blogs y gestión de eventos.
