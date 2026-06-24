@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { obtenerPerfil } from '@/lib/auth';
 import styles from './GlobalChatbot.module.css';
+import ChatbotAvatar from './ChatbotAvatar';
 
 // ─── Íconos SVG inline (patrón del proyecto: heredan currentColor) ────────
 const base = {
@@ -88,6 +89,30 @@ const CV_SUGERENCIAS: string[] = [
   '¿El inglés influye en el salario esperado?',
 ];
 
+// Sugerencias de preguntas rápidas en el Centro de Ayuda (/ayuda) según el rol del usuario
+const AYUDA_SUGERENCIAS: Record<string, string[]> = {
+  visitante: [
+    '¿Quiénes pueden registrarse?',
+    '¿Cuánto tarda en aprobarse mi cuenta?',
+    '¿El registro tiene algún costo?'
+  ],
+  estudiante: [
+    '¿Qué es el CV con IA?',
+    '¿Cómo busco mentores o apoyo?',
+    '¿Para qué sirve registrar mi proyecto de graduación?'
+  ],
+  exalumno: [
+    '¿Cómo me postulo como mentor?',
+    '¿Cómo funciona el matching interdisciplinario?',
+    '¿Puedo ofrecer empleo o pasantías?'
+  ],
+  admin: [
+    '¿Cómo funciona el matching avanzado?',
+    '¿Cómo auditar o validar donaciones?',
+    '¿Cómo moderar o resolver reportes?'
+  ]
+};
+
 export default function GlobalChatbot() {
   const pathname = usePathname();
   const { token, loading } = useAuth();
@@ -95,6 +120,7 @@ export default function GlobalChatbot() {
 
   // Estados del Chat
   const [chatAbierto, setChatAbierto] = useState(false);
+  const [fabHovered, setFabHovered] = useState(false);
   const [mensajes, setMensajes] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [cargando, setCargando] = useState(false);
@@ -194,10 +220,13 @@ export default function GlobalChatbot() {
     const handleToggle = (e: Event) => {
       setChatAbierto(true);
       const customEvent = e as CustomEvent;
-      if (customEvent.detail && customEvent.detail.mensaje) {
-        setTimeout(() => {
-          enviarMensajeEspecifico(customEvent.detail.mensaje);
-        }, 100);
+      if (customEvent.detail) {
+        const queryText = customEvent.detail.mensaje || customEvent.detail.query || '';
+        if (queryText) {
+          setTimeout(() => {
+            enviarMensajeEspecifico(queryText);
+          }, 100);
+        }
       }
     };
     window.addEventListener('open-global-chatbot', handleToggle);
@@ -281,9 +310,12 @@ export default function GlobalChatbot() {
 
   return (
     <>
+
       {/* Botón Flotante (oculto donde se ofrece como opción desplegable) */}
       {!ocultarFab && (
         <button
+          onMouseEnter={() => setFabHovered(true)}
+          onMouseLeave={() => setFabHovered(false)}
           onClick={() => setChatAbierto((prev) => !prev)}
           className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
           aria-label="Abrir chat de asistencia"
@@ -291,10 +323,9 @@ export default function GlobalChatbot() {
           {chatAbierto ? (
             <IClose />
           ) : (
-            <>
-              <img src="/images/chatbot-avatar.png" alt="Abrir chat" className={styles.chatFabAvatar} />
-              <div className={styles.chatFabTrail}></div>
-            </>
+            <div className={styles.chatFabAvatar}>
+              <ChatbotAvatar animated={true} hovered={fabHovered} />
+            </div>
           )}
         </button>
       )}
@@ -304,7 +335,9 @@ export default function GlobalChatbot() {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderTitle}>
-              <img src="/images/chatbot-avatar.png" alt="Avatar" className={styles.chatHeaderAvatar} />
+              <div className={styles.chatHeaderAvatar}>
+                <ChatbotAvatar animated={true} />
+              </div>
               <span>Soporte Alumni UCR</span>
             </div>
             <button
@@ -323,11 +356,9 @@ export default function GlobalChatbot() {
                 className={msg.role === 'user' ? styles.chatUserWrapper : styles.chatAssistantWrapper}
               >
                 {msg.role !== 'user' && (
-                  <img
-                    src="/images/chatbot-avatar.png"
-                    alt="Asistente"
-                    className={styles.chatMessageAvatar}
-                  />
+                  <div className={styles.chatMessageAvatar}>
+                    <ChatbotAvatar animated={true} />
+                  </div>
                 )}
                 <div
                   className={`${styles.chatBubble} ${
@@ -340,11 +371,9 @@ export default function GlobalChatbot() {
             ))}
             {cargando && (
               <div className={styles.chatAssistantWrapper}>
-                <img
-                  src="/images/chatbot-avatar.png"
-                  alt="Asistente"
-                  className={styles.chatMessageAvatar}
-                />
+                <div className={styles.chatMessageAvatar}>
+                  <ChatbotAvatar animated={true} />
+                </div>
                 <div className={`${styles.chatBubble} ${styles.chatBubbleAssistant} ${styles.chatBubbleLoading}`}>
                   <span className={styles.chatLoadingDots}>
                     <span></span>
@@ -383,6 +412,22 @@ export default function GlobalChatbot() {
                   '¿Qué verbos de acción usar?',
                   '¿Qué certificaciones me recomiendas?',
                 ].map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.chatSuggestionChip}
+                    onClick={() => seleccionarSugerencia(s)}
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Chips de acceso rápido iniciales en el Centro de Ayuda */}
+            {pathname.includes('/ayuda') && !nuevoMensaje.trim() && mensajes.length <= 1 && !cargando && (
+              <div className={styles.chatSuggestions}>
+                {(AYUDA_SUGERENCIAS[rol] || AYUDA_SUGERENCIAS.visitante).map((s, i) => (
                   <button
                     key={i}
                     type="button"
