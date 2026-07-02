@@ -59,75 +59,79 @@ export default function StudentShell({
   return (
     <div className="bg-background text-on-background font-body-base antialiased">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6">
-        <div className="mb-8 flex w-full shrink-0 items-center justify-center py-2">
-          <Link href="/dashboard" aria-label="UCR Conecta — inicio">
-            <AlumniLogo height={56} />
-          </Link>
-        </div>
-
-        <div className="mb-8 flex shrink-0 flex-col items-center px-4">
-          <div className="relative mb-4">
-            {perfil.foto ? (
-              <img
-                src={perfil.foto}
-                alt={nombreMostrar}
-                className="h-24 w-24 rounded-full border-2 border-primary object-cover object-center shadow-sm"
-              />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm">
-                {iniciales || 'E'}
-              </div>
-            )}
-            {/* Botón para subir/editar la foto */}
-            <button
-              type="button"
-              onClick={() => setEditorFoto(true)}
-              title="Cambiar foto"
-              aria-label="Cambiar foto de perfil"
-              className="absolute bottom-0 right-0 rounded-full border-2 border-surface-container-low bg-secondary p-1.5 text-on-secondary transition-transform hover:scale-110"
-            >
-              <span className="material-symbols-outlined text-sm">photo_camera</span>
-            </button>
-            <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
+      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-outline-variant bg-surface-container-low p-6">
+        {/* Logo + perfil + navegación: comparten scroll para que "Configuración/Salir"
+            siempre queden fijos abajo, incluso si el nombre ocupa varias líneas. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+          <div className="mb-6 flex w-full shrink-0 items-center justify-center py-2">
+            <Link href="/dashboard" aria-label="UCR Conecta — inicio">
+              <AlumniLogo height={56} />
+            </Link>
           </div>
-          <h2 className="font-body-semibold text-primary">{nombreMostrar}</h2>
-          <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">{subtitulo}</p>
-        </div>
 
-        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-          {NAV.map((item) => {
-            const activo = item.key === active;
-            const claseBase = activo
-              ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
-              : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface';
+          <div className="mb-6 flex shrink-0 flex-col items-center px-4">
+            <div className="relative mb-3">
+              {perfil.foto ? (
+                <img
+                  src={perfil.foto}
+                  alt={nombreMostrar}
+                  className="h-20 w-20 rounded-full border-2 border-primary object-cover object-center shadow-sm"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary shadow-sm">
+                  {iniciales || 'E'}
+                </div>
+              )}
+              {/* Botón para subir/editar la foto */}
+              <button
+                type="button"
+                onClick={() => setEditorFoto(true)}
+                title="Cambiar foto"
+                aria-label="Cambiar foto de perfil"
+                className="absolute bottom-0 right-0 rounded-full border-2 border-surface-container-low bg-secondary p-1.5 text-on-secondary transition-transform hover:scale-110"
+              >
+                <span className="material-symbols-outlined text-sm">photo_camera</span>
+              </button>
+              <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
+            </div>
+            <h2 title={nombreMostrar} className="line-clamp-1 w-full text-center font-body-semibold text-primary">{nombreMostrar}</h2>
+            <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">{subtitulo}</p>
+          </div>
 
-            // Departamentos por crear: botón con aviso, sin navegar a un link muerto.
-            if (item.proximamente) {
+          <nav className="flex shrink-0 flex-col gap-1">
+            {NAV.map((item) => {
+              const activo = item.key === active;
+              const claseBase = activo
+                ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'
+                : 'flex items-center gap-4 rounded-lg p-4 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface';
+
+              // Departamentos por crear: botón con aviso, sin navegar a un link muerto.
+              if (item.proximamente) {
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => notificar('🚧 Departamento en desarrollo')}
+                    className={`${claseBase} text-left`}
+                  >
+                    <span className="material-symbols-outlined">{item.icon}</span>
+                    <span className="font-body-semibold">{item.label}</span>
+                    <span className="ml-auto rounded-full bg-surface-variant px-2 py-0.5 text-[11px] font-bold uppercase text-on-surface-variant">
+                      Pronto
+                    </span>
+                  </button>
+                );
+              }
+
               return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => notificar('🚧 Departamento en desarrollo')}
-                  className={`${claseBase} text-left`}
-                >
+                <Link key={item.key} href={item.href} className={claseBase}>
                   <span className="material-symbols-outlined">{item.icon}</span>
                   <span className="font-body-semibold">{item.label}</span>
-                  <span className="ml-auto rounded-full bg-surface-variant px-2 py-0.5 text-[11px] font-bold uppercase text-on-surface-variant">
-                    Pronto
-                  </span>
-                </button>
+                </Link>
               );
-            }
-
-            return (
-              <Link key={item.key} href={item.href} className={claseBase}>
-                <span className="material-symbols-outlined">{item.icon}</span>
-                <span className="font-body-semibold">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+            })}
+          </nav>
+        </div>
 
         <div className="flex shrink-0 flex-col gap-1 border-t border-outline-variant pt-6">
           <Link

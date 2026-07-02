@@ -11,7 +11,7 @@ import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerSugeridos, obtenerMisMatches } from '@/lib/matchesEstudiante';
+import { obtenerSugeridos, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
 
 const bento = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
 
@@ -49,6 +49,7 @@ export default function MisMatchesPage() {
   const [sugeridos, setSugeridos] = useState<any[]>([]);
   const [misMatches, setMisMatches] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [conectando, setConectando] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !token) router.replace('/login');
@@ -84,7 +85,21 @@ export default function MisMatchesPage() {
   const resto = sugeridos.slice(1, 6);
   const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
 
-  const interesar = (nombre: string) => notificar(`📨 Registramos tu interés por ${nombre}. Te avisaremos cuando responda.`);
+  // Inicia la conexión real (RF-06): crea/usa el match y dispara el email al exalumno.
+  const conectar = async (idExalumno: string, nombre: string) => {
+    if (!token || conectando) return;
+    setConectando(idExalumno);
+    try {
+      await conectarConExalumno(token, idExalumno, misMatches);
+      notificar(`✅ Le avisamos a ${nombre} que querés conectar. Te va a llegar su contacto cuando acepte.`);
+      const actualizados = await obtenerMisMatches(token);
+      setMisMatches(actualizados);
+    } catch {
+      notificar('❌ No pudimos enviar la solicitud. Intentá de nuevo en un momento.');
+    } finally {
+      setConectando(null);
+    }
+  };
 
   return (
     <StudentShell active="matches">
@@ -153,8 +168,12 @@ export default function MisMatchesPage() {
                         : `Forma parte de la red UCR y puede aportar a ${proyecto}.`}
                     </p>
                     <div className="flex flex-wrap justify-center gap-2 pt-3 md:justify-start">
-                      <button onClick={() => interesar(destacado.nombre)} className="flex items-center gap-2 rounded-lg bg-[#54BCEB] px-6 py-3 text-sm font-bold text-primary transition-transform hover:scale-105">
-                        Solicitar Mentoría <span className="material-symbols-outlined text-[18px]">send</span>
+                      <button
+                        onClick={() => conectar(destacado.id, destacado.nombre)}
+                        disabled={conectando === destacado.id}
+                        className="flex items-center gap-2 rounded-lg bg-[#54BCEB] px-6 py-3 text-sm font-bold text-primary transition-transform hover:scale-105 disabled:opacity-60"
+                      >
+                        {conectando === destacado.id ? 'Enviando…' : 'Solicitar Mentoría'} <span className="material-symbols-outlined text-[18px]">send</span>
                       </button>
                       <button onClick={() => router.push('/directorio')} className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all hover:bg-white/20">
                         Ver Directorio
@@ -196,8 +215,12 @@ export default function MisMatchesPage() {
                       {(s.comunes?.length ? s.comunes : s.areas || []).slice(0, 2).map((t: string) => <span key={t} className="rounded bg-secondary/10 px-2 py-1 text-[10px] font-bold uppercase text-secondary">{t}</span>)}
                       {s.score > 0 && <span className="rounded bg-tertiary/10 px-2 py-1 text-[10px] font-bold text-tertiary">{s.score}%</span>}
                     </div>
-                    <button onClick={() => interesar(s.nombre)} title="Conectar" className="rounded-full p-2 text-secondary transition-colors hover:bg-secondary/10">
-                      <span className="material-symbols-outlined">person_add</span>
+                    <button
+                      onClick={() => conectar(s.id, s.nombre)}
+                      disabled={conectando === s.id}
+                      className="flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-400 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">person_add</span> {conectando === s.id ? 'Enviando…' : 'Conectar'}
                     </button>
                   </div>
                 ))}
