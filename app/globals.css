@@ -83,6 +83,82 @@
   --font-brand-heading: 'Barlow', sans-serif;
   --font-brand-body: 'Elza Text', 'Work Sans', sans-serif;  /* cuerpo: Elza Text (libro de marcas) */
   --font-ucr-display: 'Barlow', sans-serif;  /* titulares: Barlow (libro de marcas) */
+
+  /* ───────────────────────────────────────────────────────────────
+     Tokens del rediseño Stitch (área de estudiante), en variables CSS
+     para soportar modo oscuro real (toggle en /configuracion). Los
+     valores de abajo son el tema CLARO (default); .dark los sobre-
+     escribe. "fixed"/"fixed-dim" son roles M3 que NO cambian entre
+     temas por diseño, así que no tienen variante oscura.
+     ─────────────────────────────────────────────────────────────── */
+  --st-primary: #003445;
+  --st-on-primary: #ffffff;
+  --st-primary-container: #004c63;
+  --st-on-primary-container: #83bbd6;
+  --st-secondary: #006687;
+  --st-on-secondary: #ffffff;
+  --st-secondary-container: #6acfff;
+  --st-on-secondary-container: #005774;
+  --st-secondary-fixed: #c1e8ff;
+  --st-secondary-fixed-dim: #73d1ff;
+  --st-primary-fixed: #bee9ff;
+  --st-primary-fixed-dim: #96ceea;
+  --st-tertiary: #00372c;
+  --st-on-tertiary: #ffffff;
+  --st-tertiary-container: #005041;
+  --st-on-tertiary-container: #65c5ac;
+  --st-on-secondary-fixed-variant: #004d67;
+  --st-background: #fdf8f8;
+  --st-on-background: #1c1b1b;
+  --st-surface: #fdf8f8;
+  --st-on-surface: #1c1b1b;
+  --st-surface-variant: #e6e1e1;
+  --st-on-surface-variant: #40484c;
+  --st-outline: #70787d;
+  --st-outline-variant: #c0c8cd;
+  --st-surface-container-lowest: #ffffff;
+  --st-surface-container-low: #f7f2f2;
+  --st-surface-container: #f1edec;
+  --st-surface-container-high: #ece7e7;
+  --st-surface-container-highest: #e6e1e1;
+  --st-error: #ba1a1a;
+  --st-on-error: #ffffff;
+  --st-error-container: #ffdad6;
+}
+
+/* Tema oscuro del área de estudiante: se activa con <html class="dark">
+   (ver lib/useTema.ts). Solo afecta los tokens --st-* (Stitch); el resto
+   del sitio (landing, login, paneles admin/exalumno) no usa estos tokens
+   y queda intacto. */
+.dark {
+  --st-primary: #83bbd6;
+  --st-on-primary: #00344a;
+  --st-primary-container: #004c63;
+  --st-on-primary-container: #bee9ff;
+  --st-secondary: #73d1ff;
+  --st-on-secondary: #00344a;
+  --st-secondary-container: #004d67;
+  --st-on-secondary-container: #c1e8ff;
+  --st-tertiary: #65c5ac;
+  --st-on-tertiary: #00372c;
+  --st-tertiary-container: #005041;
+  --st-on-tertiary-container: #82d9c0;
+  --st-background: #0f1416;
+  --st-on-background: #e1e3e3;
+  --st-surface: #0f1416;
+  --st-on-surface: #e1e3e3;
+  --st-surface-variant: #40484c;
+  --st-on-surface-variant: #c0c8cd;
+  --st-outline: #8a9296;
+  --st-outline-variant: #40484c;
+  --st-surface-container-lowest: #0a0e10;
+  --st-surface-container-low: #1c2022;
+  --st-surface-container: #202425;
+  --st-surface-container-high: #2a2e30;
+  --st-surface-container-highest: #353a3b;
+  --st-error: #ffb4ab;
+  --st-on-error: #690005;
+  --st-error-container: #93000a;
 }
 
 :root {

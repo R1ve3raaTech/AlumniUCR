@@ -11,8 +11,11 @@ import StudentShell from '@/components/student/StudentShell';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import { misReportes } from '@/lib/reportesAnomalias';
+import { obtenerSugeridos } from '@/lib/matchesEstudiante';
 
 const card = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
+
+const iniciales = (n: string) => n.split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
 const TIPS = [
   'Acordate de tomar descansos: 25 minutos de foco, 5 de pausa.',
@@ -49,10 +52,17 @@ export default function DashboardEstudiante() {
   const { token } = useAuth();
   const { perfil } = usePerfilEstudiante();
   const [reportes, setReportes] = useState<any[]>([]);
+  const [sugeridos, setSugeridos] = useState<any[]>([]);
 
   useEffect(() => {
     if (token) misReportes(token).then(setReportes).catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    let activo = true;
+    obtenerSugeridos(perfil).then((res) => { if (activo) setSugeridos(res); });
+    return () => { activo = false; };
+  }, [perfil]);
 
   const nombre = perfil.nombre?.trim() || 'estudiante';
   const pct = completitud(perfil);
@@ -107,6 +117,20 @@ export default function DashboardEstudiante() {
           </div>
         </section>
 
+        {/* Accesos rápidos */}
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          {secciones.map((s) => (
+            <Link
+              key={`acceso-${s.titulo}`}
+              href={s.href}
+              className="flex flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5 hover:border-secondary"
+            >
+              <span className="material-symbols-outlined text-secondary">{s.icon}</span>
+              <span className="text-xs font-bold text-on-surface">{s.titulo}</span>
+            </Link>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Resumen por sección */}
           <div className="space-y-6 lg:col-span-8">
@@ -132,28 +156,66 @@ export default function DashboardEstudiante() {
             </div>
 
             {/* Mi proyecto de graduación */}
-            <div className={`${card} p-6`}>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-body-semibold text-primary">
-                  <span className="material-symbols-outlined text-secondary">science</span> Mi proyecto de graduación
-                </h2>
-                <Link href="/directorio" className="text-xs font-bold uppercase text-secondary hover:underline">Gestionar</Link>
+            <div className={`relative overflow-hidden rounded-xl bg-primary p-6 text-on-primary shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]`}>
+              <div className="absolute right-0 top-0 p-6 opacity-10">
+                <span className="material-symbols-outlined text-8xl">science</span>
               </div>
-              {perfil.proyectoTitulo ? (
-                <>
-                  <p className="mb-1 text-xs font-bold uppercase text-outline">{perfil.proyectoTipo.split(' ')[0]} · {perfil.proyectoAvance}% de avance</p>
-                  <h3 className="mb-3 font-body-semibold text-on-surface">{perfil.proyectoTitulo}</h3>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
-                    <div className="h-full rounded-full bg-secondary" style={{ width: `${perfil.proyectoAvance}%` }} />
-                  </div>
-                  {perfil.proyectoAreas.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {perfil.proyectoAreas.map((a) => <span key={a} className="rounded-full bg-secondary/10 px-2.5 py-1 text-[11px] font-semibold text-secondary">{a}</span>)}
+              <div className="relative z-10">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 font-body-semibold">
+                    <span className="material-symbols-outlined">science</span> Mi proyecto de graduación
+                  </h2>
+                  {perfil.proyectoTitulo && <span className="font-bold text-orange-300">{perfil.proyectoAvance}%</span>}
+                </div>
+                {perfil.proyectoTitulo ? (
+                  <>
+                    <p className="mb-1 text-xs font-bold uppercase text-on-primary/70">{perfil.proyectoTipo.split(' ')[0]} · {perfil.proyectoAvance}% de avance</p>
+                    <h3 className="mb-3 font-body-semibold">{perfil.proyectoTitulo}</h3>
+                    <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-primary-container">
+                      <div className="h-full rounded-full bg-orange-400" style={{ width: `${perfil.proyectoAvance}%` }} />
                     </div>
-                  )}
-                </>
+                    {perfil.proyectoAreas.length > 0 && (
+                      <div className="mb-5 flex flex-wrap gap-1.5">
+                        {perfil.proyectoAreas.map((a) => <span key={a} className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase">{a}</span>)}
+                      </div>
+                    )}
+                    <Link href="/directorio" className="block w-full rounded-lg bg-orange-400 py-2.5 text-center text-sm font-bold text-white transition-opacity hover:opacity-90">
+                      Gestionar Proyecto Completo
+                    </Link>
+                  </>
+                ) : (
+                  <p className="text-sm text-on-primary/85">Todavía no registraste tu proyecto. <Link href="/directorio" className="font-semibold underline">Registralo</Link> para aparecer en el directorio y mejorar tus matches.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Conexiones sugeridas */}
+            <div className={`${card} p-6`}>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 font-body-semibold text-primary">
+                  <span className="material-symbols-outlined text-secondary">diversity_3</span> Conexiones sugeridas para ti
+                </h2>
+                <Link href="/mis-matches" className="text-xs font-bold uppercase text-secondary hover:underline">Ver todos los perfiles</Link>
+              </div>
+              {sugeridos.length === 0 ? (
+                <p className="text-sm italic text-on-surface-variant">Completá tu perfil para recibir sugerencias de conexión.</p>
               ) : (
-                <p className="text-sm text-on-surface-variant">Todavía no registraste tu proyecto. <Link href="/directorio" className="font-semibold text-secondary underline">Registralo</Link> para aparecer en el directorio y mejorar tus matches.</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {sugeridos.slice(0, 2).map((s) => (
+                    <div key={s.id ?? s.nombre} className="flex flex-col items-center gap-2 rounded-xl border border-outline-variant/30 bg-surface-container-low p-4 text-center">
+                      <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-primary bg-primary/10 font-bold text-primary">
+                        {s.foto_perfil ? <img src={s.foto_perfil} alt={s.nombre} className="h-full w-full object-cover" /> : iniciales(s.nombre || '')}
+                      </div>
+                      <div>
+                        <p className="font-body-semibold text-sm text-on-surface">{s.nombre}</p>
+                        <p className="text-xs text-tertiary">{s.score}% de coincidencia{s.comunes?.length ? ` en ${s.comunes[0]}` : ''}</p>
+                      </div>
+                      <Link href="/mis-matches" className="w-full rounded-lg bg-orange-400 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90">
+                        Conectar
+                      </Link>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -162,9 +224,14 @@ export default function DashboardEstudiante() {
           <div className="space-y-6 lg:col-span-4">
             {/* Avisos prácticos */}
             <div className={`${card} p-6`}>
-              <h2 className="mb-4 flex items-center gap-2 font-body-semibold text-primary">
-                <span className="material-symbols-outlined text-secondary">checklist</span> Próximos pasos
-              </h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 font-body-semibold text-primary">
+                  <span className="material-symbols-outlined text-secondary">checklist</span> Próximos pasos
+                </h2>
+                {avisos.length > 0 && (
+                  <span className="rounded-full bg-orange-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-orange-500">Pendiente</span>
+                )}
+              </div>
               {avisos.length === 0 ? (
                 <div className="flex items-center gap-3 rounded-lg bg-tertiary/5 p-4">
                   <span className="material-symbols-outlined text-tertiary">task_alt</span>
@@ -189,13 +256,20 @@ export default function DashboardEstudiante() {
 
             {/* Bienestar */}
             <div className="rounded-xl border-none bg-[#E6F4F9] p-6">
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-3xl text-secondary">self_improvement</span>
-                <div>
-                  <h3 className="font-body-semibold text-primary">Tu bienestar</h3>
-                  <p className="mt-1 text-sm text-on-secondary-fixed-variant">{tip}</p>
-                </div>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 font-body-semibold text-primary">
+                  <span className="material-symbols-outlined text-secondary">self_improvement</span> Bienestar Académico
+                </h3>
               </div>
+              <p className="mb-3 text-xs text-on-secondary-fixed-variant">Tu nivel de satisfacción actual es del</p>
+              <div className="mb-4 flex items-end gap-2">
+                <span className="font-headline-lg text-3xl font-bold text-primary">85%</span>
+                <span className="rounded-full bg-tertiary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-tertiary">Estado óptimo</span>
+              </div>
+              <p className="mb-4 text-sm text-on-secondary-fixed-variant">{tip}</p>
+              <button type="button" className="w-full rounded-lg border border-primary py-2 text-sm font-bold text-primary transition-colors hover:bg-white/40">
+                Revisar balance emocional
+              </button>
             </div>
 
             {/* Stats rápidas */}

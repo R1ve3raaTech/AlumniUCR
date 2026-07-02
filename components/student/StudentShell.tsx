@@ -6,11 +6,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
 import AvatarUploader from '@/components/student/AvatarUploader';
+import { useTema } from '@/lib/useTema';
 
 // Departamentos del estudiante. Todos activos.
 const NAV: { key: string; href: string; icon: string; label: string; proximamente?: boolean }[] = [
@@ -32,9 +34,16 @@ export default function StudentShell({
   nombre?: string;
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const { perfil, actualizar } = usePerfilEstudiante();
   const [editorFoto, setEditorFoto] = useState(false);
+  useTema(); // sincroniza <html class="dark"> con la preferencia guardada (cualquier pantalla del estudiante)
+
+  const salir = () => {
+    signOut();
+    router.replace('/login');
+  };
 
   const correo = user?.email ?? '';
   const nombrePerfil = `${perfil.nombre} ${perfil.apellidos}`.trim();
@@ -132,6 +141,14 @@ export default function StudentShell({
             <span className="material-symbols-outlined">settings</span>
             <span className="font-body-semibold">Configuración</span>
           </Link>
+          <button
+            type="button"
+            onClick={salir}
+            className="flex items-center gap-4 rounded-lg p-4 text-left text-on-surface-variant transition-all hover:bg-error/10 hover:text-error"
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-body-semibold">Salir</span>
+          </button>
         </div>
       </aside>
 
@@ -154,14 +171,6 @@ export default function StudentShell({
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={() => notificar('🔔 No tenés notificaciones nuevas')}
-              className="relative rounded-full p-2 text-on-surface-variant transition-all hover:bg-surface-variant"
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error" />
-            </button>
             <div className="flex cursor-pointer items-center gap-2 rounded-lg p-1 transition-all hover:bg-surface-container">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                 {iniciales || 'E'}

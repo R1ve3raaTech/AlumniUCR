@@ -16,11 +16,32 @@ export interface Experiencia {
   descripcion: string;
 }
 
+export interface RegistroAcademico {
+  id: string;
+  icono: string;
+  titulo: string;
+  subtitulo: string;
+}
+
+export interface ArchivoPortafolio {
+  id: string;
+  categoria: 'educativa' | 'galeria';
+  nombre: string;
+  dataUrl: string;
+}
+
+export interface ActividadItem {
+  id: string;
+  texto: string;
+  fecha: string; // ISO
+}
+
 export interface PerfilEstudiante {
   // Identidad
   nombre: string;
   apellidos: string;
   telefono: string;
+  direccion: string;
   linkedin: string;
   foto: string; // data URL (imagen recortada) o URL; pertenece a la persona
   // CV (editor)
@@ -31,19 +52,39 @@ export interface PerfilEstudiante {
   // Académica
   carne: string;
   carrera: string;
+  facultad: string;
   sede: string;
   anioIngreso: string;
-  nivel: string;
+  nivel: string; // Bachillerato | Licenciatura | Maestría | Doctorado
+  promedioPonderado: string; // opcional, privado (RF-03 Sección 1)
   // Situación socioeconómica
-  beca: string; // 'Tipo 4' | 'Tipo 5' | ''
+  beca: string; // Sin beca | Nivel 1..5
   // Proyecto de graduación (TFG)
   proyectoTitulo: string;
   proyectoDescripcion: string;
   proyectoAvance: number;
-  proyectoAreas: string[];
-  proyectoTipo: string; // TFG | TCU | Proyecto de Curso
+  areaTematica: string; // Sección 3: 1 sola área del catálogo de 14
+  proyectoAreas: string[]; // Sección 4 "Áreas de interés del proyecto": mín. 1, del catálogo de 14
+  proyectoTipo: string; // TFG | Tesis | Práctica Dirigida | Seminario
+  necesidadesProyecto: {
+    financiamiento: boolean;
+    mentoriaTecnica: boolean;
+    accesoDatos: boolean;
+    infraestructura: boolean;
+    validacionEmpresarial: boolean;
+    empleoParalelo: boolean;
+  };
+  proyectoFinalizado: boolean;
   // Apoyo requerido
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; financiamiento: boolean };
+  // Pausar perfil: no recibir contactos temporalmente (RF-03, criterio de aceptación)
+  pausado: boolean;
+  // Portafolio (documentos/imágenes); igual que la foto de perfil, se guarda como data URL.
+  portafolio: ArchivoPortafolio[];
+  // Bitácora de actividad propia ("Ver toda mi actividad"), más reciente primero.
+  actividad: ActividadItem[];
+  // Historial académico y experiencia (cursos, pasantías, etc.)
+  historialAcademico: RegistroAcademico[];
   // Intereses
   intereses: string[];
   // Habilidades
@@ -58,6 +99,7 @@ export const PERFIL_VACIO: PerfilEstudiante = {
   nombre: '',
   apellidos: '',
   telefono: '',
+  direccion: '',
   linkedin: '',
   foto: '',
   cargoDeseado: '',
@@ -66,16 +108,32 @@ export const PERFIL_VACIO: PerfilEstudiante = {
   experiencias: [],
   carne: '',
   carrera: '',
+  facultad: '',
   sede: '',
   anioIngreso: '',
   nivel: '',
-  beca: '',
+  promedioPonderado: '',
+  beca: 'Sin beca',
   proyectoTitulo: '',
   proyectoDescripcion: '',
   proyectoAvance: 0,
+  areaTematica: '',
   proyectoAreas: [],
-  proyectoTipo: 'TFG (Trabajo Final de Graduación)',
+  proyectoTipo: 'TFG',
+  necesidadesProyecto: {
+    financiamiento: false,
+    mentoriaTecnica: false,
+    accesoDatos: false,
+    infraestructura: false,
+    validacionEmpresarial: false,
+    empleoParalelo: false,
+  },
+  proyectoFinalizado: false,
   apoyo: { mentoria: false, empleo: false, pasantia: false, financiamiento: false },
+  pausado: false,
+  portafolio: [],
+  actividad: [],
+  historialAcademico: [],
   intereses: [],
   habilidadesTecnicas: '',
   habilidadesBlandas: '',
