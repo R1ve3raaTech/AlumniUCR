@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import LandingShell from '@/components/landing/LandingShell';
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
@@ -10,8 +10,9 @@ import CTAFinal from '@/components/landing/CTAFinal';
 import MisionFundacion from '@/components/landing/MisionFundacion';
 import Footer from '@/components/landing/Footer';
 import ScrollToHero from '@/components/landing/ScrollToHero';
+import AlumniMascot from '@/components/landing/AlumniMascot';
 
-// Landing público de UCR Connect (diseño Stitch adaptado a CSS Modules + GSAP).
+// Landing pÃºblico de Alumni UCR (diseÃ±o Stitch adaptado a CSS Modules + GSAP).
 // LandingShell (cliente) aporta el scope de GSAP; las secciones se renderizan en
 // el servidor y se animan al entrar en viewport.
 export default function Home() {
@@ -29,6 +30,7 @@ export default function Home() {
       </main>
       <Footer />
       <ScrollToHero />
+      <AlumniMascot />
     </LandingShell>
   );
 }

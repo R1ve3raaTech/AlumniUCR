@@ -1,0 +1,593 @@
+/* ════════════════════════════════════════════════════════════════════
+   ALUMNI MASCOT · Asistente IA flotante — usa imagen real del robot.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Wrapper posición fija (inferior derecha) ────────────────────── */
+.wrapper {
+  position: fixed;
+  bottom: clamp(1rem, 2.5vw, 1.75rem);
+  right: clamp(1rem, 2.5vw, 1.75rem);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.wrapper > * {
+  pointer-events: auto;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MASCOTA FLOTANTE
+   ════════════════════════════════════════════════════════════════════ */
+
+/*
+  El botón es transparente — la imagen PNG sin fondo define la silueta natural.
+  filter:drop-shadow sigue el contorno real de la imagen (no un rectángulo).
+*/
+.mascotBtn {
+  position: relative;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+  animation: float 3.8s ease-in-out infinite;
+  transition: transform 0.18s ease;
+  overflow: hidden;
+  filter:
+    drop-shadow(3px 8px 14px rgba(0, 76, 99, 0.32))
+    drop-shadow(-2px -2px 6px rgba(255, 255, 255, 0.7));
+}
+
+.mascotBtn:hover {
+  animation-play-state: paused;
+  transform: scale(1.08) translateY(-4px);
+  filter:
+    drop-shadow(5px 12px 20px rgba(0, 76, 99, 0.42))
+    drop-shadow(-3px -3px 8px rgba(255, 255, 255, 0.85))
+    drop-shadow(0 0 16px rgba(84, 188, 235, 0.35));
+}
+
+/* Imagen del robot — centrada y recortada para que la cara quede sobre la flecha */
+.mascotImg {
+  display: block;
+  width: 260px;
+  height: auto;
+  object-fit: contain;
+  margin-right: -60px;
+}
+
+/* Oculto cuando el chat está abierto */
+.mascotHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7) translateY(20px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* ── Estados de la mascota ───────────────────────────────────────── */
+
+/* WAVE: saludo — rota el personaje levemente y lo anima */
+.mascot_wave {
+  animation: waveAnim 0.6s ease-in-out 4, float 3.8s ease-in-out infinite;
+  filter:
+    drop-shadow(0 10px 22px rgba(0, 76, 99, 0.42))
+    drop-shadow(0 3px 8px rgba(84, 188, 235, 0.35));
+}
+
+/* TALK: hablando — pulsa suavemente */
+.mascot_talk {
+  animation: talkAnim 0.45s ease-in-out infinite alternate, float 3.8s ease-in-out infinite;
+}
+
+/* THINK: pensando — oscila lentamente */
+.mascot_think {
+  animation: thinkAnim 1.4s ease-in-out infinite, float 3.8s ease-in-out infinite;
+  filter:
+    drop-shadow(0 8px 18px rgba(0, 76, 99, 0.3))
+    drop-shadow(0 0 12px rgba(84, 188, 235, 0.4));
+}
+
+/* IDLE: reposo */
+.mascot_idle {
+  animation: float 3.8s ease-in-out infinite;
+}
+
+/* ── Halo de glow detrás del personaje ──────────────────────────── */
+.mascotGlow {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(84, 188, 235, 0.35) 0%, transparent 72%);
+  animation: glowPulse 3.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Badge de notificación ───────────────────────────────────────── */
+.notifBadge {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #F34B26;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(243, 75, 38, 0.5);
+  animation: badgePulse 1.8s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   BURBUJA DE SALUDO
+   ════════════════════════════════════════════════════════════════════ */
+.greetingBubble {
+  position: relative;
+  max-width: 230px;
+  background: #edf0f2;
+  border-radius: 16px 16px 16px 4px;
+  padding: 0.8rem 2rem 0.8rem 1rem;
+  box-shadow:
+    7px 7px 18px rgba(0, 40, 55, 0.18),
+    -5px -5px 13px rgba(255, 255, 255, 0.94);
+  animation: bubbleEntrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Cola de la burbuja */
+.greetingBubble::before {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 18px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 10px solid #edf0f2;
+  filter: drop-shadow(0 3px 3px rgba(0,40,55,0.08));
+}
+
+.greetingText {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.48;
+  color: #004C63;
+  font-weight: 600;
+  animation: textReveal 0.35s ease forwards;
+}
+
+.greetingClose {
+  position: absolute;
+  top: 5px;
+  right: 9px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7a9aaa;
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+.greetingClose:hover { color: #004C63; }
+
+/* ════════════════════════════════════════════════════════════════════
+   PANEL DE CHAT
+   ════════════════════════════════════════════════════════════════════ */
+.chatPanel {
+  position: absolute;
+  bottom: 88px;
+  right: 0;
+  width: 360px;
+  background: #edf0f2;
+  border-radius: 20px;
+  box-shadow:
+    10px 10px 30px rgba(0, 40, 55, 0.2),
+    -8px -8px 22px rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  margin-top: 60px;
+  /* Cerrado */
+  transform: scale(0.82) translateY(24px);
+  transform-origin: bottom left;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s ease;
+}
+
+.chatPanelOpen {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.chatHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #003a4e 0%, #005a8e 60%, #0072c6 100%);
+  box-shadow: 0 4px 18px rgba(0, 40, 55, 0.35);
+  min-height: 64px;
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+}
+
+/* Robot superpuesto sobre el header, sin agrandar el rectángulo */
+.chatRobotFloat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 0.5rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.chatRobotFloat img {
+  width: 50px !important;
+  height: auto !important;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 12px rgba(84, 188, 235, 0.5));
+}
+
+.chatHeaderInfo {
+  flex: 1;
+  min-width: 0;
+  padding-left: 60px;
+}
+
+.chatHeaderName {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.chatHeaderStatus {
+  margin: 0.28rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-weight: 500;
+}
+
+.statusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80, 0 0 16px rgba(74,222,128,0.5);
+  animation: statusBlink 2.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.chatClose {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.25), -2px -2px 5px rgba(255,255,255,0.1);
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+.chatClose:hover {
+  background: rgba(255,255,255,0.28);
+  transform: rotate(90deg);
+}
+
+/* ── Área de mensajes ────────────────────────────────────────────── */
+.chatMessages {
+  flex: 1;
+  min-height: 240px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 1rem 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  scroll-behavior: smooth;
+}
+
+.chatMessages::-webkit-scrollbar { width: 4px; }
+.chatMessages::-webkit-scrollbar-track { background: transparent; }
+.chatMessages::-webkit-scrollbar-thumb {
+  background: rgba(0, 76, 99, 0.18);
+  border-radius: 4px;
+}
+
+/* ── Burbujas ────────────────────────────────────────────────────── */
+.bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  animation: msgIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.bubbleBot  { align-self: flex-start; }
+.bubbleUser { align-self: flex-end; flex-direction: row-reverse; }
+
+.bubbleAvatar {
+  width: 48px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #004C63, #006AD3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow:
+    3px 3px 8px rgba(0, 40, 55, 0.2),
+    -2px -2px 5px rgba(255, 255, 255, 0.85);
+  padding: 3px;
+}
+
+.bubbleAvatar img {
+  object-fit: contain;
+}
+
+.bubbleText {
+  margin: 0;
+  padding: 0.62rem 0.88rem;
+  font-size: 0.86rem;
+  line-height: 1.52;
+  max-width: 205px;
+  border-radius: 16px;
+  word-break: break-word;
+}
+
+.bubbleBot .bubbleText {
+  background: #ffffff;
+  color: #0a2a38;
+  border-bottom-left-radius: 4px;
+  box-shadow:
+    4px 4px 10px rgba(0, 40, 55, 0.12),
+    -3px -3px 8px rgba(255, 255, 255, 0.9);
+}
+
+.bubbleUser .bubbleText {
+  background: linear-gradient(135deg, #004C63, #006AD3);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow:
+    4px 4px 10px rgba(0, 76, 99, 0.3),
+    -2px -2px 6px rgba(255, 255, 255, 0.12);
+}
+
+/* ── Indicador de escritura ──────────────────────────────────────── */
+.typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 16px;
+}
+
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #54BCEB;
+  animation: typingDot 1.2s ease-in-out infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Input ───────────────────────────────────────────────────────── */
+.chatInputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border-top: 1px solid rgba(0, 40, 55, 0.07);
+}
+
+.chatInputField {
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  font-size: 0.87rem;
+  color: #0a2a38;
+  background: #f5f7f8;
+  box-shadow:
+    inset 3px 3px 7px rgba(0, 40, 55, 0.1),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.82);
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.chatInputField:focus {
+  box-shadow:
+    inset 3px 3px 7px rgba(0, 40, 55, 0.12),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.85),
+    0 0 0 2.5px rgba(84, 188, 235, 0.38);
+}
+
+.chatInputField::placeholder { color: #8aabb8; }
+.chatInputField:disabled { opacity: 0.55; }
+
+.chatSend {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #004C63, #006AD3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow:
+    5px 5px 12px rgba(0, 76, 99, 0.32),
+    -3px -3px 7px rgba(255, 255, 255, 0.14);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.chatSend:hover:not(:disabled) {
+  transform: scale(1.09);
+  box-shadow:
+    6px 6px 16px rgba(0, 76, 99, 0.38),
+    -3px -3px 8px rgba(255, 255, 255, 0.16);
+}
+
+.chatSend:active:not(:disabled) {
+  transform: scale(0.92);
+  box-shadow:
+    inset 3px 3px 7px rgba(0, 40, 55, 0.2),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+}
+
+.chatSend:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Flotado base */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  45%       { transform: translateY(-12px); }
+  75%       { transform: translateY(-6px); }
+}
+
+/* Glow sincronizado */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.8; transform: translateX(-50%) scaleX(1); }
+  45%       { opacity: 0.35; transform: translateX(-50%) scaleX(0.65); }
+}
+
+/* Saludo: bamboleo lateral */
+@keyframes waveAnim {
+  0%   { transform: translateY(var(--ty, 0)) rotate(0deg) scale(1); }
+  25%  { transform: translateY(var(--ty, 0)) rotate(-6deg) scale(1.04); }
+  50%  { transform: translateY(var(--ty, 0)) rotate(5deg) scale(1.04); }
+  75%  { transform: translateY(var(--ty, 0)) rotate(-3deg) scale(1.02); }
+  100% { transform: translateY(var(--ty, 0)) rotate(0deg) scale(1); }
+}
+
+/* Hablando: escala leve alterna */
+@keyframes talkAnim {
+  from { transform: scale(1) translateY(0); }
+  to   { transform: scale(1.03) translateY(-4px); }
+}
+
+/* Pensando: oscila lentamente */
+@keyframes thinkAnim {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%       { transform: translateY(-8px) rotate(2deg); }
+}
+
+/* Burbuja entrada */
+@keyframes bubbleEntrance {
+  from { opacity: 0; transform: translateY(10px) scale(0.93); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Texto burbuja */
+@keyframes textReveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Mensajes chat */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Badge */
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(243,75,38,0.5); }
+  50%       { transform: scale(1.22); box-shadow: 0 3px 12px rgba(243,75,38,0.7); }
+}
+
+/* Status dot */
+@keyframes statusBlink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 7px #4ade80; }
+  50%       { opacity: 0.55; box-shadow: 0 0 14px #4ade80; }
+}
+
+/* Typing dots */
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%            { transform: translateY(-7px); opacity: 1; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .mascotBtn {
+    width: 88px;
+    height: 104px;
+  }
+
+  .chatPanel {
+    width: calc(100vw - 2rem);
+    max-width: 310px;
+    bottom: 116px;
+  }
+
+  .greetingBubble {
+    max-width: 195px;
+  }
+
+  .bubbleText {
+    max-width: 185px;
+  }
+}
+
+/* Accesibilidad: sin movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .mascotBtn,
+  .mascot_wave,
+  .mascot_talk,
+  .mascot_think,
+  .mascot_idle,
+  .mascotGlow,
+  .notifBadge,
+  .statusDot {
+    animation: none !important;
+  }
+}
