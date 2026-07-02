@@ -185,6 +185,9 @@ REGLAS ESTRICTAS:
 - Si el estudiante comparte texto de su CV, analiza EXACTAMENTE ese texto y devuelve una versión mejorada.
 - Si te preguntan sobre temas no relacionados a currículum o carrera profesional, redirige amablemente al tema de CV.
 - Tienes PROHIBIDO realizar tareas administrativas (aprobar cuentas, auditar donaciones, gestión de reportes).
+
+A continuación se muestra el estado actual del currículum del estudiante. Úsalo para darle recomendaciones personalizadas y precisas, y haz referencia directa a lo que ha escrito o lo que le falta:
+{cv_contexto_formateado}
 `
 };
 
@@ -210,7 +213,11 @@ const obtenerPromptDeSistema = async (contexto, usuario) => {
     // Si está en la sección de su currículum — inyectar CV personalizado en el prompt
     if (pathname.includes('/mi-curriculum')) {
       let cvContexto = 'El estudiante aún no ha registrado datos en su currículum. Motívalo a completar sus secciones de Experiencia, Habilidades y Certificaciones.';
-      if (usuario?.id) {
+      
+      // Intentar primero con el perfil en tiempo real enviado por el editor
+      if (contexto?.perfil) {
+        cvContexto = formatearPerfilFrontendParaPrompt(contexto.perfil);
+      } else if (usuario?.id) {
         try {
           const cvService = require('./cv.service');
           const cv = await cvService.obtenerCvCompleto(usuario.id);
@@ -368,6 +375,38 @@ HABILIDADES:
 CERTIFICACIONES Y LOGROS:
 ${certificaciones}
 ---------------------------------------------
+  `;
+};
+
+/**
+ * Helper para formatear el currículum (CV) del estudiante enviado en tiempo real por el frontend.
+ */
+const formatearPerfilFrontendParaPrompt = (perfil) => {
+  if (!perfil) return 'Sin currículum registrado en el editor en tiempo real.';
+  
+  const experiencias = (perfil.experiencias || []).map(e => `
+* Rol: ${e.puesto || 'N/A'} en ${e.empresa || 'N/A'}
+  - Periodo: ${e.periodo || 'N/A'}
+  - Descripción: ${e.descripcion || ''}
+  `).join('\n') || 'Ninguna registrada.';
+
+  return `
+--- DETALLES DEL CURRÍCULUM DEL ESTUDIANTE (TIEMPO REAL DESDE EL EDITOR) ---
+Nombre: ${perfil.nombre || ''} ${perfil.apellidos || ''}
+Cargo deseado: ${perfil.cargoDeseado || 'No especificado'}
+Carrera: ${perfil.carrera || 'No especificada'}
+Sede: ${perfil.sede || 'No especificada'}
+Nivel: ${perfil.nivel || 'No especificado'}
+Resumen profesional: ${perfil.resumen || 'No especificado'}
+
+EXPERIENCIA LABORAL Y PROYECTOS:
+${experiencias}
+
+HABILIDADES:
+- Técnicas: ${perfil.habilidadesTecnicas || 'No especificadas'}
+- Blandas: ${perfil.habilidadesBlandas || 'No especificadas'}
+- Idiomas: ${perfil.idiomas || 'No especificadas'}
+------------------------------------------------------------
   `;
 };
 

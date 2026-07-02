@@ -13,6 +13,8 @@ import Desplegable from '@/components/student/Desplegable';
 import PerfilHeader from '@/components/student/PerfilHeader';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
+import { useAuth } from '@/context/AuthContext';
+import { apiFetch } from '@/lib/api';
 
 // Aviso temporal: los botones sin acción real (los reales llevan data-real).
 function avisoProximamente(e: React.MouseEvent) {
@@ -27,12 +29,61 @@ const cuenta = (s: string) => (s || '').split(',').map((x) => x.trim()).filter(B
 
 export default function MiCurriculumPage() {
   const { perfil } = usePerfilEstudiante();
+  const { token } = useAuth();
+  const [analisis, setAnalisis] = useState<any>(null);
+  const [cargandoAnalisis, setCargandoAnalisis] = useState(false);
+
   const o = (v: string, d = '—') => (v && v.trim() ? v : d);
   const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
   const nombreCompacto = perfil.apellidos?.trim()
     ? `${(perfil.nombre || '').trim().split(/\s+/)[0]} ${perfil.apellidos.trim().charAt(0).toUpperCase()}.`
     : (perfil.nombre || 'Estudiante');
   const habilidades = cuenta(perfil.habilidadesTecnicas) + cuenta(perfil.habilidadesBlandas);
+
+  useEffect(() => {
+    if (!token) return;
+    let activo = true;
+    const fetchAnalisis = async () => {
+      setCargandoAnalisis(true);
+      try {
+        const res = await apiFetch('/claude/career-analysis', {
+          method: 'POST',
+          token,
+        });
+        if (activo && res && res.success) {
+          setAnalisis(res.data);
+        }
+      } catch (err) {
+        console.error('Error al obtener análisis de carrera:', err);
+      } finally {
+        if (activo) setCargandoAnalisis(false);
+      }
+    };
+    fetchAnalisis();
+    return () => {
+      activo = false;
+    };
+  }, [token]);
+
+  const optimizarParaVacante = () => {
+    window.dispatchEvent(
+      new CustomEvent('open-global-chatbot', {
+        detail: {
+          mensaje: 'Me gustaría optimizar mi currículum para una vacante específica. ¿Cómo podemos empezar?'
+        }
+      })
+    );
+  };
+
+  const sugerirCertificaciones = () => {
+    window.dispatchEvent(
+      new CustomEvent('open-global-chatbot', {
+        detail: {
+          mensaje: '¿Qué certificaciones me recomiendas para potenciar mi perfil y mi carrera profesional?'
+        }
+      })
+    );
+  };
 
   return (
     <StudentShell active="cv">
@@ -84,13 +135,35 @@ export default function MiCurriculumPage() {
             <div className="flex flex-col gap-3">
               <div className="rounded-lg border border-secondary/20 bg-secondary/5 p-3">
                 <p className="mb-1 text-xs font-bold uppercase tracking-wider text-secondary">Estado actual</p>
-                <p className="text-sm italic text-on-surface-variant">Analizando el mercado para proyectar tu perfil hacia vacantes afines a {o(perfil.carrera, 'tu carrera')}.</p>
+                <p className="text-sm italic text-on-surface-variant">
+                  {cargandoAnalisis
+                    ? 'Conectando con el Asistente de IA para analizar el mercado...'
+                    : analisis?.estadoActual || `Analizando el mercado para proyectar tu perfil hacia vacantes afines a ${o(perfil.carrera, 'tu carrera')}.`}
+                </p>
               </div>
-              <button type="button" data-real onClick={() => window.dispatchEvent(new Event('open-global-chatbot'))} className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5">
+              <Link
+                href="/mi-curriculum/advisor"
+                data-real
+                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5"
+              >
                 <span className="material-symbols-outlined">smart_toy</span> Abrir asistente
+              </Link>
+              <button
+                type="button"
+                data-real
+                onClick={optimizarParaVacante}
+                className="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-2.5 text-sm font-bold text-primary transition-all hover:bg-surface-variant"
+              >
+                <span className="material-symbols-outlined text-base">rocket_launch</span> Optimizar para vacante
               </button>
-              <button className="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-2.5 text-sm font-bold text-primary"><span className="material-symbols-outlined text-base">rocket_launch</span> Optimizar para vacante</button>
-              <button className="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-2.5 text-sm font-bold text-primary"><span className="material-symbols-outlined text-base">workspace_premium</span> Sugerir certificaciones</button>
+              <button
+                type="button"
+                data-real
+                onClick={sugerirCertificaciones}
+                className="flex items-center justify-center gap-2 rounded-lg border border-outline-variant py-2.5 text-sm font-bold text-primary transition-all hover:bg-surface-variant"
+              >
+                <span className="material-symbols-outlined text-base">workspace_premium</span> Sugerir certificaciones
+              </button>
             </div>
           </Desplegable>
 
@@ -98,28 +171,78 @@ export default function MiCurriculumPage() {
             <div className="space-y-4">
               <div className="rounded-lg border-l-4 border-secondary bg-surface-container-low p-3">
                 <p className="mb-1 text-xs font-bold uppercase text-secondary">Benchmarking salarial</p>
-                <p className="text-sm font-semibold">{o(perfil.carrera, 'Tu carrera')} · Nivel competitivo</p>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-outline-variant/30"><div className="h-full w-3/4 bg-secondary" /></div>
-                <p className="mt-1 text-xs text-on-surface-variant">Tu perfil está en el top 15% de competitividad.</p>
+                <p className="text-sm font-semibold">
+                  {analisis?.benchmarkingSalarial?.cargo || o(perfil.carrera, 'Tu carrera')} · Nivel competitivo
+                </p>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-outline-variant/30">
+                  <div
+                    className="h-full bg-secondary transition-all duration-500"
+                    style={{ width: `${analisis?.benchmarkingSalarial?.porcentaje || 75}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  {analisis?.benchmarkingSalarial?.mensaje || 'Tu perfil está en el top 15% de competitividad.'}
+                </p>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
-                <div><p className="text-xs font-bold text-on-surface">Demanda en IA crece +45%</p><p className="text-xs leading-tight text-on-surface-variant">Las empresas en Zona Franca buscan especialistas.</p></div>
-              </div>
+              {cargandoAnalisis ? (
+                <div className="text-xs text-on-surface-variant italic animate-pulse">Cargando tendencias del mercado...</div>
+              ) : analisis?.tendencias && analisis.tendencias.length > 0 ? (
+                analisis.tendencias.map((t: any, idx: number) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
+                    <div>
+                      <p className="text-xs font-bold text-on-surface">{t.titulo}</p>
+                      <p className="text-xs leading-tight text-on-surface-variant">{t.descripcion}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
+                  <div>
+                    <p className="text-xs font-bold text-on-surface">Demanda en IA crece +45%</p>
+                    <p className="text-xs leading-tight text-on-surface-variant">Las empresas en Zona Franca buscan especialistas.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </Desplegable>
 
           <Desplegable titulo="Proyección de Perfil" icono="psychology" tono="tertiary" resumen="Tus mejores matches">
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-secondary/10 font-bold text-secondary">92%</span>
-                <div><p className="text-xs font-bold">Cloud Architect @ Microsoft</p><p className="text-xs text-on-surface-variant">Palabras clave optimizadas por IA.</p></div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-500/10 font-bold text-emerald-600">88%</span>
-                <div><p className="text-xs font-bold">Lead Dev @ Gorilla Logic</p><p className="text-xs text-on-surface-variant">IA enfatizó tu liderazgo.</p></div>
-              </div>
-              <p className="border-t border-outline-variant/20 pt-2 text-xs italic text-on-surface-variant">Sugerencia: obtené la certificación AWS para llegar al 98% de match.</p>
+              {cargandoAnalisis ? (
+                <div className="text-xs text-on-surface-variant italic animate-pulse">Cargando proyecciones de perfil...</div>
+              ) : analisis?.proyecciones && analisis.proyecciones.length > 0 ? (
+                analisis.proyecciones.map((p: any, idx: number) => {
+                  const isHigh = p.porcentaje >= 90;
+                  const colorClass = isHigh ? 'bg-secondary/10 text-secondary' : 'bg-emerald-500/10 text-emerald-600';
+                  return (
+                    <div key={idx} className="flex items-center gap-3">
+                      <span className={`grid h-11 w-11 place-items-center rounded-full font-bold ${colorClass}`}>
+                        {p.porcentaje}%
+                      </span>
+                      <div>
+                        <p className="text-xs font-bold">{p.puesto}</p>
+                        <p className="text-xs text-on-surface-variant">{p.explicacion}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-11 w-11 place-items-center rounded-full bg-secondary/10 font-bold text-secondary">92%</span>
+                    <div><p className="text-xs font-bold">Cloud Architect @ Microsoft</p><p className="text-xs text-on-surface-variant">Palabras clave optimizadas por IA.</p></div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-500/10 font-bold text-emerald-600">88%</span>
+                    <div><p className="text-xs font-bold">Lead Dev @ Gorilla Logic</p><p className="text-xs text-on-surface-variant">IA enfatizó tu liderazgo.</p></div>
+                  </div>
+                </>
+              )}
+              <p className="border-t border-outline-variant/20 pt-2 text-xs italic text-on-surface-variant">
+                {analisis?.sugerenciaCertificacion || 'Sugerencia: obtené la certificación AWS para llegar al 98% de match.'}
+              </p>
             </div>
           </Desplegable>
         </section>
