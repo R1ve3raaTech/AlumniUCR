@@ -15,6 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import { obtenerDirectorio } from '@/lib/perfilExalumno';
 import { puntuar, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
+import { apiFetch } from '@/lib/api';
+import { CARRERAS_UCR } from '@/lib/catalogoUCR';
 
 interface Exalumno {
   id: string;
@@ -62,7 +64,14 @@ function PickerModal({
     inputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCerrar(); };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Bloquea el scroll de la página de fondo: así la rueda del mouse siempre
+    // desplaza la lista de opciones y no el directorio detrás del modal.
+    const overflowPrevio = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflowPrevio;
+    };
   }, [onCerrar]);
 
   const filtradas = useMemo(() => {
@@ -75,15 +84,15 @@ function PickerModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}
     >
-      <div className="flex w-full max-w-md flex-col rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-ucr-outline-variant px-6 py-4">
+      <div className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-ucr-outline-variant px-6 py-4">
           <h2 className="font-brand-heading text-lg font-bold text-ucr-on-surface">{titulo}</h2>
           <button type="button" onClick={onCerrar} className="rounded-full p-1 hover:bg-ucr-surface-container">
             <span className="material-symbols-outlined text-ucr-outline">close</span>
           </button>
         </div>
 
-        <div className="px-6 pt-4">
+        <div className="shrink-0 px-6 pt-4">
           <input
             ref={inputRef}
             type="text"
@@ -94,7 +103,10 @@ function PickerModal({
           />
         </div>
 
-        <ul className="mt-3 max-h-72 overflow-y-auto px-3 pb-4">
+        <ul
+          className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4"
+          style={{ maxHeight: '18rem', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
+        >
           <li>
             <button
               type="button"
@@ -154,6 +166,11 @@ export default function DirectorioExalumnos() {
 
   const [lista, setLista] = useState<Exalumno[]>([]);
   const [misMatches, setMisMatches] = useState<any[]>([]);
+  // Catálogos completos para los filtros (RF-04): igual que en el Directorio de
+  // Estudiantes, las opciones no dependen solo de los exalumnos ya cargados.
+  const [catCarreras, setCatCarreras] = useState<string[]>([]);
+  const [catSectores, setCatSectores] = useState<string[]>([]);
+  const [catAreas, setCatAreas] = useState<string[]>([]);
   const [cargando, setCargando] = useState(true);
   const [enviando, setEnviando] = useState<string | null>(null);
   const [modalAbierto, setModalAbierto] = useState<null | 'carrera' | 'sector' | 'area' | 'apoyo'>(null);
@@ -171,9 +188,12 @@ export default function DirectorioExalumnos() {
     let activo = true;
     (async () => {
       try {
-        const [res, mm] = await Promise.all([
+        const [res, mm, resCarreras, resSectores, resAreas] = await Promise.all([
           obtenerDirectorio(),
           token ? obtenerMisMatches(token) : Promise.resolve([]),
+          apiFetch('/carreras', { token: token ?? undefined }).catch(() => null),
+          apiFetch('/sectores', { token: token ?? undefined }).catch(() => null),
+          apiFetch('/areas-interes', { token: token ?? undefined }).catch(() => null),
         ]);
         if (!activo) return;
         const exalumnos = (res?.data ?? [])
@@ -181,6 +201,14 @@ export default function DirectorioExalumnos() {
           .sort((a: Exalumno, b: Exalumno) => b.score - a.score); // RF-04: orden por score de match
         setLista(exalumnos);
         setMisMatches(mm);
+        const nombresDe = (r: any) => ((r?.data ?? []) as { nombre?: string }[])
+          .map((x) => x.nombre)
+          .filter((n): n is string => Boolean(n))
+          .sort();
+        const carrerasApi = nombresDe(resCarreras);
+        setCatCarreras(carrerasApi.length > 0 ? carrerasApi : CARRERAS_UCR);
+        setCatSectores(nombresDe(resSectores));
+        setCatAreas(nombresDe(resAreas));
       } catch {
         if (activo) setLista([]);
       } finally {
@@ -199,9 +227,19 @@ export default function DirectorioExalumnos() {
     return mapa;
   }, [misMatches]);
 
-  const opcionesCarrera = useMemo(() => Array.from(new Set(lista.flatMap((e) => e.carreras))).sort(), [lista]);
-  const opcionesSector = useMemo(() => Array.from(new Set(lista.flatMap((e) => e.sectores))).sort(), [lista]);
-  const opcionesArea = useMemo(() => Array.from(new Set(lista.flatMap((e) => e.areas))).sort(), [lista]);
+  // Catálogo completo del BE; si no responde, se derivan de los exalumnos cargados.
+  const opcionesCarrera = useMemo(
+    () => (catCarreras.length > 0 ? catCarreras : Array.from(new Set(lista.flatMap((e) => e.carreras))).sort()),
+    [catCarreras, lista],
+  );
+  const opcionesSector = useMemo(
+    () => (catSectores.length > 0 ? catSectores : Array.from(new Set(lista.flatMap((e) => e.sectores))).sort()),
+    [catSectores, lista],
+  );
+  const opcionesArea = useMemo(
+    () => (catAreas.length > 0 ? catAreas : Array.from(new Set(lista.flatMap((e) => e.areas))).sort()),
+    [catAreas, lista],
+  );
   const opcionesApoyo = APOYO_LABEL.map((a) => a.label);
 
   // RF-04: los filtros se combinan con AND lógico; nombre con coincidencia parcial.
