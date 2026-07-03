@@ -1,5 +1,7 @@
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+// RF-03: registrar la carrera puede completar el perfil del estudiante.
+const { recalcularPerfilCompleto } = require('./informacionEstudianteService');
 
 const TABLA = 'carreras_usuario';
 
@@ -65,6 +67,8 @@ const crearCarreraUsuario = async (carreraUsuarioData) => {
         throw mapDbError(error);
     }
 
+    await recalcularPerfilCompleto(carreraUsuarioData.id_usuario).catch(() => {});
+
     return data;
 };
 
@@ -87,6 +91,8 @@ const actualizarCarreraUsuario = async (id, carreraUsuarioData) => {
     if (error) {
         throw mapDbError(error);
     }
+
+    if (data?.id_usuario) await recalcularPerfilCompleto(data.id_usuario).catch(() => {});
 
     return data;
 };

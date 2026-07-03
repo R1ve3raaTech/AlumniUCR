@@ -57,6 +57,14 @@ router.put(
     matchesMentoriaController.aceptarMatch
 );
 
+// GET /api/matches-mentoria/:id/aceptar-correo?u=<idUsuario>&token=<hmac>
+// Acepta la conexión con un clic desde el correo (enlace firmado, sin sesión).
+// La autenticación es el propio token HMAC ligado al destinatario y al match.
+router.get(
+    '/:id/aceptar-correo',
+    matchesMentoriaController.aceptarDesdeCorreo
+);
+
 // PUT /api/matches-mentoria/:id/rechazar
 // Rechaza la conexión (contactado → cerrado)
 // RF-06: el exalumno rechazado no puede volver a solicitar al mismo estudiante
