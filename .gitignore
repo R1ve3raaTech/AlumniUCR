@@ -19,3 +19,4 @@ BE/data/
 
 # Configuración local del agente/editor
 .claude/
+BE/test-key.js
