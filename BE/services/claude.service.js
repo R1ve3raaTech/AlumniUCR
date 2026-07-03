@@ -478,8 +478,8 @@ const buscarEstudiantePorNombre = async (nombreBuscado) => {
  * @returns {Promise<string>} La respuesta generada por Claude.
  */
 const generarRespuestaSoporte = async (historial, contexto, usuarioAutenticado) => {
-  // Configurar el modelo desde la variable de entorno o usar Claude 3.5 Sonnet por defecto
-  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+  // Configurar el modelo desde la variable de entorno o usar Claude Sonnet 5 por defecto
+  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-5';
 
   // Adaptar el historial para Claude:
   // 1. Debe comenzar con un mensaje del rol 'user'.
@@ -702,7 +702,7 @@ Debes responder ÚNICAMENTE con un objeto JSON válido (sin formato markdown ni 
  * Genera un análisis de carrera personalizado basado en el perfil del estudiante.
  */
 const generarAnalisisCarrera = async (perfil) => {
-  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+  const model = process.env.CLAUDE_MODEL || 'claude-sonnet-5';
   const datosPerfil = perfil || {};
 
   const contentPrompt = `

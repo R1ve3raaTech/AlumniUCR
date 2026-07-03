@@ -1,7 +1,7 @@
 'use client';
 
 // Panel del administrador: cola de donaciones pendientes de confirmación con
-// alerta SLA (RF-07/RF-08.2). Es un RESUMEN con alerta de antigüedad; la
+// alerta SLA de 24h (RF-07/RF-08.2). Es un RESUMEN con alerta de antigüedad; la
 // confirmación/rechazo con visor de comprobante vive en /admin/donaciones.
 // Usa el endpoint existente GET /api/admin/donaciones/pendientes. Si el usuario
 // no es admin, responde 403 y el bloque se oculta.
@@ -16,7 +16,7 @@ interface DonacionPendiente {
   monto?: number;
   moneda?: string;
   created_at?: string;
-  alerta_48h?: boolean;
+  alerta_24h?: boolean;
   usuarios?: { nombre?: string; correo_electronico?: string } | null;
   proyecto_graduacion?: { titulo_proyecto?: string } | null;
   tipo_pago?: { descripcion?: string } | null;
@@ -48,13 +48,13 @@ export default function AdminDonacionesPendientes({ token }: { token: string }) 
 
   if (!esAdmin) return null;
 
-  const vencidas = donaciones.filter((d) => d.alerta_48h).length;
+  const vencidas = donaciones.filter((d) => d.alerta_24h).length;
 
   return (
     <div className={styles.wrap}>
       <span className={styles.count}>
         {donaciones.length} pendiente(s)
-        {vencidas > 0 ? ` · ${vencidas} vencida(s) > 48 h` : ''}
+        {vencidas > 0 ? ` · ${vencidas} vencida(s) > 24 h` : ''}
       </span>
 
       {donaciones.length === 0 ? (
@@ -76,10 +76,10 @@ export default function AdminDonacionesPendientes({ token }: { token: string }) 
                   </div>
                   <span
                     className={`${styles.estado} ${
-                      d.alerta_48h ? styles.estado_rechazado : styles.estado_pendiente
+                      d.alerta_24h ? styles.estado_rechazado : styles.estado_pendiente
                     }`}
                   >
-                    {d.alerta_48h ? 'vencida > 48 h' : 'pendiente'}
+                    {d.alerta_24h ? 'vencida > 24 h' : 'pendiente'}
                   </span>
                 </div>
               </article>

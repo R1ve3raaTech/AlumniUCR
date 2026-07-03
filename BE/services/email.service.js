@@ -307,7 +307,7 @@ const enviarCorreoMatchActivoAdmin = async ({ nombre_exalumno, nombre_estudiante
 
 
 /**
- * RF-08: Notifica al admin cuando llega una nueva donación (SLA: 48 horas hábiles).
+ * RF-08: Notifica al admin cuando llega una nueva donación (SLA: 24 horas hábiles).
  * @param {object} params
  * @param {string} params.nombre_exalumno
  * @param {number} params.monto
@@ -324,7 +324,7 @@ const enviarCorreoNuevaDonacion = async ({ nombre_exalumno, monto, moneda, metod
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
       <h2 style="color:#5b3df5">Nueva donación pendiente de verificación</h2>
-      <p>Se recibió un comprobante de donación que requiere tu confirmación en menos de 48 horas hábiles:</p>
+      <p>Se recibió un comprobante de donación que requiere tu confirmación en menos de 24 horas hábiles:</p>
       <table style="border-collapse:collapse;margin:16px 0">
         <tr><td style="padding:4px 12px 4px 0;color:#666">Donante</td><td><strong>${nombre_exalumno}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#666">Monto</td><td><strong>${monto} ${moneda}</strong></td></tr>

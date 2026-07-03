@@ -26,7 +26,7 @@ const obtenerMatchesAdmin = async (req, res, next) => {
 
 
 // ======================================================
-// RF-08.2 — GET DONACIONES PENDIENTES (con alerta 48h)
+// RF-08.2 — GET DONACIONES PENDIENTES (con alerta 24h)
 // ======================================================
 
 const obtenerDonacionesPendientes = async (req, res, next) => {
@@ -42,7 +42,7 @@ const obtenerDonacionesPendientes = async (req, res, next) => {
 
 
 // ======================================================
-// RF-08.2 — POST ENVIAR RECORDATORIOS (donaciones > 48h)
+// RF-08.2 — POST ENVIAR RECORDATORIOS (donaciones > 24h)
 // ======================================================
 
 const enviarRecordatorioDonaciones = async (req, res, next) => {

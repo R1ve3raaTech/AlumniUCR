@@ -272,7 +272,7 @@ export default function AdminDashboard({
             {token && <AdminExalumnosPendientes token={token} />}
           </motion.section>
 
-          {/* Donaciones pendientes con alerta SLA 48h (RF-07 / RF-08.2) */}
+          {/* Donaciones pendientes con alerta SLA 24h (RF-07 / RF-08.2) */}
           <motion.section
             className={styles.bloque}
             initial={{ opacity: 0, y: 20 }}
@@ -282,7 +282,7 @@ export default function AdminDashboard({
           >
             <div className={styles.bloqueHead}>
               <h2 className={styles.bloqueTitulo}>Donaciones por confirmar</h2>
-              <span className={styles.bloqueHint}>Cola por antigüedad · alerta a las 48 h hábiles</span>
+              <span className={styles.bloqueHint}>Cola por antigüedad · alerta a las 24 h hábiles</span>
             </div>
             {token && <AdminDonacionesPendientes token={token} />}
           </motion.section>
