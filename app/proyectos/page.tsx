@@ -597,7 +597,7 @@ function ProyectosContent() {
           <p className={styles.modalText}>
             Para acceder a los proyectos y conectar con sus autores necesitas una
             cuenta de <strong>Exalumno</strong> o <strong>Voluntario</strong> de la
-            red UCR Connect. ¡Únete y sé parte del ecosistema!
+            red Alumni UCR. ¡Únete y sé parte del ecosistema!
           </p>
 
           <div className={styles.modalActions}>

@@ -42,7 +42,16 @@ export default function Hero() {
               variants={fadeUp}
               transition={{ duration: 0.65, ease: 'easeOut' }}
             >
-              Conectando <span className={styles.heroTitleHighlight}>Talento</span> con Experiencia
+              Conectando{' '}
+              <span className={styles.wordHighlightWrap} data-anim-word="talento">
+                <span className={styles.wordHighlightBar} data-anim-bar="talento" aria-hidden />
+                <span className={`${styles.heroTitleHighlight} ${styles.wordHighlightText}`} data-anim-wtext="talento">Talento</span>
+              </span>
+              {' '}con{' '}
+              <span className={styles.wordHighlightWrap} data-anim-word="experiencia">
+                <span className={styles.wordHighlightBar} data-anim-bar="experiencia" aria-hidden />
+                <span className={styles.wordHighlightText} data-anim-wtext="experiencia">Experiencia</span>
+              </span>
             </motion.h1>
 
             <motion.p

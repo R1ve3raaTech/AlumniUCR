@@ -7,6 +7,7 @@ import { solicitarMagicLink, registrarExalumno, correoYaRegistrado } from '@/lib
 import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/validaciones';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import AlumniLogo from '@/components/AlumniLogo';
+import AlumniMascot from '@/components/landing/AlumniMascot';
 import { FACULTADES_UCR, CARRERAS_UCR } from '@/lib/catalogoUCR';
 import styles from './registro.module.css';
 
@@ -196,6 +197,7 @@ export default function RegistroPage() {
 
   return (
     <div className={styles.page}>
+      <AlumniMascot />
       <div className={styles.bg} aria-hidden>
         <span className={styles.bgCircle} />
         <span className={styles.bgBlock} />

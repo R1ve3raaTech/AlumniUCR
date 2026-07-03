@@ -11,7 +11,7 @@ const TESTIMONIOS = [
     rol: 'Mentora en Medicina',
     avatar: '/images/TANIA_RODRIGUEZ01-pq2.png',
     texto:
-      'Poder retribuir a mi alma máter guiando a la nueva generación de médicos ha sido una de las experiencias más gratificantes de mi carrera. UCR Connect facilita este puente de manera excepcional.',
+      'Poder retribuir a mi alma máter guiando a la nueva generación de médicos ha sido una de las experiencias más gratificantes de mi carrera. Alumni UCR facilita este puente de manera excepcional.',
   },
   {
     nombre: 'Mateo Rivera',
