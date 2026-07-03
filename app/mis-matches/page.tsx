@@ -52,6 +52,7 @@ export default function MisMatchesPage() {
   const [misMatches, setMisMatches] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [conectando, setConectando] = useState<string | null>(null);
+  const [modalConexion, setModalConexion] = useState<{ ok: boolean; nombre: string; foto?: string } | null>(null);
 
   useEffect(() => {
     if (!loading && !token) router.replace('/login');
@@ -76,16 +77,16 @@ export default function MisMatchesPage() {
   const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
 
   // Inicia la conexión real (RF-06): crea/usa el match y dispara el email al exalumno.
-  const conectar = async (idExalumno: string, nombre: string) => {
+  const conectar = async (idExalumno: string, nombre: string, foto?: string) => {
     if (!token || conectando) return;
     setConectando(idExalumno);
     try {
       await conectarConExalumno(token, idExalumno, misMatches);
-      notificar(`✅ Le avisamos a ${nombre} que querés conectar. Te va a llegar su contacto cuando acepte.`);
       const actualizados = await obtenerMisMatches(token);
       setMisMatches(actualizados);
+      setModalConexion({ ok: true, nombre, foto });
     } catch {
-      notificar('❌ No pudimos enviar la solicitud. Intentá de nuevo en un momento.');
+      setModalConexion({ ok: false, nombre });
     } finally {
       setConectando(null);
     }
@@ -166,7 +167,7 @@ export default function MisMatchesPage() {
                   <div className="mt-auto flex gap-2">
                     <button
                       type="button"
-                      onClick={() => conectar(s.id, s.nombre)}
+                      onClick={() => conectar(s.id, s.nombre, s.foto_perfil)}
                       disabled={conectando === s.id}
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-bold text-on-primary transition-colors hover:bg-secondary disabled:opacity-60"
                     >
@@ -212,6 +213,45 @@ export default function MisMatchesPage() {
               })}
             </div>
           </section>
+        )}
+        {/* Modal de resultado de la conexión (RF-06) */}
+        {modalConexion && (
+          <div className="fixed inset-0 z-[120] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal onClick={() => setModalConexion(null)}>
+            <div className="w-full max-w-sm rounded-2xl bg-surface-container-lowest p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              {modalConexion.ok ? (
+                <>
+                  <div className="mx-auto mb-3 grid h-16 w-16 place-items-center overflow-hidden rounded-full border-2 border-tertiary bg-tertiary/10">
+                    {modalConexion.foto
+                      ? <img src={modalConexion.foto} alt={modalConexion.nombre} className="h-full w-full object-cover" />
+                      : <span className="material-symbols-outlined text-3xl text-tertiary">mark_email_read</span>}
+                  </div>
+                  <h3 className="font-headline-md text-lg text-primary">¡Solicitud enviada!</h3>
+                  <p className="mt-2 text-sm text-on-surface-variant">
+                    Le avisamos a <b>{modalConexion.nombre}</b> por correo que querés conectar.
+                    Cuando acepte, ambos van a recibir el contacto del otro para coordinar directamente.
+                  </p>
+                  <p className="mt-2 text-xs text-on-surface-variant">Podés seguir el estado en «Solicitudes Enviadas».</p>
+                </>
+              ) : (
+                <>
+                  <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-error/10">
+                    <span className="material-symbols-outlined text-3xl text-error">error</span>
+                  </div>
+                  <h3 className="font-headline-md text-lg text-primary">No pudimos enviar la solicitud</h3>
+                  <p className="mt-2 text-sm text-on-surface-variant">
+                    Hubo un problema al conectar con <b>{modalConexion.nombre}</b>. Revisá que tu perfil esté completo e intentá de nuevo en un momento.
+                  </p>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => setModalConexion(null)}
+                className="mt-5 w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-on-primary transition-opacity hover:opacity-90"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </StudentShell>
