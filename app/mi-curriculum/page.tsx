@@ -32,6 +32,8 @@ export default function MiCurriculumPage() {
   const { token } = useAuth();
   const [analisis, setAnalisis] = useState<any>(null);
   const [cargandoAnalisis, setCargandoAnalisis] = useState(false);
+  const [errorAnalisis, setErrorAnalisis] = useState(false);
+  const [reintento, setReintento] = useState(0);
 
   const o = (v: string, d = '—') => (v && v.trim() ? v : d);
   const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
@@ -45,6 +47,7 @@ export default function MiCurriculumPage() {
     let activo = true;
     const fetchAnalisis = async () => {
       setCargandoAnalisis(true);
+      setErrorAnalisis(false);
       try {
         const res = await apiFetch('/claude/career-analysis', {
           method: 'POST',
@@ -52,9 +55,12 @@ export default function MiCurriculumPage() {
         });
         if (activo && res && res.success) {
           setAnalisis(res.data);
+        } else if (activo) {
+          setErrorAnalisis(true);
         }
       } catch (err) {
         console.error('Error al obtener análisis de carrera:', err);
+        if (activo) setErrorAnalisis(true);
       } finally {
         if (activo) setCargandoAnalisis(false);
       }
@@ -63,7 +69,22 @@ export default function MiCurriculumPage() {
     return () => {
       activo = false;
     };
-  }, [token]);
+  }, [token, reintento]);
+
+  // Estado honesto sin datos: el análisis falló o no llegó (no se inventan cifras).
+  const AnalisisNoDisponible = () => (
+    <div className="flex flex-col items-start gap-2 rounded-lg border border-outline-variant/40 bg-surface-container-low p-3">
+      <p className="text-xs text-on-surface-variant">No pudimos obtener el análisis de mercado en este momento.</p>
+      <button
+        type="button"
+        data-real
+        onClick={() => setReintento((n) => n + 1)}
+        className="flex items-center gap-1 text-xs font-bold text-secondary hover:underline"
+      >
+        <span className="material-symbols-outlined text-sm">refresh</span> Reintentar
+      </button>
+    </div>
+  );
 
   const optimizarParaVacante = () => {
     window.dispatchEvent(
@@ -169,41 +190,39 @@ export default function MiCurriculumPage() {
 
           <Desplegable titulo="Inteligencia de Mercado" icono="query_stats" tono="secondary" resumen="Demanda y salario">
             <div className="space-y-4">
-              <div className="rounded-lg border-l-4 border-secondary bg-surface-container-low p-3">
-                <p className="mb-1 text-xs font-bold uppercase text-secondary">Benchmarking salarial</p>
-                <p className="text-sm font-semibold">
-                  {analisis?.benchmarkingSalarial?.cargo || o(perfil.carrera, 'Tu carrera')} · Nivel competitivo
-                </p>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-outline-variant/30">
-                  <div
-                    className="h-full bg-secondary transition-all duration-500"
-                    style={{ width: `${analisis?.benchmarkingSalarial?.porcentaje || 75}%` }}
-                  />
-                </div>
-                <p className="mt-1 text-xs text-on-surface-variant">
-                  {analisis?.benchmarkingSalarial?.mensaje || 'Tu perfil está en el top 15% de competitividad.'}
-                </p>
-              </div>
               {cargandoAnalisis ? (
-                <div className="text-xs text-on-surface-variant italic animate-pulse">Cargando tendencias del mercado...</div>
-              ) : analisis?.tendencias && analisis.tendencias.length > 0 ? (
-                analisis.tendencias.map((t: any, idx: number) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
-                    <div>
-                      <p className="text-xs font-bold text-on-surface">{t.titulo}</p>
-                      <p className="text-xs leading-tight text-on-surface-variant">{t.descripcion}</p>
+                <div className="animate-pulse text-xs italic text-on-surface-variant">Cargando tendencias del mercado...</div>
+              ) : analisis?.benchmarkingSalarial || (analisis?.tendencias && analisis.tendencias.length > 0) ? (
+                <>
+                  {analisis?.benchmarkingSalarial && (
+                    <div className="rounded-lg border-l-4 border-secondary bg-surface-container-low p-3">
+                      <p className="mb-1 text-xs font-bold uppercase text-secondary">Benchmarking salarial</p>
+                      <p className="text-sm font-semibold">
+                        {analisis.benchmarkingSalarial.cargo || o(perfil.carrera, 'Tu carrera')} · Nivel competitivo
+                      </p>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-outline-variant/30">
+                        <div
+                          className="h-full bg-secondary transition-all duration-500"
+                          style={{ width: `${analisis.benchmarkingSalarial.porcentaje || 0}%` }}
+                        />
+                      </div>
+                      {analisis.benchmarkingSalarial.mensaje && (
+                        <p className="mt-1 text-xs text-on-surface-variant">{analisis.benchmarkingSalarial.mensaje}</p>
+                      )}
                     </div>
-                  </div>
-                ))
+                  )}
+                  {(analisis?.tendencias || []).map((t: any, idx: number) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
+                      <div>
+                        <p className="text-xs font-bold text-on-surface">{t.titulo}</p>
+                        <p className="text-xs leading-tight text-on-surface-variant">{t.descripcion}</p>
+                      </div>
+                    </div>
+                  ))}
+                </>
               ) : (
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined mt-0.5 text-sm text-secondary">trending_up</span>
-                  <div>
-                    <p className="text-xs font-bold text-on-surface">Demanda en IA crece +45%</p>
-                    <p className="text-xs leading-tight text-on-surface-variant">Las empresas en Zona Franca buscan especialistas.</p>
-                  </div>
-                </div>
+                <AnalisisNoDisponible />
               )}
             </div>
           </Desplegable>
@@ -211,38 +230,33 @@ export default function MiCurriculumPage() {
           <Desplegable titulo="Proyección de Perfil" icono="psychology" tono="tertiary" resumen="Tus mejores matches">
             <div className="space-y-3">
               {cargandoAnalisis ? (
-                <div className="text-xs text-on-surface-variant italic animate-pulse">Cargando proyecciones de perfil...</div>
+                <div className="animate-pulse text-xs italic text-on-surface-variant">Cargando proyecciones de perfil...</div>
               ) : analisis?.proyecciones && analisis.proyecciones.length > 0 ? (
-                analisis.proyecciones.map((p: any, idx: number) => {
-                  const isHigh = p.porcentaje >= 90;
-                  const colorClass = isHigh ? 'bg-secondary/10 text-secondary' : 'bg-emerald-500/10 text-emerald-600';
-                  return (
-                    <div key={idx} className="flex items-center gap-3">
-                      <span className={`grid h-11 w-11 place-items-center rounded-full font-bold ${colorClass}`}>
-                        {p.porcentaje}%
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold">{p.puesto}</p>
-                        <p className="text-xs text-on-surface-variant">{p.explicacion}</p>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
                 <>
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-11 w-11 place-items-center rounded-full bg-secondary/10 font-bold text-secondary">92%</span>
-                    <div><p className="text-xs font-bold">Cloud Architect @ Microsoft</p><p className="text-xs text-on-surface-variant">Palabras clave optimizadas por IA.</p></div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-11 w-11 place-items-center rounded-full bg-emerald-500/10 font-bold text-emerald-600">88%</span>
-                    <div><p className="text-xs font-bold">Lead Dev @ Gorilla Logic</p><p className="text-xs text-on-surface-variant">IA enfatizó tu liderazgo.</p></div>
-                  </div>
+                  {analisis.proyecciones.map((p: any, idx: number) => {
+                    const isHigh = p.porcentaje >= 90;
+                    const colorClass = isHigh ? 'bg-secondary/10 text-secondary' : 'bg-emerald-500/10 text-emerald-600';
+                    return (
+                      <div key={idx} className="flex items-center gap-3">
+                        <span className={`grid h-11 w-11 place-items-center rounded-full font-bold ${colorClass}`}>
+                          {p.porcentaje}%
+                        </span>
+                        <div>
+                          <p className="text-xs font-bold">{p.puesto}</p>
+                          <p className="text-xs text-on-surface-variant">{p.explicacion}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {analisis?.sugerenciaCertificacion && (
+                    <p className="border-t border-outline-variant/20 pt-2 text-xs italic text-on-surface-variant">
+                      {analisis.sugerenciaCertificacion}
+                    </p>
+                  )}
                 </>
+              ) : (
+                <AnalisisNoDisponible />
               )}
-              <p className="border-t border-outline-variant/20 pt-2 text-xs italic text-on-surface-variant">
-                {analisis?.sugerenciaCertificacion || 'Sugerencia: obtené la certificación AWS para llegar al 98% de match.'}
-              </p>
             </div>
           </Desplegable>
         </section>
