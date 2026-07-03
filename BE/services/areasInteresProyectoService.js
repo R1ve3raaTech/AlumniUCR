@@ -63,6 +63,17 @@ const crearAreaInteresProyecto = async (dataRelacion) => {
         throw mapDbError(error);
     }
 
+    // RF-03: la primera área del proyecto puede completar el perfil del estudiante.
+    const { data: proy } = await supabase
+        .from('proyecto_graduacion')
+        .select('id_estudiante')
+        .eq('id', dataRelacion.id_proyecto)
+        .maybeSingle();
+    if (proy?.id_estudiante) {
+        const { recalcularPerfilCompleto } = require('./informacionEstudianteService');
+        await recalcularPerfilCompleto(proy.id_estudiante).catch(() => {});
+    }
+
     return data;
 };
 
