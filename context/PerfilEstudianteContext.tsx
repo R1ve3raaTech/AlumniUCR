@@ -75,6 +75,10 @@ export interface PerfilEstudiante {
     empleoParalelo: boolean;
   };
   proyectoFinalizado: boolean;
+  // Adjunto del proyecto: foto (recortada), documento PDF o un enlace.
+  proyectoAdjunto: string; // data URL (imagen/pdf) o URL (link)
+  proyectoAdjuntoTipo: string; // '' | 'imagen' | 'pdf' | 'link'
+  proyectoAdjuntoNombre: string;
   // Apoyo requerido
   apoyo: { mentoria: boolean; empleo: boolean; pasantia: boolean; financiamiento: boolean };
   // Pausar perfil: no recibir contactos temporalmente (RF-03, criterio de aceptación)
@@ -129,6 +133,9 @@ export const PERFIL_VACIO: PerfilEstudiante = {
     empleoParalelo: false,
   },
   proyectoFinalizado: false,
+  proyectoAdjunto: '',
+  proyectoAdjuntoTipo: '',
+  proyectoAdjuntoNombre: '',
   apoyo: { mentoria: false, empleo: false, pasantia: false, financiamiento: false },
   pausado: false,
   portafolio: [],
