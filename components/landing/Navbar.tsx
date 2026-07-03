@@ -8,11 +8,11 @@ import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
 
-// NavegaciÃ³n pÃºblica
+// Navegación pública
 const LINKS = [
   { label: 'Inicio', href: '/' },
   { label: 'Proyectos', href: '/proyectos' },
-  { label: 'MentorÃ­as', href: '/mentorias' },
+  { label: 'Mentorías', href: '/mentorias' },
 ];
 
 export default function Navbar() {
@@ -28,7 +28,7 @@ export default function Navbar() {
     >
       <div className={`${styles.container} ${styles.navInner}`}>
         <div className={styles.navLeft}>
-          <Link href="/" aria-label="Alumni UCR â€” inicio" onClick={cerrar}>
+          <Link href="/" aria-label="Alumni UCR — inicio" onClick={cerrar}>
             <BrandLogo />
           </Link>
         </div>
@@ -72,8 +72,8 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/registro" className={styles.navCta} onClick={cerrar}>
-              Unete
+            <Link href="/login" className={styles.navCta} onClick={cerrar}>
+              ACCEDER
             </Link>
           )}
         </div>
@@ -81,7 +81,7 @@ export default function Navbar() {
         <button
           type="button"
           className={styles.navToggle}
-          aria-label="Abrir menÃº"
+          aria-label="Abrir menú"
           aria-expanded={abierto}
           onClick={() => setAbierto((v) => !v)}
         >
