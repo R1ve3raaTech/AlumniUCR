@@ -1070,7 +1070,7 @@ export default function PerfilEstudiantePage() {
                 <span className="text-xs font-bold uppercase text-primary">Estado de Cuenta</span>
                 <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-bold text-green-500">SEGURO</span>
               </div>
-              <p className="text-xs text-on-surface-variant">Tu cuenta está en buen estado. 0 reportes acumulados.</p>
+              <p className="text-xs text-on-surface-variant">Tu cuenta está activa y en buen estado.</p>
             </div>
           </div>
         </section>

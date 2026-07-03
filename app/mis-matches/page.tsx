@@ -29,11 +29,14 @@ const ESTADO_SOLICITUD: Record<string, { label: string; color: string; barra: st
   activo: { label: 'Conectado', color: 'text-tertiary', barra: 'bg-tertiary', pct: 100 },
 };
 
+// Mismo cálculo que el dashboard: campos obligatorios de RF-03 (información
+// académica, proyecto de graduación y áreas de interés), para que el % de
+// perfil completo sea consistente en todas las pantallas.
 function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): number {
   const campos = [
-    p.nombre, p.apellidos, p.telefono, p.carrera, p.resumen, p.foto,
-    p.proyectoTitulo, p.habilidadesTecnicas,
-    p.experiencias.length ? 'x' : '', p.intereses.length ? 'x' : '',
+    p.carne, p.carrera, p.facultad, p.sede, p.anioIngreso, p.nivel,
+    p.proyectoTitulo, p.proyectoDescripcion, p.areaTematica, p.proyectoTipo,
+    p.proyectoAreas.length ? 'x' : '',
   ];
   const llenos = campos.filter((c) => String(c).trim()).length;
   return Math.round((llenos / campos.length) * 100);

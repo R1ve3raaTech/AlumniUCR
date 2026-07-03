@@ -1,29 +1,27 @@
 'use client';
 
-// Dashboard del estudiante: un "pizarrón" práctico que resume TODAS sus
-// pantallas (perfil, CV, matches, directorio, comunidad, reportes), 100% ligado
-// a la fuente única (perfil) + reportes reales. Pensado como un panel de
-// practicidad y bienestar: reseñas breves, avisos accionables y próximos pasos.
+// Dashboard del estudiante: bienvenida + accesos rápidos + próximos pasos
+// (criterios RF-03) + conexiones sugeridas reales (RF-06). 100% ligado a la
+// fuente única (perfil); sin datos quemados.
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
-import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { misReportes } from '@/lib/reportesAnomalias';
 import { obtenerSugeridos } from '@/lib/matchesEstudiante';
-import { notificar } from '@/components/student/Toast';
 
 const card = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
 
 const iniciales = (n: string) => n.split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
-const TIPS = [
-  'Acordate de tomar descansos: 25 minutos de foco, 5 de pausa.',
-  'Tu bienestar importa tanto como tus notas. Dormí bien hoy.',
-  'Un perfil completo abre puertas: dedicale 10 minutos esta semana.',
-  'Conectar con un mentor reduce la incertidumbre. Animate a escribir.',
-  'Celebrá los pequeños avances; cada sección completada suma.',
+// Accesos rápidos a las secciones del área de estudiante.
+const ACCESOS: { titulo: string; icon: string; href: string }[] = [
+  { titulo: 'Mi Perfil', icon: 'person', href: '/perfil-estudiante' },
+  { titulo: 'CV + IA', icon: 'description', href: '/mi-curriculum' },
+  { titulo: 'Matches', icon: 'handshake', href: '/mis-matches' },
+  { titulo: 'Directorio', icon: 'badge', href: '/directorio' },
+  { titulo: 'Reportes', icon: 'flag', href: '/reportes' },
+  { titulo: 'Comunidad', icon: 'forum', href: '/comunidad' },
 ];
 
 // Porcentaje de perfil completo según los campos obligatorios de RF-03
@@ -39,27 +37,9 @@ function completitud(p: PerfilEstudiante): number {
   return Math.round((campos.filter((c) => String(c).trim()).length / campos.length) * 100);
 }
 
-// Secciones del CV con datos.
-function seccionesCV(p: PerfilEstudiante): number {
-  return [
-    p.nombre || p.apellidos,
-    p.telefono || p.linkedin || p.ubicacion,
-    p.experiencias.length,
-    p.habilidadesTecnicas || p.habilidadesBlandas || p.idiomas,
-    p.carrera || p.sede,
-    p.resumen,
-  ].filter(Boolean).length;
-}
-
 export default function DashboardEstudiante() {
-  const { token } = useAuth();
   const { perfil } = usePerfilEstudiante();
-  const [reportes, setReportes] = useState<any[]>([]);
   const [sugeridos, setSugeridos] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (token) misReportes(token).then(setReportes).catch(() => {});
-  }, [token]);
 
   useEffect(() => {
     let activo = true;
@@ -69,10 +49,7 @@ export default function DashboardEstudiante() {
 
   const nombre = perfil.nombre?.trim() || 'estudiante';
   const pct = completitud(perfil);
-  const cvSecs = seccionesCV(perfil);
   const apoyos = Object.values(perfil.apoyo).filter(Boolean).length;
-  const reportesActivos = reportes.filter((r) => r.estado !== 'resuelta').length;
-  const tip = TIPS[nombre.length % TIPS.length];
 
   // Avisos prácticos derivados de los criterios de aceptación de RF-03: el
   // perfil incompleto no aparece en el directorio, así que estos son los
@@ -92,18 +69,8 @@ export default function DashboardEstudiante() {
     avisos.push({ icon: 'flag', texto: 'Tu proyecto llegó al 100% — marcalo como finalizado.', href: '/perfil-estudiante' });
   }
 
-  // Tarjetas-resumen de cada sección (reseña + enlace).
-  const secciones = [
-    { titulo: 'Mi Perfil', icon: 'person', valor: `${pct}% completo`, detalle: `${perfil.carne || 'Sin carné'} · ${perfil.sede || 'Sede pendiente'}`, href: '/perfil-estudiante' },
-    { titulo: 'CV + IA', icon: 'description', valor: `${cvSecs}/6 secciones`, detalle: perfil.cargoDeseado || 'Definí tu cargo deseado', href: '/mi-curriculum' },
-    { titulo: 'Matches', icon: 'handshake', valor: `${apoyos} necesidad${apoyos === 1 ? '' : 'es'}`, detalle: apoyos ? 'Buscando conexiones' : 'Definí qué apoyo buscás', href: '/mis-matches' },
-    { titulo: 'Directorio', icon: 'badge', valor: perfil.proyectoTitulo ? 'Ficha lista' : 'Ficha incompleta', detalle: perfil.proyectoTitulo || 'Registrá tu proyecto', href: '/directorio' },
-    { titulo: 'Reportes', icon: 'flag', valor: `${reportes.length} enviado${reportes.length === 1 ? '' : 's'}`, detalle: reportesActivos ? `${reportesActivos} en seguimiento` : 'Todo al día', href: '/reportes' },
-    { titulo: 'Comunidad', icon: 'forum', valor: 'Próx: 24 Nov', detalle: 'Feria de Empleo Tech 2026', href: '/comunidad' },
-  ];
-
   const proximoPaso = avisos[0];
-  const sugeridosDestacados = sugeridos.slice(0, 2);
+  const sugeridosDestacados = sugeridos.slice(0, 3);
 
   return (
     <StudentShell active="dashboard">
@@ -136,7 +103,7 @@ export default function DashboardEstudiante() {
 
         {/* Accesos rápidos */}
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-          {secciones.map((s) => (
+          {ACCESOS.map((s) => (
             <Link
               key={`acceso-${s.titulo}`}
               href={s.href}
@@ -177,55 +144,37 @@ export default function DashboardEstudiante() {
           )}
         </div>
 
-        {/* Conexiones sugeridas + Bienestar */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className={`${card} p-6 lg:col-span-2`}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-body-semibold text-primary">Conexiones sugeridas para ti</h2>
-              <Link href="/mis-matches" className="text-xs font-bold text-secondary hover:underline">Ver todos los perfiles</Link>
-            </div>
-            {sugeridosDestacados.length === 0 ? (
-              <p className="text-sm italic text-on-surface-variant">Completá tu perfil para recibir sugerencias de conexión.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {sugeridosDestacados.map((s) => (
-                  <div key={s.id ?? s.nombre} className="flex items-center gap-3 rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-primary bg-primary/10 font-bold text-primary">
-                      {s.foto_perfil ? <img src={s.foto_perfil} alt={s.nombre} className="h-full w-full object-cover" /> : iniciales(s.nombre || '')}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-body-semibold text-sm text-on-surface">{s.nombre}</p>
-                      <p className="truncate text-xs text-tertiary">{s.score}% de coincidencia{s.comunes?.length ? ` en ${s.comunes[0]}` : ''}</p>
-                      <div className="mt-2 flex gap-2">
-                        <Link href="/mis-matches" className="rounded-lg bg-orange-400 px-4 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">
-                          Conectar
-                        </Link>
-                        <Link href="/directorio" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
-                          <span className="material-symbols-outlined text-[16px]">mail</span>
-                        </Link>
-                      </div>
+        {/* Conexiones sugeridas */}
+        <div className={`${card} p-6`}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-body-semibold text-primary">Conexiones sugeridas para ti</h2>
+            <Link href="/mis-matches" className="text-xs font-bold text-secondary hover:underline">Ver todos los perfiles</Link>
+          </div>
+          {sugeridosDestacados.length === 0 ? (
+            <p className="text-sm italic text-on-surface-variant">Completá tu perfil para recibir sugerencias de conexión.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sugeridosDestacados.map((s) => (
+                <div key={s.id ?? s.nombre} className="flex items-center gap-3 rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-primary bg-primary/10 font-bold text-primary">
+                    {s.foto_perfil ? <img src={s.foto_perfil} alt={s.nombre} className="h-full w-full object-cover" /> : iniciales(s.nombre || '')}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-body-semibold text-sm text-on-surface">{s.nombre}</p>
+                    <p className="truncate text-xs text-tertiary">{s.score}% de coincidencia{s.comunes?.length ? ` en ${s.comunes[0]}` : ''}</p>
+                    <div className="mt-2 flex gap-2">
+                      <Link href="/mis-matches" className="rounded-lg bg-orange-400 px-4 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">
+                        Conectar
+                      </Link>
+                      <Link href="/directorio" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
+                        <span className="material-symbols-outlined text-[16px]">mail</span>
+                      </Link>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-xl border-none bg-[#E6F4F9] p-6">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-body-semibold text-primary">Bienestar Académico</h3>
-              <span className="material-symbols-outlined text-secondary">favorite</span>
+                </div>
+              ))}
             </div>
-            <p className="mb-2 text-xs text-on-secondary-fixed-variant">Tu nivel de satisfacción actual es del</p>
-            <div className="mb-3 flex items-end gap-2">
-              <span className="font-headline-lg text-3xl font-bold text-primary">85%</span>
-              <span className="rounded-full bg-tertiary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-tertiary">Estado óptimo</span>
-            </div>
-            <p className="mb-3 text-xs text-on-secondary-fixed-variant">{tip}</p>
-            <button type="button" onClick={() => notificar('🚧 Función en desarrollo')} className="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
-              Revisar balance emocional <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </StudentShell>
