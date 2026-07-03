@@ -126,8 +126,8 @@ export default function ComunidadFeed() {
       await crearBlog(token as string, { tipo, titulo: titulo.trim(), contenido: contenido.trim() });
       setTituloV(''); setContenido('');
       setModalAbierto(false);
-      notificar('✅ Enviado — el admin lo revisará pronto');
-      if (token) misBlogs(token).catch(() => []).then(setMios);
+      notificar('✅ ¡Publicado! Tu aporte ya es visible en la comunidad');
+      cargar(); // refresca el feed para que la publicación aparezca de inmediato
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'No se pudo enviar';
       notificar(`⚠️ ${msg}`);
@@ -412,8 +412,8 @@ export default function ComunidadFeed() {
 
                 {/* Aviso */}
                 <p className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[14px] text-amber-500">info</span>
-                  Tu publicación será revisada por el administrador antes de aparecer.
+                  <span className="material-symbols-outlined text-[14px] text-emerald-500">bolt</span>
+                  Tu publicación aparecerá en la comunidad de inmediato.
                 </p>
 
                 {/* Botón */}
@@ -424,7 +424,7 @@ export default function ComunidadFeed() {
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary py-3 font-bold text-on-primary shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                 >
                   <span className="material-symbols-outlined text-lg">send</span>
-                  {enviando ? 'Enviando…' : 'Enviar solicitud'}
+                  {enviando ? 'Publicando…' : 'Publicar'}
                 </button>
               </form>
             </div>

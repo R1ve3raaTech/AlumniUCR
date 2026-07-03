@@ -27,11 +27,13 @@ const crearBlog = async (req, res, next) => {
       tipo: TIPOS.includes(tipo) ? tipo : 'noticia',
       titulo: String(titulo).trim(),
       contenido: String(contenido).trim(),
-      estado: 'pendiente',
+      // Publicación directa: no pasa por revisión del admin. El admin conserva
+      // la moderación a posteriori (puede rechazarla desde su panel).
+      estado: 'aprobado',
     };
     const { data, error } = await supabase.from('blogs').insert(fila).select().single();
     if (error) throw error;
-    res.status(201).json({ success: true, mensaje: 'Tu publicación se envió y será revisada por el administrador.', data });
+    res.status(201).json({ success: true, mensaje: 'Tu publicación ya está visible en la comunidad.', data });
   } catch (e) { next(e); }
 };
 
