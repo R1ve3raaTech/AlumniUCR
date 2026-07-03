@@ -485,70 +485,97 @@ export default function ComunidadFeed() {
           onClick={() => setMisPublicAbierto(false)}
         >
           <div
-            className="w-full max-w-lg animate-slide-up rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-2xl"
+            className="w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-outline-variant sm:hidden" />
-            <div className="p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-headline-md text-lg font-bold text-primary">Mis publicaciones</h2>
+            {/* Cabecera con degradado de marca */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-[#003B5C] to-[#0080B5] px-6 py-5 text-white">
+              <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/10 blur-xl" />
+              <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/30 sm:hidden" />
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15">
+                    <span className="material-symbols-outlined text-xl">list_alt</span>
+                  </span>
+                  <div>
+                    <h2 className="font-headline-md text-lg font-bold leading-tight">Mis publicaciones</h2>
+                    <p className="text-xs text-white/70">
+                      {mios.length === 1 ? '1 aporte publicado' : `${mios.length} aportes publicados`} en la comunidad
+                    </p>
+                  </div>
+                </div>
                 <button
                   id="btn-cerrar-mis-publicaciones"
                   onClick={() => setMisPublicAbierto(false)}
-                  className="grid h-8 w-8 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+                  className="grid h-8 w-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 >
                   <span className="material-symbols-outlined text-xl">close</span>
                 </button>
               </div>
+            </div>
 
+            <div className="p-5">
               {mios.length === 0 ? (
-                <p className="py-8 text-center text-sm text-on-surface-variant">No tenés publicaciones aún.</p>
+                <div className="py-10 text-center">
+                  <span className="material-symbols-outlined mb-2 text-5xl text-outline">post_add</span>
+                  <p className="font-semibold text-primary">Aún no publicaste nada</p>
+                  <p className="mt-1 text-sm text-on-surface-variant">Tu primer aporte aparecerá aquí.</p>
+                </div>
               ) : (
-                <ul className="max-h-80 space-y-3 overflow-y-auto">
-                  {mios.map((m) => (
-                    <li
-                      key={m.id}
-                      className="flex items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-4"
-                    >
-                      <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${TIPOS[m.tipo]?.color || ''}`}>
-                        {TIPOS[m.tipo]?.label || m.tipo}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-primary">{m.titulo}</p>
-                        <p className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
-                          {timeAgo(m.created_at)}
-                          {fueEditado(m) && (
-                            <span className="rounded-full bg-surface-variant px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
-                              Editada
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-col items-end gap-2">
-                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-700">
-                          Publicado
-                        </span>
-                        <div className="flex gap-1">
+                <ul className="max-h-[60vh] space-y-3 overflow-y-auto overscroll-contain pr-1">
+                  {mios.map((m) => {
+                    const t = TIPOS[m.tipo] || TIPOS.noticia;
+                    return (
+                      <li
+                        key={m.id}
+                        className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm transition-all hover:border-secondary/40 hover:shadow-md"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Ícono del tipo */}
+                          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${t.color}`}>
+                            <span className="material-symbols-outlined text-lg">{t.icon}</span>
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-primary">{m.titulo}</p>
+                            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-on-surface-variant">
+                              <span className="font-bold uppercase tracking-wide">{t.label}</span>
+                              <span aria-hidden>·</span>
+                              {timeAgo(m.created_at)}
+                              {fueEditado(m) && (
+                                <span className="rounded-full bg-surface-variant px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                                  Editada
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Publicado
+                          </span>
+                        </div>
+
+                        {/* Acciones */}
+                        <div className="mt-3 flex justify-end gap-2 border-t border-outline-variant/60 pt-3">
                           <button
                             type="button"
-                            title="Editar publicación"
                             onClick={() => abrirEdicion(m)}
-                            className="grid h-7 w-7 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-secondary/10 hover:text-secondary"
+                            className="flex items-center gap-1.5 rounded-full border border-outline-variant px-3.5 py-1.5 text-xs font-bold text-on-surface-variant transition-colors hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
                           >
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                            <span className="material-symbols-outlined text-[15px]">edit</span>
+                            Editar
                           </button>
                           <button
                             type="button"
-                            title="Eliminar publicación"
                             onClick={() => setAEliminar(m)}
-                            className="grid h-7 w-7 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-error/10 hover:text-error"
+                            className="flex items-center gap-1.5 rounded-full border border-outline-variant px-3.5 py-1.5 text-xs font-bold text-on-surface-variant transition-colors hover:border-error hover:bg-error/10 hover:text-error"
                           >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                            <span className="material-symbols-outlined text-[15px]">delete</span>
+                            Eliminar
                           </button>
                         </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
