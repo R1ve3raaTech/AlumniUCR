@@ -544,7 +544,7 @@ DATOS DEL ESTUDIANTE Y SU PROYECTO:
 Genera la explicación en español (máximo 90 palabras, directo, en un párrafo continuo sin viñetas ni encabezados).
 `;
 
-        const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+        const model = process.env.CLAUDE_MODEL || 'claude-sonnet-5';
         const response = await claude.messages.create({
             model: model,
             max_tokens: 250,
