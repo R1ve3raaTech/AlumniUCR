@@ -81,14 +81,90 @@
 /* ─── Hero ────────────────────────────────────────────────────────── */
 .hero {
   position: relative;
-  height: 420px;
+  min-height: 460px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--ucr-primary), var(--brand-esmeralda));
-  padding: 0 clamp(1rem, 4vw, 2rem);
+  background: linear-gradient(135deg, var(--ucr-primary) 0%, var(--brand-esmeralda) 55%, var(--ucr-secondary) 100%);
+  padding: 2.5rem clamp(1rem, 4vw, 2rem);
 }
+
+/* Preguntas sugeridas por la IA */
+.suggestedQuestions {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.suggestedLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-ucr-display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sparkleIcon {
+  width: 15px;
+  height: 15px;
+  color: var(--brand-amarillo);
+  filter: drop-shadow(0 0 4px var(--brand-amarillo));
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.suggestedChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: 48rem;
+}
+
+.suggestedChip {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--brand-blanco);
+  border-radius: 9999px;
+  padding: 0.45rem 1.15rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.suggestedChip:hover {
+  background: var(--brand-blanco);
+  color: var(--ucr-primary);
+  border-color: var(--brand-blanco);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.suggestedChip:active {
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
 
 .heroGlow {
   position: absolute;
@@ -135,6 +211,8 @@
   position: relative;
   max-width: 42rem;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
 }
 
 .searchIcon {
@@ -144,6 +222,7 @@
   transform: translateY(-50%);
   color: var(--ucr-primary);
   pointer-events: none;
+  z-index: 5;
 }
 
 .searchIcon svg {
@@ -155,7 +234,7 @@
 .search {
   width: 100%;
   height: 4rem;
-  padding: 0 1.5rem 0 3.75rem;
+  padding: 0 10rem 0 3.75rem;
   border: none;
   border-radius: 9999px;
   background: var(--brand-blanco);
@@ -175,6 +254,35 @@
   box-shadow: 0 0 0 4px var(--brand-amarillo);
 }
 
+.searchBtn {
+  position: absolute;
+  right: 0.5rem;
+  height: 3rem;
+  padding: 0 1.5rem;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--brand-esmeralda), var(--ucr-primary));
+  color: white;
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 166, 100, 0.25);
+  text-transform: uppercase;
+  z-index: 5;
+  letter-spacing: 0.02em;
+}
+
+.searchBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.searchBtn:active {
+  transform: translateY(0);
+}
+
 /* ─── Categorías ──────────────────────────────────────────────────── */
 .categorias {
   width: 100%;
@@ -187,19 +295,20 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 76, 99, 0.1);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px -15px rgba(0, 31, 42, 0.05);
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .card:hover {
   transform: translateY(-0.5rem);
-  box-shadow: 0 18px 40px -16px rgba(0, 52, 69, 0.35);
+  border-color: var(--brand-esmeralda);
+  box-shadow: 0 20px 40px -15px rgba(0, 166, 100, 0.2);
 }
 
 .cardIcon {
@@ -335,10 +444,48 @@
   overflow: hidden;
 }
 
-.accordionA {
+.accordionBody {
   padding: 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.accordionA {
+  margin: 0;
   color: var(--ucr-on-surface-variant);
   line-height: 1.7;
+}
+
+.faqChatbotBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(0, 166, 100, 0.06), rgba(0, 76, 99, 0.06));
+  border: 1px solid rgba(0, 166, 100, 0.25);
+  color: var(--brand-esmeralda);
+  font-family: var(--font-ucr-display);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.faqChatbotBtn:hover {
+  background: var(--brand-esmeralda);
+  color: var(--brand-blanco);
+  border-color: var(--brand-esmeralda);
+  box-shadow: 0 4px 12px rgba(0, 166, 100, 0.2);
+  transform: translateY(-1px);
+}
+
+.faqChatbotBtn:active {
+  transform: translateY(0);
 }
 
 /* ─── Canales de contacto ─────────────────────────────────────────── */

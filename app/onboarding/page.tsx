@@ -4,9 +4,10 @@
 // (PerfilEstudianteContext) y de ahí lo leen todas sus pantallas. Wizard de 3
 // pasos, humanizado.
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
+import AvatarUploader from '@/components/student/AvatarUploader';
 
 const SEDES = ['Rodrigo Facio (Central)', 'Sede del Pacífico', 'Sede de Occidente', 'Sede del Atlántico', 'Sede de Guanacaste', 'Recinto de Golfito', 'Recinto de Tacares'];
 const NIVELES = ['Bachillerato', 'Licenciatura', 'Maestría'];
@@ -36,6 +37,7 @@ export default function OnboardingPage() {
     beca: perfil.beca || 'Tipo 5',
     proyectoTitulo: perfil.proyectoTitulo, proyectoDescripcion: perfil.proyectoDescripcion, proyectoAvance: perfil.proyectoAvance,
     proyectoAreasStr: perfil.proyectoAreas.join(', '),
+    proyectoAdjunto: perfil.proyectoAdjunto, proyectoAdjuntoTipo: perfil.proyectoAdjuntoTipo, proyectoAdjuntoNombre: perfil.proyectoAdjuntoNombre,
     apoyo: { ...perfil.apoyo },
     interesesSel: [...perfil.intereses],
     habilidadesTecnicas: perfil.habilidadesTecnicas, habilidadesBlandas: perfil.habilidadesBlandas, idiomas: perfil.idiomas,
@@ -45,6 +47,27 @@ export default function OnboardingPage() {
   const toggleInteres = (a: string) =>
     setF((p) => ({ ...p, interesesSel: p.interesesSel.includes(a) ? p.interesesSel.filter((x) => x !== a) : [...p.interesesSel, a] }));
 
+  // ── Adjunto del proyecto (foto recortable / PDF / link) ──
+  const [editorAdjunto, setEditorAdjunto] = useState(false);
+  const [adjError, setAdjError] = useState<string | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const ADJ_MAX = 5 * 1024 * 1024; // 5MB
+
+  const onPdf = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAdjError(null);
+    if (file.type !== 'application/pdf') { setAdjError('El documento debe ser PDF.'); return; }
+    if (file.size > ADJ_MAX) { setAdjError('El archivo supera los 5 MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => setF((p) => ({ ...p, proyectoAdjunto: String(reader.result), proyectoAdjuntoTipo: 'pdf', proyectoAdjuntoNombre: file.name }));
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+  const setLink = (v: string) =>
+    setF((p) => ({ ...p, proyectoAdjunto: v, proyectoAdjuntoTipo: v ? 'link' : '', proyectoAdjuntoNombre: v ? 'Enlace del proyecto' : '' }));
+  const quitarAdjunto = () => { setAdjError(null); setF((p) => ({ ...p, proyectoAdjunto: '', proyectoAdjuntoTipo: '', proyectoAdjuntoNombre: '' })); };
+
   const finalizar = () => {
     actualizar({
       nombre: f.nombre.trim(), apellidos: f.apellidos.trim(), telefono: f.telefono.trim(), linkedin: f.linkedin.trim(),
@@ -52,6 +75,7 @@ export default function OnboardingPage() {
       beca: f.beca,
       proyectoTitulo: f.proyectoTitulo.trim(), proyectoDescripcion: f.proyectoDescripcion.trim(), proyectoAvance: Number(f.proyectoAvance) || 0,
       proyectoAreas: f.proyectoAreasStr.split(',').map((s) => s.trim()).filter(Boolean),
+      proyectoAdjunto: f.proyectoAdjunto, proyectoAdjuntoTipo: f.proyectoAdjuntoTipo, proyectoAdjuntoNombre: f.proyectoAdjuntoNombre,
       apoyo: f.apoyo,
       intereses: f.interesesSel,
       habilidadesTecnicas: f.habilidadesTecnicas.trim(), habilidadesBlandas: f.habilidadesBlandas.trim(), idiomas: f.idiomas.trim(),
@@ -124,6 +148,49 @@ export default function OnboardingPage() {
             <Campo label="Áreas del proyecto (separadas por coma)">
               <input className={inputCls} value={f.proyectoAreasStr} onChange={(e) => set('proyectoAreasStr', e.target.value)} placeholder="Data Science, Web Dev, IA/ML" />
             </Campo>
+
+            {/* Adjunto del proyecto: foto (recortable), PDF o link */}
+            <Campo label="Adjunto del proyecto (foto, PDF o link)">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setEditorAdjunto(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm font-semibold text-primary transition-colors hover:border-secondary">
+                  <span className="material-symbols-outlined text-base">add_a_photo</span> Foto
+                </button>
+                <button type="button" onClick={() => pdfInputRef.current?.click()}
+                  className="flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm font-semibold text-primary transition-colors hover:border-secondary">
+                  <span className="material-symbols-outlined text-base">picture_as_pdf</span> PDF
+                </button>
+                <input ref={pdfInputRef} type="file" accept="application/pdf" hidden onChange={onPdf} />
+              </div>
+              <input
+                className={`${inputCls} mt-2`}
+                placeholder="O pegá un enlace (https://...)"
+                value={f.proyectoAdjuntoTipo === 'link' ? f.proyectoAdjunto : ''}
+                onChange={(e) => setLink(e.target.value)}
+              />
+              {adjError && <p className="mt-1 text-xs font-semibold text-error">{adjError}</p>}
+
+              {f.proyectoAdjunto && (
+                <div className="mt-3 flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                  {f.proyectoAdjuntoTipo === 'imagen' ? (
+                    <img src={f.proyectoAdjunto} alt="Adjunto" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                  ) : (
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-secondary/10 text-secondary">
+                      <span className="material-symbols-outlined">{f.proyectoAdjuntoTipo === 'pdf' ? 'picture_as_pdf' : 'link'}</span>
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-on-surface">{f.proyectoAdjuntoNombre || 'Adjunto'}</p>
+                    <p className="text-xs text-on-surface-variant">
+                      {f.proyectoAdjuntoTipo === 'imagen' ? 'Foto' : f.proyectoAdjuntoTipo === 'pdf' ? 'Documento PDF' : 'Enlace'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={quitarAdjunto} aria-label="Quitar adjunto" className="shrink-0 text-on-surface-variant transition-colors hover:text-error">
+                    <span className="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              )}
+            </Campo>
           </div>
         )}
 
@@ -180,6 +247,14 @@ export default function OnboardingPage() {
           )}
         </div>
       </div>
+
+      {/* Recorte/ajuste de la foto del proyecto (reutiliza el editor de avatar) */}
+      <AvatarUploader
+        abierto={editorAdjunto}
+        fotoActual={f.proyectoAdjuntoTipo === 'imagen' ? f.proyectoAdjunto : ''}
+        onGuardar={(foto) => setF((p) => ({ ...p, proyectoAdjunto: foto, proyectoAdjuntoTipo: 'imagen', proyectoAdjuntoNombre: 'Foto del proyecto' }))}
+        onCerrar={() => setEditorAdjunto(false)}
+      />
     </main>
   );
 }

@@ -56,23 +56,29 @@ function opcionesUnicas(lista: Exalumno[], selector: (e: Exalumno) => string[]):
 }
 
 export default function DirectorioPage() {
-  const { token } = useAuth();
+  const { token, loading: authLoading } = useAuth();
   const [rol, setRol] = useState<string | null>(null);
+  const [rolCargando, setRolCargando] = useState(true);
   const [lista, setLista] = useState<Exalumno[]>([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS);
+  // Fotos que fallaron al cargar → mostrar iniciales en lugar de ícono roto.
+  const [fotosRotas, setFotosRotas] = useState<Set<string>>(new Set());
 
   // El estudiante gestiona su Directorio de Talento; el resto ve el directorio
-  // de exalumnos (público = exalumnos).
+  // de exalumnos (público = exalumnos). Se espera a conocer el rol antes de
+  // pintar para evitar el "flash" de una pantalla y luego la otra.
   useEffect(() => {
-    if (!token) return;
+    if (authLoading) return;             // esperar hidratación de la sesión
+    if (!token) { setRolCargando(false); return; } // visitante → exalumnos
     let activo = true;
     obtenerPerfil(token)
       .then((r) => { if (activo) setRol(r?.data?.roles?.nombre?.toLowerCase().trim() ?? null); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (activo) setRolCargando(false); });
     return () => { activo = false; };
-  }, [token]);
+  }, [token, authLoading]);
 
   useEffect(() => {
     let activo = true;
@@ -134,6 +140,19 @@ export default function DirectorioPage() {
   const limpiar = () => { setFiltros({ ...FILTROS_VACIOS, apoyo: new Set() }); setBusqueda(''); };
 
   const iniciales = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+
+  // Mientras no se sepa el rol, no se pinta ninguna de las dos pantallas (evita
+  // el parpadeo: directorio de exalumnos → ficha del estudiante).
+  if (authLoading || rolCargando) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background font-body-base text-on-surface-variant">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined animate-spin text-secondary">progress_activity</span>
+          Cargando directorio…
+        </div>
+      </div>
+    );
+  }
 
   // El estudiante ve su ficha (Directorio de Talento); el exalumno, el directorio.
   if (rol === 'estudiante') return <DirectorioTalento />;
@@ -240,8 +259,8 @@ export default function DirectorioPage() {
             {filtrada.map((e) => (
               <article key={e.id} className={styles.card}>
                 <div className={styles.cardHead}>
-                  {e.foto_perfil
-                    ? <img src={e.foto_perfil} alt={e.nombre} className={styles.foto} />
+                  {e.foto_perfil && !fotosRotas.has(e.id)
+                    ? <img src={e.foto_perfil} alt={e.nombre} className={styles.foto} onError={() => setFotosRotas((s) => new Set(s).add(e.id))} />
                     : <span className={styles.fotoIni}>{iniciales(e.nombre)}</span>}
                   <div>
                     <h3 className={styles.nombre}>{e.nombre}</h3>

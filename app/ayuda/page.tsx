@@ -7,6 +7,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { enviarConsultaSoporte } from '@/lib/consultasSoporte';
+import { obtenerFaqs } from '@/lib/faqs';
+import { useAuth } from '@/context/AuthContext';
+import { obtenerPerfil } from '@/lib/auth';
 import styles from './ayuda.module.css';
 
 // Registro de plugins GSAP
@@ -35,27 +38,82 @@ const ITicket = ({ style }: { style?: React.CSSProperties }) => (<svg style={sty
 const IMessageSquare = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (<svg className={className} style={style} {...base}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>);
 
 // ─── Datos ────────────────────────────────────────────────────────────────
-const CATEGORIAS = [
-  { icon: <IProfile />, titulo: 'Gestión de Perfil', texto: 'Actualiza tu información académica y profesional.' },
-  { icon: <ISchool />, titulo: 'Mentorías', texto: 'Guía para mentores y mentees sobre el proceso.' },
-  { icon: <IHub />, titulo: 'Proyectos', texto: 'Colaboración y publicación de iniciativas Alumni.' },
-  { icon: <ICalendar />, titulo: 'Eventos y Red', texto: 'Gestión de inscripciones y networking regional.' },
-  { icon: <IShield />, titulo: 'Seguridad', texto: 'Recuperación de cuenta y privacidad de datos.' },
-];
+// Las preguntas y categorías vienen del backend (fuente única versionada,
+// /api/faqs). Aquí solo mapeamos el ícono de cada gestión por su título.
+interface Faq { categoria: string; pregunta: string; respuesta: string; }
+interface Categoria { key: string; titulo: string; texto: string; }
 
-const FAQS = [
-  { categoria: 'Mentorías', pregunta: '¿Cómo me convierto en mentor?', respuesta: 'Para convertirte en mentor, debes ir a tu perfil, seleccionar la pestaña "Mentorías" y completar el formulario de postulación. Revisaremos tu trayectoria profesional y académica en la UCR para validar tu perfil.' },
-  { categoria: 'Proyectos', pregunta: '¿Quién puede ver mis proyectos?', respuesta: 'Tú controlas la visibilidad. Por defecto, los proyectos son visibles para la red verificada de Alumni UCR. Puedes ajustar la privacidad para que solo usuarios con intereses específicos puedan ver tus colaboraciones activas.' },
-  { categoria: 'Seguridad', pregunta: '¿Cómo recupero mi cuenta institucional?', respuesta: 'Si has perdido acceso a tu cuenta, usa la opción "¿Olvidaste tu contraseña?" en la pantalla de inicio de sesión para recibir un enlace de restablecimiento. Si el problema persiste con tu correo @ucr.ac.cr, contacta al Centro de Informática.' },
-  { categoria: 'Gestión de Perfil', pregunta: '¿Cómo actualizo mi currículum?', respuesta: 'Dirígete a la configuración de tu cuenta y haz clic en "Perfil Profesional". Allí podrás subir un nuevo documento PDF o enlazar directamente tu perfil de LinkedIn.' },
-  { categoria: 'Eventos y Red', pregunta: '¿Dónde encuentro eventos de networking?', respuesta: 'Todos los eventos presenciales y virtuales organizados por Alumni UCR se publican en el boletín semanal y en la pestaña "Eventos" del Navbar principal.' },
-  { categoria: 'Mentorías', pregunta: '¿Puedo tener más de un mentor?', respuesta: 'Actualmente, el sistema permite conectar activamente con un máximo de 2 mentores simultáneamente para asegurar la calidad y el compromiso en el proceso de guía.' },
-];
+const ICONOS: Record<string, React.ReactNode> = {
+  'Registro y Cuenta': <IProfile />,
+  'Estudiantes y Becas': <ISchool />,
+  'Exalumnos y Mentorías': <IHub />,
+  'Proyectos y Financiamiento': <ICalendar />,
+  'Donaciones': <ITicket />,
+  'Seguridad y Privacidad': <IShield />,
+};
+const ICONO_DEFECTO = <IHub />;
+
+const SUGERENCIAS_POR_ROL: Record<string, string[]> = {
+  visitante: [
+    '¿Quiénes pueden registrarse?',
+    '¿Los exalumnos también necesitan correo institucional?',
+    '¿Cuánto tarda en aprobarse mi cuenta?',
+    '¿El registro tiene algún costo?'
+  ],
+  estudiante: [
+    '¿Qué es el CV con IA?',
+    '¿Cómo busco mentores o apoyo?',
+    '¿Para qué sirve registrar mi proyecto de graduación?',
+    '¿Qué encuentro en mi dashboard?'
+  ],
+  exalumno: [
+    '¿Cómo me postulo como mentor?',
+    '¿Cómo funciona el matching interdisciplinario?',
+    '¿Puedo ofrecer empleo o pasantías?',
+    '¿Cómo registro una donación?'
+  ],
+  admin: [
+    '¿Cómo funciona el matching avanzado?',
+    '¿Cómo auditar o validar donaciones?',
+    '¿Cómo moderar o resolver reportes?',
+    '¿Cómo mantener las tablas maestras?'
+  ]
+};
 
 export default function AyudaPage() {
+  const { token } = useAuth();
+  const [rol, setRol] = useState('visitante');
   const [busqueda, setBusqueda] = useState('');
-  const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
-  const [abierto, setAbierto] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!token) {
+      setRol('visitante');
+      return;
+    }
+    let activo = true;
+    obtenerPerfil(token)
+      .then((res) => {
+        if (!activo) return;
+        const userRol = res?.data?.roles?.nombre?.toLowerCase().trim();
+        setRol(userRol || 'visitante');
+      })
+      .catch(() => {
+        if (activo) setRol('visitante');
+      });
+    return () => { activo = false; };
+  }, [token]);
+
+  // ─── Categorías de soporte (desde el backend, con caché de resiliencia) ──
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+
+  useEffect(() => {
+    let activo = true;
+    obtenerFaqs().then((d) => {
+      if (!activo) return;
+      setCategorias(d?.categorias ?? []);
+    });
+    return () => { activo = false; };
+  }, []);
 
   // ─── Consulta directa al administrador (Centro de Soporte) ──────────────
   const [consulta, setConsulta] = useState({ nombre: '', apellidos: '', cedula: '', telefono: '', mensaje: '' });
@@ -95,62 +153,7 @@ export default function AyudaPage() {
   };
 
   const categoriasRef = useRef<HTMLElement>(null);
-  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contactoRef = useRef<HTMLElement>(null);
-  const noResultsRef = useRef<HTMLDivElement>(null);
-
-  // ─── Filtrado Predictivo ──────────────────────────────────────────────
-  const faqsFiltradas = useMemo(() => {
-    let filtradas = FAQS;
-    // 1. Filtro por categoría (clic en tarjeta)
-    if (categoriaActiva) {
-      filtradas = filtradas.filter(f => f.categoria === categoriaActiva);
-    }
-    // 2. Filtro predictivo por texto
-    const q = busqueda.trim().toLowerCase();
-    if (q) {
-      filtradas = filtradas.filter(
-        f => f.pregunta.toLowerCase().includes(q) || f.respuesta.toLowerCase().includes(q)
-      );
-    }
-    return filtradas;
-  }, [busqueda, categoriaActiva]);
-
-  // ─── Animación GSAP: Ocultar/Mostrar Categorías al Buscar ─────────────
-  useEffect(() => {
-    if (!categoriasRef.current) return;
-    const ctx = gsap.context(() => {
-      if (busqueda.trim() !== '') {
-        // Ocultar categorías
-        gsap.to(categoriasRef.current, {
-          height: 0,
-          opacity: 0,
-          marginTop: 0,
-          marginBottom: 0,
-          paddingTop: 0,
-          paddingBottom: 0,
-          overflow: 'hidden',
-          duration: 0.4,
-          ease: 'power2.inOut',
-        });
-        if (categoriaActiva) setCategoriaActiva(null);
-      } else {
-        // Mostrar categorías
-        gsap.to(categoriasRef.current, {
-          height: 'auto',
-          opacity: 1,
-          marginTop: '',
-          marginBottom: '',
-          paddingTop: '',
-          paddingBottom: '',
-          duration: 0.4,
-          ease: 'power2.inOut',
-          clearProps: 'overflow',
-        });
-      }
-    });
-    return () => ctx.revert();
-  }, [busqueda, categoriaActiva]);
 
   // ─── Animación GSAP: Contacto (Core Motion Mechanics & Scroll Dynamics) ──
   useEffect(() => {
@@ -213,50 +216,16 @@ export default function AyudaPage() {
     };
   }, []);
 
-  // ─── Animación GSAP: Empty State (State Transitions) ──────────────────
-  useEffect(() => {
-    if (faqsFiltradas.length === 0 && noResultsRef.current) {
-      let ctx: gsap.Context = gsap.context(() => {
-        gsap.fromTo(noResultsRef.current, 
-          { opacity: 0, y: -10, scale: 0.98 }, 
-          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power2.out' }
-        );
-        
-        gsap.fromTo('.no-results-alert-icon',
-          { scale: 0.5, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.5, delay: 0.2, ease: 'back.out(2)' }
-        );
-      });
-      return () => ctx.revert();
-    }
-  }, [faqsFiltradas.length]);
-
-  // ─── Animación GSAP: Acordeón ────────────────────────────────────────
-  const toggle = (idx: number) => {
-    // Si ya estaba abierto, ciérralo
-    if (abierto === idx) {
-      gsap.to(contentRefs.current[idx], { height: 0, duration: 0.35, ease: 'power2.inOut' });
-      setAbierto(null);
-    } else {
-      // Cierra el anterior si existe
-      if (abierto !== null && contentRefs.current[abierto]) {
-        gsap.to(contentRefs.current[abierto], { height: 0, duration: 0.35, ease: 'power2.inOut' });
-      }
-      // Abre el nuevo
-      setAbierto(idx);
-      gsap.fromTo(contentRefs.current[idx], 
-        { height: 0 }, 
-        { height: 'auto', duration: 0.5, ease: 'back.out(1.2)' }
-      );
-    }
+  const handleCardClick = (titulo: string) => {
+    window.dispatchEvent(new CustomEvent('open-global-chatbot', {
+      detail: { query: `Hola, tengo dudas sobre la categoría "${titulo}". ¿Me podrías guiar con las consultas más comunes?` }
+    }));
   };
 
-  const handleCardClick = (titulo: string) => {
-    if (categoriaActiva === titulo) {
-      setCategoriaActiva(null); // Toggle off
-    } else {
-      setCategoriaActiva(titulo);
-      setAbierto(null); // Cierra acordeones al cambiar categoría
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busqueda.trim()) {
+      window.dispatchEvent(new CustomEvent('open-global-chatbot', { detail: { query: busqueda } }));
     }
   };
 
@@ -271,125 +240,70 @@ export default function AyudaPage() {
           <span className={styles.heroSkew} aria-hidden />
           <div className={styles.heroContent}>
             <h1 className={styles.heroTitle}>Centro de Ayuda</h1>
-            <div className={styles.searchWrap}>
+            <form onSubmit={handleSearchSubmit} className={styles.searchWrap}>
               <span className={styles.searchIcon}><ISearch /></span>
               <input
                 className={styles.search}
                 type="text"
-                placeholder="¿En qué podemos ayudarte hoy?"
+                placeholder="¿En qué podemos ayudarte hoy? Escribe tu duda..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                aria-label="Buscar en el centro de ayuda"
+                aria-label="Buscar en el centro de ayuda con IA"
               />
+              <button type="submit" className={styles.searchBtn}>
+                Preguntar
+              </button>
+            </form>
+
+            {/* Preguntas sugeridas por la IA */}
+            <div className={styles.suggestedQuestions}>
+              <span className={styles.suggestedLabel}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.sparkleIcon}>
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                </svg>
+                Preguntas sugeridas por la IA:
+              </span>
+              <div className={styles.suggestedChips}>
+                {(SUGERENCIAS_POR_ROL[rol] || SUGERENCIAS_POR_ROL.visitante).map((pregunta, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={styles.suggestedChip}
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('open-global-chatbot', { detail: { query: pregunta } }));
+                    }}
+                  >
+                    {pregunta}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Categorías de soporte (Desaparecen al buscar) */}
-        <section className={styles.categorias} ref={categoriasRef}>
-          {CATEGORIAS.map((c) => {
-            const isActive = categoriaActiva === c.titulo;
+        {/* Categorías de soporte */}
+        <section className={styles.categorias} ref={categoriasRef} aria-label="Categorías de ayuda">
+          {categorias.map((c) => {
             return (
-              <article 
-                key={c.titulo} 
+              <article
+                key={c.titulo}
                 className={styles.card}
+                role="button"
+                tabIndex={0}
+                aria-label={`Preguntar sobre ${c.titulo}`}
                 onClick={() => handleCardClick(c.titulo)}
-                style={{
-                  borderColor: isActive ? 'var(--brand-esmeralda)' : 'rgba(0, 76, 99, 0.1)',
-                  boxShadow: isActive ? '0 12px 30px -10px rgba(0, 102, 135, 0.3)' : '',
-                  transform: isActive ? 'translateY(-0.5rem)' : '',
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(c.titulo); }
                 }}
               >
-                <span 
-                  className={styles.cardIcon}
-                  style={{
-                    backgroundColor: isActive ? 'var(--brand-esmeralda)' : '',
-                    color: isActive ? 'var(--brand-blanco)' : '',
-                  }}
-                >
-                  {c.icon}
+                <span className={styles.cardIcon} aria-hidden>
+                  {ICONOS[c.titulo] ?? ICONO_DEFECTO}
                 </span>
                 <h3 className={styles.cardTitle}>{c.titulo}</h3>
                 <p className={styles.cardText}>{c.texto}</p>
               </article>
             );
           })}
-        </section>
-
-        {/* Preguntas frecuentes */}
-        <section id="faq-section" className={styles.faqSection}>
-          <div className={styles.faqInner}>
-            <div className={styles.faqHead}>
-              <h2 className={styles.faqTitle}>
-                {categoriaActiva ? `Preguntas sobre ${categoriaActiva}` : 'Preguntas Frecuentes'}
-              </h2>
-              <span className={styles.faqRule} aria-hidden />
-            </div>
-
-            <div className={styles.faqList}>
-              {faqsFiltradas.length === 0 ? (
-                <div ref={noResultsRef} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', background: 'var(--ucr-surface)', border: '1px solid var(--ucr-outline-variant)', borderRadius: '0.5rem', padding: '1rem 1.5rem', marginTop: '1rem', boxShadow: '0 4px 15px -5px rgba(0,0,0,0.05)', flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div className="no-results-alert-icon" style={{ background: 'rgba(243, 75, 38, 0.1)', color: 'var(--brand-naranja)', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
-                      <ISearch />
-                    </div>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--ucr-primary)', fontFamily: 'var(--font-ucr-display)' }}>No hay resultados para "{busqueda}"</h4>
-                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--ucr-on-surface-variant)' }}>¿Quieres que nuestro asistente virtual lo resuelva por ti?</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => window.dispatchEvent(new CustomEvent('open-global-chatbot', { detail: { query: busqueda } }))}
-                    style={{ background: 'var(--brand-esmeralda)', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.375rem', fontSize: '0.9rem', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--brand-esmeralda-dark, #00A664)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--brand-esmeralda)'}
-                  >
-                    <IChat /> Consultar Asistente
-                  </button>
-                  <button
-                    type="button"
-                    onClick={irAConsulta}
-                    style={{ background: 'transparent', color: 'var(--ucr-primary)', padding: '0.5rem 1rem', borderRadius: '0.375rem', fontSize: '0.9rem', fontWeight: 700, border: '1.5px solid var(--ucr-celeste)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}
-                  >
-                    <IMessageSquare style={{ width: 18, height: 18 }} /> Escribir al administrador
-                  </button>
-                </div>
-              ) : (
-                faqsFiltradas.map((f, i) => {
-                  const activo = abierto === i;
-                  return (
-                    <div 
-                      key={f.pregunta} 
-                      className={`${styles.accordion} ${activo ? styles.accordionActive : ''}`}
-                      style={{ borderColor: activo ? 'var(--brand-esmeralda)' : '' }}
-                    >
-                      <button
-                        type="button"
-                        className={styles.accordionBtn}
-                        onClick={() => toggle(i)}
-                        aria-expanded={activo}
-                      >
-                        <span className={styles.accordionQ}>{f.pregunta}</span>
-                        <IChevron 
-                          className={styles.chevron} 
-                          style={{ 
-                            transform: activo ? 'rotate(180deg)' : 'none', 
-                            color: activo ? 'var(--brand-esmeralda)' : '' 
-                          }} 
-                        />
-                      </button>
-                      <div 
-                        className={styles.accordionContent}
-                        ref={(el) => { contentRefs.current[i] = el; }}
-                      >
-                        <p className={styles.accordionA}>{f.respuesta}</p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
         </section>
 
         {/* Call to Action Final - Informativo (Sin Contenedor) */}

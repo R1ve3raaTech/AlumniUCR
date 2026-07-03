@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { obtenerPerfil } from '@/lib/auth';
 import styles from './GlobalChatbot.module.css';
+import ChatbotAvatar from './ChatbotAvatar';
 
 // ─── Íconos SVG inline (patrón del proyecto: heredan currentColor) ────────
 const base = {
@@ -45,6 +46,9 @@ const obtenerSaludoInicial = (rol: string, pathname: string) => {
     return '¡Hola, graduado UCR! Estoy listo para asistirte en cómo completar tus datos, postularte como mentor, registrar ofertas de empleo y gestionar tus mentorías activas.';
   }
   if (rol === 'estudiante') {
+    if (pathname.includes('/mi-curriculum')) {
+      return '¡Hola! Soy tu **CV Advisor** especializado 📋\n\nPuedo ayudarte a:\n• Redactar logros con la metodología STAR\n• Optimizar tu CV para una vacante específica\n• Sugerirte certificaciones para tu área\n• Mejorar tu resumen profesional\n\n¿Qué sección de tu CV quieres trabajar hoy?';
+    }
     if (pathname.includes('/proyectos') || pathname.includes('/perfil-estudiante') || pathname.includes('/completar-perfil')) {
       return '¡Hola! Actúo como tu Asesor de TFG virtual. Puedo guiarte a estructurar mejor tus objetivos de tesis (generales y específicos) y a elegir las áreas temáticas correctas para el matching.';
     }
@@ -56,6 +60,59 @@ const obtenerSaludoInicial = (rol: string, pathname: string) => {
   return '¡Hola! Soy el asistente de IA oficial de Alumni UCR. ¿Tienes alguna duda sobre el registro, las mentorías o los proyectos? Cuéntame y te ayudo.';
 };
 
+// Catálogo de sugerencias para el CV Advisor (type-ahead chips)
+const CV_SUGERENCIAS: string[] = [
+  // Estructura
+  '¿Cuántas páginas debe tener mi CV?',
+  '¿Qué secciones son obligatorias en un CV universitario?',
+  '¿Debo poner foto en mi CV?',
+  '¿Cuál es la diferencia entre CV y résumé?',
+  // Redacción y logros
+  '¿Cómo redacto mis logros con la metodología STAR?',
+  '¿Qué verbos de acción debo usar en mi CV?',
+  '¿Cómo cuantifico un logro si no tengo datos exactos?',
+  '¿Cómo transformo una descripción genérica en un bullet de impacto?',
+  // Mejoras específicas
+  '¿Cómo mejoro mi resumen o perfil profesional?',
+  '¿Cómo adapto mi CV para una vacante específica?',
+  '¿Cómo optimizo mi CV para pasar filtros ATS?',
+  '¿Cómo listo proyectos universitarios si no tengo experiencia laboral?',
+  // Habilidades y certificaciones
+  '¿Qué certificaciones me recomiendas para mi área?',
+  '¿Cómo agrego niveles de idioma a mi CV?',
+  '¿Qué habilidades blandas valoran más los reclutadores?',
+  '¿Cuáles son las tecnologías más demandadas en Costa Rica?',
+  // Mercado laboral
+  '¿Qué buscan los reclutadores costarricenses en un CV?',
+  '¿Qué empresas contratan egresados de la UCR?',
+  '¿Cómo postularme a Amazon, Intel o Accenture desde la UCR?',
+  '¿El inglés influye en el salario esperado?',
+];
+
+// Sugerencias de preguntas rápidas en el Centro de Ayuda (/ayuda) según el rol del usuario
+const AYUDA_SUGERENCIAS: Record<string, string[]> = {
+  visitante: [
+    '¿Quiénes pueden registrarse?',
+    '¿Cuánto tarda en aprobarse mi cuenta?',
+    '¿El registro tiene algún costo?'
+  ],
+  estudiante: [
+    '¿Qué es el CV con IA?',
+    '¿Cómo busco mentores o apoyo?',
+    '¿Para qué sirve registrar mi proyecto de graduación?'
+  ],
+  exalumno: [
+    '¿Cómo me postulo como mentor?',
+    '¿Cómo funciona el matching interdisciplinario?',
+    '¿Puedo ofrecer empleo o pasantías?'
+  ],
+  admin: [
+    '¿Cómo funciona el matching avanzado?',
+    '¿Cómo auditar o validar donaciones?',
+    '¿Cómo moderar o resolver reportes?'
+  ]
+};
+
 export default function GlobalChatbot() {
   const pathname = usePathname();
   const { token, loading } = useAuth();
@@ -63,11 +120,18 @@ export default function GlobalChatbot() {
 
   // Estados del Chat
   const [chatAbierto, setChatAbierto] = useState(false);
+  const [fabHovered, setFabHovered] = useState(false);
   const [mensajes, setMensajes] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [sugerenciasFiltradas, setSugerenciasFiltradas] = useState<string[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const estadoRef = useRef({ token, rol, pathname, mensajes, cargando });
+
+  useEffect(() => {
+    estadoRef.current = { token, rol, pathname, mensajes, cargando };
+  }, [token, rol, pathname, mensajes, cargando]);
 
   // 1. Obtener y actualizar el rol del usuario en base a su sesión activa
   useEffect(() => {
@@ -102,43 +166,34 @@ export default function GlobalChatbot() {
     });
   }, [rol, pathname]);
 
-  // 3. Listener para abrir el chatbot desde botones de páginas específicas (ej. ayuda)
-  useEffect(() => {
-    const handleToggle = () => setChatAbierto(true);
-    window.addEventListener('open-global-chatbot', handleToggle);
-    return () => window.removeEventListener('open-global-chatbot', handleToggle);
-  }, []);
+  const enviarMensajeEspecifico = async (texto: string) => {
+    const { token: t, rol: r, pathname: p, mensajes: m, cargando: c } = estadoRef.current;
+    if (!texto.trim() || c) return;
 
-  // 4. Scroll automático a los nuevos mensajes
-  useEffect(() => {
-    if (chatAbierto) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [mensajes, cargando, chatAbierto]);
+    const msgUsuario = texto.trim();
+    let histActualizado: Array<{ role: 'user' | 'assistant'; text: string }> = [];
 
-  const enviarMensaje = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nuevoMensaje.trim() || cargando) return;
+    setMensajes((actual) => {
+      histActualizado = [...actual, { role: 'user' as const, text: msgUsuario }];
+      return histActualizado;
+    });
 
-    const msgUsuario = nuevoMensaje.trim();
-    setNuevoMensaje('');
-
-    // Actualizar historial local
-    const nuevoHistorial = [...mensajes, { role: 'user' as const, text: msgUsuario }];
-    setMensajes(nuevoHistorial);
     setCargando(true);
 
     try {
-      // Llamar al backend pasando el historial y el contexto dinámico actual
+      // Pequeño retardo para asegurar que la actualización de estado ha finalizado
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       const data = await apiFetch('/claude/chat', {
         method: 'POST',
         body: {
-          historial: nuevoHistorial,
+          historial: histActualizado.length > 0 ? histActualizado : [...m, { role: 'user' as const, text: msgUsuario }],
           contexto: {
-            rol: rol,
-            pathname: pathname,
+            rol: r,
+            pathname: p,
           },
         },
+        token: t || undefined,
       });
 
       if (data && data.success) {
@@ -159,6 +214,72 @@ export default function GlobalChatbot() {
       setCargando(false);
     }
   };
+
+  // 3. Listener para abrir el chatbot desde botones de páginas específicas (ej. ayuda, directorio)
+  useEffect(() => {
+    const handleToggle = (e: Event) => {
+      setChatAbierto(true);
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        const queryText = customEvent.detail.mensaje || customEvent.detail.query || '';
+        if (queryText) {
+          setTimeout(() => {
+            enviarMensajeEspecifico(queryText);
+          }, 100);
+        }
+      }
+    };
+    window.addEventListener('open-global-chatbot', handleToggle);
+    return () => window.removeEventListener('open-global-chatbot', handleToggle);
+  }, []);
+
+  // 4. Scroll automático a los nuevos mensajes
+  useEffect(() => {
+    if (chatAbierto) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [mensajes, cargando, chatAbierto]);
+
+  const enviarMensaje = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoMensaje.trim() || cargando) return;
+
+    const msg = nuevoMensaje;
+    setNuevoMensaje('');
+    setSugerenciasFiltradas([]);
+    await enviarMensajeEspecifico(msg);
+  };
+
+  // Maneja el cambio del input y filtra sugerencias (type-ahead para el CV Advisor)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    setNuevoMensaje(valor);
+
+    // Solo mostrar sugerencias en la sección de CV
+    if (!pathname.includes('/mi-curriculum')) {
+      setSugerenciasFiltradas([]);
+      return;
+    }
+
+    if (valor.trim().length < 2) {
+      setSugerenciasFiltradas([]);
+      return;
+    }
+
+    const query = valor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const filtradas = CV_SUGERENCIAS.filter((s) => {
+      const sSin = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return sSin.includes(query);
+    }).slice(0, 3);
+    setSugerenciasFiltradas(filtradas);
+  };
+
+  const seleccionarSugerencia = async (sugerencia: string) => {
+    setNuevoMensaje('');
+    setSugerenciasFiltradas([]);
+    await enviarMensajeEspecifico(sugerencia);
+  };
+
 
   // Parsea negritas básicas **texto** y saltos de línea del markdown
   const formatearTextoMarkdown = (texto: string) => {
@@ -183,30 +304,40 @@ export default function GlobalChatbot() {
   // No renderizar mientras NextAuth/AuthContext se está hidratando
   if (loading) return null;
 
+  // En el perfil del estudiante el asistente no flota: se abre desde un
+  // desplegable de esa pantalla (evento 'open-global-chatbot').
+  const ocultarFab = !!pathname && pathname.startsWith('/perfil-estudiante');
+
   return (
     <>
-      {/* Botón Flotante */}
-      <button
-        onClick={() => setChatAbierto((prev) => !prev)}
-        className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
-        aria-label="Abrir chat de asistencia"
-      >
-        {chatAbierto ? (
-          <IClose />
-        ) : (
-          <>
-            <img src="/images/chatbot-avatar.png" alt="Abrir chat" className={styles.chatFabAvatar} />
-            <div className={styles.chatFabTrail}></div>
-          </>
-        )}
-      </button>
+
+      {/* Botón Flotante (oculto donde se ofrece como opción desplegable) */}
+      {!ocultarFab && (
+        <button
+          onMouseEnter={() => setFabHovered(true)}
+          onMouseLeave={() => setFabHovered(false)}
+          onClick={() => setChatAbierto((prev) => !prev)}
+          className={`${styles.chatFab} ${chatAbierto ? styles.chatFabActive : ''}`}
+          aria-label="Abrir chat de asistencia"
+        >
+          {chatAbierto ? (
+            <IClose />
+          ) : (
+            <div className={styles.chatFabAvatar}>
+              <ChatbotAvatar animated={true} hovered={fabHovered} />
+            </div>
+          )}
+        </button>
+      )}
 
       {/* Ventana de Chat */}
       {chatAbierto && (
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderTitle}>
-              <img src="/images/chatbot-avatar.png" alt="Avatar" className={styles.chatHeaderAvatar} />
+              <div className={styles.chatHeaderAvatar}>
+                <ChatbotAvatar animated={true} />
+              </div>
               <span>Soporte Alumni UCR</span>
             </div>
             <button
@@ -225,11 +356,9 @@ export default function GlobalChatbot() {
                 className={msg.role === 'user' ? styles.chatUserWrapper : styles.chatAssistantWrapper}
               >
                 {msg.role !== 'user' && (
-                  <img
-                    src="/images/chatbot-avatar.png"
-                    alt="Asistente"
-                    className={styles.chatMessageAvatar}
-                  />
+                  <div className={styles.chatMessageAvatar}>
+                    <ChatbotAvatar animated={true} />
+                  </div>
                 )}
                 <div
                   className={`${styles.chatBubble} ${
@@ -242,11 +371,9 @@ export default function GlobalChatbot() {
             ))}
             {cargando && (
               <div className={styles.chatAssistantWrapper}>
-                <img
-                  src="/images/chatbot-avatar.png"
-                  alt="Asistente"
-                  className={styles.chatMessageAvatar}
-                />
+                <div className={styles.chatMessageAvatar}>
+                  <ChatbotAvatar animated={true} />
+                </div>
                 <div className={`${styles.chatBubble} ${styles.chatBubbleAssistant} ${styles.chatBubbleLoading}`}>
                   <span className={styles.chatLoadingDots}>
                     <span></span>
@@ -261,21 +388,75 @@ export default function GlobalChatbot() {
           </div>
 
           <form onSubmit={enviarMensaje} className={styles.chatForm}>
-            <input
-              type="text"
-              className={styles.chatInput}
-              placeholder="Escribe tu mensaje..."
-              value={nuevoMensaje}
-              onChange={(e) => setNuevoMensaje(e.target.value)}
-              disabled={cargando}
-            />
-            <button
-              type="submit"
-              className={styles.chatSendBtn}
-              disabled={!nuevoMensaje.trim() || cargando}
-            >
-              <ISend />
-            </button>
+            {/* Chips de sugerencias tipo-ahead (solo en /mi-curriculum) */}
+            {sugerenciasFiltradas.length > 0 && (
+              <div className={styles.chatSuggestions}>
+                {sugerenciasFiltradas.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.chatSuggestionChip}
+                    onClick={() => seleccionarSugerencia(s)}
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Chips de acceso rápido iniciales (solo en /mi-curriculum y sin texto) */}
+            {pathname.includes('/mi-curriculum') && !nuevoMensaje.trim() && mensajes.length <= 1 && !cargando && (
+              <div className={styles.chatSuggestions}>
+                {[
+                  '¿Cómo redacto mis logros con STAR?',
+                  '¿Qué verbos de acción usar?',
+                  '¿Qué certificaciones me recomiendas?',
+                ].map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.chatSuggestionChip}
+                    onClick={() => seleccionarSugerencia(s)}
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Chips de acceso rápido iniciales en el Centro de Ayuda */}
+            {pathname.includes('/ayuda') && !nuevoMensaje.trim() && mensajes.length <= 1 && !cargando && (
+              <div className={styles.chatSuggestions}>
+                {(AYUDA_SUGERENCIAS[rol] || AYUDA_SUGERENCIAS.visitante).map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.chatSuggestionChip}
+                    onClick={() => seleccionarSugerencia(s)}
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className={styles.chatInputRow}>
+              <input
+                type="text"
+                className={styles.chatInput}
+                placeholder={pathname.includes('/mi-curriculum') ? 'Pregunta sobre tu CV...' : 'Escribe tu mensaje...'}
+                value={nuevoMensaje}
+                onChange={handleInputChange}
+                disabled={cargando}
+              />
+              <button
+                type="submit"
+                className={styles.chatSendBtn}
+                disabled={!nuevoMensaje.trim() || cargando}
+              >
+                <ISend />
+              </button>
+            </div>
           </form>
         </div>
       )}

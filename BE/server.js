@@ -125,6 +125,8 @@ app.use('/api/estudiantes', directorioEstudiantesRoutes);
 app.use('/api/comprobantes', comprobantesRoutes);
 app.use('/api/perfil-onboarding', require('./routes/perfilOnboarding.routes'));
 app.use('/api/reportes-anomalias', require('./routes/reportes.routes'));
+app.use('/api/faqs', require('./routes/faqs.routes'));
+app.use('/api/comunidad', require('./routes/comunidad.routes'));
 
 // Endpoint de prueba para confirmar conexión BE-FE
 app.get('/api/health', (req, res) => {

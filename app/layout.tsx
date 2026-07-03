@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { PerfilEstudianteProvider } from "@/context/PerfilEstudianteContext";
-import GlobalChatbot from "@/components/GlobalChatbot";
+import NavigationSpinner from "@/components/NavigationSpinner";
 
 export const metadata: Metadata = {
   title: "Conectando Talento",
@@ -34,8 +34,8 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <PerfilEstudianteProvider>
+            <NavigationSpinner />
             {children}
-            <GlobalChatbot />
           </PerfilEstudianteProvider>
         </AuthProvider>
       </body>

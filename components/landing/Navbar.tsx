@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -8,11 +8,11 @@ import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
 
-// Navegación pública
+// NavegaciÃ³n pÃºblica
 const LINKS = [
   { label: 'Inicio', href: '/' },
   { label: 'Proyectos', href: '/proyectos' },
-  { label: 'Mentorías', href: '/mentorias' },
+  { label: 'MentorÃ­as', href: '/mentorias' },
 ];
 
 export default function Navbar() {
@@ -28,7 +28,7 @@ export default function Navbar() {
     >
       <div className={`${styles.container} ${styles.navInner}`}>
         <div className={styles.navLeft}>
-          <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrar}>
+          <Link href="/" aria-label="Alumni UCR â€” inicio" onClick={cerrar}>
             <BrandLogo />
           </Link>
         </div>
@@ -81,7 +81,7 @@ export default function Navbar() {
         <button
           type="button"
           className={styles.navToggle}
-          aria-label="Abrir menú"
+          aria-label="Abrir menÃº"
           aria-expanded={abierto}
           onClick={() => setAbierto((v) => !v)}
         >

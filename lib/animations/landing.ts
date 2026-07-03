@@ -1,9 +1,9 @@
-// Animaciones GSAP del landing de UCR Connect.
+﻿// Animaciones GSAP del landing de Alumni UCR.
 //
-// Funciones puras (sin React): reciben el elemento raíz (scope) y crean los
+// Funciones puras (sin React): reciben el elemento raÃ­z (scope) y crean los
 // tweens usando atributos data-anim para seleccionar los objetivos. La
-// integración con React (cleanup, SSR) la maneja components/landing/LandingShell.tsx
-// mediante useGSAP, que revierte automáticamente todo lo creado aquí.
+// integraciÃ³n con React (cleanup, SSR) la maneja components/landing/LandingShell.tsx
+// mediante useGSAP, que revierte automÃ¡ticamente todo lo creado aquÃ­.
 
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -37,7 +37,7 @@ function animateHero(scope: HTMLElement) {
 /**
  * Revela los grupos marcados con [data-anim="reveal"] al entrar en viewport,
  * animando sus hijos directos con un stagger. Equivale al fade/slide-up del
- * diseño original, pero gestionado con ScrollTrigger.
+ * diseÃ±o original, pero gestionado con ScrollTrigger.
  */
 function animateReveals(scope: HTMLElement) {
   q(scope, '[data-anim="reveal"]').forEach((group) => {
@@ -59,8 +59,8 @@ function animateReveals(scope: HTMLElement) {
 }
 
 /**
- * Conteo numérico de las métricas marcadas con [data-count="<valor>"].
- * Respeta prefijos/sufijos no numéricos (p. ej. "+1,200", "85%").
+ * Conteo numÃ©rico de las mÃ©tricas marcadas con [data-count="<valor>"].
+ * Respeta prefijos/sufijos no numÃ©ricos (p. ej. "+1,200", "85%").
  */
 function animateStats(scope: HTMLElement) {
   q(scope, '[data-count]').forEach((el) => {
@@ -85,12 +85,40 @@ function animateStats(scope: HTMLElement) {
 }
 
 /**
- * Punto de entrada único. Lo invoca LandingShell dentro de useGSAP.
+ * Efecto de realce dinÃ¡mico sobre "Talento" y "Experiencia" en el hero.
+ * Un highlight naranja barre la palabra de izquierda a derecha,
+ * el texto aparece encima y luego el highlight se desvanece.
+ * Talento primero, Experiencia despuÃ©s.
+ */
+function animateWordHighlight(scope: HTMLElement) {
+  const talBar = scope.querySelector<HTMLElement>('[data-anim-bar="talento"]');
+  const talTxt = scope.querySelector<HTMLElement>('[data-anim-wtext="talento"]');
+  const expBar = scope.querySelector<HTMLElement>('[data-anim-bar="experiencia"]');
+  const expTxt = scope.querySelector<HTMLElement>('[data-anim-wtext="experiencia"]');
+
+  if (!talBar || !talTxt || !expBar || !expTxt) return;
+
+  const tl = gsap.timeline({ delay: 0.9, repeat: -1, repeatDelay: 3.5 });
+
+  // TALENTO: barre â†’ texto aparece â†’ highlight se desvanece
+  tl.to(talBar, { scaleX: 1, opacity: 0.72, duration: 0.38, ease: 'power2.inOut' })
+    .to(talTxt, { opacity: 1, duration: 0.22, ease: 'power1.out' }, '-=0.18')
+    .to(talBar, { opacity: 0, duration: 0.38, ease: 'power2.in' }, '+=0.12')
+
+    // EXPERIENCIA: igual pero mÃ¡s lento (palabra mÃ¡s larga)
+    .to(expBar, { scaleX: 1, opacity: 0.72, duration: 0.5, ease: 'power2.inOut' }, '+=0.08')
+    .to(expTxt, { opacity: 1, duration: 0.25, ease: 'power1.out' }, '-=0.22')
+    .to(expBar, { opacity: 0, duration: 0.38, ease: 'power2.in' }, '+=0.12');
+}
+
+/**
+ * Punto de entrada Ãºnico. Lo invoca LandingShell dentro de useGSAP.
  * Todo lo creado queda en el contexto de useGSAP y se revierte al desmontar.
  */
 export function initLandingAnimations(scope: HTMLElement | null) {
   if (!scope) return;
   animateHero(scope);
+  animateWordHighlight(scope);
   animateReveals(scope);
   animateStats(scope);
 }

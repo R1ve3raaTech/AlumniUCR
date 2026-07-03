@@ -47,6 +47,15 @@ export default function DashboardEstudiante() {
     return () => { activo = false; };
   }, [perfil]);
 
+  useEffect(() => {
+    let activo = true;
+    obtenerSugeridos(perfil).then((s) => { if (activo) setSugeridos(s); }).catch(() => {});
+    return () => { activo = false; };
+  }, [perfil]);
+
+  const iniciales = (n: string) => (n || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  const interesar = (n: string) => notificar(`📨 Registramos tu interés por ${n}.`);
+
   const nombre = perfil.nombre?.trim() || 'estudiante';
   const pct = completitud(perfil);
   const apoyos = Object.values(perfil.apoyo).filter(Boolean).length;

@@ -301,12 +301,19 @@ function ProyectosContent() {
     return () => window.removeEventListener('keydown', onKey);
   }, [modalOpen, cerrarModal]);
 
+  // ─── Acceso del usuario (mismo criterio para CTA y buscador) ──────────
+  const tieneAcceso = !!(user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario));
+
   // ─── Guard del CTA ────────────────────────────────────────────────────
   const handleCta = (e: React.MouseEvent) => {
     e.preventDefault();
-    const tieneAcceso = user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario);
     if (!tieneAcceso) { abrirModal(); return; }
     // Con acceso: aquí iría la navegación real al detalle
+  };
+
+  // ─── Guard del buscador: sin acceso → mismo modal que "Apoyar proyecto" ─
+  const handleBuscarGuard = (e: React.SyntheticEvent) => {
+    if (!tieneAcceso) { e.preventDefault(); abrirModal(); return; }
   };
 
   // ─── Filtrado + ordenamiento + paginación ────────────────────────────
@@ -380,10 +387,21 @@ function ProyectosContent() {
                 placeholder="Buscar proyectos..."
                 className={styles.filterSearchInput}
                 value={query}
-                onChange={e => { setQuery(e.target.value); setPagina(1); }}
+                readOnly={!tieneAcceso}
+                onMouseDown={handleBuscarGuard}
+                onFocus={handleBuscarGuard}
+                onChange={e => {
+                  if (!tieneAcceso) { abrirModal(); return; }
+                  setQuery(e.target.value); setPagina(1);
+                }}
                 aria-label="Buscar proyectos"
               />
-              <button type="button" className={styles.filterSearchBtn} aria-label="Buscar">
+              <button
+                type="button"
+                className={styles.filterSearchBtn}
+                aria-label="Buscar"
+                onClick={handleBuscarGuard}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
                 </svg>
@@ -579,7 +597,7 @@ function ProyectosContent() {
           <p className={styles.modalText}>
             Para acceder a los proyectos y conectar con sus autores necesitas una
             cuenta de <strong>Exalumno</strong> o <strong>Voluntario</strong> de la
-            red UCR Connect. ¡Únete y sé parte del ecosistema!
+            red Alumni UCR. ¡Únete y sé parte del ecosistema!
           </p>
 
           <div className={styles.modalActions}>

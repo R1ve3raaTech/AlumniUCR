@@ -1,11 +1,13 @@
 'use client';
 
-// Mi Perfil (estudiante) — rediseño Stitch (estático). Contenido de ejemplo;
-// se conectarán datos reales en una etapa posterior. Layout fiel al diseño.
+// Mi Perfil (estudiante) — versión desplegable (acordeón). Cada sección muestra
+// poca información por defecto y se expande al tocarla, para una pantalla limpia
+// y mucho más fácil de hacer responsiva. Datos reales desde la fuente única.
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
+import Desplegable from '@/components/student/Desplegable';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type PerfilEstudiante, type ArchivoPortafolio } from '@/context/PerfilEstudianteContext';
 import { FACULTADES_UCR } from '@/lib/catalogoUCR';
@@ -46,9 +48,7 @@ const NECESIDADES_PROYECTO: { clave: 'financiamiento' | 'mentoriaTecnica' | 'acc
   { clave: 'empleoParalelo', label: 'Empleo paralelo' },
 ];
 
-// Aviso temporal: todos los botones de esta pantalla aún no tienen acción real.
-// Se captura el clic en el contenedor y se muestra un toast consistente. Cuando
-// se cablee una acción real, ese botón lleva data-real para excluirse de aquí.
+// Aviso temporal: botones aún sin acción real (los reales llevan data-real).
 function avisoProximamente(e: React.MouseEvent) {
   const el = (e.target as HTMLElement).closest('button, a[href="#"]');
   if (el && !el.hasAttribute('data-real')) {
@@ -57,18 +57,11 @@ function avisoProximamente(e: React.MouseEvent) {
   }
 }
 
-const SHADOW = 'shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]';
-const CARD = `rounded-xl border border-outline-variant bg-surface-container-lowest p-8 ${SHADOW}`;
-
 function CampoLectura({ label, valor, resaltar }: { label: string; valor: string; resaltar?: boolean }) {
   return (
     <div className="flex flex-col gap-1">
       <label className="font-label-caps text-xs uppercase tracking-wider text-on-surface-variant">{label}</label>
-      <div
-        className={`rounded-lg border border-outline-variant/30 bg-surface-container-low p-4 font-body-semibold ${
-          resaltar ? 'text-primary' : ''
-        }`}
-      >
+      <div className={`rounded-lg border border-outline-variant/30 bg-surface-container-low p-3 font-body-semibold ${resaltar ? 'text-primary' : ''}`}>
         {valor}
       </div>
     </div>
@@ -628,6 +621,20 @@ export default function PerfilEstudiantePage() {
   const [categoriaPortafolio, setCategoriaPortafolio] = useState<'educativa' | 'galeria' | null>(null);
   const [verActividad, setVerActividad] = useState(false);
   const o = (v: string, d = '—') => (v && v.trim() ? v : d);
+  const apoyosActivos = [
+    perfil.apoyo.mentoria && 'Mentoría',
+    perfil.apoyo.empleo && 'Empleo',
+    perfil.apoyo.pasantia && 'Pasantía',
+    perfil.apoyo.financiamiento && 'Financiamiento',
+  ].filter(Boolean) as string[];
+  const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
+  const iniciales = nombre.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || 'E';
+  const pctCampos = [
+    perfil.nombre, perfil.apellidos, perfil.telefono, perfil.carrera, perfil.sede, perfil.resumen,
+    perfil.foto, perfil.proyectoTitulo, perfil.habilidadesTecnicas,
+    perfil.experiencias.length ? 'x' : '', perfil.intereses.length ? 'x' : '',
+  ];
+  const pct = Math.round((pctCampos.filter((c) => String(c).trim()).length / pctCampos.length) * 100);
 
   // Solo se usa para el hito "Aplicar a tu primera posición" del Mapa de Carrera;
   // el detalle de postulaciones vive en /mis-aplicaciones.
@@ -682,16 +689,81 @@ export default function PerfilEstudiantePage() {
 
   return (
     <StudentShell active="perfil">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-6 p-8" onClick={avisoProximamente}>
-        {/* Aviso: si no completó el onboarding, invitarlo (humaniza la conexión inicial) */}
+      <div className="mx-auto grid max-w-[1280px] grid-cols-12 gap-5 p-4 sm:p-8" onClick={avisoProximamente}>
+        {/* Tarjeta de perfil (encabezado dinámico, responsivo) */}
+        <div className="col-span-12">
+          <div className="relative overflow-hidden rounded-3xl border border-outline-variant bg-surface-container-lowest p-5 shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] sm:p-7">
+            {/* Acentos decorativos */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-secondary/25 to-primary/10 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-secondary to-[#54bceb]" aria-hidden />
+
+            <div className="relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6">
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                {perfil.foto ? (
+                  <img src={perfil.foto} alt={nombre} className="h-24 w-24 rounded-2xl border-2 border-white object-cover object-center shadow-md sm:h-28 sm:w-28" />
+                ) : (
+                  <div className="grid h-24 w-24 place-items-center rounded-2xl border-2 border-white bg-gradient-to-br from-primary to-secondary font-display-lg text-3xl font-bold text-white shadow-md sm:h-28 sm:w-28">{iniciales}</div>
+                )}
+                <span className="absolute -bottom-1.5 -right-1.5 grid h-7 w-7 place-items-center rounded-full border-2 border-surface-container-lowest bg-secondary text-on-secondary" title="Estudiante verificado">
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                </span>
+              </div>
+
+              {/* Identidad + chips */}
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <h1 className="truncate font-headline-md text-2xl text-primary sm:text-3xl">{nombre}</h1>
+                <p className="text-on-surface-variant">Estudiante · {o(perfil.carrera)}</p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+                  {[
+                    { icon: 'badge', txt: o(perfil.carne, 'Sin carné') },
+                    { icon: 'location_on', txt: o(perfil.sede, 'Sede pendiente') },
+                    { icon: 'workspace_premium', txt: `Beca ${o(perfil.beca, '—')}` },
+                  ].map((c) => (
+                    <span key={c.icon} className="inline-flex items-center gap-1 rounded-full bg-surface-container-low px-3 py-1 text-xs font-semibold text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[15px] text-secondary">{c.icon}</span> {c.txt}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Anillo de progreso + editar */}
+              <div className="flex shrink-0 flex-col items-center gap-2">
+                <div className="relative grid h-20 w-20 place-items-center rounded-full" style={{ background: `conic-gradient(#54bceb ${pct * 3.6}deg, rgba(0,76,99,0.08) 0deg)` }}>
+                  <div className="grid h-[60px] w-[60px] place-items-center rounded-full bg-surface-container-lowest">
+                    <span className="text-lg font-bold text-primary">{pct}%</span>
+                  </div>
+                </div>
+                <Link href="/onboarding" data-real className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-secondary px-4 py-1.5 text-xs font-bold text-on-primary shadow-sm transition-transform hover:-translate-y-0.5">
+                  <span className="material-symbols-outlined text-[16px]">edit</span> Editar
+                </Link>
+              </div>
+            </div>
+
+            {/* Estadísticas rápidas */}
+            <div className="relative mt-6 flex items-center justify-around gap-2 border-t border-outline-variant/40 pt-5 text-center">
+              {[
+                { icon: 'science', label: 'Avance TFG', valor: `${perfil.proyectoAvance}%` },
+                { icon: 'work_history', label: 'Registros', valor: String(perfil.experiencias.length).padStart(2, '0') },
+                { icon: 'interests', label: 'Intereses', valor: String(perfil.intereses.length).padStart(2, '0') },
+              ].map((s, i) => (
+                <React.Fragment key={s.label}>
+                  {i > 0 && <div className="h-10 w-px shrink-0 bg-outline-variant/50" />}
+                  <div className="flex flex-1 flex-col items-center">
+                    <span className="material-symbols-outlined mb-0.5 text-secondary">{s.icon}</span>
+                    <p className="text-xl font-bold text-primary">{s.valor}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">{s.label}</p>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {!perfil.completado && (
           <div className="col-span-12 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-secondary/30 bg-secondary/5 p-4">
-            <p className="text-sm text-on-surface">
-              <strong>Completá tu perfil una vez</strong> y se reflejará automáticamente en todas tus pantallas.
-            </p>
-            <Link href="/onboarding" data-real className="rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-on-secondary">
-              Completar ahora
-            </Link>
+            <p className="text-sm text-on-surface"><strong>Completá tu perfil una vez</strong> y se reflejará en todas tus pantallas.</p>
+            <Link href="/onboarding" data-real className="rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-on-secondary">Completar ahora</Link>
           </div>
         )}
 
@@ -740,7 +812,7 @@ export default function PerfilEstudiantePage() {
               <CampoLectura label="Nivel Académico" valor={o(perfil.nivel)} />
               <CampoLectura label="Promedio Ponderado" valor={o(perfil.promedioPonderado, 'No registrado')} />
             </div>
-          </div>
+          </Desplegable>
 
           <ModalEditarAcademico
             abierto={editandoAcademico}
@@ -800,7 +872,7 @@ export default function PerfilEstudiantePage() {
                 ))}
               </div>
             </div>
-          </div>
+          </Desplegable>
 
           <ModalEditarTFG
             abierto={editandoTFG}
@@ -877,7 +949,7 @@ export default function PerfilEstudiantePage() {
                 Ver Mapa de Carrera
               </button>
             </div>
-          </div>
+          </Desplegable>
 
           <ModalMapaCarrera abierto={verMapaCarrera} hitos={hitosCarrera} onCerrar={() => setVerMapaCarrera(false)} />
 
@@ -912,10 +984,11 @@ export default function PerfilEstudiantePage() {
                     <button data-real onClick={() => setRegistroEditando({ id: r.id })} className="p-2 text-outline-variant hover:text-secondary"><span className="material-symbols-outlined">edit</span></button>
                     <button data-real onClick={() => eliminarRegistro(r.id)} className="p-2 text-outline-variant hover:text-error"><span className="material-symbols-outlined">delete</span></button>
                   </div>
+                  <div><p className="font-body-semibold text-sm">{r.titulo}</p><p className="text-xs text-on-surface-variant">{r.sub}</p></div>
                 </div>
               ))}
             </div>
-          </div>
+          </Desplegable>
 
           <ModalEditarRegistro
             abierto={registroEditando !== null}
@@ -941,7 +1014,10 @@ export default function PerfilEstudiantePage() {
               <h3 className="font-headline-md text-lg text-primary">Tipo de Beca</h3>
               <button data-real onClick={() => setEditandoBeca(true)} className="text-on-surface-variant transition-colors hover:text-secondary"><span className="material-symbols-outlined text-lg">edit</span></button>
             </div>
-            <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-4">
+          </Desplegable>
+
+          <Desplegable titulo="Tipo de Beca" icono="workspace_premium" tono="amber" resumen={o(perfil.beca, 'Sin asignar')} defaultOpen>
+            <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
               <div className="flex flex-col">
                 <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Asignada</span>
                 <span className="text-xl font-bold text-primary">{o(perfil.beca, 'Sin beca')}</span>
@@ -950,7 +1026,7 @@ export default function PerfilEstudiantePage() {
                 <span className="material-symbols-outlined">star</span>
               </div>
             </div>
-          </div>
+          </Desplegable>
 
           <ModalEditarBeca abierto={editandoBeca} inicial={perfil.beca} onGuardar={(beca) => { actualizar({ beca }); registrarActividad('Actualizaste tu tipo de beca.'); }} onCerrar={() => setEditandoBeca(false)} />
 
@@ -978,7 +1054,7 @@ export default function PerfilEstudiantePage() {
                 </label>
               ))}
             </div>
-          </div>
+          </Desplegable>
 
           <ModalEditarApoyo abierto={editandoApoyo} inicial={perfil.apoyo} onGuardar={(apoyo) => { actualizar({ apoyo }); registrarActividad('Actualizaste tu apoyo requerido.'); }} onCerrar={() => setEditandoApoyo(false)} />
 
@@ -988,9 +1064,7 @@ export default function PerfilEstudiantePage() {
               <h3 className="font-headline-md text-lg text-primary">Intereses</h3>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {perfil.intereses.length === 0 && (
-                <span className="text-xs italic text-on-surface-variant">Sin intereses aún.</span>
-              )}
+              {perfil.intereses.length === 0 && <span className="text-xs italic text-on-surface-variant">Sin intereses aún.</span>}
               {perfil.intereses.map((i) => (
                 <span key={i} className="flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 font-body-semibold text-xs text-primary">
                   {i}
@@ -1011,7 +1085,7 @@ export default function PerfilEstudiantePage() {
                 <span className="material-symbols-outlined text-xs">add</span>
               </button>
             </div>
-          </div>
+          </Desplegable>
 
           {/* Portafolio */}
           <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
@@ -1030,7 +1104,7 @@ export default function PerfilEstudiantePage() {
                 <span className="text-[11px] text-on-surface-variant">{perfil.portafolio.filter((a) => a.categoria === 'galeria').length} archivo(s)</span>
               </button>
             </div>
-          </div>
+          </Desplegable>
 
           <ModalPortafolio
             abierto={categoriaPortafolio !== null}
@@ -1072,7 +1146,7 @@ export default function PerfilEstudiantePage() {
               </div>
               <p className="text-xs text-on-surface-variant">Tu cuenta está activa y en buen estado.</p>
             </div>
-          </div>
+          </Desplegable>
         </section>
       </div>
     </StudentShell>
