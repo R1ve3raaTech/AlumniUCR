@@ -144,9 +144,18 @@ function MentoriasContent() {
   useEffect(() => {
     if (!user || !token) return;
     obtenerPerfil(token)
-      .then((perfil: { rol?: string }) => setRolUsuario(perfil?.rol ?? null))
+      .then((res: any) => {
+        const rol = res?.data?.roles?.nombre?.toLowerCase().trim();
+        setRolUsuario(rol ?? null);
+      })
       .catch(() => setRolUsuario(null));
   }, [user, token]);
+
+  useEffect(() => {
+    if (rolUsuario === 'exalumno') {
+      router.replace('/mentorias/exalumno');
+    }
+  }, [rolUsuario, router]);
 
   // Si cambian los filtros, contraemos la lista
   useEffect(() => {

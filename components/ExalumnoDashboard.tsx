@@ -6,13 +6,15 @@
 // donaciones. Conserva la lógica de aprobación (pendiente/activo) y los enlaces
 // funcionales (perfil, mentorías, estudiantes, donaciones, posiciones, ayuda).
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import AlumniLogo from './AlumniLogo';
 import { obtenerMisDonaciones } from '@/lib/donaciones';
 import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
 import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA } from '@/lib/matchesEstudiante';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 interface Perfil {
   nombre?: string;
@@ -26,7 +28,7 @@ interface Donacion { estado?: string; id_proyecto?: string | null }
 const NAV = [
   { key: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/dashboard' },
   { key: 'perfil', icon: 'person', label: 'Mi Perfil', href: '/perfil-exalumno' },
-  { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias' },
+  { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias/exalumno' },
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
   { key: 'donaciones', icon: 'volunteer_activism', label: 'Donaciones', href: '/donaciones' },
   { key: 'posiciones', icon: 'work', label: 'Posiciones', href: '/mis-posiciones' },
@@ -34,7 +36,7 @@ const NAV = [
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
 ];
 
-const card = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all';
+const card = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_44px_-16px_rgba(0,40,55,0.25)] hover:border-secondary/35';
 
 export default function ExalumnoDashboard({
   perfil, correo, onSignOut, userId, token,
@@ -54,6 +56,36 @@ export default function ExalumnoDashboard({
   const [cargandoMatches, setCargandoMatches] = useState(true);
   const [explicacionIA, setExplicacionIA] = useState<string>('');
   const [cargandoExplicacion, setCargandoExplicacion] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // 1. Bento cards entrance stagger
+    gsap.fromTo('.bento-card', 
+      { y: 30, opacity: 0, scale: 0.97 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.8, stagger: 0.06, ease: 'power4.out', delay: 0.1 }
+    );
+  }, { scope: containerRef });
+
+  useGSAP(() => {
+    // 2. Stats counter animation
+    const targets = containerRef.current?.querySelectorAll('.stat-number');
+    targets?.forEach((el) => {
+      const targetVal = parseFloat(el.getAttribute('data-target') || '0');
+      if (targetVal > 0) {
+        const obj = { val: 0 };
+        gsap.to(obj, {
+          val: targetVal,
+          duration: 1.5,
+          ease: 'power2.out',
+          delay: 0.3,
+          onUpdate: () => {
+            el.textContent = String(Math.round(obj.val));
+          }
+        });
+      }
+    });
+  }, { scope: containerRef, dependencies: [full, donaciones] });
 
   // Función para volver a cargar los matches
   const cargarMatches = async () => {
@@ -92,7 +124,7 @@ export default function ExalumnoDashboard({
     if (!token) return;
     let activo = true;
     Promise.all([obtenerMiPerfilExalumno(token), obtenerCatalogos(token)])
-      .then(([p, c]) => { if (activo) { setFull(p?.perfil ?? null); setCat(c ?? null); } })
+      .then(([p, c]) => { if (activo) { setFull(p?.data?.perfil ?? p?.perfil ?? p ?? null); setCat(c ?? null); } })
       .catch(() => {});
     if (userId) {
       obtenerMisDonaciones(token, userId)
@@ -181,19 +213,19 @@ export default function ExalumnoDashboard({
   const conexionesActivas = matches.filter((m: any) => m.estado === 'activo');
 
   const STATS = [
-    { valor: experiencia ? `${experiencia}+` : '—', label: 'Años de experiencia', destacado: true },
-    { valor: full?.ofrece_mentoria && full?.horas_disponibles_mes ? `${full.horas_disponibles_mes}h` : '—', label: 'Horas mentoría / mes' },
-    { valor: dash(proyectosApoyados), label: 'Proyectos apoyados' },
-    { valor: dash((donaciones ?? []).length), label: 'Donaciones realizadas' },
+    { rawVal: experiencia ? Number(experiencia) : 0, suffix: '+', label: 'Años de experiencia', destacado: true },
+    { rawVal: full?.ofrece_mentoria && full?.horas_disponibles_mes ? Number(full.horas_disponibles_mes) : 0, suffix: 'h', label: 'Horas mentoría / mes' },
+    { rawVal: donaciones === null ? 0 : (proyectosApoyados || 0), suffix: '', label: 'Proyectos apoyados' },
+    { rawVal: donaciones === null ? 0 : (donaciones ?? []).length, suffix: '', label: 'Donaciones realizadas' },
   ];
 
   return (
-    <div className="min-h-screen bg-background font-body-base text-on-background antialiased">
+    <div ref={containerRef} className="min-h-screen bg-background font-body-base text-on-background antialiased">
       {/* Sidebar */}
       {menuAbierto && (
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
       )}
-      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto`}>
         <Link href="/" className="mb-8 flex items-center justify-center py-2" aria-label="Alumni UCR — inicio">
           <AlumniLogo height={52} />
         </Link>
@@ -216,14 +248,40 @@ export default function ExalumnoDashboard({
             <Link key={item.key} href={item.href}
               className={item.key === 'dashboard'
                 ? 'flex items-center gap-4 rounded-lg bg-primary-container p-3.5 font-bold text-on-primary-container'
-                : 'flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface'}>
+                : 'flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface'}
+              onMouseEnter={(e) => {
+                const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+                if (icon) {
+                  gsap.to(icon, { scale: 1.15, rotation: 8, duration: 0.3, ease: 'back.out(2)' });
+                }
+              }}
+              onMouseLeave={(e) => {
+                const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+                if (icon) {
+                  gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+                }
+              }}
+            >
               <span className="material-symbols-outlined">{item.icon}</span>
               <span className="font-body-semibold">{item.label}</span>
             </Link>
           ))}
         </nav>
         <button type="button" onClick={onSignOut}
-          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error">
+          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error"
+          onMouseEnter={(e) => {
+            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+            if (icon) {
+              gsap.to(icon, { scale: 1.15, rotation: -8, duration: 0.3, ease: 'back.out(2)' });
+            }
+          }}
+          onMouseLeave={(e) => {
+            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+            if (icon) {
+              gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+            }
+          }}
+        >
           <span className="material-symbols-outlined">logout</span>
           <span className="font-body-semibold">Cerrar sesión</span>
         </button>
@@ -271,7 +329,7 @@ export default function ExalumnoDashboard({
 
           {/* Encabezado de perfil + stats */}
           <section className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 flex flex-col items-start gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-6 md:flex-row md:items-center lg:col-span-8">
+            <div className="col-span-12 flex flex-col items-start gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-6 md:flex-row md:items-center lg:col-span-8 bento-card">
               <div className="relative shrink-0">
                 {foto ? (
                   <img src={foto} alt={nombre} className="h-32 w-32 rounded-full border-4 border-white object-cover shadow-md md:h-36 md:w-36" />
@@ -295,7 +353,7 @@ export default function ExalumnoDashboard({
                 </div>
               </div>
               <div className="flex w-full flex-col gap-2 md:w-auto">
-                <Link href="/mentorias" className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary px-6 py-3 text-sm font-bold text-on-primary shadow-md transition-transform hover:-translate-y-0.5">
+                <Link href="/mentorias/exalumno" className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary px-6 py-3 text-sm font-bold text-on-primary shadow-md transition-transform hover:-translate-y-0.5">
                   <span className="material-symbols-outlined text-[20px]">handshake</span> Ofrecer mentoría
                 </Link>
                 <Link href="/perfil-exalumno" className="flex items-center justify-center gap-2 rounded-lg border border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5">
@@ -307,8 +365,10 @@ export default function ExalumnoDashboard({
             {/* Stats */}
             <div className="col-span-12 grid grid-cols-2 gap-4 lg:col-span-4">
               {STATS.map((s) => (
-                <div key={s.label} className={`${card} flex flex-col items-center justify-center p-5 text-center ${s.destacado ? 'bg-primary-container' : ''}`}>
-                  <span className={`font-display-lg text-3xl font-bold ${s.destacado ? 'text-on-primary-container' : 'text-secondary'}`}>{s.valor}</span>
+                <div key={s.label} className={`${card} bento-card flex flex-col items-center justify-center p-5 text-center ${s.destacado ? 'bg-primary-container' : ''}`}>
+                  <span className={`font-display-lg text-3xl font-bold ${s.destacado ? 'text-on-primary-container' : 'text-secondary'}`}>
+                    <span className="stat-number" data-target={s.rawVal}>0</span>{s.suffix}
+                  </span>
                   <p className={`mt-1 text-[10px] font-bold uppercase tracking-wider ${s.destacado ? 'text-on-primary-container/80' : 'text-on-surface-variant'}`}>{s.label}</p>
                 </div>
               ))}
@@ -319,7 +379,7 @@ export default function ExalumnoDashboard({
           <div className="grid grid-cols-12 items-start gap-6">
             <div className="col-span-12 flex flex-col gap-6 lg:col-span-8">
               {/* Biografía */}
-              <section className={`${card} p-6 sm:p-8`}>
+              <section className={`${card} bento-card p-6 sm:p-8`}>
                 <h3 className="mb-4 flex items-center gap-2 font-headline-md text-xl text-primary">
                   <span className="material-symbols-outlined">article</span> Biografía profesional
                 </h3>
@@ -334,7 +394,7 @@ export default function ExalumnoDashboard({
               </section>
 
               {/* Áreas de especialidad */}
-              <section className={`${card} p-6 sm:p-8`}>
+              <section className={`${card} bento-card p-6 sm:p-8`}>
                 <h3 className="mb-6 flex items-center gap-2 font-headline-md text-xl text-primary">
                   <span className="material-symbols-outlined">workspace_premium</span> Áreas de especialidad
                 </h3>
@@ -358,7 +418,7 @@ export default function ExalumnoDashboard({
               </section>
 
               {/* Acciones rápidas (funcionales) */}
-              <section className={`${card} p-6 sm:p-8`}>
+              <section className={`${card} bento-card p-6 sm:p-8`}>
                 <h3 className="mb-5 flex items-center gap-2 font-headline-md text-xl text-primary">
                   <span className="material-symbols-outlined">bolt</span> Acciones rápidas
                 </h3>
@@ -369,7 +429,7 @@ export default function ExalumnoDashboard({
                     { icon: 'post_add', t: 'Publicar una posición', href: '/posiciones/nueva' },
                     { icon: 'work', t: 'Mis posiciones', href: '/mis-posiciones' },
                     { icon: 'groups', t: 'Directorio de estudiantes', href: '/estudiantes' },
-                    { icon: 'handshake', t: 'Ofrecer mentoría', href: '/mentorias' },
+                    { icon: 'handshake', t: 'Ofrecer mentoría', href: '/mentorias/exalumno' },
                   ].map((a) => (
                     <Link key={a.t} href={a.href} className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant/60 p-4 transition-all hover:-translate-y-0.5 hover:border-secondary hover:bg-secondary/5">
                       <span className="flex items-center gap-3">
@@ -397,7 +457,7 @@ export default function ExalumnoDashboard({
                 const enProceso = procesandoMatchId === matchSugerido.id;
                 
                 return (
-                  <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl">
+                  <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl bento-card">
                     <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
                     <div className="relative z-10">
                       <div className="mb-6 flex items-start justify-between">
@@ -447,7 +507,7 @@ export default function ExalumnoDashboard({
 
               {/* Solicitudes de contacto de estudiantes */}
               {!cargandoMatches && solicitudesPendientes.length > 0 && (
-                <div className={`${card} p-6`}>
+                <div className={`${card} bento-card p-6`}>
                   <h4 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-primary">
                     <span className="material-symbols-outlined text-[18px]">handshake</span> Solicitudes Recibidas ({solicitudesPendientes.length})
                   </h4>
@@ -484,7 +544,7 @@ export default function ExalumnoDashboard({
 
               {/* Conexiones Activas (Matches Aceptados) */}
               {!cargandoMatches && conexionesActivas.length > 0 && (
-                <div className={`${card} p-6`}>
+                <div className={`${card} bento-card p-6`}>
                   <h4 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-emerald-700">
                     <span className="material-symbols-outlined text-[18px]">verified_user</span> Conexiones Activas ({conexionesActivas.length})
                   </h4>
@@ -513,7 +573,7 @@ export default function ExalumnoDashboard({
               )}
 
               {/* Actividad reciente */}
-              <div className={`${card} p-6`}>
+              <div className={`${card} bento-card p-6`}>
                 <h4 className="mb-5 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Actividad reciente</h4>
                 <div className="space-y-5">
                   {[
