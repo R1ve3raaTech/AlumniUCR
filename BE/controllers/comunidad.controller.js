@@ -37,6 +37,47 @@ const crearBlog = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// Solo el autor puede editar/eliminar su publicación.
+const blogDelAutor = async (id, idUsuario) => {
+  const { data, error } = await supabase.from('blogs').select('id, id_autor').eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw Object.assign(new Error('La publicación no existe.'), { statusCode: 404 });
+  if (!idUsuario || data.id_autor !== idUsuario) {
+    throw Object.assign(new Error('Solo el autor puede modificar esta publicación.'), { statusCode: 403 });
+  }
+  return data;
+};
+
+const actualizarBlog = async (req, res, next) => {
+  try {
+    await blogDelAutor(req.params.id, req.user?.id);
+    const { tipo, titulo, contenido } = req.body || {};
+    if (!titulo || !String(titulo).trim()) throw err400('El título es obligatorio.');
+    if (!contenido || !String(contenido).trim()) throw err400('El contenido es obligatorio.');
+    const cambios = {
+      titulo: String(titulo).trim(),
+      contenido: String(contenido).trim(),
+      // updated_at marca la edición: el FE muestra la etiqueta "Editada"
+      // cuando difiere de created_at.
+      updated_at: new Date().toISOString(),
+    };
+    if (TIPOS.includes(tipo)) cambios.tipo = tipo;
+    const { data, error } = await supabase
+      .from('blogs').update(cambios).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.status(200).json({ success: true, mensaje: 'Publicación actualizada.', data });
+  } catch (e) { next(e); }
+};
+
+const eliminarBlog = async (req, res, next) => {
+  try {
+    await blogDelAutor(req.params.id, req.user?.id);
+    const { error } = await supabase.from('blogs').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.status(200).json({ success: true, mensaje: 'Publicación eliminada.' });
+  } catch (e) { next(e); }
+};
+
 const misBlogs = async (req, res, next) => {
   try {
     const { data, error } = await supabase
@@ -107,4 +148,4 @@ const moderarEvento = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-module.exports = { listarBlogs, crearBlog, misBlogs, listarEventos, panelAdmin, moderarBlog, crearEvento, moderarEvento };
+module.exports = { listarBlogs, crearBlog, actualizarBlog, eliminarBlog, misBlogs, listarEventos, panelAdmin, moderarBlog, crearEvento, moderarEvento };
