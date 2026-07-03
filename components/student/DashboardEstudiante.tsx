@@ -1,61 +1,51 @@
 'use client';
 
-// Dashboard del estudiante: un "pizarrón" práctico que resume TODAS sus
-// pantallas (perfil, CV, matches, directorio, comunidad, reportes), 100% ligado
-// a la fuente única (perfil) + reportes reales. Pensado como un panel de
-// practicidad y bienestar: reseñas breves, avisos accionables y próximos pasos.
+// Dashboard del estudiante: bienvenida + accesos rápidos + próximos pasos
+// (criterios RF-03) + conexiones sugeridas reales (RF-06). 100% ligado a la
+// fuente única (perfil); sin datos quemados.
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
-import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { misReportes } from '@/lib/reportesAnomalias';
 import { obtenerSugeridos } from '@/lib/matchesEstudiante';
-import { notificar } from '@/components/student/Toast';
 
 const card = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
 
-const TIPS = [
-  'Acordate de tomar descansos: 25 minutos de foco, 5 de pausa.',
-  'Tu bienestar importa tanto como tus notas. Dormí bien hoy.',
-  'Un perfil completo abre puertas: dedicale 10 minutos esta semana.',
-  'Conectar con un mentor reduce la incertidumbre. Animate a escribir.',
-  'Celebrá los pequeños avances; cada sección completada suma.',
+const iniciales = (n: string) => n.split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+
+// Accesos rápidos a las secciones del área de estudiante.
+const ACCESOS: { titulo: string; icon: string; href: string }[] = [
+  { titulo: 'Mi Perfil', icon: 'person', href: '/perfil-estudiante' },
+  { titulo: 'CV + IA', icon: 'description', href: '/mi-curriculum' },
+  { titulo: 'Matches', icon: 'handshake', href: '/mis-matches' },
+  { titulo: 'Directorio', icon: 'badge', href: '/directorio' },
+  { titulo: 'Reportes', icon: 'flag', href: '/reportes' },
+  { titulo: 'Comunidad', icon: 'forum', href: '/comunidad' },
 ];
 
-// Porcentaje de perfil completo a partir de los campos clave.
+// Porcentaje de perfil completo según los campos obligatorios de RF-03
+// (Sección 1: información académica, Sección 3: proyecto de graduación,
+// Sección 4: mín. 1 área de interés del proyecto). No incluye campos del
+// editor de CV (RF-11), que es una sección aparte del perfil.
 function completitud(p: PerfilEstudiante): number {
   const campos = [
-    p.nombre, p.apellidos, p.telefono, p.carrera, p.sede, p.resumen, p.foto,
-    p.proyectoTitulo, p.habilidadesTecnicas,
-    p.experiencias.length ? 'x' : '', p.intereses.length ? 'x' : '',
-    Object.values(p.apoyo).some(Boolean) ? 'x' : '',
+    p.carne, p.carrera, p.facultad, p.sede, p.anioIngreso, p.nivel,
+    p.proyectoTitulo, p.proyectoDescripcion, p.areaTematica, p.proyectoTipo,
+    p.proyectoAreas.length ? 'x' : '',
   ];
   return Math.round((campos.filter((c) => String(c).trim()).length / campos.length) * 100);
 }
 
-// Secciones del CV con datos.
-function seccionesCV(p: PerfilEstudiante): number {
-  return [
-    p.nombre || p.apellidos,
-    p.telefono || p.linkedin || p.ubicacion,
-    p.experiencias.length,
-    p.habilidadesTecnicas || p.habilidadesBlandas || p.idiomas,
-    p.carrera || p.sede,
-    p.resumen,
-  ].filter(Boolean).length;
-}
-
 export default function DashboardEstudiante() {
-  const { token } = useAuth();
   const { perfil } = usePerfilEstudiante();
-  const [reportes, setReportes] = useState<any[]>([]);
   const [sugeridos, setSugeridos] = useState<any[]>([]);
 
   useEffect(() => {
-    if (token) misReportes(token).then(setReportes).catch(() => {});
-  }, [token]);
+    let activo = true;
+    obtenerSugeridos(perfil).then((res) => { if (activo) setSugeridos(res); });
+    return () => { activo = false; };
+  }, [perfil]);
 
   useEffect(() => {
     let activo = true;
@@ -68,226 +58,132 @@ export default function DashboardEstudiante() {
 
   const nombre = perfil.nombre?.trim() || 'estudiante';
   const pct = completitud(perfil);
-  const cvSecs = seccionesCV(perfil);
   const apoyos = Object.values(perfil.apoyo).filter(Boolean).length;
-  const reportesActivos = reportes.filter((r) => r.estado !== 'resuelta').length;
-  const tip = TIPS[nombre.length % TIPS.length];
 
-  // Avisos prácticos derivados de lo que falta en el perfil.
+  // Avisos prácticos derivados de los criterios de aceptación de RF-03: el
+  // perfil incompleto no aparece en el directorio, así que estos son los
+  // campos obligatorios reales (info académica, proyecto, áreas de interés).
   const avisos: { icon: string; texto: string; href: string }[] = [];
-  if (!perfil.foto) avisos.push({ icon: 'add_a_photo', texto: 'Subí tu foto de perfil para destacar.', href: '/perfil-estudiante' });
-  if (!perfil.resumen) avisos.push({ icon: 'edit_note', texto: 'Escribí tu resumen profesional para tu CV.', href: '/mi-curriculum/editor' });
-  if (perfil.experiencias.length === 0) avisos.push({ icon: 'work', texto: 'Agregá experiencia o proyectos a tu CV.', href: '/mi-curriculum/editor' });
-  if (apoyos === 0) avisos.push({ icon: 'volunteer_activism', texto: 'Definí qué apoyo buscás (mentoría, pasantía…).', href: '/directorio' });
-  if (!perfil.proyectoTitulo) avisos.push({ icon: 'science', texto: 'Registrá tu proyecto de graduación (TFG/TCU).', href: '/directorio' });
-  if (perfil.intereses.length === 0) avisos.push({ icon: 'interests', texto: 'Agregá tus intereses para mejores matches.', href: '/mis-matches' });
+  if (!perfil.carne || !perfil.carrera || !perfil.facultad || !perfil.sede || !perfil.anioIngreso || !perfil.nivel) {
+    avisos.push({ icon: 'school', texto: 'Completá tu información académica (carné, carrera, sede, nivel).', href: '/perfil-estudiante' });
+  }
+  if (!perfil.proyectoTitulo || !perfil.proyectoDescripcion || !perfil.areaTematica || !perfil.proyectoTipo) {
+    avisos.push({ icon: 'science', texto: 'Registrá tu proyecto de graduación (TFG/Tesis/Práctica Dirigida).', href: '/perfil-estudiante' });
+  }
+  if (perfil.proyectoAreas.length === 0) {
+    avisos.push({ icon: 'interests', texto: 'Agregá al menos un área de interés a tu proyecto para mejores matches.', href: '/perfil-estudiante' });
+  }
+  if (apoyos === 0) avisos.push({ icon: 'volunteer_activism', texto: 'Definí qué apoyo buscás (financiamiento, mentoría, empleo, pasantía).', href: '/perfil-estudiante' });
+  if (perfil.proyectoAvance >= 100 && !perfil.proyectoFinalizado) {
+    avisos.push({ icon: 'flag', texto: 'Tu proyecto llegó al 100% — marcalo como finalizado.', href: '/perfil-estudiante' });
+  }
 
-  // Tarjetas-resumen de cada sección (reseña + enlace).
-  const secciones = [
-    { titulo: 'Mi Perfil', icon: 'person', valor: `${pct}% completo`, detalle: `${perfil.carne || 'Sin carné'} · ${perfil.sede || 'Sede pendiente'}`, href: '/perfil-estudiante' },
-    { titulo: 'CV + IA', icon: 'description', valor: `${cvSecs}/6 secciones`, detalle: perfil.cargoDeseado || 'Definí tu cargo deseado', href: '/mi-curriculum' },
-    { titulo: 'Matches', icon: 'handshake', valor: `${apoyos} necesidad${apoyos === 1 ? '' : 'es'}`, detalle: apoyos ? 'Buscando conexiones' : 'Definí qué apoyo buscás', href: '/mis-matches' },
-    { titulo: 'Directorio', icon: 'badge', valor: perfil.proyectoTitulo ? 'Ficha lista' : 'Ficha incompleta', detalle: perfil.proyectoTitulo || 'Registrá tu proyecto', href: '/directorio' },
-    { titulo: 'Reportes', icon: 'flag', valor: `${reportes.length} enviado${reportes.length === 1 ? '' : 's'}`, detalle: reportesActivos ? `${reportesActivos} en seguimiento` : 'Todo al día', href: '/reportes' },
-    { titulo: 'Comunidad', icon: 'forum', valor: 'Próx: 24 Nov', detalle: 'Feria de Empleo Tech 2026', href: '/comunidad' },
-  ];
+  const proximoPaso = avisos[0];
+  const sugeridosDestacados = sugeridos.slice(0, 3);
 
   return (
     <StudentShell active="dashboard">
       <div className="mx-auto w-full max-w-[1280px] space-y-6 p-6 lg:p-8">
         {/* Saludo + progreso */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-secondary p-8 text-white">
+        <section className="relative overflow-hidden rounded-2xl bg-primary p-8 text-on-primary">
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div>
-              <p className="text-sm uppercase tracking-widest text-white/70">Tu pizarrón</p>
-              <h1 className="font-headline-md text-2xl sm:text-3xl">Hola, {nombre} 👋</h1>
-              <p className="mt-1 max-w-lg text-white/85">{perfil.carrera || 'Estudiante UCR'}{perfil.sede ? ` · ${perfil.sede}` : ''}. Acá tenés un resumen práctico de todo lo tuyo.</p>
+              <p className="text-sm text-on-primary/70">¡Hola de nuevo!</p>
+              <h1 className="font-headline-md text-2xl font-bold sm:text-3xl">{nombre}</h1>
+              <p className="mt-1 max-w-lg text-sm text-on-primary/85">
+                Es un placer tenerte de vuelta. Tenés {sugeridosDestacados.length} sugerencia{sugeridosDestacados.length === 1 ? '' : 's'} de conexión basada{sugeridosDestacados.length === 1 ? '' : 's'} en tu progreso actual.
+              </p>
             </div>
             {/* Anillo de progreso */}
-            <div className="flex items-center gap-4">
-              <div className="relative grid h-24 w-24 place-items-center rounded-full" style={{ background: `conic-gradient(#54BCEB ${pct * 3.6}deg, rgba(255,255,255,0.2) 0deg)` }}>
-                <div className="grid h-[76px] w-[76px] place-items-center rounded-full bg-primary">
-                  <span className="font-display-lg text-2xl font-bold">{pct}%</span>
-                </div>
+            <div className="flex items-center gap-3 rounded-xl bg-white/10 p-3 pr-5">
+              <div className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#fb923c ${pct * 3.6}deg, rgba(255,255,255,0.25) 0deg)` }}>
+                <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-sm font-bold">{pct}%</span>
               </div>
-              <div className="text-sm">
-                <p className="font-body-semibold">Perfil completo</p>
-                <Link
-                  href="/onboarding"
-                  aria-label="Editar mi perfil"
-                  title="Editar mi perfil"
-                  className="mt-2 inline-grid h-9 w-9 place-items-center rounded-full bg-[#54BCEB] text-primary shadow-md transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                  <span className="material-symbols-outlined text-[20px]">edit</span>
+              <div>
+                <p className="font-body-semibold text-sm">Perfil Completo</p>
+                <Link href="/perfil-estudiante" className="text-xs text-on-primary/70 underline hover:text-on-primary">
+                  {pct >= 100 ? '¡Tu perfil se ve genial para los reclutadores!' : 'Completar ahora →'}
                 </Link>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Resumen por sección */}
-          <div className="space-y-6 lg:col-span-8">
-            <div>
-              <h2 className="mb-3 font-body-semibold text-primary">Resumen de tus secciones</h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {secciones.map((s) => (
-                  <Link key={s.titulo} href={s.href} className={`${card} flex flex-col gap-2 p-5`}>
-                    <div className="flex items-center justify-between">
-                      <span className="grid h-10 w-10 place-items-center rounded-lg bg-secondary/10 text-secondary">
-                        <span className="material-symbols-outlined">{s.icon}</span>
-                      </span>
-                      <span className="material-symbols-outlined text-outline">chevron_right</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{s.titulo}</p>
-                      <p className="font-headline-md text-lg text-primary">{s.valor}</p>
-                      <p className="line-clamp-1 text-xs text-on-surface-variant">{s.detalle}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+        {/* Accesos rápidos */}
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          {ACCESOS.map((s) => (
+            <Link
+              key={`acceso-${s.titulo}`}
+              href={s.href}
+              className="flex flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5 hover:border-secondary"
+            >
+              <span className="material-symbols-outlined text-secondary">{s.icon}</span>
+              <span className="text-xs font-bold text-on-surface">{s.titulo}</span>
+            </Link>
+          ))}
+        </div>
 
-            {/* Mi proyecto de graduación */}
-            <div className={`${card} p-6`}>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-body-semibold text-primary">
-                  <span className="material-symbols-outlined text-secondary">science</span> Mi proyecto de graduación
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Link href="/directorio" className="text-xs font-bold uppercase text-secondary hover:underline">Gestionar</Link>
-                  <Link
-                    href="/onboarding"
-                    aria-label="Editar proyecto"
-                    title="Editar proyecto"
-                    className="grid h-8 w-8 place-items-center rounded-full bg-secondary/10 text-secondary transition-colors hover:bg-secondary/20"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                  </Link>
-                </div>
-              </div>
-              {perfil.proyectoTitulo ? (
-                <>
-                  <p className="mb-1 text-xs font-bold uppercase text-outline">{perfil.proyectoTipo.split(' ')[0]} · {perfil.proyectoAvance}% de avance</p>
-                  <h3 className="mb-3 font-body-semibold text-on-surface">{perfil.proyectoTitulo}</h3>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
-                    <div className="h-full rounded-full bg-secondary" style={{ width: `${perfil.proyectoAvance}%` }} />
-                  </div>
-                  {perfil.proyectoAreas.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {perfil.proyectoAreas.map((a) => <span key={a} className="rounded-full bg-secondary/10 px-2.5 py-1 text-[11px] font-semibold text-secondary">{a}</span>)}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-on-surface-variant">Todavía no registraste tu proyecto. <Link href="/directorio" className="font-semibold text-secondary underline">Registralo</Link> para aparecer en el directorio y mejorar tus matches.</p>
-              )}
-            </div>
-
-            {/* Conexiones sugeridas (exalumnos reales puntuados por afinidad) */}
-            {sugeridos.length > 0 && (
-              <section className={`${card} p-6`}>
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-secondary">Para ti</p>
-                    <h2 className="font-headline-md text-lg text-primary">Conexiones sugeridas</h2>
-                  </div>
-                  <Link href="/mis-matches" className="flex items-center gap-1 text-xs font-bold uppercase text-secondary hover:underline">
-                    Ver todas <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </Link>
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {sugeridos.slice(0, 3).map((s) => {
-                    const tags = (s.comunes?.length ? s.comunes : s.areas || []).slice(0, 3);
-                    return (
-                      <article key={s.id} className="flex flex-col rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 transition-all hover:-translate-y-0.5 hover:border-secondary/50">
-                        <div className="mb-3 flex items-center gap-3">
-                          {s.foto_perfil ? (
-                            <img src={s.foto_perfil} alt={s.nombre} className="h-11 w-11 shrink-0 rounded-full object-cover" />
-                          ) : (
-                            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">{iniciales(s.nombre)}</span>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <h3 className="truncate font-body-semibold text-primary">{s.nombre}</h3>
-                            <p className="truncate text-xs text-on-surface-variant">{s.carreras?.[0] || s.facultades?.[0] || 'Exalumno UCR'}</p>
-                          </div>
-                          <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-on-primary">{s.score}%</span>
-                        </div>
-                        {tags.length > 0 && (
-                          <div className="mb-4 flex flex-wrap gap-1.5">
-                            {tags.map((t: string) => <span key={t} className="rounded bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">{t}</span>)}
-                          </div>
-                        )}
-                        <div className="mt-auto flex gap-2">
-                          <button type="button" onClick={() => interesar(s.nombre)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2 text-sm font-bold text-on-primary transition-colors hover:bg-secondary">
-                            <span className="material-symbols-outlined text-[18px]">diamond</span> Conectar
-                          </button>
-                          <Link href="/directorio" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
-                            <span className="material-symbols-outlined text-[18px]">person</span>
-                          </Link>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
+        {/* Próximos pasos */}
+        <div className={`${card} p-6`}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-body-semibold text-primary">Próximos pasos</h2>
+            {proximoPaso && (
+              <span className="rounded-full bg-orange-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-orange-500">Pendiente</span>
             )}
           </div>
-
-          {/* Columna derecha: avisos + bienestar */}
-          <div className="space-y-6 lg:col-span-4">
-            {/* Avisos prácticos */}
-            <div className={`${card} p-6`}>
-              <h2 className="mb-4 flex items-center gap-2 font-body-semibold text-primary">
-                <span className="material-symbols-outlined text-secondary">checklist</span> Próximos pasos
-              </h2>
-              {avisos.length === 0 ? (
-                <div className="flex items-center gap-3 rounded-lg bg-tertiary/5 p-4">
-                  <span className="material-symbols-outlined text-tertiary">task_alt</span>
-                  <p className="text-sm text-on-surface-variant">¡Excelente! Tu perfil está al día. Seguí explorando matches y comunidad.</p>
-                </div>
-              ) : (
-                <ul className="space-y-2">
-                  {avisos.map((a, i) => (
-                    <li key={i}>
-                      <Link href={a.href} className="flex items-center gap-3 rounded-lg border border-outline-variant/40 p-3 transition-colors hover:border-secondary hover:bg-secondary/5">
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-secondary/10 text-secondary">
-                          <span className="material-symbols-outlined text-[18px]">{a.icon}</span>
-                        </span>
-                        <span className="flex-1 text-sm text-on-surface">{a.texto}</span>
-                        <span className="material-symbols-outlined text-outline">chevron_right</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Bienestar */}
-            <div className="rounded-xl border-none bg-[#E6F4F9] p-6">
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-3xl text-secondary">self_improvement</span>
-                <div>
-                  <h3 className="font-body-semibold text-primary">Tu bienestar</h3>
-                  <p className="mt-1 text-sm text-on-secondary-fixed-variant">{tip}</p>
-                </div>
+          {proximoPaso ? (
+            <div className="flex items-start gap-4">
+              <div className="rounded-lg bg-secondary/10 p-2 text-secondary">
+                <span className="material-symbols-outlined">{proximoPaso.icon}</span>
+              </div>
+              <div>
+                <p className="font-body-semibold text-sm text-on-surface">{proximoPaso.texto}</p>
+                <p className="mt-1 text-xs text-on-surface-variant">Sumá este paso para que tu perfil se vea mejor ante exalumnos y reclutadores.</p>
+                <Link href={proximoPaso.href} className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-secondary hover:underline">
+                  Ver detalles del proceso <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
               </div>
             </div>
-
-            {/* Stats rápidas */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className={`${card} p-4 text-center`}>
-                <p className="text-2xl font-bold text-secondary">{perfil.intereses.length}</p>
-                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Intereses</p>
-              </div>
-              <div className={`${card} p-4 text-center`}>
-                <p className="text-2xl font-bold text-secondary">{perfil.experiencias.length}</p>
-                <p className="text-[10px] font-bold uppercase text-on-surface-variant">Experiencias</p>
-              </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg bg-tertiary/5 p-4">
+              <span className="material-symbols-outlined text-tertiary">task_alt</span>
+              <p className="text-sm text-on-surface-variant">¡Excelente! Tu perfil está al día. Seguí explorando matches y comunidad.</p>
             </div>
+          )}
+        </div>
+
+        {/* Conexiones sugeridas */}
+        <div className={`${card} p-6`}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-body-semibold text-primary">Conexiones sugeridas para ti</h2>
+            <Link href="/mis-matches" className="text-xs font-bold text-secondary hover:underline">Ver todos los perfiles</Link>
           </div>
+          {sugeridosDestacados.length === 0 ? (
+            <p className="text-sm italic text-on-surface-variant">Completá tu perfil para recibir sugerencias de conexión.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sugeridosDestacados.map((s) => (
+                <div key={s.id ?? s.nombre} className="flex items-center gap-3 rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-primary bg-primary/10 font-bold text-primary">
+                    {s.foto_perfil ? <img src={s.foto_perfil} alt={s.nombre} className="h-full w-full object-cover" /> : iniciales(s.nombre || '')}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-body-semibold text-sm text-on-surface">{s.nombre}</p>
+                    <p className="truncate text-xs text-tertiary">{s.score}% de coincidencia{s.comunes?.length ? ` en ${s.comunes[0]}` : ''}</p>
+                    <div className="mt-2 flex gap-2">
+                      <Link href="/mis-matches" className="rounded-lg bg-orange-400 px-4 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">
+                        Conectar
+                      </Link>
+                      <Link href="/directorio" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
+                        <span className="material-symbols-outlined text-[16px]">mail</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </StudentShell>

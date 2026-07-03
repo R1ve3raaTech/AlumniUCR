@@ -3,6 +3,8 @@
 // Shell del área de estudiante (rediseño Stitch): sidebar fijo + header + main.
 // Reutilizable por dashboard, perfil, CV, matches y directorio. Identidad =
 // usuario logueado (sin datos quemados). Paleta/markup fieles al diseño Stitch.
+// Responsivo (RNF-02): en móvil el sidebar se oculta tras un menú y aparece
+// una barra de navegación inferior estilo app; desde lg: vuelve al layout fijo.
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -12,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
 import AvatarUploader from '@/components/student/AvatarUploader';
+import { useTema } from '@/lib/useTema';
 
 // Departamentos del estudiante. Todos activos.
 const NAV: { key: string; href: string; icon: string; label: string; proximamente?: boolean }[] = [
@@ -39,6 +42,7 @@ export default function StudentShell({
   const { perfil, actualizar } = usePerfilEstudiante();
   const [editorFoto, setEditorFoto] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  useTema(); // sincroniza <html class="dark"> con la preferencia guardada (cualquier pantalla del estudiante)
 
   const correo = user?.email ?? '';
   const nombrePerfil = `${perfil.nombre} ${perfil.apellidos}`.trim();
@@ -63,7 +67,11 @@ export default function StudentShell({
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
       )}
 
-      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Logo + perfil + navegación comparten el scroll: si la ventana es
+            baja, se desliza todo el bloque junto en vez de aplastar el menú
+            a una franja. Configuración/Cerrar sesión quedan fijos abajo. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         <div className="mb-6 flex w-full shrink-0 items-center justify-center py-1 sm:mb-8 sm:py-2">
           <Link href="/dashboard" aria-label="UCR Conecta — inicio">
             <AlumniLogo className="!h-11 w-auto sm:!h-14" />
@@ -99,7 +107,7 @@ export default function StudentShell({
           <p className="max-w-full truncate text-xs font-bold uppercase tracking-tighter text-on-surface-variant" title={subtitulo}>{subtitulo}</p>
         </div>
 
-        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        <nav className="flex shrink-0 flex-col gap-1">
           {NAV.map((item) => {
             const activo = item.key === active;
             const claseBase = activo
@@ -132,6 +140,7 @@ export default function StudentShell({
             );
           })}
         </nav>
+        </div>
 
         <div className="flex shrink-0 flex-col gap-1 border-t border-outline-variant pt-6">
           <Link
@@ -174,12 +183,18 @@ export default function StudentShell({
               <input
                 className="w-full rounded-full border border-outline-variant bg-surface-container py-2 pl-11 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30"
                 placeholder="Buscar en la red UCR..."
+                aria-label="Buscar en la red UCR"
                 type="text"
               />
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex cursor-pointer items-center gap-2 rounded-full p-1 outline-none transition-all hover:bg-surface-container focus-visible:ring-2 focus-visible:ring-secondary/40">
+            <Link
+              href="/perfil-estudiante"
+              aria-label="Ir a mi perfil"
+              title="Mi Perfil"
+              className="flex items-center gap-2 rounded-full p-1 outline-none transition-all hover:bg-surface-container focus-visible:ring-2 focus-visible:ring-secondary/40"
+            >
               {perfil.foto ? (
                 <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
               ) : (
@@ -188,7 +203,7 @@ export default function StudentShell({
                 </div>
               )}
               <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
-            </div>
+            </Link>
           </div>
         </div>
       </header>
