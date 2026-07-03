@@ -180,20 +180,26 @@ const enviarCorreoConfirmacionExalumno = async ({ nombre, correo, url }) => {
  * @param {string} params.rol_remitente      'estudiante' | 'exalumno'
  * @returns {Promise<boolean>}
  */
-const enviarCorreoNuevoContacto = async ({ nombre_remitente, correo_destinatario, nombre_destinatario, rol_remitente }) => {
+const enviarCorreoNuevoContacto = async ({ nombre_remitente, correo_destinatario, nombre_destinatario, rol_remitente, aceptar_url }) => {
   if (!resend) {
     console.warn(`⚠️  RESEND_API_KEY no configurada: no se envió notificación de contacto a ${correo_destinatario}.`);
     return false;
   }
 
   const tipoRemitente = rol_remitente === 'exalumno' ? 'un exalumno' : 'un estudiante';
+  const botonAceptar = aceptar_url
+    ? `<p style="margin:24px 0">
+        <a href="${aceptar_url}" style="background:#16a34a;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">✓ Aceptar conexión</a>
+      </p>`
+    : '<p>Ingresa a la plataforma para aceptar esta solicitud.</p>';
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
       <h2 style="color:#5b3df5">Nueva solicitud de conexión</h2>
       <p>Hola <strong>${nombre_destinatario || ''}</strong>,</p>
       <p><strong>${nombre_remitente}</strong> (${tipoRemitente}) ha iniciado una conexión contigo en Conectando Talento UCR.</p>
-      <p>Ingresa a la plataforma para aceptar o rechazar esta solicitud.</p>
-      <p style="font-size:13px;color:#666">Si no reconoces a esta persona, puedes rechazar la solicitud desde tu panel de matches.</p>
+      <p>Al aceptar, ambos recibirán el correo del otro para coordinar directamente.</p>
+      ${botonAceptar}
+      <p style="font-size:13px;color:#666">Si no te interesa esta conexión, simplemente ignora este correo. También puedes gestionarla desde tu panel de matches en la plataforma.</p>
     </div>`;
 
   try {

@@ -12,6 +12,7 @@
 
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+const { generarToken } = require('../utils/aprobacionToken');
 const {
     enviarCorreoNuevoContacto,
     enviarCorreoMatchActivo,
@@ -19,6 +20,8 @@ const {
 } = require('./email.service');
 
 const TABLA = 'matches_mentoria';
+// Base pública del backend para los enlaces de acción dentro de los correos.
+const BACKEND_URL = process.env.APP_BACKEND_URL || 'http://localhost:5000';
 
 // RF-06: trae nombre/correo/rol de los dos usuarios de un match (exalumno y
 // estudiante) para las notificaciones por correo. Devuelve un mapa por id.
@@ -322,11 +325,16 @@ const contactarMatch = async (id, idUsuario) => {
         const remitenteId = iniciado_por === 'exalumno' ? match.id_exalumno : match.id_estudiante;
         const destinatario = usuarios[destinatarioId];
         if (destinatario?.correo) {
+            // Enlace firmado para aceptar directamente desde el correo (RF-06).
+            // Rechazar no requiere acción: basta con ignorar el correo.
+            const tokenAceptar = generarToken(destinatarioId, `aceptar-match:${id}`);
+            const aceptarUrl = `${BACKEND_URL}/api/matches-mentoria/${id}/aceptar-correo?u=${destinatarioId}&token=${tokenAceptar}`;
             await enviarCorreoNuevoContacto({
                 nombre_remitente: usuarios[remitenteId]?.nombre,
                 correo_destinatario: destinatario.correo,
                 nombre_destinatario: destinatario.nombre,
                 rol_remitente: iniciado_por,
+                aceptar_url: aceptarUrl,
             });
         }
     } catch (emailErr) {
