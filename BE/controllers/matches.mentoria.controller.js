@@ -195,6 +195,33 @@ const actualizarMatch = async (req, res, next) => {
     }
 };
 
+// ======================================================
+// GET - EXPLICACIÓN DE MATCH CON IA
+// ======================================================
+
+const obtenerExplicacionIA = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del match es requerido'
+            });
+        }
+
+        const explicacion = await matchesMentoriaService.generarExplicacionIA(id);
+
+        res.status(200).json({
+            success: true,
+            data: { explicacion },
+            message: 'Explicación del match generada correctamente'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 // ======================================================
 // EXPORTAR
@@ -208,4 +235,5 @@ module.exports = {
     rechazarMatch,
     obtenerTodosLosMatches,
     actualizarMatch,
+    obtenerExplicacionIA,
 };

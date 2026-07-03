@@ -11,6 +11,8 @@ import Link from 'next/link';
 import AlumniLogo from './AlumniLogo';
 import { obtenerMisDonaciones } from '@/lib/donaciones';
 import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
+import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA } from '@/lib/matchesEstudiante';
+import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
 
 interface Perfil {
   nombre?: string;
@@ -47,6 +49,44 @@ export default function ExalumnoDashboard({
   const [cat, setCat] = useState<any | null>(null);
   const [donaciones, setDonaciones] = useState<Donacion[] | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [cargandoMatches, setCargandoMatches] = useState(true);
+  const [explicacionIA, setExplicacionIA] = useState<string>('');
+  const [cargandoExplicacion, setCargandoExplicacion] = useState(false);
+
+  // Función para volver a cargar los matches
+  const cargarMatches = async () => {
+    if (!token) return;
+    try {
+      const [m, e] = await Promise.all([
+        obtenerMisMatches(token),
+        obtenerDirectorioEstudiantes(token)
+      ]);
+      setMatches(m);
+      setEstudiantes(e?.data ?? e ?? []);
+
+      // Cargar explicación IA si hay un match sugerido
+      const sug = m.find((x: any) => x.estado === 'sugerido');
+      if (sug) {
+        setCargandoExplicacion(true);
+        try {
+          const exp = await obtenerExplicacionMatchIA(token, sug.id);
+          setExplicacionIA(exp);
+        } catch (err) {
+          console.error("Error al cargar explicación IA:", err);
+        } finally {
+          setCargandoExplicacion(false);
+        }
+      } else {
+        setExplicacionIA('');
+      }
+    } catch (err) {
+      console.error("Error al cargar matches o directorio:", err);
+    } finally {
+      setCargandoMatches(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -59,6 +99,7 @@ export default function ExalumnoDashboard({
         .then((r) => { if (activo) setDonaciones((Array.isArray(r) ? r : r?.data ?? []) as Donacion[]); })
         .catch(() => { if (activo) setDonaciones(null); });
     }
+    cargarMatches();
     return () => { activo = false; };
   }, [token, userId]);
 
@@ -88,6 +129,56 @@ export default function ExalumnoDashboard({
   const confirmadas = (donaciones ?? []).filter((d) => (d.estado || '').toLowerCase() === 'confirmada');
   const proyectosApoyados = new Set(confirmadas.map((d) => d.id_proyecto).filter(Boolean)).size;
   const dash = (v: number) => (donaciones === null ? '—' : String(v));
+
+  const [procesandoMatchId, setProcesandoMatchId] = useState<string | null>(null);
+
+  const handleConectar = async (matchId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(matchId);
+    try {
+      await contactarMatch(token, matchId);
+      await cargarMatches();
+    } catch (err) {
+      console.error("Error al contactar match:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
+  const handleAceptar = async (matchId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(matchId);
+    try {
+      await aceptarMatch(token, matchId);
+      await cargarMatches();
+    } catch (err) {
+      console.error("Error al aceptar match:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
+  const handleRechazar = async (matchId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(matchId);
+    try {
+      await rechazarMatch(token, matchId);
+      await cargarMatches();
+    } catch (err) {
+      console.error("Error al rechazar match:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
+  const obtenerDetallesEstudiante = (estudianteId: string) => {
+    return estudiantes.find((e: any) => e.id === estudianteId);
+  };
+
+  // Clasificación de matches
+  const matchSugerido = matches.find((m: any) => m.estado === 'sugerido');
+  const solicitudesPendientes = matches.filter((m: any) => m.estado === 'contactado' && m.iniciado_por === 'estudiante');
+  const conexionesActivas = matches.filter((m: any) => m.estado === 'activo');
 
   const STATS = [
     { valor: experiencia ? `${experiencia}+` : '—', label: 'Años de experiencia', destacado: true },
@@ -295,31 +386,131 @@ export default function ExalumnoDashboard({
             {/* Derecha */}
             <aside className="col-span-12 flex flex-col gap-6 lg:col-span-4">
               {/* Match Estratégico */}
-              <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl">
-                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-                <div className="relative z-10">
-                  <div className="mb-6 flex items-start justify-between">
-                    <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-black uppercase text-on-secondary-container">Match estratégico</span>
-                    <div className="text-right"><span className="font-display-lg text-2xl leading-none">95%</span><p className="text-[10px] font-bold opacity-80">Afinidad</p></div>
-                  </div>
-                  <div className="mb-6 flex items-center justify-center gap-3">
-                    <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-white/40 bg-white/10 font-bold">
-                      {foto ? <img src={foto} alt={nombre} className="h-full w-full object-cover" /> : (iniciales || 'E')}
+              {cargandoMatches ? (
+                <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 text-center text-sm text-on-surface-variant animate-pulse">
+                  Cargando coincidencias...
+                </div>
+              ) : matchSugerido ? (() => {
+                const detalles = obtenerDetallesEstudiante(matchSugerido.usuarios.id);
+                const estInitials = matchSugerido.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                const estAreas = detalles?.areas || ['Tecnología', 'Innovación'];
+                const enProceso = procesandoMatchId === matchSugerido.id;
+                
+                return (
+                  <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl">
+                    <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+                    <div className="relative z-10">
+                      <div className="mb-6 flex items-start justify-between">
+                        <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-black uppercase text-on-secondary-container">Match estratégico</span>
+                        <div className="text-right"><span className="font-display-lg text-2xl leading-none">{matchSugerido.score_match}%</span><p className="text-[10px] font-bold opacity-80">Afinidad</p></div>
+                      </div>
+                      <div className="mb-6 flex items-center justify-center gap-3">
+                        <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-white/40 bg-white/10 font-bold text-lg">
+                          {estInitials}
+                        </div>
+                        <span className="material-symbols-outlined text-secondary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                        <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-secondary-fixed-dim bg-white/10 font-bold text-lg">{iniciales}</div>
+                      </div>
+                      <p className="mb-2 text-center font-body-semibold">Conexión recomendada con <strong>{matchSugerido.usuarios.nombre}</strong></p>
+                      <p className="mb-3 text-center text-xs opacity-90 italic line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
+                      {cargandoExplicacion ? (
+                        <p className="mb-4 text-xs opacity-75 text-center italic animate-pulse">Analizando afinidad con IA...</p>
+                      ) : explicacionIA ? (
+                        <div className="mb-4 rounded-xl bg-white/10 p-3.5 text-[11px] leading-relaxed border border-white/15 text-left text-on-primary">
+                          <span className="flex items-center gap-1 font-bold text-secondary-fixed-dim mb-1">
+                            <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span> Recomendación de la IA
+                          </span>
+                          {explicacionIA}
+                        </div>
+                      ) : null}
+                      <div className="mb-6 space-y-2 border-t border-white/20 pt-4">
+                        {estAreas.slice(0, 3).map((a: string) => (
+                          <p key={a} className="flex items-center gap-2 text-sm"><span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>{a}</p>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => handleConectar(matchSugerido.id)} disabled={enProceso} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#54BCEB] py-3.5 font-bold text-primary transition-transform hover:scale-[1.02] disabled:opacity-50">
+                        {enProceso ? 'Conectando...' : <>Conectar <span className="material-symbols-outlined">bolt</span></>}
+                      </button>
                     </div>
-                    <span className="material-symbols-outlined text-secondary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-                    <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-secondary-fixed-dim bg-white/10 font-bold">AS</div>
                   </div>
-                  <p className="mb-5 text-center font-body-semibold">Conexión recomendada con <strong>Adriana Solano</strong></p>
-                  <div className="mb-6 space-y-2 border-t border-white/20 pt-4">
-                    {(areas.length ? areas : ['Tecnología', 'Innovación']).slice(0, 3).map((a) => (
-                      <p key={a} className="flex items-center gap-2 text-sm"><span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>{a}</p>
-                    ))}
-                  </div>
-                  <Link href="/estudiantes" className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#54BCEB] py-3.5 font-bold text-primary transition-transform hover:scale-[1.02]">
-                    Ver estudiantes <span className="material-symbols-outlined">bolt</span>
+                );
+              })() : (
+                <div className="relative overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-7 shadow-sm text-center">
+                  <span className="material-symbols-outlined text-4xl text-outline mb-2">groups</span>
+                  <h4 className="font-body-semibold text-primary mb-1">Sin sugerencias activas</h4>
+                  <p className="text-xs text-on-surface-variant mb-4">Asegúrate de completar tu perfil al 100% y seleccionar tus áreas para recibir recomendaciones.</p>
+                  <Link href="/estudiantes" className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary/5">
+                    Ver directorio de estudiantes
                   </Link>
                 </div>
-              </div>
+              )}
+
+              {/* Solicitudes de contacto de estudiantes */}
+              {!cargandoMatches && solicitudesPendientes.length > 0 && (
+                <div className={`${card} p-6`}>
+                  <h4 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-primary">
+                    <span className="material-symbols-outlined text-[18px]">handshake</span> Solicitudes Recibidas ({solicitudesPendientes.length})
+                  </h4>
+                  <div className="space-y-4">
+                    {solicitudesPendientes.map((m: any) => {
+                      const detalles = obtenerDetallesEstudiante(m.usuarios.id);
+                      const estInitials = m.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                      const enProceso = procesandoMatchId === m.id;
+                      return (
+                        <div key={m.id} className="flex flex-col gap-2 rounded-xl border border-outline-variant p-4 bg-surface-container-low">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 font-bold text-primary text-sm">{estInitials}</span>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate text-sm font-bold text-primary">{m.usuarios.nombre}</h5>
+                              <p className="truncate text-xs text-on-surface-variant">{detalles?.carreras?.[0] || 'Estudiante UCR'}</p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{m.score_match}%</span>
+                          </div>
+                          <p className="text-xs font-body-semibold italic text-on-surface-variant line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
+                          <div className="mt-2 flex gap-2">
+                            <button type="button" onClick={() => handleAceptar(m.id)} disabled={enProceso} className="flex-1 rounded-lg bg-secondary py-1.5 text-xs font-bold text-on-secondary hover:brightness-110 disabled:opacity-50">
+                              {enProceso ? 'Aceptar...' : 'Aceptar'}
+                            </button>
+                            <button type="button" onClick={() => handleRechazar(m.id)} disabled={enProceso} className="flex-1 rounded-lg border border-outline-variant py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-variant/20 disabled:opacity-50">
+                              Rechazar
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Conexiones Activas (Matches Aceptados) */}
+              {!cargandoMatches && conexionesActivas.length > 0 && (
+                <div className={`${card} p-6`}>
+                  <h4 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-emerald-700">
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span> Conexiones Activas ({conexionesActivas.length})
+                  </h4>
+                  <div className="space-y-4">
+                    {conexionesActivas.map((m: any) => {
+                      const detalles = obtenerDetallesEstudiante(m.usuarios.id);
+                      const estInitials = m.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                      return (
+                        <div key={m.id} className="flex flex-col gap-1.5 rounded-xl border border-outline-variant p-4 bg-emerald-50/40">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold text-emerald-800 text-sm">{estInitials}</span>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate text-sm font-bold text-primary">{m.usuarios.nombre}</h5>
+                              <p className="truncate text-xs text-on-surface-variant">{detalles?.carreras?.[0] || 'Estudiante UCR'}</p>
+                            </div>
+                          </div>
+                          <p className="text-xs font-body-semibold italic text-on-surface-variant line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
+                          <a href={`mailto:${m.usuarios.correo_electronico}`} className="mt-1 flex items-center gap-1.5 text-xs font-bold text-secondary hover:underline">
+                            <span className="material-symbols-outlined text-[14px]">mail</span> {m.usuarios.correo_electronico}
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Actividad reciente */}
               <div className={`${card} p-6`}>

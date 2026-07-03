@@ -482,6 +482,75 @@ const actualizarMatch = async (id, datosActualizar) => {
     return data;
 };
 
+// ======================================================
+// EXPLICACIÓN DEL MATCH CON INTELIGENCIA ARTIFICIAL (IA)
+// ======================================================
+
+const claude = require('../config/claude');
+
+const generarExplicacionIA = async (matchId) => {
+    try {
+        const { data: match, error: errMatch } = await supabase
+            .from(TABLA)
+            .select('*')
+            .eq('id', matchId)
+            .maybeSingle();
+        if (errMatch || !match) throw new Error('Match no encontrado');
+
+        const [exalumnoRes, carrExaRes, proyectoRes, carrEstRes] = await Promise.all([
+            supabase.from('informacion_exalumno').select('*').eq('id_usuario', match.id_exalumno).maybeSingle(),
+            supabase.from('carreras_usuario').select('id_carrera').eq('id_usuario', match.id_exalumno),
+            supabase.from('proyecto_graduacion').select('*').eq('id_estudiante', match.id_estudiante).maybeSingle(),
+            supabase.from('carreras_usuario').select('id_carrera').eq('id_usuario', match.id_estudiante),
+        ]);
+
+        const exalumno = exalumnoRes.data || {};
+        const proyecto = proyectoRes.data || {};
+
+        const idCarrerasExa = (carrExaRes.data || []).map(c => c.id_carrera);
+        const idCarrerasEst = (carrEstRes.data || []).map(c => c.id_carrera);
+
+        const [carrerasExaData, carrerasEstData] = await Promise.all([
+            idCarrerasExa.length > 0 ? supabase.from('carreras').select('nombre').in('id', idCarrerasExa) : Promise.resolve({ data: [] }),
+            idCarrerasEst.length > 0 ? supabase.from('carreras').select('nombre').in('id', idCarrerasEst) : Promise.resolve({ data: [] }),
+        ]);
+
+        const carrerasExalumno = (carrerasExaData.data || []).map(c => c.nombre).join(', ') || 'Carrera no especificada';
+        const carrerasEstudiante = (carrerasEstData.data || []).map(c => c.nombre).join(', ') || 'Carrera no especificada';
+
+        const promptSistema = "Eres un asistente oficial de la Fundación de Exalumnos UCR. Tu tarea es redactar una breve explicación personalizada (un solo párrafo de máximo 3 líneas) en tono profesional y motivador sobre por qué este exalumno (mentor) es un match ideal para guiar el proyecto de graduación de este estudiante. Enfócate en las sinergias entre la experiencia y biografía del exalumno y los objetivos y descripción del proyecto del estudiante.";
+        const promptUsuario = `
+DATOS DEL EXALUMNO (MENTOR):
+- Carrera: ${carrerasExalumno}
+- Cargo/Empresa: ${exalumno.cargo || 'Profesional'} en ${exalumno.empresa || 'UCR'}
+- Biografía Profesional: ${exalumno.biografia || 'Sin biografía disponible'}
+
+DATOS DEL ESTUDIANTE Y SU PROYECTO:
+- Carrera: ${carrerasEstudiante}
+- Título del Proyecto: ${proyecto.titulo_proyecto || 'Proyecto de Graduación'}
+- Descripción del Proyecto: ${proyecto.descripcion || 'Sin descripción disponible'}
+
+Genera la explicación en español (máximo 90 palabras, directo, en un párrafo continuo sin viñetas ni encabezados).
+`;
+
+        const model = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+        const response = await claude.messages.create({
+            model: model,
+            max_tokens: 250,
+            system: promptSistema,
+            temperature: 0.3,
+            messages: [{ role: 'user', content: promptUsuario }],
+        });
+
+        if (response.content && response.content.length > 0 && response.content[0].text) {
+            return response.content[0].text.trim();
+        }
+        throw new Error('Sin respuesta del servicio de IA');
+    } catch (err) {
+        console.error('Error al generar explicación del match con Claude:', err.message);
+        return 'Recomendado por compatibilidad en áreas temáticas y afinidad profesional para guiar el desarrollo de este proyecto de graduación de la UCR.';
+    }
+};
 
 // ======================================================
 // EXPORTAR
@@ -495,4 +564,5 @@ module.exports = {
     rechazarMatch,
     obtenerTodosLosMatches,
     actualizarMatch,
+    generarExplicacionIA,
 };
