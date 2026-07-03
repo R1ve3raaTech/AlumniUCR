@@ -2,8 +2,9 @@
 
 // Centro de Matches (estudiante): grid de tarjetas de conexión con datos reales.
 // Los perfiles sugeridos son exalumnos reales del directorio (RF-02) puntuados
-// por afinidad (carrera 30 + áreas 40 + apoyo 30); las solicitudes salen del
-// motor RF-06 (/matches-mentoria/mis-matches).
+// con el algoritmo RF-06 (carrera 30 + áreas 30 + sector↔proyecto 20 + apoyo 20);
+// las solicitudes salen del motor RF-06 (/matches-mentoria/mis-matches) y el
+// botón Conectar crea/usa el match real y dispara el email al exalumno.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,7 +12,7 @@ import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerSugeridos, obtenerMisMatches } from '@/lib/matchesEstudiante';
+import { obtenerSugeridos, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
 
 const APOYO: { k: string; label: string; icon: string }[] = [
   { k: 'mentoria', label: 'Mentoría', icon: 'school' },
@@ -27,11 +28,14 @@ const ESTADO_SOLICITUD: Record<string, { label: string; color: string; barra: st
   activo: { label: 'Conectado', color: 'text-tertiary', barra: 'bg-tertiary', pct: 100 },
 };
 
+// Mismo cálculo que el dashboard: campos obligatorios de RF-03 (información
+// académica, proyecto de graduación y áreas de interés), para que el % de
+// perfil completo sea consistente en todas las pantallas.
 function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): number {
   const campos = [
-    p.nombre, p.apellidos, p.telefono, p.carrera, p.resumen, p.foto,
-    p.proyectoTitulo, p.habilidadesTecnicas,
-    p.experiencias.length ? 'x' : '', p.intereses.length ? 'x' : '',
+    p.carne, p.carrera, p.facultad, p.sede, p.anioIngreso, p.nivel,
+    p.proyectoTitulo, p.proyectoDescripcion, p.areaTematica, p.proyectoTipo,
+    p.proyectoAreas.length ? 'x' : '',
   ];
   return Math.round((campos.filter((c) => String(c).trim()).length / campos.length) * 100);
 }
@@ -47,6 +51,7 @@ export default function MisMatchesPage() {
   const [sugeridos, setSugeridos] = useState<any[]>([]);
   const [misMatches, setMisMatches] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [conectando, setConectando] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !token) router.replace('/login');
@@ -69,7 +74,22 @@ export default function MisMatchesPage() {
 
   const pct = useMemo(() => completitud(perfil), [perfil]);
   const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
-  const interesar = (nombre: string) => notificar(`📨 Registramos tu interés por ${nombre}. Te avisaremos cuando responda.`);
+
+  // Inicia la conexión real (RF-06): crea/usa el match y dispara el email al exalumno.
+  const conectar = async (idExalumno: string, nombre: string) => {
+    if (!token || conectando) return;
+    setConectando(idExalumno);
+    try {
+      await conectarConExalumno(token, idExalumno, misMatches);
+      notificar(`✅ Le avisamos a ${nombre} que querés conectar. Te va a llegar su contacto cuando acepte.`);
+      const actualizados = await obtenerMisMatches(token);
+      setMisMatches(actualizados);
+    } catch {
+      notificar('❌ No pudimos enviar la solicitud. Intentá de nuevo en un momento.');
+    } finally {
+      setConectando(null);
+    }
+  };
 
   return (
     <StudentShell active="matches">
@@ -85,13 +105,13 @@ export default function MisMatchesPage() {
           </span>
         </section>
 
-        {/* Banner del algoritmo */}
+        {/* Banner del algoritmo (fórmula RF-06) */}
         <section className="flex items-start gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 p-5">
           <span className="material-symbols-outlined mt-0.5 text-secondary">auto_awesome</span>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-secondary">Tus conexiones personalizadas</p>
             <p className="text-sm text-on-surface-variant">
-              El algoritmo calculó tu compatibilidad con cada exalumno según <b>carrera (30 pts)</b>, <b>áreas en común (40 pts)</b> y <b>tipo de apoyo (30 pts)</b>.
+              El algoritmo calculó tu compatibilidad con cada exalumno según <b>carrera (30 pts)</b>, <b>áreas en común (30 pts)</b>, <b>sector ↔ área de tu proyecto (20 pts)</b> y <b>tipo de apoyo (20 pts)</b>.
             </p>
           </div>
         </section>
@@ -144,8 +164,13 @@ export default function MisMatchesPage() {
                   )}
 
                   <div className="mt-auto flex gap-2">
-                    <button type="button" onClick={() => interesar(s.nombre)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-bold text-on-primary transition-colors hover:bg-secondary">
-                      <span className="material-symbols-outlined text-[18px]">diamond</span> Conectar
+                    <button
+                      type="button"
+                      onClick={() => conectar(s.id, s.nombre)}
+                      disabled={conectando === s.id}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-bold text-on-primary transition-colors hover:bg-secondary disabled:opacity-60"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">diamond</span> {conectando === s.id ? 'Enviando…' : 'Conectar'}
                     </button>
                     <button type="button" onClick={() => router.push('/directorio')} title="Ver perfil" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
                       <span className="material-symbols-outlined text-[20px]">person</span>

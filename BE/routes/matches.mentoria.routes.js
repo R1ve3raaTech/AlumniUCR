@@ -39,6 +39,15 @@ router.put(
     matchesMentoriaController.contactarMatch
 );
 
+// GET /api/matches-mentoria/:id/explicacion-ia
+// Genera una explicación inteligente por IA del match
+router.get(
+    '/:id/explicacion-ia',
+    autenticarUsuario,
+    exigirRol(['estudiante', 'exalumno']),
+    matchesMentoriaController.obtenerExplicacionIA
+);
+
 // PUT /api/matches-mentoria/:id/aceptar
 // Acepta la conexión (contactado → activo)
 router.put(

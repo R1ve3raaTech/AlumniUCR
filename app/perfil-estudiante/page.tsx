@@ -294,7 +294,7 @@ export default function PerfilEstudiantePage() {
                   <span className="text-xs font-bold uppercase text-primary">Estado de Cuenta</span>
                   <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-bold text-green-600">SEGURO</span>
                 </div>
-                <p className="text-xs text-on-surface-variant">Tu cuenta está en buen estado. 0 reportes acumulados.</p>
+                <p className="text-xs text-on-surface-variant">Tu cuenta está activa y en buen estado.</p>
               </div>
               <p className="text-xs italic leading-tight text-on-surface-variant">3 reportes generan una suspensión temporal automática. Los reportes son 100% anónimos.</p>
               <Link href="/reportes" data-real className="flex items-center justify-center gap-2 rounded-lg border border-error py-2 text-center text-sm font-bold text-error transition-colors hover:bg-error/5">
