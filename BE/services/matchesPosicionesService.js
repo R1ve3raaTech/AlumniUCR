@@ -125,6 +125,7 @@ const calcularScore = (
 const generarMatchesPosicionesPorEstudiante = async (idEstudiante) => {
 
     const [
+        usuarioRes,
         infoEstRes,
         habilidadesRes,
         areasProyectoRes,
@@ -134,7 +135,12 @@ const generarMatchesPosicionesPorEstudiante = async (idEstudiante) => {
         puestosRes,
         sectoresEmpleoRes,
         areasEmpleoRes,
+        publicadoresActivosRes,
     ] = await Promise.all([
+        supabase.from('usuarios')
+            .select('id, estado')
+            .eq('id', idEstudiante)
+            .maybeSingle(),
         supabase.from('informacion_estudiante')
             .select('id_usuario, busca_empleo, busca_pasantia, perfil_completo, pausado')
             .eq('id_usuario', idEstudiante)
@@ -156,7 +162,7 @@ const generarMatchesPosicionesPorEstudiante = async (idEstudiante) => {
         supabase.from('carreras')
             .select('id, id_facultad'),
         supabase.from('puestos_empleo')
-            .select('id, tipo, habilidades')
+            .select('id, tipo, habilidades, id_usuario')
             .eq('estado', 'activo')
             .eq('pausada', false)
             .eq('eliminada', false),
@@ -164,12 +170,24 @@ const generarMatchesPosicionesPorEstudiante = async (idEstudiante) => {
             .select('id_empleo, id_sector'),
         supabase.from('areas_interes_empleo')
             .select('id_empleo, id_area_tematica'),
+        // RF-09.1: exalumnos activos (las posiciones de suspendidos no matchean).
+        supabase.from('usuarios')
+            .select('id')
+            .eq('id_rol', 2)
+            .eq('estado', 'activo'),
     ]);
+
+    // RF-09.1: un estudiante suspendido no genera ni aparece en matches.
+    if (usuarioRes.data?.estado !== 'activo') {
+        return { generados: 0 };
+    }
 
     const infoEstudiante = infoEstRes.data;
     if (!infoEstudiante || !infoEstudiante.perfil_completo || infoEstudiante.pausado) {
         return { generados: 0 };
     }
+
+    const publicadoresActivos = new Set((publicadoresActivosRes.data || []).map((u) => u.id));
 
     const proyecto = proyectoRes.data;
     const carrerasEstudiante = carrerasUsuarioRes.data || [];
@@ -198,6 +216,9 @@ const generarMatchesPosicionesPorEstudiante = async (idEstudiante) => {
     const matchesAInsertar = [];
 
     for (const puesto of (puestosRes.data || [])) {
+        // RF-09.1: las posiciones publicadas por un exalumno suspendido no matchean.
+        if (!publicadoresActivos.has(puesto.id_usuario)) continue;
+
         const sectoresEmpleo = sectoresMap.get(puesto.id) || [];
         const areasEmpleo = areasEmpleoMap.get(puesto.id) || [];
 
@@ -260,7 +281,8 @@ const obtenerMisMatchesPosiciones = async (idEstudiante) => {
                 empresa,
                 lugar_trabajo,
                 fecha_limite,
-                estado
+                estado,
+                usuarios ( estado )
             )
         `)
         .eq('id_estudiante', idEstudiante)
@@ -269,7 +291,8 @@ const obtenerMisMatchesPosiciones = async (idEstudiante) => {
 
     if (error) throw mapDbError(error);
 
-    return data;
+    // RF-09.1: las posiciones de un exalumno suspendido no se muestran.
+    return (data || []).filter((m) => m.puestos_empleo?.usuarios?.estado === 'activo');
 };
 
 

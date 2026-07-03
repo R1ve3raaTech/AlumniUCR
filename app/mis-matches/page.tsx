@@ -11,7 +11,7 @@ import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerSugeridos, obtenerMisMatches } from '@/lib/matchesEstudiante';
+import { obtenerSugeridos, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
 
 const APOYO: { k: string; label: string; icon: string }[] = [
   { k: 'mentoria', label: 'Mentoría', icon: 'school' },
@@ -27,11 +27,14 @@ const ESTADO_SOLICITUD: Record<string, { label: string; color: string; barra: st
   activo: { label: 'Conectado', color: 'text-tertiary', barra: 'bg-tertiary', pct: 100 },
 };
 
+// Mismo cálculo que el dashboard: campos obligatorios de RF-03 (información
+// académica, proyecto de graduación y áreas de interés), para que el % de
+// perfil completo sea consistente en todas las pantallas.
 function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): number {
   const campos = [
-    p.nombre, p.apellidos, p.telefono, p.carrera, p.resumen, p.foto,
-    p.proyectoTitulo, p.habilidadesTecnicas,
-    p.experiencias.length ? 'x' : '', p.intereses.length ? 'x' : '',
+    p.carne, p.carrera, p.facultad, p.sede, p.anioIngreso, p.nivel,
+    p.proyectoTitulo, p.proyectoDescripcion, p.areaTematica, p.proyectoTipo,
+    p.proyectoAreas.length ? 'x' : '',
   ];
   return Math.round((campos.filter((c) => String(c).trim()).length / campos.length) * 100);
 }
@@ -47,6 +50,7 @@ export default function MisMatchesPage() {
   const [sugeridos, setSugeridos] = useState<any[]>([]);
   const [misMatches, setMisMatches] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [conectando, setConectando] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !token) router.replace('/login');
@@ -69,7 +73,22 @@ export default function MisMatchesPage() {
 
   const pct = useMemo(() => completitud(perfil), [perfil]);
   const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
-  const interesar = (nombre: string) => notificar(`📨 Registramos tu interés por ${nombre}. Te avisaremos cuando responda.`);
+
+  // Inicia la conexión real (RF-06): crea/usa el match y dispara el email al exalumno.
+  const conectar = async (idExalumno: string, nombre: string) => {
+    if (!token || conectando) return;
+    setConectando(idExalumno);
+    try {
+      await conectarConExalumno(token, idExalumno, misMatches);
+      notificar(`✅ Le avisamos a ${nombre} que querés conectar. Te va a llegar su contacto cuando acepte.`);
+      const actualizados = await obtenerMisMatches(token);
+      setMisMatches(actualizados);
+    } catch {
+      notificar('❌ No pudimos enviar la solicitud. Intentá de nuevo en un momento.');
+    } finally {
+      setConectando(null);
+    }
+  };
 
   return (
     <StudentShell active="matches">
@@ -96,32 +115,41 @@ export default function MisMatchesPage() {
           </div>
         </section>
 
-        {/* Grid de tarjetas de conexión */}
-        {cargando ? (
-          <p className="py-16 text-center text-sm text-on-surface-variant">Buscando perfiles afines…</p>
-        ) : sugeridos.length === 0 ? (
-          <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-10 text-center">
-            <span className="material-symbols-outlined mb-2 text-4xl text-outline">groups</span>
-            <p className="font-body-semibold text-primary">Aún no hay exalumnos para conectar</p>
-            <p className="text-sm text-on-surface-variant">Completá tus áreas e intereses en el perfil para mejorar tus coincidencias.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {sugeridos.map((s) => {
-              const ap = apoyoDe(s);
-              const tags = (s.comunes?.length ? s.comunes : s.areas || []).slice(0, 3);
-              return (
-                <article key={s.id} className="flex flex-col rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-1 hover:border-secondary/50 hover:shadow-[0_20px_44px_-16px_rgba(0,40,55,0.3)]">
-                  <div className="mb-3 flex items-start gap-3">
-                    {s.foto_perfil ? (
-                      <img src={s.foto_perfil} alt={s.nombre} className="h-12 w-12 shrink-0 rounded-full object-cover" />
-                    ) : (
-                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary/10 font-bold text-primary">{iniciales(s.nombre)}</span>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-body-semibold text-primary">{s.nombre}</h3>
-                      <p className="truncate text-xs text-on-surface-variant">{s.carreras?.[0] || s.facultades?.[0] || 'Exalumno UCR'}</p>
-                      <p className="text-[11px] text-on-surface-variant">Graduado UCR{s.anio_graduacion ? ` · ${s.anio_graduacion}` : ''}</p>
+            {/* Match Estratégico (mejor exalumno real) */}
+            {destacado ? (
+              <div className="overflow-hidden rounded-xl shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]">
+                <div className="flex flex-col items-center gap-8 bg-gradient-to-br from-primary to-secondary p-8 md:flex-row">
+                  <div className="relative shrink-0">
+                    <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-xl border-4 border-secondary-container/30 bg-white/10 font-display-lg text-4xl font-bold text-white">
+                      {destacado.foto_perfil ? <img src={destacado.foto_perfil} alt={destacado.nombre} className="h-full w-full object-cover" /> : iniciales(destacado.nombre)}
+                    </div>
+                    <span className="absolute -bottom-2 -right-2 rounded-lg bg-secondary-container px-2 py-1 text-[10px] font-bold text-on-secondary-container shadow-lg">MATCH {destacado.score}%</span>
+                  </div>
+                  <div className="flex-1 space-y-2 text-center text-white md:text-left">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 backdrop-blur-md">
+                      <span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">verified</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Mejor afinidad para vos</span>
+                    </div>
+                    <h2 className="font-headline-md text-2xl leading-none">{destacado.nombre}</h2>
+                    <p className="text-secondary-fixed-dim">
+                      {(destacado.carreras?.[0] || 'Exalumno UCR')}{destacado.anio_graduacion ? ` · UCR ’${String(destacado.anio_graduacion).slice(-2)}` : ''}
+                    </p>
+                    <p className="mx-auto max-w-lg text-sm leading-relaxed opacity-90 md:mx-0">
+                      {destacado.comunes?.length
+                        ? `Comparten interés en ${destacado.comunes.slice(0, 3).join(', ')}. Puede aportar a ${proyecto}.`
+                        : `Forma parte de la red UCR y puede aportar a ${proyecto}.`}
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 pt-3 md:justify-start">
+                      <button
+                        onClick={() => conectar(destacado.id, destacado.nombre)}
+                        disabled={conectando === destacado.id}
+                        className="flex items-center gap-2 rounded-lg bg-[#54BCEB] px-6 py-3 text-sm font-bold text-primary transition-transform hover:scale-105 disabled:opacity-60"
+                      >
+                        {conectando === destacado.id ? 'Enviando…' : 'Solicitar Mentoría'} <span className="material-symbols-outlined text-[18px]">send</span>
+                      </button>
+                      <button onClick={() => router.push('/directorio')} className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-all hover:bg-white/20">
+                        Ver Directorio
+                      </button>
                     </div>
                     <span className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-on-primary">{s.score}%</span>
                   </div>
@@ -141,14 +169,12 @@ export default function MisMatchesPage() {
                         <span key={t} className="rounded bg-surface-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">{t}</span>
                       ))}
                     </div>
-                  )}
-
-                  <div className="mt-auto flex gap-2">
-                    <button type="button" onClick={() => interesar(s.nombre)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-bold text-on-primary transition-colors hover:bg-secondary">
-                      <span className="material-symbols-outlined text-[18px]">diamond</span> Conectar
-                    </button>
-                    <button type="button" onClick={() => router.push('/directorio')} title="Ver perfil" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
-                      <span className="material-symbols-outlined text-[20px]">person</span>
+                    <button
+                      onClick={() => conectar(s.id, s.nombre)}
+                      disabled={conectando === s.id}
+                      className="flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-400 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">person_add</span> {conectando === s.id ? 'Enviando…' : 'Conectar'}
                     </button>
                   </div>
                 </article>

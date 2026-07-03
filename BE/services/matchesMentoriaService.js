@@ -93,6 +93,14 @@ const calcularScore = (exalumno, estudiante, areasExalumno, areasEstudiante, car
 
 const generarMatchesPorUsuario = async (idUsuario, rol) => {
 
+    // RF-09.1: un usuario suspendido no genera ni aparece en matches.
+    const { data: solicitante } = await supabase
+        .from('usuarios')
+        .select('estado')
+        .eq('id', idUsuario)
+        .maybeSingle();
+    if (solicitante?.estado !== 'activo') return { generados: 0 };
+
     // Cargar datos base según el rol del usuario que completó perfil
     const [
         exalumnosRes,
@@ -105,8 +113,9 @@ const generarMatchesPorUsuario = async (idUsuario, rol) => {
         infoExalumnosRes,
         proyectosRes,
     ] = await Promise.all([
-        supabase.from('usuarios').select('id').eq('id_rol', 2), // exalumnos
-        supabase.from('usuarios').select('id').eq('id_rol', 1), // estudiantes
+        // RF-09.1: los perfiles suspendidos no aparecen en los matches.
+        supabase.from('usuarios').select('id').eq('id_rol', 2).eq('estado', 'activo'), // exalumnos
+        supabase.from('usuarios').select('id').eq('id_rol', 1).eq('estado', 'activo'), // estudiantes
         supabase.from('areas_interes_exalumno').select('id_exalumno, id_area_tematica'),
         supabase.from('areas_interes_proyecto').select('id_proyecto, id_area_tematica'),
         supabase.from('carreras_usuario').select('id_usuario, id_carrera'),
@@ -234,7 +243,7 @@ const obtenerMisMatches = async (idUsuario, rol) => {
             .select(`
                 id, score_match, estado, iniciado_por, resultado, created_at,
                 usuarios!matches_mentoria_id_estudiante_fkey (
-                    id, nombre, correo_electronico
+                    id, nombre, correo_electronico, estado
                 )
             `)
             .eq('id_exalumno', idUsuario)
@@ -246,7 +255,7 @@ const obtenerMisMatches = async (idUsuario, rol) => {
             .select(`
                 id, score_match, estado, iniciado_por, resultado, created_at,
                 usuarios!matches_mentoria_id_exalumno_fkey (
-                    id, nombre, correo_electronico
+                    id, nombre, correo_electronico, estado
                 )
             `)
             .eq('id_estudiante', idUsuario)
@@ -257,7 +266,9 @@ const obtenerMisMatches = async (idUsuario, rol) => {
     const { data, error } = await query;
     if (error) throw mapDbError(error);
 
-    return data;
+    // RF-09.1: si la contraparte fue suspendida después de generarse el match,
+    // el match no se muestra.
+    return (data || []).filter((m) => m.usuarios?.estado === 'activo');
 };
 
 

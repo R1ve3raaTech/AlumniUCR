@@ -92,7 +92,7 @@ const enviarCorreoRecuperacion = async ({ correo, url }) => {
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
       <h2 style="color:#003445">Restablece tu contraseña</h2>
-      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en UCR Connect.</p>
+      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Alumni UCR.</p>
       <p style="margin:24px 0">
         <a href="${url}" style="background:#F34B26;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Restablecer contraseña</a>
       </p>
@@ -103,7 +103,7 @@ const enviarCorreoRecuperacion = async ({ correo, url }) => {
     const { error } = await resend.emails.send({
       from: REMITENTE,
       to: correo,
-      subject: 'Restablece tu contraseña — UCR Connect',
+      subject: 'Restablece tu contraseña — Alumni UCR',
       html,
     });
     if (error) {

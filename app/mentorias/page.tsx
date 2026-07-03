@@ -596,7 +596,7 @@ function MentoriasContent() {
           <p className={styles.modalText}>
             Para acceder a los perfiles de los mentores y solicitar conexiones necesitas una
             cuenta activa como <strong>Alumno</strong> o <strong>Estudiante</strong> de la
-            red UCR Connect. ¡Regístrate ahora!
+            red Alumni UCR. ¡Regístrate ahora!
           </p>
 
           <div className={styles.modalActions}>
