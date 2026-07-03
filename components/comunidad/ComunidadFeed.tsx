@@ -64,12 +64,6 @@ const ROL_COLOR: Record<string, string> = {
   admin:      'bg-error/10 text-error',
 };
 
-const ESTADO_CLS: Record<string, string> = {
-  aprobado:  'bg-emerald-100 text-emerald-700',
-  rechazado: 'bg-red-100 text-red-700',
-  pendiente: 'bg-amber-100 text-amber-700',
-};
-
 // ── Componente ─────────────────────────────────────────────────────────────────
 export default function ComunidadFeed() {
   const { token } = useAuth();
@@ -138,8 +132,6 @@ export default function ComunidadFeed() {
 
   // ── Cerrar modal al click en overlay ─────────────────────────────────────
   const cerrarModal = () => { setModalAbierto(false); };
-
-  const pendientes = mios.filter((m) => m.estado === 'pendiente').length;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -235,11 +227,6 @@ export default function ComunidadFeed() {
           >
             <span className="material-symbols-outlined text-[14px]">list_alt</span>
             Mis publicaciones
-            {pendientes > 0 && (
-              <span className="h-4 min-w-[16px] rounded-full bg-amber-400 px-1 text-center text-[10px] font-bold text-white">
-                {pendientes}
-              </span>
-            )}
           </button>
         )}
       </div>
@@ -471,8 +458,8 @@ export default function ComunidadFeed() {
                         <p className="truncate text-sm font-semibold text-primary">{m.titulo}</p>
                         <p className="text-[11px] text-on-surface-variant">{timeAgo(m.created_at)}</p>
                       </div>
-                      <span className={`shrink-0 self-start rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${ESTADO_CLS[m.estado] || 'bg-surface-variant text-on-surface-variant'}`}>
-                        {m.estado}
+                      <span className="shrink-0 self-start rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-700">
+                        Publicado
                       </span>
                     </li>
                   ))}
