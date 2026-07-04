@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { notificar } from '@/components/student/Toast';
-import { listarBlogs, listarEventos, crearBlog, misBlogs } from '@/lib/comunidad';
+import { listarBlogs, listarEventos, crearBlog, editarBlog, eliminarBlog, misBlogs } from '@/lib/comunidad';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 interface Blog {
@@ -18,6 +18,7 @@ interface Blog {
   contenido: string;
   estado: string;
   created_at: string;
+  updated_at?: string | null;
 }
 
 interface Evento {
@@ -39,6 +40,12 @@ const fechaCorta = (iso: string) => {
   const [, m, d] = (iso || '').split('-').map(Number);
   return { dia: d || '', mes: MESES[(m || 1) - 1] || '' };
 };
+
+// La edición se detecta por updated_at: el BE lo actualiza al editar. Se usa
+// un margen de 1 min para ignorar diferencias de milisegundos al insertar.
+const fueEditado = (b: Blog) =>
+  Boolean(b.updated_at) &&
+  new Date(b.updated_at as string).getTime() - new Date(b.created_at).getTime() > 60_000;
 
 const timeAgo = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
@@ -64,12 +71,6 @@ const ROL_COLOR: Record<string, string> = {
   admin:      'bg-error/10 text-error',
 };
 
-const ESTADO_CLS: Record<string, string> = {
-  aprobado:  'bg-emerald-100 text-emerald-700',
-  rechazado: 'bg-red-100 text-red-700',
-  pendiente: 'bg-amber-100 text-amber-700',
-};
-
 // ── Componente ─────────────────────────────────────────────────────────────────
 export default function ComunidadFeed() {
   const { token } = useAuth();
@@ -80,15 +81,18 @@ export default function ComunidadFeed() {
   const [filtro,  setFiltro ] = useState<'todas' | 'noticia' | 'sugerencia' | 'comentario'>('todas');
   const [cargando, setCargando] = useState(true);
 
-  // Modal compositor
+  // Modal compositor (crear o editar: editandoId indica el modo edición)
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [tipo,      setTipo     ] = useState<'noticia' | 'sugerencia' | 'comentario'>('noticia');
   const [titulo,    setTituloV  ] = useState('');
   const [contenido, setContenido] = useState('');
   const [enviando,  setEnviando ] = useState(false);
 
-  // Modal mis publicaciones
+  // Modal mis publicaciones + confirmación de eliminación
   const [misPublicAbierto, setMisPublicAbierto] = useState(false);
+  const [aEliminar, setAEliminar] = useState<Blog | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -116,18 +120,25 @@ export default function ComunidadFeed() {
     [blogs, filtro],
   );
 
-  // ── Publicar ──────────────────────────────────────────────────────────────
+  // ── Publicar o guardar edición ────────────────────────────────────────────
   const publicar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titulo.trim())    { notificar('Escribí un título'); return; }
     if (!contenido.trim()) { notificar('Escribí el contenido'); return; }
     setEnviando(true);
     try {
-      await crearBlog(token as string, { tipo, titulo: titulo.trim(), contenido: contenido.trim() });
+      const payload = { tipo, titulo: titulo.trim(), contenido: contenido.trim() };
+      if (editandoId) {
+        await editarBlog(token as string, editandoId, payload);
+        notificar('✅ Publicación actualizada');
+      } else {
+        await crearBlog(token as string, payload);
+        notificar('✅ ¡Publicado! Tu aporte ya es visible en la comunidad');
+      }
       setTituloV(''); setContenido('');
+      setEditandoId(null);
       setModalAbierto(false);
-      notificar('✅ Enviado — el admin lo revisará pronto');
-      if (token) misBlogs(token).catch(() => []).then(setMios);
+      cargar(); // refresca el feed para reflejar el cambio de inmediato
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'No se pudo enviar';
       notificar(`⚠️ ${msg}`);
@@ -136,10 +147,39 @@ export default function ComunidadFeed() {
     }
   };
 
-  // ── Cerrar modal al click en overlay ─────────────────────────────────────
-  const cerrarModal = () => { setModalAbierto(false); };
+  // ── Editar: abre el compositor precargado con la publicación ─────────────
+  const abrirEdicion = (b: Blog) => {
+    setEditandoId(b.id);
+    setTipo(b.tipo);
+    setTituloV(b.titulo);
+    setContenido(b.contenido);
+    setMisPublicAbierto(false);
+    setModalAbierto(true);
+  };
 
-  const pendientes = mios.filter((m) => m.estado === 'pendiente').length;
+  // ── Eliminar (tras confirmar en el modal) ─────────────────────────────────
+  const confirmarEliminacion = async () => {
+    if (!aEliminar) return;
+    setEliminando(true);
+    try {
+      await eliminarBlog(token as string, aEliminar.id);
+      notificar('🗑️ Publicación eliminada');
+      setAEliminar(null);
+      cargar();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'No se pudo eliminar';
+      notificar(`⚠️ ${msg}`);
+    } finally {
+      setEliminando(false);
+    }
+  };
+
+  // ── Cerrar modal al click en overlay ─────────────────────────────────────
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setEditandoId(null);
+    setTituloV(''); setContenido('');
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -156,7 +196,7 @@ export default function ComunidadFeed() {
               <h1 className="font-headline-md text-2xl font-bold">Comunidad UCR</h1>
             </div>
             <p className="max-w-sm text-sm text-white/80">
-              Compartí noticias, sugerencias y comentarios con la red. El administrador revisa cada publicación.
+              Compartí noticias, sugerencias y comentarios con la red Alumni UCR.
             </p>
           </div>
           {token && (
@@ -235,11 +275,6 @@ export default function ComunidadFeed() {
           >
             <span className="material-symbols-outlined text-[14px]">list_alt</span>
             Mis publicaciones
-            {pendientes > 0 && (
-              <span className="h-4 min-w-[16px] rounded-full bg-amber-400 px-1 text-center text-[10px] font-bold text-white">
-                {pendientes}
-              </span>
-            )}
           </button>
         )}
       </div>
@@ -295,7 +330,14 @@ export default function ComunidadFeed() {
                         {b.autor_rol}
                       </span>
                     </div>
-                    <p className="text-[11px] text-on-surface-variant">{timeAgo(b.created_at)}</p>
+                    <p className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
+                      {timeAgo(b.created_at)}
+                      {fueEditado(b) && (
+                        <span className="rounded-full bg-surface-variant px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                          Editada
+                        </span>
+                      )}
+                    </p>
                   </div>
                   {/* Badge tipo */}
                   <span className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${t.color}`}>
@@ -358,7 +400,9 @@ export default function ComunidadFeed() {
             <div className="p-6">
               {/* Cabecera */}
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-headline-md text-lg font-bold text-primary">Nueva publicación</h2>
+                <h2 className="font-headline-md text-lg font-bold text-primary">
+                  {editandoId ? 'Editar publicación' : 'Nueva publicación'}
+                </h2>
                 <button
                   id="btn-cerrar-modal"
                   onClick={cerrarModal}
@@ -412,8 +456,10 @@ export default function ComunidadFeed() {
 
                 {/* Aviso */}
                 <p className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[14px] text-amber-500">info</span>
-                  Tu publicación será revisada por el administrador antes de aparecer.
+                  <span className="material-symbols-outlined text-[14px] text-emerald-500">bolt</span>
+                  {editandoId
+                    ? 'La publicación mostrará la etiqueta "Editada".'
+                    : 'Tu publicación aparecerá en la comunidad de inmediato.'}
                 </p>
 
                 {/* Botón */}
@@ -423,8 +469,8 @@ export default function ComunidadFeed() {
                   disabled={enviando}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary py-3 font-bold text-on-primary shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                 >
-                  <span className="material-symbols-outlined text-lg">send</span>
-                  {enviando ? 'Enviando…' : 'Enviar solicitud'}
+                  <span className="material-symbols-outlined text-lg">{editandoId ? 'save' : 'send'}</span>
+                  {enviando ? 'Guardando…' : editandoId ? 'Guardar cambios' : 'Publicar'}
                 </button>
               </form>
             </div>
@@ -439,45 +485,136 @@ export default function ComunidadFeed() {
           onClick={() => setMisPublicAbierto(false)}
         >
           <div
-            className="w-full max-w-lg animate-slide-up rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-2xl"
+            className="w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-outline-variant sm:hidden" />
-            <div className="p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="font-headline-md text-lg font-bold text-primary">Mis publicaciones</h2>
+            {/* Cabecera con degradado de marca */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-[#003B5C] to-[#0080B5] px-6 py-5 text-white">
+              <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/10 blur-xl" />
+              <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/30 sm:hidden" />
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15">
+                    <span className="material-symbols-outlined text-xl">list_alt</span>
+                  </span>
+                  <div>
+                    <h2 className="font-headline-md text-lg font-bold leading-tight">Mis publicaciones</h2>
+                    <p className="text-xs text-white/70">
+                      {mios.length === 1 ? '1 aporte publicado' : `${mios.length} aportes publicados`} en la comunidad
+                    </p>
+                  </div>
+                </div>
                 <button
                   id="btn-cerrar-mis-publicaciones"
                   onClick={() => setMisPublicAbierto(false)}
-                  className="grid h-8 w-8 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+                  className="grid h-8 w-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 >
                   <span className="material-symbols-outlined text-xl">close</span>
                 </button>
               </div>
+            </div>
 
+            <div className="p-5">
               {mios.length === 0 ? (
-                <p className="py-8 text-center text-sm text-on-surface-variant">No tenés publicaciones aún.</p>
+                <div className="py-10 text-center">
+                  <span className="material-symbols-outlined mb-2 text-5xl text-outline">post_add</span>
+                  <p className="font-semibold text-primary">Aún no publicaste nada</p>
+                  <p className="mt-1 text-sm text-on-surface-variant">Tu primer aporte aparecerá aquí.</p>
+                </div>
               ) : (
-                <ul className="max-h-80 space-y-3 overflow-y-auto">
-                  {mios.map((m) => (
-                    <li
-                      key={m.id}
-                      className="flex items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-4"
-                    >
-                      <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${TIPOS[m.tipo]?.color || ''}`}>
-                        {TIPOS[m.tipo]?.label || m.tipo}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-primary">{m.titulo}</p>
-                        <p className="text-[11px] text-on-surface-variant">{timeAgo(m.created_at)}</p>
-                      </div>
-                      <span className={`shrink-0 self-start rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${ESTADO_CLS[m.estado] || 'bg-surface-variant text-on-surface-variant'}`}>
-                        {m.estado}
-                      </span>
-                    </li>
-                  ))}
+                <ul className="max-h-[60vh] space-y-3 overflow-y-auto overscroll-contain pr-1">
+                  {mios.map((m) => {
+                    const t = TIPOS[m.tipo] || TIPOS.noticia;
+                    return (
+                      <li
+                        key={m.id}
+                        className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm transition-all hover:border-secondary/40 hover:shadow-md"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Ícono del tipo */}
+                          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${t.color}`}>
+                            <span className="material-symbols-outlined text-lg">{t.icon}</span>
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-primary">{m.titulo}</p>
+                            <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-on-surface-variant">
+                              <span className="font-bold uppercase tracking-wide">{t.label}</span>
+                              <span aria-hidden>·</span>
+                              {timeAgo(m.created_at)}
+                              {fueEditado(m) && (
+                                <span className="rounded-full bg-surface-variant px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                                  Editada
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Publicado
+                          </span>
+                        </div>
+
+                        {/* Acciones */}
+                        <div className="mt-3 flex justify-end gap-2 border-t border-outline-variant/60 pt-3">
+                          <button
+                            type="button"
+                            onClick={() => abrirEdicion(m)}
+                            className="flex items-center gap-1.5 rounded-full border border-outline-variant px-3.5 py-1.5 text-xs font-bold text-on-surface-variant transition-colors hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">edit</span>
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAEliminar(m)}
+                            className="flex items-center gap-1.5 rounded-full border border-outline-variant px-3.5 py-1.5 text-xs font-bold text-on-surface-variant transition-colors hover:border-error hover:bg-error/10 hover:text-error"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">delete</span>
+                            Eliminar
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL CONFIRMAR ELIMINACIÓN ───────────────────────────────────── */}
+      {aEliminar && (
+        <div
+          className="fixed inset-0 z-[210] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+          onClick={() => { if (!eliminando) setAEliminar(null); }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-surface-container-lowest p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="material-symbols-outlined mb-2 text-4xl text-error">delete_forever</span>
+            <h2 className="font-headline-md text-lg font-bold text-primary">¿Eliminar publicación?</h2>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              <span className="font-semibold">“{aEliminar.titulo}”</span> se eliminará de la comunidad de forma permanente.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setAEliminar(null)}
+                disabled={eliminando}
+                className="flex-1 rounded-xl border border-outline-variant py-2.5 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarEliminacion}
+                disabled={eliminando}
+                className="flex-1 rounded-xl bg-error py-2.5 text-sm font-bold text-on-error shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-60"
+              >
+                {eliminando ? 'Eliminando…' : 'Eliminar'}
+              </button>
             </div>
           </div>
         </div>

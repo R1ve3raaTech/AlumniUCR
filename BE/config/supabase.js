@@ -27,7 +27,7 @@ const supabase = createClient(
     }
 );
 
-console.log("SUPABASE URL:", supabaseUrl);
-console.log("KEY USADA:", supabaseKey);
+// No imprimir la URL ni la key en consola: la service-role key otorga acceso
+// total a la base y no debe quedar en logs (terminales, CI, hosting).
 
 module.exports = supabase;
