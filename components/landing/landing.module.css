@@ -1265,11 +1265,12 @@
 }
 
 /* â”€â”€â”€ BotÃ³n flotante "Volver al inicio" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Solo visible en las secciones proyectos / impacto / historias. Sube
-   al hero con scroll suave. Comparte la identidad de .navCta (celeste). */
+   Visible siempre que el usuario no estÃ© en el tope de la landing. Sube
+   al hero con scroll suave. Comparte la identidad de .navCta (celeste).
+   A la izquierda para no chocar con la mascota IA (esquina derecha). */
 .scrollTop {
   position: fixed;
-  right: clamp(1rem, 3vw, 2.5rem);
+  left: clamp(1rem, 3vw, 2.5rem);
   bottom: clamp(1rem, 3vw, 2.5rem);
   z-index: 60;
   display: flex;
