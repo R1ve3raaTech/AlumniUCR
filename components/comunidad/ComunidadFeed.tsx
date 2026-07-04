@@ -64,13 +64,6 @@ const TIPOS = {
   comentario: { label: 'Comentario', icon: 'forum',     color: 'bg-violet-50 text-violet-700 border-violet-200' },
 } as const;
 
-const ROL_COLOR: Record<string, string> = {
-  estudiante: 'bg-primary/10 text-primary',
-  exalumno:   'bg-secondary/10 text-secondary',
-  voluntario: 'bg-tertiary/10 text-tertiary',
-  admin:      'bg-error/10 text-error',
-};
-
 // ── Componente ─────────────────────────────────────────────────────────────────
 export default function ComunidadFeed() {
   const { token } = useAuth();
@@ -181,206 +174,241 @@ export default function ComunidadFeed() {
     setTituloV(''); setContenido('');
   };
 
+  // Colaboradores destacados: autores únicos de las publicaciones reales.
+  const autores = useMemo(() => {
+    const vistos = new Map<string, Blog>();
+    for (const b of blogs) if (b.autor_nombre && !vistos.has(b.autor_nombre)) vistos.set(b.autor_nombre, b);
+    return Array.from(vistos.values()).slice(0, 4);
+  }, [blogs]);
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
+    <div className="mx-auto w-full max-w-6xl p-4 sm:p-6">
+      <div className="grid grid-cols-12 gap-6">
 
-      {/* ── Hero compacto ── */}
-      <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003B5C] via-[#005B82] to-[#0080B5] px-6 py-8 text-white shadow-lg">
-        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
-        <div className="absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-white/5 blur-2xl" />
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="material-symbols-outlined text-3xl">groups</span>
-              <h1 className="font-headline-md text-2xl font-bold">Comunidad UCR</h1>
+        {/* ══ Columna principal ══ */}
+        <div className="col-span-12 space-y-5 lg:col-span-8">
+
+          {/* Encabezado + filtros */}
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="font-headline-md text-2xl font-bold text-on-surface">Feed de la Comunidad</h1>
+              <p className="mt-0.5 text-sm text-on-surface-variant">Conectá, colaborá y compartí con la red Alumni UCR.</p>
             </div>
-            <p className="max-w-sm text-sm text-white/80">
-              Compartí noticias, sugerencias y comentarios con la red Alumni UCR.
-            </p>
-          </div>
-          {token && (
-            <button
-              id="btn-nueva-publicacion"
-              onClick={() => setModalAbierto(true)}
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#003B5C] shadow-md transition-transform hover:scale-105 active:scale-95"
-            >
-              <span className="material-symbols-outlined text-lg">edit_note</span>
-              Nueva publicación
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* ── Próximos eventos ── */}
-      {eventos.length > 0 && (
-        <section>
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-on-surface-variant">
-            <span className="material-symbols-outlined text-base text-secondary">calendar_month</span>
-            Próximos eventos
-          </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {eventos.slice(0, 4).map((ev) => {
-              const f = fechaCorta(ev.fecha);
-              return (
-                <article
-                  key={ev.id}
-                  className="flex gap-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            <div className="flex flex-wrap gap-2">
+              {(['todas', 'noticia', 'sugerencia', 'comentario'] as const).map((t) => (
+                <button
+                  key={t}
+                  id={`filtro-${t}`}
+                  onClick={() => setFiltro(t)}
+                  className={`cursor-pointer rounded-full border-0 px-4 py-2 text-xs font-bold transition-all ${
+                    filtro === t
+                      ? 'bg-[#F34B26] text-white shadow-sm'
+                      : 'bg-surface-container-lowest text-on-surface-variant shadow-sm hover:text-[#E8890C]'
+                  }`}
                 >
-                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-on-primary">
-                    <span className="text-xl font-bold leading-none">{f.dia}</span>
-                    <span className="text-[9px] font-bold uppercase">{f.mes}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="truncate font-semibold text-primary">{ev.titulo}</h3>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-on-surface-variant">
-                      {ev.hora && (
-                        <><span className="material-symbols-outlined text-[13px]">schedule</span>{String(ev.hora).slice(0, 5)}</>
-                      )}
-                      <span className="material-symbols-outlined text-[13px]">location_on</span>
-                      <span className="truncate">{ev.lugar}</span>
-                    </p>
-                    <p className="mt-1 line-clamp-1 text-xs text-on-surface-variant/70">{ev.descripcion}</p>
-                  </div>
-                </article>
-              );
-            })}
+                  {t === 'todas' ? 'Todas' : TIPOS[t].label}
+                </button>
+              ))}
+            </div>
           </div>
-        </section>
-      )}
 
-      {/* ── Barra de filtros + indicador mis publicaciones ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {(['todas', 'noticia', 'sugerencia', 'comentario'] as const).map((t) => (
-            <button
-              key={t}
-              id={`filtro-${t}`}
-              onClick={() => setFiltro(t)}
-              className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-all ${
-                filtro === t
-                  ? 'bg-primary text-on-primary shadow-sm'
-                  : 'border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:border-secondary/60'
-              }`}
-            >
-              {t === 'todas' ? 'Todas' : TIPOS[t].label}
-            </button>
-          ))}
-        </div>
-        {token && mios.length > 0 && (
-          <button
-            id="btn-mis-publicaciones"
-            onClick={() => setMisPublicAbierto(true)}
-            className="flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-bold text-on-surface-variant transition-colors hover:border-secondary/60 hover:text-secondary"
-          >
-            <span className="material-symbols-outlined text-[14px]">list_alt</span>
-            Mis publicaciones
-          </button>
-        )}
-      </div>
-
-      {/* ── Feed ── */}
-      <section className="space-y-4">
-        {cargando ? (
-          // Skeleton loader
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse rounded-2xl border border-outline-variant bg-surface-container-lowest p-5">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-surface-variant" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-32 rounded-full bg-surface-variant" />
-                    <div className="h-2.5 w-20 rounded-full bg-surface-variant" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 w-2/3 rounded-full bg-surface-variant" />
-                  <div className="h-3 rounded-full bg-surface-variant" />
-                  <div className="h-3 w-4/5 rounded-full bg-surface-variant" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : visibles.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest p-12 text-center">
-            <span className="material-symbols-outlined mb-3 text-5xl text-outline">forum</span>
-            <p className="font-semibold text-primary">Aún no hay publicaciones</p>
-            <p className="mt-1 text-sm text-on-surface-variant">
-              {token ? 'Sé la primera persona en aportar.' : 'Iniciá sesión para publicar.'}
-            </p>
-          </div>
-        ) : (
-          visibles.map((b) => {
-            const t = TIPOS[b.tipo] || TIPOS.noticia;
-            const rolCls = ROL_COLOR[b.autor_rol] || 'bg-surface-variant text-on-surface-variant';
-            return (
-              <article
-                key={b.id}
-                className="group rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+          {/* Compositor inline: abre el modal de nueva publicación */}
+          {token && (
+            <div className="rounded-3xl bg-surface-container-lowest p-5 shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)]">
+              <button
+                id="btn-nueva-publicacion"
+                type="button"
+                onClick={() => setModalAbierto(true)}
+                className="flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left"
               >
-                {/* Header del post */}
-                <div className="mb-3 flex items-start gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                    {iniciales(b.autor_nombre)}
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#FF9B18]/15 text-[#E8890C]">
+                  <span className="material-symbols-outlined">person</span>
+                </span>
+                <span className="flex-1 rounded-full bg-surface-container-low px-5 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container">
+                  ¿Qué tenés en mente hoy?
+                </span>
+              </button>
+              <div className="mt-4 flex items-center justify-between gap-2">
+                {mios.length > 0 ? (
+                  <button
+                    id="btn-mis-publicaciones"
+                    type="button"
+                    onClick={() => setMisPublicAbierto(true)}
+                    className="flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-xs font-bold text-on-surface-variant transition-colors hover:text-[#E8890C]"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">list_alt</span>
+                    Mis publicaciones
+                  </button>
+                ) : <span />}
+                <button
+                  type="button"
+                  onClick={() => setModalAbierto(true)}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border-0 bg-[#F34B26] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+                >
+                  <span className="material-symbols-outlined text-base">send</span> Publicar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Feed */}
+          <section className="space-y-4">
+            {cargando ? (
+              // Skeleton loader
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse rounded-3xl bg-surface-container-lowest p-6 shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)]">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-surface-variant" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-32 rounded-full bg-surface-variant" />
+                        <div className="h-2.5 w-20 rounded-full bg-surface-variant" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-2/3 rounded-full bg-surface-variant" />
+                      <div className="h-3 rounded-full bg-surface-variant" />
+                      <div className="h-3 w-4/5 rounded-full bg-surface-variant" />
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-primary">{b.autor_nombre}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${rolCls}`}>
-                        {b.autor_rol}
+                ))}
+              </div>
+            ) : visibles.length === 0 ? (
+              <div className="rounded-3xl bg-surface-container-lowest p-12 text-center shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)]">
+                <span className="material-symbols-outlined mb-3 text-5xl text-outline">forum</span>
+                <p className="font-semibold text-on-surface">Aún no hay publicaciones</p>
+                <p className="mt-1 text-sm text-on-surface-variant">
+                  {token ? 'Sé la primera persona en aportar.' : 'Iniciá sesión para publicar.'}
+                </p>
+              </div>
+            ) : (
+              visibles.map((b) => {
+                const t = TIPOS[b.tipo] || TIPOS.noticia;
+                return (
+                  <article
+                    key={b.id}
+                    className="rounded-3xl bg-surface-container-lowest p-6 shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_32px_-12px_rgba(20,20,20,0.18)]"
+                  >
+                    {/* Header del post */}
+                    <div className="mb-3 flex items-start gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#FF9B18]/15 text-sm font-bold text-[#E8890C]">
+                        {iniciales(b.autor_nombre)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-on-surface">{b.autor_nombre}</p>
+                        <p className="text-[11px] capitalize text-on-surface-variant">{b.autor_rol}</p>
+                      </div>
+                      {/* Badge tipo */}
+                      <span className={`flex shrink-0 items-center gap-1 rounded-full border-0 px-3 py-1.5 text-[11px] font-bold ${t.color}`}>
+                        <span className="material-symbols-outlined text-[13px]">{t.icon}</span>
+                        {t.label}
                       </span>
                     </div>
-                    <p className="flex items-center gap-1.5 text-[11px] text-on-surface-variant">
-                      {timeAgo(b.created_at)}
+
+                    {/* Contenido */}
+                    <h3 className="mb-1.5 font-headline-md text-base font-semibold leading-snug text-on-surface">{b.titulo}</h3>
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-on-surface-variant">{b.contenido}</p>
+
+                    {/* Pie: solo la fecha (sin likes ni comentarios: no existen en la base) */}
+                    <div className="mt-4 flex items-center justify-end gap-2 text-[11px] text-on-surface-variant/70">
                       {fueEditado(b) && (
-                        <span className="rounded-full bg-surface-variant px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
+                        <span className="rounded-full bg-surface-variant px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">
                           Editada
                         </span>
                       )}
-                    </p>
+                      {timeAgo(b.created_at)}
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </section>
+
+          {/* CTA login si no hay token */}
+          {!token && (
+            <div className="rounded-3xl bg-surface-container-lowest p-6 text-center shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)]">
+              <span className="material-symbols-outlined mb-2 text-3xl text-[#E8890C]">lock_open</span>
+              <h3 className="font-semibold text-on-surface">Sumá tu voz a la comunidad</h3>
+              <p className="mb-4 mt-1 text-sm text-on-surface-variant">
+                Iniciá sesión como estudiante, exalumno o voluntario para publicar.
+              </p>
+              <a
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#F34B26] px-6 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+              >
+                Iniciar sesión
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* ══ Columna derecha ══ */}
+        <aside className="col-span-12 space-y-5 lg:col-span-4">
+
+          {/* Próximos Eventos */}
+          <div className="rounded-3xl bg-surface-container-lowest p-6 shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)]">
+            <h2 className="font-headline-md text-base font-bold text-on-surface">Próximos Eventos</h2>
+            <div className="mt-4 space-y-4">
+              {eventos.length === 0 && (
+                <p className="text-xs italic text-on-surface-variant">No hay eventos programados por ahora.</p>
+              )}
+              {eventos.slice(0, 4).map((ev) => {
+                const f = fechaCorta(ev.fecha);
+                return (
+                  <div key={ev.id} className="flex items-start gap-3">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FF9B18]/15 text-[#E8890C]">
+                      <span className="text-lg font-bold leading-none">{f.dia}</span>
+                      <span className="text-[9px] font-bold uppercase">{f.mes}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-on-surface">{ev.titulo}</h3>
+                      <p className="mt-0.5 truncate text-[11px] text-on-surface-variant">
+                        {ev.hora ? `${String(ev.hora).slice(0, 5)} · ` : ''}{ev.lugar}
+                      </p>
+                    </div>
                   </div>
-                  {/* Badge tipo */}
-                  <span className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${t.color}`}>
-                    <span className="material-symbols-outlined text-[13px]">{t.icon}</span>
-                    {t.label}
-                  </span>
-                </div>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* Contenido */}
-                <h3 className="mb-1.5 font-headline-md text-base font-semibold leading-snug text-primary">{b.titulo}</h3>
-                <p className="whitespace-pre-line text-sm leading-relaxed text-on-surface-variant">{b.contenido}</p>
-              </article>
-            );
-          })
-        )}
-      </section>
+          {/* Colaboradores Destacados (autores reales del feed) */}
+          {autores.length > 0 && (
+            <div className="rounded-3xl bg-surface-container-lowest p-6 shadow-[0_4px_24px_-10px_rgba(20,20,20,0.12)]">
+              <h2 className="font-headline-md text-base font-bold text-on-surface">Colaboradores Destacados</h2>
+              <div className="mt-4 space-y-3">
+                {autores.map((a) => (
+                  <div key={a.autor_nombre} className="flex items-center gap-3">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#FF9B18]/15 text-xs font-bold text-[#E8890C]">
+                      {iniciales(a.autor_nombre)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-on-surface">{a.autor_nombre}</p>
+                      <p className="text-[11px] capitalize text-on-surface-variant">{a.autor_rol}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* ── CTA login si no hay token ── */}
-      {!token && (
-        <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 text-center">
-          <span className="material-symbols-outlined mb-2 text-3xl text-secondary">lock_open</span>
-          <h3 className="font-semibold text-primary">Sumá tu voz a la comunidad</h3>
-          <p className="mb-4 mt-1 text-sm text-on-surface-variant">
-            Iniciá sesión como estudiante, exalumno o voluntario para publicar.
-          </p>
-          <a
-            href="/login"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-on-primary transition-transform hover:scale-105"
-          >
-            Iniciar sesión
-          </a>
-        </div>
-      )}
-
-      {/* ── Nota de comunidad ── */}
-      <div className="flex items-start gap-3 rounded-2xl bg-[#E6F4F9] p-5">
-        <span className="material-symbols-outlined text-2xl text-secondary">diversity_3</span>
-        <div>
-          <p className="font-semibold text-primary">Comunidad con propósito</p>
-          <p className="mt-0.5 text-sm text-on-secondary-fixed-variant">
-            Cada aporte fortalece la red Alumni UCR. Publicá con respeto y empatía.
-          </p>
-        </div>
+          {/* Pulso de la Comunidad (datos reales, en naranja de marca) */}
+          <div className="rounded-3xl bg-gradient-to-br from-[#F34B26] to-[#FF9B18] p-6 text-white shadow-[0_10px_30px_-10px_rgba(243,75,38,0.45)]">
+            <h2 className="font-headline-md text-base font-bold">Pulso de la Comunidad</h2>
+            <p className="mt-0.5 text-xs text-white/85">Actividad real de la red Alumni UCR.</p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-white/15 p-3">
+                <p className="text-xl font-bold leading-none">{blogs.length}</p>
+                <p className="mt-1 text-[11px] font-semibold text-white/85">Publicaciones</p>
+              </div>
+              <div className="rounded-xl bg-white/15 p-3">
+                <p className="text-xl font-bold leading-none">{eventos.length}</p>
+                <p className="mt-1 text-[11px] font-semibold text-white/85">Eventos próximos</p>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
 
       {/* ── MODAL COMPOSITOR ──────────────────────────────────────────────── */}
@@ -391,7 +419,7 @@ export default function ComunidadFeed() {
           onClick={cerrarModal}
         >
           <div
-            className="w-full max-w-lg animate-slide-up rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-2xl"
+            className="w-full max-w-lg animate-slide-up rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Handle móvil */}
@@ -406,7 +434,7 @@ export default function ComunidadFeed() {
                 <button
                   id="btn-cerrar-modal"
                   onClick={cerrarModal}
-                  className="grid h-8 w-8 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+                  className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-on-surface-variant transition-colors hover:bg-surface-container"
                 >
                   <span className="material-symbols-outlined text-xl">close</span>
                 </button>
@@ -467,7 +495,7 @@ export default function ComunidadFeed() {
                   id="btn-enviar-publicacion"
                   type="submit"
                   disabled={enviando}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary py-3 font-bold text-on-primary shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-[#F34B26] py-3 font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                 >
                   <span className="material-symbols-outlined text-lg">{editandoId ? 'save' : 'send'}</span>
                   {enviando ? 'Guardando…' : editandoId ? 'Guardar cambios' : 'Publicar'}
@@ -485,7 +513,7 @@ export default function ComunidadFeed() {
           onClick={() => setMisPublicAbierto(false)}
         >
           <div
-            className="w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-2xl"
+            className="w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl bg-surface-container-lowest shadow-2xl sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Cabecera con degradado de marca */}
@@ -507,7 +535,7 @@ export default function ComunidadFeed() {
                 <button
                   id="btn-cerrar-mis-publicaciones"
                   onClick={() => setMisPublicAbierto(false)}
-                  className="grid h-8 w-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+                  className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 >
                   <span className="material-symbols-outlined text-xl">close</span>
                 </button>
@@ -611,7 +639,7 @@ export default function ComunidadFeed() {
                 type="button"
                 onClick={confirmarEliminacion}
                 disabled={eliminando}
-                className="flex-1 rounded-xl bg-error py-2.5 text-sm font-bold text-on-error shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                className="flex-1 cursor-pointer rounded-full border-0 bg-error py-2.5 text-sm font-bold text-on-error shadow-sm transition-all hover:-translate-y-0.5 disabled:opacity-60"
               >
                 {eliminando ? 'Eliminando…' : 'Eliminar'}
               </button>

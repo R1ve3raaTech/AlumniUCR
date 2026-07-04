@@ -45,11 +45,11 @@ export default function GirasolScroll() {
         // Absoluto (no fixed): queda anclado arriba de la página, en la zona
         // del hero, y NO acompaña al usuario cuando scrollea.
         position: 'absolute',
-        top: '110px',
+        top: '56px',
         right: 0,
         // Corre el contenedor la mitad hacia afuera: solo asoma media flor.
         transform: 'translateX(50%)',
-        width: 'min(560px, 46vw)',
+        width: 'min(470px, 40vw)',
         aspectRatio: '1 / 1',
         pointerEvents: 'none',
         zIndex: 30, // debajo de la mascota/chatbot, encima del contenido
