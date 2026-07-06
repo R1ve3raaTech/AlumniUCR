@@ -351,7 +351,7 @@ export default function AdminDashboard({
 
       <footer className={styles.footer}>
         <AlumniLogo height={30} />
-        <span className={styles.footerCopy}>Sesión: {correo} · © 2025 Alumni UCR</span>
+        <span className={styles.footerCopy}>Sesión: {correo} · © 2026 Alumni UCR</span>
       </footer>
     </div>
   );

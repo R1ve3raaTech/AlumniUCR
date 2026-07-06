@@ -568,7 +568,7 @@ function MentoriasContent() {
             <a href="https://www.ucr.ac.cr" target="_blank" rel="noopener noreferrer">UCR.ac.cr</a>
           </nav>
           <p className={styles.footerCopy}>
-            © 2025 Alumni UCR. Universidad de Costa Rica.<br />Todos los derechos reservados.
+            © 2026 Alumni UCR. Universidad de Costa Rica.<br />Todos los derechos reservados.
           </p>
         </div>
       </footer>

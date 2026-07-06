@@ -552,7 +552,7 @@ function ProyectosContent() {
             </div>
           </div>
           <div className={styles.footerBottom}>
-            <p className={styles.footerCopy}>© 2025 Fundación Alumni UCR. Diseño estratégico.</p>
+            <p className={styles.footerCopy}>© 2026 Fundación Alumni UCR. Diseño estratégico.</p>
           </div>
         </div>
       </footer>

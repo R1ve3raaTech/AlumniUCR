@@ -676,7 +676,7 @@ export default function RegistroPage() {
 
       <footer className={styles.footer}>
         <AlumniLogo height={34} />
-        <div className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</div>
+        <div className={styles.footerCopy}>© 2026 Alumni UCR. Todos los derechos reservados.</div>
         <div className={styles.footerLinks}>
           <Link href="/terminos#privacidad">Privacidad</Link>
           <Link href="/terminos">Términos</Link>
