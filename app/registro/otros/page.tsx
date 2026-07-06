@@ -144,7 +144,7 @@ export default function OtrosPage() {
 
       <footer className={styles.footer}>
         <AlumniLogo height={32} />
-        <div className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</div>
+        <div className={styles.footerCopy}>© 2026 Alumni UCR. Todos los derechos reservados.</div>
       </footer>
     </div>
   );

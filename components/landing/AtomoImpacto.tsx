@@ -188,12 +188,29 @@ export default function AtomoImpacto({ valores = VALORES_DEFECTO }: { valores?: 
         ctx.fillText(e.o.valor, e.sx, e.sy - r - 8);
       });
 
-      raf = requestAnimationFrame(frame);
+      if (enPantalla) raf = requestAnimationFrame(frame);
     };
-    frame();
+
+    // El átomo solo anima mientras el canvas está en viewport: redibujarlo a
+    // 60 fps durante todo el scroll de la página costaba CPU sin verse.
+    let enPantalla = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting && !enPantalla) {
+          enPantalla = true;
+          raf = requestAnimationFrame(frame);
+        } else if (!e.isIntersecting && enPantalla) {
+          enPantalla = false;
+          cancelAnimationFrame(raf);
+        }
+      },
+      { threshold: 0.05 },
+    );
+    io.observe(cv);
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       ro.disconnect();
       window.removeEventListener('resize', resize);
       mql?.removeEventListener('change', onDpr);

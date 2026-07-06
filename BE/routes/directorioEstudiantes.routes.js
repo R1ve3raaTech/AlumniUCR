@@ -4,6 +4,9 @@ const ctrl = require('../controllers/directorioEstudiantes.controller');
 const autenticarUsuario = require('../middlewares/auth.middleware');
 const exigirRol = require('../middlewares/role.middleware');
 
+// Directorio público de proyectos (sin sesión): tarjetas sin beca/correo.
+router.get('/publico', ctrl.obtenerDirectorioPublico);
+
 // Directorio de estudiantes (lo consultan exalumnos y admin).
 router.get('/', autenticarUsuario, exigirRol(['admin', 'exalumno']), ctrl.obtenerDirectorio);
 

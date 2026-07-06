@@ -423,7 +423,7 @@ export default function AyudaPage() {
         <div className={styles.footerInner}>
           <div>
             <AlumniLogo height={34} />
-            <p className={styles.footerCopy}>© 2025 Alumni UCR. Todos los derechos reservados.</p>
+            <p className={styles.footerCopy}>© 2026 Alumni UCR. Todos los derechos reservados.</p>
           </div>
           <div className={styles.footerLinks}>
             <a href="#">Privacidad</a>

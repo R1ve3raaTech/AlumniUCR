@@ -74,17 +74,17 @@ const enviarCorreoAprobacion = async ({ nombre, correo, rol, aprobarUrl, rechaza
 };
 
 /**
- * Envía al usuario el enlace para restablecer su contraseña.
+ * Envía al usuario el código de verificación para restablecer su contraseña.
  * @param {object} params
  * @param {string} params.correo  Destinatario.
- * @param {string} params.url     Enlace de restablecimiento (con token).
+ * @param {string} params.codigo  Código de 6 dígitos (vigencia ~10-15 min).
  * @returns {Promise<boolean>}
  */
-const enviarCorreoRecuperacion = async ({ correo, url }) => {
+const enviarCorreoRecuperacion = async ({ correo, codigo }) => {
   if (!resend) {
     console.warn(
       '⚠️  RESEND_API_KEY no configurada: no se envió el correo de recuperación. ' +
-        `Restablecer manualmente: ${url}`,
+        `Código de verificación: ${codigo}`,
     );
     return false;
   }
@@ -92,31 +92,31 @@ const enviarCorreoRecuperacion = async ({ correo, url }) => {
   const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
       <h2 style="color:#003445">Restablece tu contraseña</h2>
-      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Alumni UCR.</p>
-      <p style="margin:24px 0">
-        <a href="${url}" style="background:#F34B26;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Restablecer contraseña</a>
+      <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Alumni UCR. Usá este código de verificación en la página de recuperación:</p>
+      <p style="margin:28px 0;text-align:center">
+        <span style="display:inline-block;background:#f2f6f8;border:1px solid #d7e3e9;border-radius:12px;padding:16px 28px;font-size:34px;font-weight:bold;letter-spacing:10px;color:#003445">${codigo}</span>
       </p>
-      <p style="font-size:13px;color:#666">Este enlace expira pronto por seguridad. Si no solicitaste el cambio, ignora este correo: tu contraseña no cambiará.</p>
+      <p style="font-size:13px;color:#666">El código expira en unos 10 minutos por seguridad. Si no solicitaste el cambio, ignorá este correo: tu contraseña no cambiará.</p>
     </div>`;
 
   try {
     const { error } = await resend.emails.send({
       from: REMITENTE,
       to: correo,
-      subject: 'Restablece tu contraseña — Alumni UCR',
+      subject: `${codigo} es tu código para restablecer la contraseña — Alumni UCR`,
       html,
     });
     if (error) {
       console.error('🔴 Error al enviar el correo de recuperación:', error.message || error);
-      // Fallback útil en desarrollo (sandbox de Resend): registrar el enlace.
-      console.warn(`🔗 Enlace de restablecimiento: ${url}`);
+      // Fallback útil en desarrollo (sandbox de Resend): registrar el código.
+      console.warn(`🔑 Código de verificación para ${correo}: ${codigo}`);
       return false;
     }
     console.log(`📧 Correo de recuperación enviado a ${correo}.`);
     return true;
   } catch (err) {
     console.error('🔴 Excepción al enviar el correo de recuperación:', err.message);
-    console.warn(`🔗 Enlace de restablecimiento: ${url}`);
+    console.warn(`🔑 Código de verificación para ${correo}: ${codigo}`);
     return false;
   }
 };
