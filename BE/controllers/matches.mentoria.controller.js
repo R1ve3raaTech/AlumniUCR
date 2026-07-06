@@ -2,6 +2,19 @@
 // Gestiona el ciclo de vida completo de los matches entre exalumnos y estudiantes.
 
 const matchesMentoriaService = require('../services/matchesMentoriaService');
+const { verificarToken } = require('../utils/aprobacionToken');
+
+// Página HTML mínima para las acciones hechas desde el correo (mismo estilo
+// que la aprobación de cuentas).
+const paginaResultado = (titulo, mensaje, color) => `<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${titulo} — Conectando Talento UCR</title></head>
+<body style="font-family:Arial,Helvetica,sans-serif;background:#f6f7fb;margin:0;padding:40px 16px">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.08)">
+    <h1 style="color:${color};font-size:22px;margin:0 0 12px">${titulo}</h1>
+    <p style="color:#444;line-height:1.5;margin:0">${mensaje}</p>
+  </div>
+</body></html>`;
 
 
 // ======================================================
@@ -112,6 +125,53 @@ const aceptarMatch = async (req, res, next) => {
 
 
 // ======================================================
+// GET - ACEPTAR DESDE EL CORREO (enlace firmado, sin sesión)
+// El destinatario del correo de "nueva conexión" acepta con un clic.
+// Rechazar no requiere acción (basta ignorar el correo).
+// ======================================================
+
+const aceptarDesdeCorreo = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { u: idUsuario, token } = req.query;
+
+        if (!id || !idUsuario || !verificarToken(idUsuario, token, `aceptar-match:${id}`)) {
+            return res
+                .status(403)
+                .type('html')
+                .send(paginaResultado('✗ Enlace inválido', 'Este enlace no es válido o fue alterado. Ingresá a la plataforma para gestionar tus conexiones.', '#dc2626'));
+        }
+
+        const match = await matchesMentoriaService.aceptarMatch(id, idUsuario);
+
+        return res
+            .status(200)
+            .type('html')
+            .send(paginaResultado(
+                '✓ ¡Conexión aceptada!',
+                `El match quedó activo (afinidad ${match.score_match ?? '—'}%). Ambas partes recibirán un correo con el contacto del otro para coordinar directamente.`,
+                '#16a34a',
+            ));
+    } catch (error) {
+        if (error.statusCode) {
+            const yaProcesado = error.statusCode === 400;
+            return res
+                .status(error.statusCode)
+                .type('html')
+                .send(paginaResultado(
+                    yaProcesado ? 'Esta solicitud ya fue gestionada' : '✗ No se pudo aceptar',
+                    yaProcesado
+                        ? 'La conexión ya fue aceptada o cerrada anteriormente. Podés ver su estado en tu panel de matches.'
+                        : error.message,
+                    yaProcesado ? '#b45309' : '#dc2626',
+                ));
+        }
+        next(error);
+    }
+};
+
+
+// ======================================================
 // PUT - RECHAZAR (contactado → cerrado)
 // ======================================================
 
@@ -195,6 +255,33 @@ const actualizarMatch = async (req, res, next) => {
     }
 };
 
+// ======================================================
+// GET - EXPLICACIÓN DE MATCH CON IA
+// ======================================================
+
+const obtenerExplicacionIA = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del match es requerido'
+            });
+        }
+
+        const explicacion = await matchesMentoriaService.generarExplicacionIA(id);
+
+        res.status(200).json({
+            success: true,
+            data: { explicacion },
+            message: 'Explicación del match generada correctamente'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 // ======================================================
 // EXPORTAR
@@ -205,7 +292,9 @@ module.exports = {
     obtenerMisMatches,
     contactarMatch,
     aceptarMatch,
+    aceptarDesdeCorreo,
     rechazarMatch,
     obtenerTodosLosMatches,
     actualizarMatch,
+    obtenerExplicacionIA,
 };

@@ -12,6 +12,7 @@
 
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+const { generarToken } = require('../utils/aprobacionToken');
 const {
     enviarCorreoNuevoContacto,
     enviarCorreoMatchActivo,
@@ -19,6 +20,8 @@ const {
 } = require('./email.service');
 
 const TABLA = 'matches_mentoria';
+// Base pública del backend para los enlaces de acción dentro de los correos.
+const BACKEND_URL = process.env.APP_BACKEND_URL || 'http://localhost:5000';
 
 // RF-06: trae nombre/correo/rol de los dos usuarios de un match (exalumno y
 // estudiante) para las notificaciones por correo. Devuelve un mapa por id.
@@ -93,6 +96,14 @@ const calcularScore = (exalumno, estudiante, areasExalumno, areasEstudiante, car
 
 const generarMatchesPorUsuario = async (idUsuario, rol) => {
 
+    // RF-09.1: un usuario suspendido no genera ni aparece en matches.
+    const { data: solicitante } = await supabase
+        .from('usuarios')
+        .select('estado')
+        .eq('id', idUsuario)
+        .maybeSingle();
+    if (solicitante?.estado !== 'activo') return { generados: 0 };
+
     // Cargar datos base según el rol del usuario que completó perfil
     const [
         exalumnosRes,
@@ -105,8 +116,9 @@ const generarMatchesPorUsuario = async (idUsuario, rol) => {
         infoExalumnosRes,
         proyectosRes,
     ] = await Promise.all([
-        supabase.from('usuarios').select('id').eq('id_rol', 2), // exalumnos
-        supabase.from('usuarios').select('id').eq('id_rol', 1), // estudiantes
+        // RF-09.1: los perfiles suspendidos no aparecen en los matches.
+        supabase.from('usuarios').select('id').eq('id_rol', 2).eq('estado', 'activo'), // exalumnos
+        supabase.from('usuarios').select('id').eq('id_rol', 1).eq('estado', 'activo'), // estudiantes
         supabase.from('areas_interes_exalumno').select('id_exalumno, id_area_tematica'),
         supabase.from('areas_interes_proyecto').select('id_proyecto, id_area_tematica'),
         supabase.from('carreras_usuario').select('id_usuario, id_carrera'),
@@ -234,7 +246,7 @@ const obtenerMisMatches = async (idUsuario, rol) => {
             .select(`
                 id, score_match, estado, iniciado_por, resultado, created_at,
                 usuarios!matches_mentoria_id_estudiante_fkey (
-                    id, nombre, correo_electronico
+                    id, nombre, correo_electronico, estado
                 )
             `)
             .eq('id_exalumno', idUsuario)
@@ -246,7 +258,7 @@ const obtenerMisMatches = async (idUsuario, rol) => {
             .select(`
                 id, score_match, estado, iniciado_por, resultado, created_at,
                 usuarios!matches_mentoria_id_exalumno_fkey (
-                    id, nombre, correo_electronico
+                    id, nombre, correo_electronico, estado
                 )
             `)
             .eq('id_estudiante', idUsuario)
@@ -257,7 +269,9 @@ const obtenerMisMatches = async (idUsuario, rol) => {
     const { data, error } = await query;
     if (error) throw mapDbError(error);
 
-    return data;
+    // RF-09.1: si la contraparte fue suspendida después de generarse el match,
+    // el match no se muestra.
+    return (data || []).filter((m) => m.usuarios?.estado === 'activo');
 };
 
 
@@ -311,11 +325,16 @@ const contactarMatch = async (id, idUsuario) => {
         const remitenteId = iniciado_por === 'exalumno' ? match.id_exalumno : match.id_estudiante;
         const destinatario = usuarios[destinatarioId];
         if (destinatario?.correo) {
+            // Enlace firmado para aceptar directamente desde el correo (RF-06).
+            // Rechazar no requiere acción: basta con ignorar el correo.
+            const tokenAceptar = generarToken(destinatarioId, `aceptar-match:${id}`);
+            const aceptarUrl = `${BACKEND_URL}/api/matches-mentoria/${id}/aceptar-correo?u=${destinatarioId}&token=${tokenAceptar}`;
             await enviarCorreoNuevoContacto({
                 nombre_remitente: usuarios[remitenteId]?.nombre,
                 correo_destinatario: destinatario.correo,
                 nombre_destinatario: destinatario.nombre,
                 rol_remitente: iniciado_por,
+                aceptar_url: aceptarUrl,
             });
         }
     } catch (emailErr) {
@@ -482,6 +501,75 @@ const actualizarMatch = async (id, datosActualizar) => {
     return data;
 };
 
+// ======================================================
+// EXPLICACIÓN DEL MATCH CON INTELIGENCIA ARTIFICIAL (IA)
+// ======================================================
+
+const claude = require('../config/claude');
+
+const generarExplicacionIA = async (matchId) => {
+    try {
+        const { data: match, error: errMatch } = await supabase
+            .from(TABLA)
+            .select('*')
+            .eq('id', matchId)
+            .maybeSingle();
+        if (errMatch || !match) throw new Error('Match no encontrado');
+
+        const [exalumnoRes, carrExaRes, proyectoRes, carrEstRes] = await Promise.all([
+            supabase.from('informacion_exalumno').select('*').eq('id_usuario', match.id_exalumno).maybeSingle(),
+            supabase.from('carreras_usuario').select('id_carrera').eq('id_usuario', match.id_exalumno),
+            supabase.from('proyecto_graduacion').select('*').eq('id_estudiante', match.id_estudiante).maybeSingle(),
+            supabase.from('carreras_usuario').select('id_carrera').eq('id_usuario', match.id_estudiante),
+        ]);
+
+        const exalumno = exalumnoRes.data || {};
+        const proyecto = proyectoRes.data || {};
+
+        const idCarrerasExa = (carrExaRes.data || []).map(c => c.id_carrera);
+        const idCarrerasEst = (carrEstRes.data || []).map(c => c.id_carrera);
+
+        const [carrerasExaData, carrerasEstData] = await Promise.all([
+            idCarrerasExa.length > 0 ? supabase.from('carreras').select('nombre').in('id', idCarrerasExa) : Promise.resolve({ data: [] }),
+            idCarrerasEst.length > 0 ? supabase.from('carreras').select('nombre').in('id', idCarrerasEst) : Promise.resolve({ data: [] }),
+        ]);
+
+        const carrerasExalumno = (carrerasExaData.data || []).map(c => c.nombre).join(', ') || 'Carrera no especificada';
+        const carrerasEstudiante = (carrerasEstData.data || []).map(c => c.nombre).join(', ') || 'Carrera no especificada';
+
+        const promptSistema = "Eres un asistente oficial de la Fundación de Exalumnos UCR. Tu tarea es redactar una breve explicación personalizada (un solo párrafo de máximo 3 líneas) en tono profesional y motivador sobre por qué este exalumno (mentor) es un match ideal para guiar el proyecto de graduación de este estudiante. Enfócate en las sinergias entre la experiencia y biografía del exalumno y los objetivos y descripción del proyecto del estudiante.";
+        const promptUsuario = `
+DATOS DEL EXALUMNO (MENTOR):
+- Carrera: ${carrerasExalumno}
+- Cargo/Empresa: ${exalumno.cargo || 'Profesional'} en ${exalumno.empresa || 'UCR'}
+- Biografía Profesional: ${exalumno.biografia || 'Sin biografía disponible'}
+
+DATOS DEL ESTUDIANTE Y SU PROYECTO:
+- Carrera: ${carrerasEstudiante}
+- Título del Proyecto: ${proyecto.titulo_proyecto || 'Proyecto de Graduación'}
+- Descripción del Proyecto: ${proyecto.descripcion || 'Sin descripción disponible'}
+
+Genera la explicación en español (máximo 90 palabras, directo, en un párrafo continuo sin viñetas ni encabezados).
+`;
+
+        const model = process.env.CLAUDE_MODEL || 'claude-sonnet-5';
+        const response = await claude.messages.create({
+            model: model,
+            max_tokens: 250,
+            system: promptSistema,
+            temperature: 0.3,
+            messages: [{ role: 'user', content: promptUsuario }],
+        });
+
+        if (response.content && response.content.length > 0 && response.content[0].text) {
+            return response.content[0].text.trim();
+        }
+        throw new Error('Sin respuesta del servicio de IA');
+    } catch (err) {
+        console.error('Error al generar explicación del match con Claude:', err.message);
+        return 'Recomendado por compatibilidad en áreas temáticas y afinidad profesional para guiar el desarrollo de este proyecto de graduación de la UCR.';
+    }
+};
 
 // ======================================================
 // EXPORTAR
@@ -495,4 +583,5 @@ module.exports = {
     rechazarMatch,
     obtenerTodosLosMatches,
     actualizarMatch,
+    generarExplicacionIA,
 };

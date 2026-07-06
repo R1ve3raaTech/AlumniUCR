@@ -39,6 +39,15 @@ router.put(
     matchesMentoriaController.contactarMatch
 );
 
+// GET /api/matches-mentoria/:id/explicacion-ia
+// Genera una explicación inteligente por IA del match
+router.get(
+    '/:id/explicacion-ia',
+    autenticarUsuario,
+    exigirRol(['estudiante', 'exalumno']),
+    matchesMentoriaController.obtenerExplicacionIA
+);
+
 // PUT /api/matches-mentoria/:id/aceptar
 // Acepta la conexión (contactado → activo)
 router.put(
@@ -46,6 +55,14 @@ router.put(
     autenticarUsuario,
     exigirRol(['estudiante', 'exalumno']),
     matchesMentoriaController.aceptarMatch
+);
+
+// GET /api/matches-mentoria/:id/aceptar-correo?u=<idUsuario>&token=<hmac>
+// Acepta la conexión con un clic desde el correo (enlace firmado, sin sesión).
+// La autenticación es el propio token HMAC ligado al destinatario y al match.
+router.get(
+    '/:id/aceptar-correo',
+    matchesMentoriaController.aceptarDesdeCorreo
 );
 
 // PUT /api/matches-mentoria/:id/rechazar

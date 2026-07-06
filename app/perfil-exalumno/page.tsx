@@ -153,13 +153,18 @@ export default function PerfilExalumnoPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
-        <Link href="/dashboard" className={styles.back}>Volver al panel</Link>
       </header>
 
       <main className={styles.main}>
         <div className={styles.intro}>
           <span className={styles.tag}>Perfil de Exalumno</span>
-          <h1 className={styles.title}>Completa tu perfil</h1>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>Completa tu perfil</h1>
+            <Link href="/dashboard" className={styles.btnVolver}>
+              <span className="material-symbols-outlined">dashboard</span>
+              <span>Volver al panel</span>
+            </Link>
+          </div>
           <p className={styles.subtitle}>
             Tu perfil aparece en el directorio solo cuando está al 100%. Puedes editar
             cualquier campo en cualquier momento.

@@ -2,8 +2,9 @@
 
 // Centro de Matches (estudiante): grid de tarjetas de conexión con datos reales.
 // Los perfiles sugeridos son exalumnos reales del directorio (RF-02) puntuados
-// por afinidad (carrera 30 + áreas 40 + apoyo 30); las solicitudes salen del
-// motor RF-06 (/matches-mentoria/mis-matches).
+// con el algoritmo RF-06 (carrera 30 + áreas 30 + sector↔proyecto 20 + apoyo 20);
+// las solicitudes salen del motor RF-06 (/matches-mentoria/mis-matches) y el
+// botón Conectar crea/usa el match real y dispara el email al exalumno.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,7 +12,7 @@ import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerSugeridos, obtenerMisMatches } from '@/lib/matchesEstudiante';
+import { obtenerSugeridos, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
 
 const APOYO: { k: string; label: string; icon: string }[] = [
   { k: 'mentoria', label: 'Mentoría', icon: 'school' },
@@ -27,11 +28,14 @@ const ESTADO_SOLICITUD: Record<string, { label: string; color: string; barra: st
   activo: { label: 'Conectado', color: 'text-tertiary', barra: 'bg-tertiary', pct: 100 },
 };
 
+// Mismo cálculo que el dashboard: campos obligatorios de RF-03 (información
+// académica, proyecto de graduación y áreas de interés), para que el % de
+// perfil completo sea consistente en todas las pantallas.
 function completitud(p: ReturnType<typeof usePerfilEstudiante>['perfil']): number {
   const campos = [
-    p.nombre, p.apellidos, p.telefono, p.carrera, p.resumen, p.foto,
-    p.proyectoTitulo, p.habilidadesTecnicas,
-    p.experiencias.length ? 'x' : '', p.intereses.length ? 'x' : '',
+    p.carne, p.carrera, p.facultad, p.sede, p.anioIngreso, p.nivel,
+    p.proyectoTitulo, p.proyectoDescripcion, p.areaTematica, p.proyectoTipo,
+    p.proyectoAreas.length ? 'x' : '',
   ];
   return Math.round((campos.filter((c) => String(c).trim()).length / campos.length) * 100);
 }
@@ -47,6 +51,8 @@ export default function MisMatchesPage() {
   const [sugeridos, setSugeridos] = useState<any[]>([]);
   const [misMatches, setMisMatches] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [conectando, setConectando] = useState<string | null>(null);
+  const [modalConexion, setModalConexion] = useState<{ ok: boolean; nombre: string; foto?: string } | null>(null);
 
   useEffect(() => {
     if (!loading && !token) router.replace('/login');
@@ -69,7 +75,22 @@ export default function MisMatchesPage() {
 
   const pct = useMemo(() => completitud(perfil), [perfil]);
   const solicitudes = misMatches.filter((m) => m.estado !== 'sugerido');
-  const interesar = (nombre: string) => notificar(`📨 Registramos tu interés por ${nombre}. Te avisaremos cuando responda.`);
+
+  // Inicia la conexión real (RF-06): crea/usa el match y dispara el email al exalumno.
+  const conectar = async (idExalumno: string, nombre: string, foto?: string) => {
+    if (!token || conectando) return;
+    setConectando(idExalumno);
+    try {
+      await conectarConExalumno(token, idExalumno, misMatches);
+      const actualizados = await obtenerMisMatches(token);
+      setMisMatches(actualizados);
+      setModalConexion({ ok: true, nombre, foto });
+    } catch {
+      setModalConexion({ ok: false, nombre });
+    } finally {
+      setConectando(null);
+    }
+  };
 
   return (
     <StudentShell active="matches">
@@ -85,13 +106,13 @@ export default function MisMatchesPage() {
           </span>
         </section>
 
-        {/* Banner del algoritmo */}
+        {/* Banner del algoritmo (fórmula RF-06) */}
         <section className="flex items-start gap-3 rounded-2xl border border-secondary/20 bg-secondary/5 p-5">
           <span className="material-symbols-outlined mt-0.5 text-secondary">auto_awesome</span>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-secondary">Tus conexiones personalizadas</p>
             <p className="text-sm text-on-surface-variant">
-              El algoritmo calculó tu compatibilidad con cada exalumno según <b>carrera (30 pts)</b>, <b>áreas en común (40 pts)</b> y <b>tipo de apoyo (30 pts)</b>.
+              El algoritmo calculó tu compatibilidad con cada exalumno según <b>carrera (30 pts)</b>, <b>áreas en común (30 pts)</b>, <b>sector ↔ área de tu proyecto (20 pts)</b> y <b>tipo de apoyo (20 pts)</b>.
             </p>
           </div>
         </section>
@@ -144,8 +165,13 @@ export default function MisMatchesPage() {
                   )}
 
                   <div className="mt-auto flex gap-2">
-                    <button type="button" onClick={() => interesar(s.nombre)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-bold text-on-primary transition-colors hover:bg-secondary">
-                      <span className="material-symbols-outlined text-[18px]">diamond</span> Conectar
+                    <button
+                      type="button"
+                      onClick={() => conectar(s.id, s.nombre, s.foto_perfil)}
+                      disabled={conectando === s.id}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-bold text-on-primary transition-colors hover:bg-secondary disabled:opacity-60"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">diamond</span> {conectando === s.id ? 'Enviando…' : 'Conectar'}
                     </button>
                     <button type="button" onClick={() => router.push('/directorio')} title="Ver perfil" aria-label={`Ver perfil de ${s.nombre}`} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-outline-variant text-on-surface-variant transition-colors hover:border-secondary hover:text-secondary">
                       <span className="material-symbols-outlined text-[20px]">person</span>
@@ -187,6 +213,45 @@ export default function MisMatchesPage() {
               })}
             </div>
           </section>
+        )}
+        {/* Modal de resultado de la conexión (RF-06) */}
+        {modalConexion && (
+          <div className="fixed inset-0 z-[120] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal onClick={() => setModalConexion(null)}>
+            <div className="w-full max-w-sm rounded-2xl bg-surface-container-lowest p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              {modalConexion.ok ? (
+                <>
+                  <div className="mx-auto mb-3 grid h-16 w-16 place-items-center overflow-hidden rounded-full border-2 border-tertiary bg-tertiary/10">
+                    {modalConexion.foto
+                      ? <img src={modalConexion.foto} alt={modalConexion.nombre} className="h-full w-full object-cover" />
+                      : <span className="material-symbols-outlined text-3xl text-tertiary">mark_email_read</span>}
+                  </div>
+                  <h3 className="font-headline-md text-lg text-primary">¡Solicitud enviada!</h3>
+                  <p className="mt-2 text-sm text-on-surface-variant">
+                    Le avisamos a <b>{modalConexion.nombre}</b> por correo que querés conectar.
+                    Cuando acepte, ambos van a recibir el contacto del otro para coordinar directamente.
+                  </p>
+                  <p className="mt-2 text-xs text-on-surface-variant">Podés seguir el estado en «Solicitudes Enviadas».</p>
+                </>
+              ) : (
+                <>
+                  <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-error/10">
+                    <span className="material-symbols-outlined text-3xl text-error">error</span>
+                  </div>
+                  <h3 className="font-headline-md text-lg text-primary">No pudimos enviar la solicitud</h3>
+                  <p className="mt-2 text-sm text-on-surface-variant">
+                    Hubo un problema al conectar con <b>{modalConexion.nombre}</b>. Revisá que tu perfil esté completo e intentá de nuevo en un momento.
+                  </p>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => setModalConexion(null)}
+                className="mt-5 w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-on-primary transition-opacity hover:opacity-90"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </StudentShell>

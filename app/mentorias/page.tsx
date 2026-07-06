@@ -7,6 +7,8 @@ import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
+import { obtenerDirectorio } from '@/lib/perfilExalumno';
+import { obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './mentorias.module.css';
@@ -32,85 +34,24 @@ const IClose = () => (<svg {...base}><path d="M18 6 6 18M6 6l12 12" /></svg>);
 // ─── Datos y Roles ────────────────────────────────────────────────────────
 const ROLES_PERMITIDOS = ['alumno', 'estudiante']; // Solo estudiantes/alumnos
 
-const FILTROS = [
-  { key: 'facultad', label: 'Facultad', opciones: ['Todas las Facultades', 'Ingeniería', 'Ciencias Sociales', 'Artes y Letras', 'Ciencias Básicas'] },
-  { key: 'experticia', label: 'Experticia', opciones: ['Cualquier Experticia', 'Liderazgo', 'Software', 'Finanzas', 'Marketing', 'Gestión', 'Negocios', 'Diseño'] },
-  { key: 'experiencia', label: 'Experiencia', opciones: ['Cualquier Experiencia', '1-5 años', '6-10 años', '10+ años'] },
-];
-
+// Mentor real: exalumno del directorio que ofrece mentoría (RF-06 / Journey 2).
 type Mentor = {
-  img: string;
+  id: string;
+  img: string | null;
   nombre: string;
   cargo: string;
-  afinidad: string;
+  score: number | null; // afinidad RF-06 (si el estudiante tiene matches generados)
   tags: string[];
   facultad: string;
-  experticia: string;
-  experiencia: string;
+  sector: string;
 };
 
-const MENTORES: Mentor[] = [
-  {
-    img: '/images/ecosistema-ucr.png',
-    nombre: 'Ing. Carlos Rodríguez',
-    cargo: 'Senior Project Manager @ TechGlobal',
-    afinidad: '98% Afinidad',
-    tags: ['Gestión', 'Liderazgo', 'Software'],
-    facultad: 'Ingeniería',
-    experticia: 'Software',
-    experiencia: '10+ años'
-  },
-  {
-    img: '/images/campus.png',
-    nombre: 'Dra. Elena Mora',
-    cargo: 'Directora de Estrategia @ InnovaCR',
-    afinidad: '92% Afinidad',
-    tags: ['Negocios', 'Economía', 'Startups'],
-    facultad: 'Ciencias Sociales',
-    experticia: 'Negocios',
-    experiencia: '10+ años'
-  },
-  {
-    img: '/images/descarga-1.jpg',
-    nombre: 'MSc. Javier Soto',
-    cargo: 'UX/UI Design Lead @ GlobalPixels',
-    afinidad: '89% Afinidad',
-    tags: ['Diseño', 'Tecnología', 'Artes'],
-    facultad: 'Artes y Letras',
-    experticia: 'Diseño',
-    experiencia: '6-10 años'
-  },
-  {
-    img: '/images/ecosistema-ucr.png',
-    nombre: 'Lic. Ana Quirós',
-    cargo: 'Marketing Lead @ FinTech Latam',
-    afinidad: '85% Afinidad',
-    tags: ['Marketing', 'Finanzas', 'Gestión'],
-    facultad: 'Ciencias Sociales',
-    experticia: 'Marketing',
-    experiencia: '6-10 años'
-  },
-  {
-    img: '/images/campus.png',
-    nombre: 'Dr. Roberto Brenes',
-    cargo: 'Investigador Principal @ UCR',
-    afinidad: '78% Afinidad',
-    tags: ['Investigación', 'Ciencias Básicas'],
-    facultad: 'Ciencias Básicas',
-    experticia: 'Software',
-    experiencia: '10+ años'
-  },
-  {
-    img: '/images/descarga-1.jpg',
-    nombre: 'Ing. Sofía Vargas',
-    cargo: 'CTO @ StartupX',
-    afinidad: '95% Afinidad',
-    tags: ['Liderazgo', 'Software', 'Negocios'],
-    facultad: 'Ingeniería',
-    experticia: 'Software',
-    experiencia: '1-5 años'
-  },
-];
+// Etiqueta del botón "Conectar" según el estado real del match RF-06.
+const ESTADO_BTN: Record<string, string> = {
+  contactado: 'Solicitud enviada',
+  activo: 'Conectado ✓',
+  cerrado: 'Conexión cerrada',
+};
 
 export default function MentoriasPage() {
   return (
@@ -127,8 +68,8 @@ function MentoriasContent() {
   // ─── Estado de Filtros y Paginación ──────────────────────────────────
   const [query, setQuery] = useState('');
   const [facultad, setFacultad] = useState('Todas las Facultades');
-  const [experticia, setExperticia] = useState('Cualquier Experticia');
-  const [experiencia, setExperiencia] = useState('Cualquier Experiencia');
+  const [experticia, setExperticia] = useState('Cualquier Área');
+  const [experiencia, setExperiencia] = useState('Cualquier Sector');
   
   // Paginación y GSAP
   const [isExpanded, setIsExpanded] = useState(false);
@@ -144,9 +85,67 @@ function MentoriasContent() {
   useEffect(() => {
     if (!user || !token) return;
     obtenerPerfil(token)
-      .then((perfil: { rol?: string }) => setRolUsuario(perfil?.rol ?? null))
+      .then((res: any) => {
+        const rol = res?.data?.roles?.nombre?.toLowerCase().trim();
+        setRolUsuario(rol ?? null);
+      })
       .catch(() => setRolUsuario(null));
   }, [user, token]);
+
+  useEffect(() => {
+    if (rolUsuario === 'exalumno') {
+      router.replace('/mentorias/exalumno');
+    }
+  }, [rolUsuario, router]);
+
+  // ─── Mentores reales: directorio de exalumnos que ofrecen mentoría ─────
+  // El directorio es público; si hay sesión de estudiante se cruzan sus
+  // matches RF-06 para mostrar la afinidad real y el estado de conexión.
+  const [mentores, setMentores] = useState<Mentor[]>([]);
+  const [cargandoMentores, setCargandoMentores] = useState(true);
+  const [misMatches, setMisMatches] = useState<any[]>([]);
+  const [estadoConexion, setEstadoConexion] = useState<Record<string, string>>({});
+  const [conectandoId, setConectandoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      try {
+        const [res, mm] = await Promise.all([
+          obtenerDirectorio(),
+          token ? obtenerMisMatches(token).catch(() => []) : Promise.resolve([]),
+        ]);
+        if (!activo) return;
+        const porExalumno = new Map((mm as any[]).map((m: any) => [m.usuarios?.id, m]));
+        const lista: Mentor[] = (res?.data ?? [])
+          .filter((e: any) => e.apoyo?.mentoria)
+          .map((e: any) => {
+            const match = porExalumno.get(e.id);
+            return {
+              id: e.id,
+              img: e.foto_perfil || null,
+              nombre: e.nombre,
+              cargo: [e.carreras?.[0], e.sectores?.[0]].filter(Boolean).join(' · ') || 'Exalumno UCR',
+              score: match?.score_match ?? null,
+              tags: (e.areas ?? []).slice(0, 4),
+              facultad: e.facultades?.[0] || '',
+              sector: e.sectores?.[0] || '',
+            };
+          })
+          .sort((a: Mentor, b: Mentor) => (b.score ?? -1) - (a.score ?? -1));
+        setMentores(lista);
+        setMisMatches(mm as any[]);
+        const estados: Record<string, string> = {};
+        for (const m of mm as any[]) if (m.usuarios?.id) estados[m.usuarios.id] = m.estado;
+        setEstadoConexion(estados);
+      } catch {
+        if (activo) setMentores([]);
+      } finally {
+        if (activo) setCargandoMentores(false);
+      }
+    })();
+    return () => { activo = false; };
+  }, [token]);
 
   // Si cambian los filtros, contraemos la lista
   useEffect(() => {
@@ -351,10 +350,24 @@ function MentoriasContent() {
   const tieneAcceso = !!(user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario));
 
   // ─── Manejadores de Acción ──────────────────────────────────────────
-  const handleCta = (e: React.MouseEvent) => {
-    e.preventDefault();
+  // Conectar real (RF-06): crea/actualiza el match y dispara el correo al
+  // exalumno con el botón de aceptar. Mismo flujo que el Directorio.
+  const conectar = async (m: Mentor) => {
+    if (!tieneAcceso || !token) { abrirModal(); return; }
+    setConectandoId(m.id);
+    try {
+      const match = await conectarConExalumno(token, m.id, misMatches);
+      setEstadoConexion((prev) => ({ ...prev, [m.id]: match.estado === 'sugerido' ? 'contactado' : match.estado }));
+    } catch {
+      setEstadoConexion((prev) => ({ ...prev, [m.id]: 'error' }));
+    } finally {
+      setConectandoId(null);
+    }
+  };
+
+  const verPerfil = () => {
     if (!tieneAcceso) { abrirModal(); return; }
-    // Aquí iría la lógica real si tiene acceso
+    router.push('/directorio'); // Directorio de Exalumnos: perfil completo + filtros
   };
 
   // ─── Guard del buscador: sin acceso → mismo modal de "Cuenta requerida" ─
@@ -362,21 +375,23 @@ function MentoriasContent() {
     if (!tieneAcceso) { e.preventDefault(); abrirModal(); return; }
   };
 
+  // ─── Filtros construidos desde los datos reales ───────────────────────
+  const filtros = [
+    { key: 'facultad', label: 'Facultad', opciones: ['Todas las Facultades', ...Array.from(new Set(mentores.map(m => m.facultad).filter(Boolean))).sort()] },
+    { key: 'experticia', label: 'Área', opciones: ['Cualquier Área', ...Array.from(new Set(mentores.flatMap(m => m.tags))).sort()] },
+    { key: 'experiencia', label: 'Sector', opciones: ['Cualquier Sector', ...Array.from(new Set(mentores.map(m => m.sector).filter(Boolean))).sort()] },
+  ];
+
   const handleTagClick = (tag: string) => {
-    const validExperticia = FILTROS.find(f => f.key === 'experticia')?.opciones.includes(tag);
-    if (validExperticia) {
-      setExperticia(tag);
-    } else {
-      setQuery(tag);
-    }
+    setExperticia(tag);
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
   // ─── Filtrado ───────────────────────────────────────────────────────
-  const mentoresFiltrados = MENTORES.filter(m => {
+  const mentoresFiltrados = mentores.filter(m => {
     if (facultad !== 'Todas las Facultades' && m.facultad !== facultad) return false;
-    if (experticia !== 'Cualquier Experticia' && m.experticia !== experticia && !m.tags.includes(experticia)) return false;
-    if (experiencia !== 'Cualquier Experiencia' && m.experiencia !== experiencia) return false;
+    if (experticia !== 'Cualquier Área' && !m.tags.includes(experticia)) return false;
+    if (experiencia !== 'Cualquier Sector' && m.sector !== experiencia) return false;
     if (query) {
       const q = query.toLowerCase();
       return m.nombre.toLowerCase().includes(q) ||
@@ -442,7 +457,7 @@ function MentoriasContent() {
               />
             </div>
             <div className={styles.selects}>
-              {FILTROS.map((f) => (
+              {filtros.map((f) => (
                 <div key={f.label} className={styles.selectWrap}>
                   <select 
                     className={styles.select} 
@@ -480,40 +495,69 @@ function MentoriasContent() {
             </div>
 
             <div className={styles.grid} ref={gridRef}>
-              {mentoresFiltrados.length === 0 ? (
+              {cargandoMentores ? (
                 <div style={{ gridColumn: '1 / -1', padding: '2rem 0', color: 'var(--ucr-outline)', textAlign: 'center', fontWeight: 'bold' }}>
-                  No se encontraron mentores con esos criterios.
+                  Cargando mentores…
+                </div>
+              ) : mentoresFiltrados.length === 0 ? (
+                <div style={{ gridColumn: '1 / -1', padding: '2rem 0', color: 'var(--ucr-outline)', textAlign: 'center', fontWeight: 'bold' }}>
+                  {mentores.length === 0
+                    ? 'Aún no hay exalumnos ofreciendo mentoría. Volvé pronto.'
+                    : 'No se encontraron mentores con esos criterios.'}
                 </div>
               ) : (
-                mentoresVisibles.map((m) => (
-                  <article key={m.nombre} className={styles.card}>
-                    <div className={styles.cardMedia}>
-                      <img className={styles.cardImg} src={m.img} alt={m.nombre} />
-                      <span className={styles.afinidad}>{m.afinidad}</span>
-                    </div>
-                    <div className={styles.cardBody}>
-                      <h3 className={styles.cardName}>{m.nombre}</h3>
-                      <p className={styles.cardRole}>{m.cargo}</p>
-                      <div className={styles.tags}>
-                        {m.tags.map((t) => (
-                          <span 
-                            key={t} 
-                            className={styles.tag} 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleTagClick(t)}
-                            title={`Filtrar por ${t}`}
+                mentoresVisibles.map((m) => {
+                  const estado = estadoConexion[m.id];
+                  const conectando = conectandoId === m.id;
+                  const etiquetaBtn = conectando ? 'Enviando…' : estado === 'error' ? 'Reintentar' : (ESTADO_BTN[estado] || 'Conectar');
+                  const btnDeshabilitado = conectando || Boolean(ESTADO_BTN[estado]);
+                  return (
+                    <article key={m.id} className={styles.card}>
+                      <div className={styles.cardMedia}>
+                        {m.img ? (
+                          <img className={styles.cardImg} src={m.img} alt={m.nombre} />
+                        ) : (
+                          <div
+                            aria-hidden
+                            style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #004C63, #54BCEB)', color: '#fff', fontSize: '3rem', fontWeight: 800 }}
                           >
-                            {t}
-                          </span>
-                        ))}
+                            {m.nombre.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                          </div>
+                        )}
+                        {m.score != null && <span className={styles.afinidad}>{m.score}% Afinidad</span>}
                       </div>
-                      <div className={styles.cardActions}>
-                        <button type="button" className={styles.ctaPrimary} onClick={handleCta}>Ver Perfil</button>
-                        <button type="button" className={styles.ctaOutline} onClick={handleCta}>Conectar</button>
+                      <div className={styles.cardBody}>
+                        <h3 className={styles.cardName}>{m.nombre}</h3>
+                        <p className={styles.cardRole}>{m.cargo}</p>
+                        <div className={styles.tags}>
+                          {m.tags.map((t) => (
+                            <span
+                              key={t}
+                              className={styles.tag}
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleTagClick(t)}
+                              title={`Filtrar por ${t}`}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                        <div className={styles.cardActions}>
+                          <button type="button" className={styles.ctaPrimary} onClick={verPerfil}>Ver Perfil</button>
+                          <button
+                            type="button"
+                            className={styles.ctaOutline}
+                            onClick={() => conectar(m)}
+                            disabled={btnDeshabilitado}
+                            style={btnDeshabilitado ? { opacity: 0.65, cursor: 'default' } : undefined}
+                          >
+                            {etiquetaBtn}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))
+                    </article>
+                  );
+                })
               )}
             </div>
 
@@ -559,7 +603,7 @@ function MentoriasContent() {
             <a href="https://www.ucr.ac.cr" target="_blank" rel="noopener noreferrer">UCR.ac.cr</a>
           </nav>
           <p className={styles.footerCopy}>
-            © 2025 Alumni UCR. Universidad de Costa Rica.<br />Todos los derechos reservados.
+            © 2026 Alumni UCR. Universidad de Costa Rica.<br />Todos los derechos reservados.
           </p>
         </div>
       </footer>
@@ -596,7 +640,7 @@ function MentoriasContent() {
           <p className={styles.modalText}>
             Para acceder a los perfiles de los mentores y solicitar conexiones necesitas una
             cuenta activa como <strong>Alumno</strong> o <strong>Estudiante</strong> de la
-            red UCR Connect. ¡Regístrate ahora!
+            red Alumni UCR. ¡Regístrate ahora!
           </p>
 
           <div className={styles.modalActions}>

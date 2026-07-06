@@ -1,7 +1,7 @@
 // Servicio del Panel de Administración (RF-08).
 // Cubre:
 //   RF-08.1 — Matches con alerta de seguimiento (> 6 meses activos)
-//   RF-08.2 — Donaciones con recordatorio (> 48 horas pendientes)
+//   RF-08.2 — Donaciones con recordatorio (> 24 horas pendientes)
 //   RF-08.3 — Dashboard de impacto (métricas generales)
 
 const supabase = require('../config/supabase');
@@ -53,13 +53,13 @@ const obtenerMatchesConAlerta = async (filtros = {}) => {
 
 
 // ======================================================
-// RF-08.2 — DONACIONES CON RECORDATORIO (> 48 horas pendientes)
+// RF-08.2 — DONACIONES CON RECORDATORIO (> 24 horas pendientes)
 // ======================================================
 
 const obtenerDonacionesPendientes = async () => {
 
-    const cuarentaYOchoHorasAtras = new Date();
-    cuarentaYOchoHorasAtras.setHours(cuarentaYOchoHorasAtras.getHours() - 48);
+    const veinticuatroHorasAtras = new Date();
+    veinticuatroHorasAtras.setHours(veinticuatroHorasAtras.getHours() - 24);
 
     const { data, error } = await supabase
         .from('donaciones')
@@ -77,16 +77,16 @@ const obtenerDonacionesPendientes = async () => {
 
     return (data || []).map(d => ({
         ...d,
-        alerta_48h: new Date(d.created_at) < cuarentaYOchoHorasAtras,
+        alerta_24h: new Date(d.created_at) < veinticuatroHorasAtras,
     }));
 };
 
 
-// RF-08.2: enviar recordatorio al admin de donaciones pendientes > 48h
+// RF-08.2: enviar recordatorio al admin de donaciones pendientes > 24h
 const enviarRecordatorioDonacionesPendientes = async () => {
 
     const donaciones = await obtenerDonacionesPendientes();
-    const vencidas = donaciones.filter(d => d.alerta_48h);
+    const vencidas = donaciones.filter(d => d.alerta_24h);
 
     if (!vencidas.length) return { recordatorios: 0 };
 

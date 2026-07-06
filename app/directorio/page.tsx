@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import AlumniLogo from '@/components/AlumniLogo';
 import ReportarPerfil from '@/components/ReportarPerfil';
-import DirectorioTalento from '@/components/student/DirectorioTalento';
+import DirectorioExalumnos from '@/components/student/DirectorioExalumnos';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
 import { obtenerDirectorio } from '@/lib/perfilExalumno';
@@ -154,8 +154,8 @@ export default function DirectorioPage() {
     );
   }
 
-  // El estudiante ve su ficha (Directorio de Talento); el exalumno, el directorio.
-  if (rol === 'estudiante') return <DirectorioTalento />;
+  // El estudiante ve el Directorio de Exalumnos (RF-04); el exalumno, el de estudiantes.
+  if (rol === 'estudiante') return <DirectorioExalumnos />;
 
   return (
     <div className={styles.page}>
@@ -301,7 +301,7 @@ export default function DirectorioPage() {
 
       <footer className={styles.footer}>
         <AlumniLogo height={30} />
-        <span className={styles.footerCopy}>© 2025 Alumni UCR. Universidad de Costa Rica.</span>
+        <span className={styles.footerCopy}>© 2026 Alumni UCR. Universidad de Costa Rica.</span>
       </footer>
     </div>
   );

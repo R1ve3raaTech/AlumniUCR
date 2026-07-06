@@ -56,7 +56,7 @@ export default function Footer() {
 
         <div className={styles.footerBottom}>
           <p className={styles.footerCopy}>
-            © 2025 Fundación Alumni UCR. Todos los derechos reservados.
+            © 2026 Fundación Alumni UCR. Todos los derechos reservados.
           </p>
           <div className={styles.footerStatus}>
             <span className={styles.footerStatusDot} />

@@ -17,7 +17,7 @@ router.get(
     adminController.obtenerMatchesAdmin
 );
 
-// RF-08.2 — Donaciones pendientes con alerta 48h
+// RF-08.2 — Donaciones pendientes con alerta 24h
 // GET /api/admin/donaciones/pendientes
 router.get(
     '/donaciones/pendientes',
@@ -26,7 +26,7 @@ router.get(
     adminController.obtenerDonacionesPendientes
 );
 
-// RF-08.2 — Enviar recordatorios de donaciones vencidas > 48h
+// RF-08.2 — Enviar recordatorios de donaciones vencidas > 24h
 // POST /api/admin/donaciones/recordatorio
 router.post(
     '/donaciones/recordatorio',

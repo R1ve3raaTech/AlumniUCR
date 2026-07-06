@@ -39,6 +39,59 @@ const obtenerInformacionPorUsuario = async (idUsuario) => {
 
 
 // ======================================================
+// RECALCULAR PERFIL COMPLETO (RF-03)
+// El flag lo decide el backend a partir del estado real de la base, no el
+// frontend. Requisitos: información académica (carné, año de ingreso, nivel,
+// al menos un tipo de apoyo buscado), al menos una carrera registrada y un
+// proyecto de graduación con mínimo un área de interés.
+// ======================================================
+
+const recalcularPerfilCompleto = async (idUsuario) => {
+    const [infoRes, carrerasRes, proyectoRes] = await Promise.all([
+        supabase.from(TABLA)
+            .select('carne, ano_ingreso, id_nivel_academico, busca_financiamiento, busca_mentoria, busca_empleo, busca_pasantia, perfil_completo')
+            .eq('id_usuario', idUsuario)
+            .maybeSingle(),
+        supabase.from('carreras_usuario')
+            .select('id_carrera')
+            .eq('id_usuario', idUsuario)
+            .limit(1),
+        supabase.from('proyecto_graduacion')
+            .select('id')
+            .eq('id_estudiante', idUsuario)
+            .maybeSingle(),
+    ]);
+
+    const info = infoRes.data;
+    if (!info) return false;
+
+    let areasProyecto = 0;
+    if (proyectoRes.data) {
+        const { count } = await supabase
+            .from('areas_interes_proyecto')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_proyecto', proyectoRes.data.id);
+        areasProyecto = count || 0;
+    }
+
+    const completo = Boolean(
+        info.carne &&
+        info.ano_ingreso &&
+        info.id_nivel_academico &&
+        (info.busca_financiamiento || info.busca_mentoria || info.busca_empleo || info.busca_pasantia) &&
+        (carrerasRes.data || []).length > 0 &&
+        proyectoRes.data &&
+        areasProyecto > 0,
+    );
+
+    if (completo !== info.perfil_completo) {
+        await supabase.from(TABLA).update({ perfil_completo: completo }).eq('id_usuario', idUsuario);
+    }
+    return completo;
+};
+
+
+// ======================================================
 // CREAR INFORMACIÓN DE ESTUDIANTE
 // ======================================================
 
@@ -69,6 +122,9 @@ const crearInformacionEstudiante = async (infoData) => {
 
     if (error) throw mapDbError(error);
 
+    // RF-03: el backend decide el flag según el estado real del perfil.
+    await recalcularPerfilCompleto(infoData.id_usuario).catch(() => {});
+
     return data;
 };
 
@@ -89,6 +145,9 @@ const actualizarInformacionEstudiante = async (idUsuario, infoData) => {
         .single();
 
     if (error) throw mapDbError(error);
+
+    // RF-03: el backend decide el flag según el estado real del perfil.
+    await recalcularPerfilCompleto(idUsuario).catch(() => {});
 
     return data;
 };
@@ -193,6 +252,7 @@ module.exports = {
     crearInformacionEstudiante,
     actualizarInformacionEstudiante,
     eliminarInformacionEstudiante,
+    recalcularPerfilCompleto,
     obtenerEstudiantesBuscanEmpleo,
     obtenerEstudiantesBuscanPasantia,
     obtenerEstudiantesBuscanMentoria,

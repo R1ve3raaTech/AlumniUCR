@@ -18,16 +18,19 @@ interface Orbita {
   phase: number; trail: { x: number; y: number }[];
 }
 
-const ORBITAS: Orbita[] = [
-  { label: 'Conexiones', valor: '+1200', color: '#54BCEB', radius: 150, speed: 1.0, tiltX: 18, tiltZ: 0, phase: 0, trail: [] },
-  { label: 'Éxito de Match', valor: '85%', color: '#007D67', radius: 120, speed: 1.35, tiltX: 70, tiltZ: 35, phase: 1.2, trail: [] },
-  { label: 'Mentores', valor: '450', color: '#FFC72C', radius: 190, speed: 0.8, tiltX: 115, tiltZ: -25, phase: 2.4, trail: [] },
-  { label: 'Proyectos Activos', valor: '+50', color: '#F34B26', radius: 165, speed: 1.1, tiltX: 50, tiltZ: 75, phase: 3.6, trail: [] },
+// Layout fijo del átomo (radio/color/inclinación); el texto de cada órbita
+// (`valor`) se recibe por props para reflejar /api/stats/publicas en vivo.
+const ORBITAS_BASE: Omit<Orbita, 'valor' | 'trail'>[] = [
+  { label: 'Conexiones', color: '#54BCEB', radius: 150, speed: 1.0, tiltX: 18, tiltZ: 0, phase: 0 },
+  { label: 'Éxito de Match', color: '#007D67', radius: 120, speed: 1.35, tiltX: 70, tiltZ: 35, phase: 1.2 },
+  { label: 'Mentores', color: '#FFC72C', radius: 190, speed: 0.8, tiltX: 115, tiltZ: -25, phase: 2.4 },
+  { label: 'Proyectos Activos', color: '#F34B26', radius: 165, speed: 1.1, tiltX: 50, tiltZ: 75, phase: 3.6 },
 ];
+const VALORES_DEFECTO = ['+1200', '85%', '450', '+50'];
 
 // Radio máximo proyectado (la órbita más grande con la perspectiva al frente),
 // para autoajustar el átomo al canvas y que ninguna órbita se corte.
-const MAXR = Math.max(...ORBITAS.map((o) => o.radius)) * 1.2;
+const MAXR = Math.max(...ORBITAS_BASE.map((o) => o.radius)) * 1.2;
 const MARGEN = 30; // espacio para electrón + etiqueta (menor = átomo más grande)
 
 type P3 = { x: number; y: number; z: number };
@@ -37,7 +40,7 @@ const rotY = (p: P3, a: number): P3 => { const c = Math.cos(a), s = Math.sin(a);
 const rotZ = (p: P3, a: number): P3 => { const c = Math.cos(a), s = Math.sin(a); return { x: p.x * c - p.y * s, y: p.x * s + p.y * c, z: p.z }; };
 const hexA = (hex: string, a: number) => { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
 
-export default function AtomoImpacto() {
+export default function AtomoImpacto({ valores = VALORES_DEFECTO }: { valores?: string[] }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -47,7 +50,7 @@ export default function AtomoImpacto() {
     if (!ctx) return;
 
     let cx = 0, cy = 0, raf = 0, t = 0, spin = 0, fit = 1;
-    const orbs = ORBITAS.map((o) => ({ ...o, trail: [] as { x: number; y: number }[] }));
+    const orbs = ORBITAS_BASE.map((o, i) => ({ ...o, valor: valores[i] ?? VALORES_DEFECTO[i], trail: [] as { x: number; y: number }[] }));
 
     // Logo Alumni UCR como núcleo central
     const logo = new Image();
@@ -185,17 +188,34 @@ export default function AtomoImpacto() {
         ctx.fillText(e.o.valor, e.sx, e.sy - r - 8);
       });
 
-      raf = requestAnimationFrame(frame);
+      if (enPantalla) raf = requestAnimationFrame(frame);
     };
-    frame();
+
+    // El átomo solo anima mientras el canvas está en viewport: redibujarlo a
+    // 60 fps durante todo el scroll de la página costaba CPU sin verse.
+    let enPantalla = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting && !enPantalla) {
+          enPantalla = true;
+          raf = requestAnimationFrame(frame);
+        } else if (!e.isIntersecting && enPantalla) {
+          enPantalla = false;
+          cancelAnimationFrame(raf);
+        }
+      },
+      { threshold: 0.05 },
+    );
+    io.observe(cv);
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       ro.disconnect();
       window.removeEventListener('resize', resize);
       mql?.removeEventListener('change', onDpr);
     };
-  }, []);
+  }, [valores]);
 
   return <canvas ref={ref} className={styles.atomoCanvas} aria-hidden />;
 }

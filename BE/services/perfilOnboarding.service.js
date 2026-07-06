@@ -28,6 +28,23 @@ const guardar = async (idUsuario, datos) => {
     .select('datos')
     .single();
   if (error) throw mapDbError(error);
+
+  // Sincroniza el nombre con la tabla usuarios: es la fuente que usan los
+  // correos, el directorio y los matches. Sin esto, el nombre editado en el
+  // onboarding queda solo en el frontend y el resto del sistema muestra el
+  // nombre del registro original.
+  const nombreCompleto = [datos?.nombre, datos?.apellidos]
+    .map((s) => String(s || '').trim())
+    .filter(Boolean)
+    .join(' ');
+  if (nombreCompleto) {
+    const { error: errNombre } = await supabase
+      .from('usuarios')
+      .update({ nombre: nombreCompleto })
+      .eq('id', idUsuario);
+    if (errNombre) console.warn('⚠️ No se pudo sincronizar el nombre en usuarios:', errNombre.message);
+  }
+
   return data?.datos ?? datos;
 };
 

@@ -1,12 +1,12 @@
-/* ════════════════════════════════════════════════════════════════════
-   Landing público de UCR Connect — adaptación del diseño Stitch a CSS
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Landing pÃºblico de Alumni UCR â€” adaptaciÃ³n del diseÃ±o Stitch a CSS
    Modules. Todos los colores/fuentes vienen de los tokens --ucr-* y
    --font-* definidos en globals.css, para editarlos desde un solo lugar.
-   Responsive: pensado para escritorio y móviles (mobile-first en los
+   Responsive: pensado para escritorio y mÃ³viles (mobile-first en los
    breakpoints inferiores).
-   ════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ─── Base ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .landing {
   background: var(--ucr-surface);
   color: var(--ucr-on-surface);
@@ -33,7 +33,7 @@
   padding: 0 clamp(1.25rem, 4vw, 64px);
 }
 
-/* Helpers de tipografía */
+/* Helpers de tipografÃ­a */
 .display {
   font-size: clamp(2.6rem, 1.5rem + 4.5vw, 5.5rem);
   font-weight: 800;
@@ -50,7 +50,7 @@
   font-weight: 700;
 }
 
-/* Línea de acento bajo los títulos */
+/* LÃ­nea de acento bajo los tÃ­tulos */
 .accentBar {
   width: 6rem;
   height: 0.5rem;
@@ -58,7 +58,7 @@
   margin-top: 1rem;
 }
 
-/* ─── Botones ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Botones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -101,7 +101,7 @@
   background: rgba(84, 188, 235, 0.15);
 }
 
-/* Botón sólido grande (CTA final) */
+/* BotÃ³n sÃ³lido grande (CTA final) */
 .btnSolid {
   background: var(--ucr-celeste);
   color: var(--brand-blanco);
@@ -114,7 +114,7 @@
   transform: scale(1.04);
 }
 
-/* ─── Texturas decorativas ────────────────────────────────────────── */
+/* â”€â”€â”€ Texturas decorativas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .halftone {
   background-image: radial-gradient(var(--ucr-celeste) 1px, transparent 0);
   background-size: 12px 12px;
@@ -127,14 +127,15 @@
   opacity: 0.08;
 }
 
-/* ─── Navbar ──────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 50;
   width: 100%;
-  background: rgba(252, 249, 248, 0.95);
-  backdrop-filter: blur(10px);
+  /* Fondo sólido: el backdrop-filter obligaba a re-desenfocar el contenido
+     bajo el navbar en cada frame de scroll y causaba tirones en PC. */
+  background: #fcf9f8;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
@@ -218,18 +219,34 @@
 .navToggle {
   display: none;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 5px;
-  background: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
   border: none;
   cursor: pointer;
-  padding: 0.4rem;
+  background: #edf0f2;
+  box-shadow:
+    6px 6px 14px rgba(0, 40, 55, 0.18),
+    -5px -5px 11px rgba(255, 255, 255, 0.92);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.navToggle:active {
+  transform: scale(0.93);
+  box-shadow:
+    inset 4px 4px 10px rgba(0, 40, 55, 0.16),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.85);
 }
 
 .navToggle span {
-  width: 24px;
-  height: 2px;
+  width: 22px;
+  height: 2.5px;
   background: var(--ucr-primary);
-  border-radius: 2px;
+  border-radius: 4px;
+  transition: transform 0.28s ease, opacity 0.2s ease, background 0.2s ease;
 }
 
 .navSearchForm {
@@ -286,7 +303,7 @@
   height: 16px;
 }
 
-/* ─── Logo ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brandLogo {
   display: inline-flex;
   align-items: center;
@@ -323,7 +340,7 @@
   color: var(--brand-blanco);
 }
 
-/* ─── Hero ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .hero {
   position: relative;
   min-height: 85vh;
@@ -444,6 +461,32 @@
   font-weight: 800;
 }
 
+/* â”€â”€ Word highlight animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.wordHighlightWrap {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.wordHighlightBar {
+  position: absolute;
+  inset: -4px -8px;
+  background: var(--brand-naranja);
+  border-radius: 6px;
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.wordHighlightText {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  display: inline-block;
+}
+
 .heroText {
   color: rgba(255, 255, 255, 0.9);
   font-size: clamp(1.15rem, 1rem + 0.8vw, 1.4rem);
@@ -462,7 +505,7 @@
 
 
 
-/* ─── Secciones genéricas ─────────────────────────────────────────── */
+/* â”€â”€â”€ Secciones genÃ©ricas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .section {
   padding: clamp(4rem, 3rem + 4vw, 6rem) 0;
   position: relative;
@@ -509,37 +552,46 @@
   max-width: 28rem;
 }
 
-/* ─── Slider de proyectos destacados ──────────────────────────────── */
+/* â”€â”€â”€ Slider de proyectos destacados â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sliderControls {
   display: flex;
   gap: 1rem;
 }
 
 .sliderBtn {
-  width: 3rem;
-  height: 3rem;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--ucr-celeste);
-  color: var(--ucr-celeste);
-  background: transparent;
+  border: none;
+  color: var(--ucr-primary);
+  background: #edf0f2;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  box-shadow:
+    7px 7px 16px rgba(0, 40, 55, 0.18),
+    -5px -5px 12px rgba(255, 255, 255, 0.94);
+  transition: box-shadow 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
 .sliderBtn:hover {
-  background: var(--ucr-celeste);
-  color: var(--brand-blanco);
+  color: var(--ucr-celeste);
+  box-shadow:
+    5px 5px 11px rgba(0, 40, 55, 0.18),
+    -3px -3px 8px rgba(255, 255, 255, 0.88);
 }
 
 .sliderBtn:active {
-  transform: scale(0.95);
+  transform: scale(0.93);
+  box-shadow:
+    inset 5px 5px 11px rgba(0, 40, 55, 0.16),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.88);
 }
 
 .sliderBtn svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .sliderViewport {
@@ -662,7 +714,7 @@
   background: var(--ucr-celeste);
 }
 
-/* ─── Métricas de impacto ─────────────────────────────────────────── */
+/* â”€â”€â”€ MÃ©tricas de impacto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -691,7 +743,7 @@
   margin-top: 0.5rem;
 }
 
-/* ─── Proyectos de graduación (grid) ──────────────────────────────── */
+/* â”€â”€â”€ Proyectos de graduaciÃ³n (grid) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .gradFrame {
   border: 1px solid rgba(0, 52, 69, 0.2);
   padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
@@ -813,7 +865,7 @@
   color: var(--brand-blanco);
 }
 
-/* ─── Historias de éxito (testimonios) ────────────────────────────── */
+/* â”€â”€â”€ Historias de Ã©xito (testimonios) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .testiSection {
   padding-top: clamp(2rem, 1rem + 2vw, 3rem);
   padding-bottom: 8rem;
@@ -833,8 +885,8 @@
 
 .testiCard {
   position: relative;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
+  /* Sin backdrop-filter (costoso al scrollear); se compensa con más opacidad. */
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(84, 188, 235, 0.2);
   padding: 2.5rem;
 }
@@ -889,7 +941,7 @@
   line-height: 1.7;
 }
 
-/* ─── CTA final ───────────────────────────────────────────────────── */
+/* â”€â”€â”€ CTA final â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ctaFinal {
   text-align: center;
   max-width: 1000px;
@@ -922,7 +974,7 @@
   font-weight: 700;
 }
 
-/* ─── Footer ──────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .footer {
   background: var(--ucr-primary);
   color: var(--brand-blanco);
@@ -948,17 +1000,32 @@
 }
 
 .footerSocial a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
   color: var(--ucr-celeste);
-  transition: opacity 0.2s ease;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.35),
+    -2px -2px 6px rgba(255, 255, 255, 0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
 .footerSocial a:hover {
-  opacity: 0.7;
+  opacity: 1;
+  color: #ffffff;
+  transform: translateY(-3px);
+  box-shadow:
+    2px 2px 6px rgba(0, 0, 0, 0.4),
+    -1px -1px 4px rgba(255, 255, 255, 0.08);
 }
 
 .footerSocial svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .footerColTitle {
@@ -1044,7 +1111,7 @@
   50% { opacity: 0.4; }
 }
 
-/* ─── Animación de entrada (GSAP pone opacity:1) ──────────────────── */
+/* â”€â”€â”€ AnimaciÃ³n de entrada (GSAP pone opacity:1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .animItem {
   opacity: 0;
 }
@@ -1055,11 +1122,11 @@
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RESPONSIVE
-   ════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* Tablets / laptops pequeñas */
+/* Tablets / laptops pequeÃ±as */
 @media (max-width: 1024px) {
   .navLinks {
     gap: 1.25rem;
@@ -1108,7 +1175,7 @@
   }
 
   .heroImageWrap {
-    display: none; /* en móvil destacan el video y el texto */
+    display: none; /* en mÃ³vil destacan el video y el texto */
   }
 
   .testiGrid {
@@ -1135,7 +1202,7 @@
   }
 }
 
-/* Móviles */
+/* MÃ³viles */
 @media (max-width: 620px) {
   .heroTitle {
     padding: 1.25rem;
@@ -1191,38 +1258,41 @@
   }
 }
 
-/* Móviles pequeños */
+/* MÃ³viles pequeÃ±os */
 @media (max-width: 380px) {
   .metrics {
     grid-template-columns: 1fr;
   }
 }
 
-/* ─── Botón flotante "Volver al inicio" ───────────────────────────────
-   Solo visible en las secciones proyectos / impacto / historias. Sube
-   al hero con scroll suave. Comparte la identidad de .navCta (celeste). */
+/* â”€â”€â”€ BotÃ³n flotante "Volver al inicio" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Visible siempre que el usuario no estÃ© en el tope de la landing. Sube
+   al hero con scroll suave. Comparte la identidad de .navCta (celeste).
+   A la izquierda para no chocar con la mascota IA (esquina derecha). */
 .scrollTop {
   position: fixed;
-  right: clamp(1rem, 3vw, 2.5rem);
+  left: clamp(1rem, 3vw, 2.5rem);
   bottom: clamp(1rem, 3vw, 2.5rem);
   z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  background: var(--ucr-celeste);
-  color: var(--brand-blanco);
+  width: 3.5rem;
+  height: 3.5rem;
+  background: #edf0f2;
+  color: var(--ucr-primary);
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 12px 28px -8px rgba(0, 52, 69, 0.45);
+  box-shadow:
+    8px 8px 18px rgba(0, 52, 69, 0.22),
+    -6px -6px 13px rgba(255, 255, 255, 0.95);
   /* Oculto por defecto: no interfiere hasta entrar en las secciones. */
   opacity: 0;
   visibility: hidden;
   transform: translateY(16px);
   transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease,
-    background-color 0.2s ease;
+    box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .scrollTopVisible {
@@ -1232,8 +1302,18 @@
 }
 
 .scrollTop:hover {
-  background: var(--ucr-secondary);
+  color: var(--ucr-celeste);
   transform: translateY(-3px);
+  box-shadow:
+    4px 4px 12px rgba(0, 52, 69, 0.18),
+    -3px -3px 8px rgba(255, 255, 255, 0.88);
+}
+
+.scrollTop:active {
+  transform: scale(0.93);
+  box-shadow:
+    inset 4px 4px 8px rgba(0, 52, 69, 0.15),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.82);
 }
 
 .scrollTopIcon {
@@ -1251,9 +1331,9 @@
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   Sección Matching estudiantes ↔ exalumnos
-   ════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SecciÃ³n Matching estudiantes â†” exalumnos
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .matchHeader {
   text-align: center;
   margin-bottom: 0.5rem;
@@ -1273,7 +1353,7 @@
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
 }
 
-/* ─── Carrusel coverflow (efecto volante) ─────────────────────────── */
+/* â”€â”€â”€ Carrusel coverflow (efecto volante) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .coverflow {
   position: relative;
   margin-top: 2.5rem;
@@ -1315,7 +1395,7 @@
 
 .cfImgWrap { position: relative; height: 298px; overflow: hidden; }
 
-/* Degradé sutil para que el tag/score/badge se lean sobre cualquier imagen */
+/* DegradÃ© sutil para que el tag/score/badge se lean sobre cualquier imagen */
 .cfImgWrap::after {
   content: '';
   position: absolute;
@@ -1382,7 +1462,7 @@
   border-radius: 999px;
   box-shadow: 0 4px 12px rgba(0, 31, 42, 0.3);
 }
-/* Badge "tipo de apoyo" (Pasantía / TFG / STC) — esquina superior derecha */
+/* Badge "tipo de apoyo" (PasantÃ­a / TFG / STC) â€” esquina superior derecha */
 .cfApoyo {
   position: absolute;
   z-index: 2;
@@ -1437,16 +1517,30 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 40;
-  width: 3rem; height: 3rem; border-radius: 50%;
-  background: var(--brand-blanco);
-  border: 1px solid var(--ucr-outline-variant);
+  width: 3.25rem; height: 3.25rem; border-radius: 50%;
+  background: #edf0f2;
+  border: none;
   color: var(--ucr-primary);
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 31, 42, 0.18);
-  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+  box-shadow:
+    7px 7px 16px rgba(0, 31, 42, 0.18),
+    -5px -5px 12px rgba(255, 255, 255, 0.94);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
-.cfArrow:hover { transform: translateY(-50%) scale(1.1); background: var(--ucr-primary); color: #fff; }
+.cfArrow:hover {
+  transform: translateY(-50%) scale(1.08);
+  color: var(--ucr-celeste);
+  box-shadow:
+    5px 5px 12px rgba(0, 31, 42, 0.2),
+    -4px -4px 9px rgba(255, 255, 255, 0.9);
+}
+.cfArrow:active {
+  transform: translateY(-50%) scale(0.94);
+  box-shadow:
+    inset 5px 5px 11px rgba(0, 31, 42, 0.16),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.88);
+}
 .cfArrowLeft { left: 0; }
 .cfArrowRight { right: 0; }
 .cfArrow svg { width: 20px; height: 20px; }
@@ -1499,13 +1593,13 @@
   .cfArrowRight { right: -0.5rem; }
 }
 
-/* Sección Proyectos de Graduación: mismo gris que Matching + encabezado más arriba */
+/* SecciÃ³n Proyectos de GraduaciÃ³n: mismo gris que Matching + encabezado mÃ¡s arriba */
 .gradSection { background: #d5dde1; padding-top: clamp(2rem, 1rem + 2vw, 3rem); }
 
-/* ════════════════════════════════════════════════════════════════════
-   FONDO · Sección Matching (BLOQUE APARTE). Tapiz/textura removido: queda
-   sólo el color de fondo.
-   ════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   FONDO Â· SecciÃ³n Matching (BLOQUE APARTE). Tapiz/textura removido: queda
+   sÃ³lo el color de fondo.
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .matchTapiz {
   position: relative;
   background-color: #d5dde1;
@@ -1515,12 +1609,12 @@
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85), 0 2px 10px rgba(213, 221, 225, 0.9);
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   SECCIÓN IMPACTO (BLOQUE APARTE) — estructura "objeto + tarjetas":
-   IZQUIERDA: átomo 3D sobre degradé suave de marca.
-   DERECHA: grid de tarjetas escalonadas (4 métricas) con ícono + título +
-   valor + descripción. Para quitar el átomo: borrá .atomBox de Impacto.tsx.
-   ════════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SECCIÃ“N IMPACTO (BLOQUE APARTE) â€” estructura "objeto + tarjetas":
+   IZQUIERDA: Ã¡tomo 3D sobre degradÃ© suave de marca.
+   DERECHA: grid de tarjetas escalonadas (4 mÃ©tricas) con Ã­cono + tÃ­tulo +
+   valor + descripciÃ³n. Para quitar el Ã¡tomo: borrÃ¡ .atomBox de Impacto.tsx.
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .impactoFull {
   position: relative;
   overflow: hidden;
@@ -1532,7 +1626,7 @@
   background: #ffffff;
 }
 
-/* Panel izquierdo: el átomo sobre fondo blanco (sin degradé) */
+/* Panel izquierdo: el Ã¡tomo sobre fondo blanco (sin degradÃ©) */
 .impactoLeft {
   position: relative;
   overflow: hidden;
@@ -1549,11 +1643,11 @@
   gap: 1.6rem;
   padding: 3rem clamp(1.5rem, 4vw, 4rem);
 }
-/* Encabezado con el MISMO estilo que Matching (título + accentBar + subtítulo) */
+/* Encabezado con el MISMO estilo que Matching (tÃ­tulo + accentBar + subtÃ­tulo) */
 .impactoHead { text-align: center; margin-bottom: 0.5rem; }
 .impactoHead .accentBar { margin-left: auto; margin-right: auto; }
 
-/* Grid 2×2: las 4 tarjetas con el MISMO ancho y alto (filas iguales) */
+/* Grid 2Ã—2: las 4 tarjetas con el MISMO ancho y alto (filas iguales) */
 .apiCols {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1576,15 +1670,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   margin-bottom: 0.9rem;
   color: var(--c);
-  background: color-mix(in srgb, var(--c) 15%, #ffffff);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 22%, transparent);
+  background: color-mix(in srgb, var(--c) 8%, #edf0f2);
+  box-shadow:
+    7px 7px 16px color-mix(in srgb, var(--c) 28%, rgba(0, 0, 0, 0.12)),
+    -5px -5px 12px rgba(255, 255, 255, 0.94);
 }
-.apiIcon svg { width: 24px; height: 24px; }
+.apiIcon svg { width: 28px; height: 28px; }
 .apiTitle {
   display: flex;
   align-items: baseline;
@@ -1608,12 +1704,12 @@
   .apiCols { grid-template-columns: 1fr; grid-template-rows: auto; }
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   MATCHING · layout "info + showcase" (BLOQUE APARTE).
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MATCHING Â· layout "info + showcase" (BLOQUE APARTE).
    Izquierda: info + leyenda de puntajes. Derecha: 2 columnas de tarjetas-
-   perfil (7×16 cm) que bajan en marquee escalonado, con máscara circular
-   difuminada en los bordes para el efecto de aparición.
-   ════════════════════════════════════════════════════════════════════ */
+   perfil (7Ã—16 cm) que bajan en marquee escalonado, con mÃ¡scara circular
+   difuminada en los bordes para el efecto de apariciÃ³n.
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .imLayout {
   display: grid;
   grid-template-columns: minmax(280px, 0.82fr) 1fr;
@@ -1643,7 +1739,7 @@
 }
 .imLegendDot { width: 0.95rem; height: 0.95rem; border-radius: 50%; background: var(--ucr-celeste); flex-shrink: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--ucr-celeste) 22%, transparent); }
 
-/* Showcase: 2 columnas con marquee + máscara circular difuminada */
+/* Showcase: 2 columnas con marquee + mÃ¡scara circular difuminada */
 .imShowcase {
   position: relative;
   height: min(86vh, 760px);
@@ -1661,7 +1757,7 @@
 @keyframes imScrollDown { from { transform: translateY(-50%); } to { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .imColumn { animation: none; } }
 
-/* Tarjeta-perfil (7 cm × 16 cm) */
+/* Tarjeta-perfil (7 cm Ã— 16 cm) */
 .imProfile {
   flex-shrink: 0;
   width: 7cm;
@@ -1691,12 +1787,14 @@
 .imProyName { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.82rem; font-weight: 700; color: var(--ucr-primary); }
 .imProyName svg { width: 0.95rem; height: 0.95rem; flex-shrink: 0; }
 .imTags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: auto; }
-.imTag { font-size: 0.66rem; font-weight: 700; color: var(--ucr-primary); background: color-mix(in srgb, var(--ucr-celeste) 18%, #fff); padding: 0.22rem 0.5rem; border-radius: 7px; }
+.imTag { font-size: 0.66rem; font-weight: 700; color: var(--ucr-primary); background: #edf0f2; padding: 0.26rem 0.6rem; border-radius: 999px; box-shadow: 2px 2px 5px rgba(0, 31, 42, 0.1), -1px -1px 4px rgba(255, 255, 255, 0.88); }
 .imActions { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding-top: 0.3rem; }
-.imAct { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--ucr-outline-variant); background: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ucr-on-surface-variant); transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease; }
-.imAct:hover { transform: translateY(-2px); }
-.imActLike { background: var(--brand-esmeralda); border-color: var(--brand-esmeralda); color: #fff; width: 3rem; height: 3rem; }
-.imAct svg { width: 1.1rem; height: 1.1rem; }
+.imAct { width: 2.75rem; height: 2.75rem; border-radius: 50%; border: none; background: #edf0f2; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ucr-on-surface-variant); box-shadow: 6px 6px 14px rgba(0, 31, 42, 0.16), -5px -5px 10px rgba(255, 255, 255, 0.92); transition: box-shadow 0.18s ease, transform 0.15s ease, color 0.2s ease; }
+.imAct:hover { transform: translateY(-2px); color: var(--ucr-primary); box-shadow: 5px 5px 11px rgba(0, 31, 42, 0.17), -4px -4px 8px rgba(255, 255, 255, 0.88); }
+.imAct:active { transform: scale(0.91); box-shadow: inset 5px 5px 10px rgba(0, 31, 42, 0.15), inset -4px -4px 8px rgba(255, 255, 255, 0.86); }
+.imActLike { background: var(--brand-esmeralda); color: #fff; width: 3.25rem; height: 3.25rem; box-shadow: 6px 6px 16px rgba(0, 76, 99, 0.38), -3px -3px 8px rgba(255, 255, 255, 0.18); }
+.imActLike:hover { color: #fff; box-shadow: 5px 5px 13px rgba(0, 76, 99, 0.45), -2px -2px 6px rgba(255, 255, 255, 0.15); }
+.imAct svg { width: 1.15rem; height: 1.15rem; }
 
 @media (max-width: 920px) {
   .imLayout { grid-template-columns: 1fr; }
@@ -1711,10 +1809,10 @@
   .imColB { display: none; }
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   MISIÓN FUNDACIÓN · sección oscura con bloques alternados (texto + imagen
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MISIÃ“N FUNDACIÃ“N Â· secciÃ³n oscura con bloques alternados (texto + imagen
    con badge), bloque de equipo/soporte. (BLOQUE APARTE).
-   ════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .mfSection {
   background: linear-gradient(180deg, #0a2a38 0%, #061a23 100%);
   color: #e7eef1;
@@ -1733,7 +1831,7 @@
 
 .mfMedia { position: relative; }
 .mfMedia img { width: 100%; height: clamp(240px, 28vw, 350px); object-fit: cover; border-radius: 18px; display: block; box-shadow: 0 34px 64px -26px rgba(0, 0, 0, 0.65); }
-.mfBadge { position: absolute; right: -0.6rem; bottom: -0.9rem; display: inline-flex; align-items: center; gap: 0.6rem; background: #fff; color: #0a2a38; font-weight: 700; font-size: 0.98rem; padding: 0.72rem 1.15rem; border-radius: 13px; box-shadow: 0 18px 36px -14px rgba(0, 0, 0, 0.55); }
+.mfBadge { position: absolute; right: -0.6rem; bottom: -0.9rem; display: inline-flex; align-items: center; gap: 0.6rem; background: #edf0f2; color: #0a2a38; font-weight: 700; font-size: 0.98rem; padding: 0.72rem 1.15rem; border-radius: 999px; box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.14), -4px -4px 10px rgba(255, 255, 255, 0.9); }
 .mfBadge svg { width: 1.35rem; height: 1.35rem; color: var(--brand-esmeralda); flex-shrink: 0; }
 .mfRowRev .mfBadge { right: auto; left: -0.6rem; }
 
@@ -1749,4 +1847,221 @@
   .mfMedia { margin-bottom: 1.2rem; }
   .mfBadge { right: 1rem; bottom: -0.9rem; }
   .mfRowRev .mfBadge { left: 1rem; right: auto; }
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ICONOS RESPONSIVE Â· Mejoras estÃ©ticas para mobile y tablet.
+   Garantiza touch targets â‰¥ 44 px, mayor prominencia visual y
+   coherencia de escala en viewports angostos.
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* â”€â”€ Hamburguesa (Navbar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 860px) {
+  /* Separar el botÃ³n UNETE del hamburger */
+  .navToggle {
+    margin-left: 0.75rem;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: #edf0f2;
+    box-shadow:
+      7px 7px 16px rgba(0, 40, 55, 0.2),
+      -5px -5px 12px rgba(255, 255, 255, 0.94);
+  }
+
+  .navToggle:hover {
+    box-shadow:
+      5px 5px 12px rgba(0, 40, 55, 0.22),
+      -4px -4px 9px rgba(255, 255, 255, 0.9);
+  }
+
+  .navToggle:active {
+    box-shadow:
+      inset 5px 5px 11px rgba(0, 40, 55, 0.18),
+      inset -4px -4px 8px rgba(255, 255, 255, 0.88);
+  }
+
+  .navToggle span {
+    width: 22px;
+    height: 2.5px;
+    border-radius: 4px;
+    background: var(--ucr-primary);
+  }
+}
+
+/* â”€â”€ Botones de slider (ProyectosDestacados) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 680px) {
+  .sliderBtn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-color: rgba(84, 188, 235, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 76, 99, 0.18);
+  }
+
+  .sliderBtn:active {
+    transform: scale(0.9);
+    background: var(--ucr-celeste);
+    color: var(--brand-blanco);
+  }
+
+  .sliderBtn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* â”€â”€ Flechas coverflow (ProyectosGraduacion) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 680px) {
+  .cfArrow {
+    width: 2.75rem;
+    height: 2.75rem;
+    box-shadow: 0 6px 20px rgba(0, 31, 42, 0.22);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .cfArrow svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* â”€â”€ Iconos de mÃ©tricas / Impacto (apiIcon) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 620px) {
+  .apiIcon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    margin-bottom: 1.1rem;
+    box-shadow:
+      inset 0 0 0 1.5px color-mix(in srgb, var(--c) 28%, transparent),
+      0 4px 14px color-mix(in srgb, var(--c) 18%, transparent);
+  }
+
+  .apiIcon svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* â”€â”€ Redes sociales (Footer) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 680px) {
+  .footerSocial {
+    gap: 0.75rem;
+  }
+
+  .footerSocial a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: rgba(84, 188, 235, 0.12);
+    border: 1px solid rgba(84, 188, 235, 0.25);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .footerSocial a:hover {
+    opacity: 1;
+    background: rgba(84, 188, 235, 0.22);
+    transform: translateY(-2px);
+  }
+
+  .footerSocial svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* â”€â”€ Ãconos de contacto (Footer: Mail / Phone) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 680px) {
+  .footerContactItem svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+}
+
+/* â”€â”€ Botones de acciÃ³n Matching (x / heart / save) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 620px) {
+  .imAct {
+    width: 2.75rem;
+    height: 2.75rem;
+    box-shadow: 0 2px 8px rgba(0, 31, 42, 0.1);
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .imAct:active {
+    transform: scale(0.88);
+  }
+
+  .imAct svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .imActLike {
+    width: 3.25rem;
+    height: 3.25rem;
+    box-shadow: 0 6px 18px rgba(0, 76, 99, 0.35);
+  }
+}
+
+/* â”€â”€ Comillas decorativas (Testimonios) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 620px) {
+  .testiQuote {
+    width: 2.5rem;
+    height: 2.5rem;
+    top: 1.25rem;
+    right: 1.25rem;
+    opacity: 0.15;
+  }
+}
+
+/* â”€â”€ BotÃ³n flotante "Scroll to top" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 620px) {
+  .scrollTop {
+    width: 3.5rem;
+    height: 3.5rem;
+    box-shadow:
+      0 12px 28px -8px rgba(0, 52, 69, 0.5),
+      0 0 0 4px rgba(84, 188, 235, 0.18);
+  }
+
+  .scrollTopIcon {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+}
+
+/* â”€â”€ Link "Ver detalles" con ArrowTrend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 620px) {
+  .linkBtn {
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    min-height: 2.75rem;
+  }
+
+  .linkBtn svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* â”€â”€ Badge de misiÃ³n (Check icon) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@media (max-width: 680px) {
+  .mfBadge {
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+  }
+
+  .mfBadge svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }

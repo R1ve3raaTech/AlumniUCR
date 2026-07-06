@@ -1,5 +1,7 @@
 const supabase = require('../config/supabase');
 const { mapDbError } = require('../utils/dbError');
+// RF-03: guardar el proyecto puede completar (o invalidar) el perfil del estudiante.
+const { recalcularPerfilCompleto } = require('./informacionEstudianteService');
 
 const TABLA = 'proyecto_graduacion';
 
@@ -61,6 +63,8 @@ const crearProyectoGraduacion = async (proyectoData) => {
 
     if (error) throw mapDbError(error);
 
+    await recalcularPerfilCompleto(proyectoData.id_estudiante).catch(() => {});
+
     return data;
 };
 
@@ -81,6 +85,8 @@ const actualizarProyectoGraduacion = async (id, proyectoData) => {
         .single();
 
     if (error) throw mapDbError(error);
+
+    if (data?.id_estudiante) await recalcularPerfilCompleto(data.id_estudiante).catch(() => {});
 
     return data;
 };

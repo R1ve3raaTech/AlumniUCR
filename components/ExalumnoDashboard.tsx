@@ -6,11 +6,15 @@
 // donaciones. Conserva la lógica de aprobación (pendiente/activo) y los enlaces
 // funcionales (perfil, mentorías, estudiantes, donaciones, posiciones, ayuda).
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import AlumniLogo from './AlumniLogo';
 import { obtenerMisDonaciones } from '@/lib/donaciones';
 import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
+import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA } from '@/lib/matchesEstudiante';
+import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 interface Perfil {
   nombre?: string;
@@ -24,7 +28,7 @@ interface Donacion { estado?: string; id_proyecto?: string | null }
 const NAV = [
   { key: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/dashboard' },
   { key: 'perfil', icon: 'person', label: 'Mi Perfil', href: '/perfil-exalumno' },
-  { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias' },
+  { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias/exalumno' },
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
   { key: 'donaciones', icon: 'volunteer_activism', label: 'Donaciones', href: '/donaciones' },
   { key: 'posiciones', icon: 'work', label: 'Posiciones', href: '/mis-posiciones' },
@@ -32,7 +36,7 @@ const NAV = [
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
 ];
 
-const card = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all';
+const card = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_44px_-16px_rgba(0,40,55,0.25)] hover:border-secondary/35';
 
 export default function ExalumnoDashboard({
   perfil, correo, onSignOut, userId, token,
@@ -47,18 +51,87 @@ export default function ExalumnoDashboard({
   const [cat, setCat] = useState<any | null>(null);
   const [donaciones, setDonaciones] = useState<Donacion[] | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [cargandoMatches, setCargandoMatches] = useState(true);
+  const [explicacionIA, setExplicacionIA] = useState<string>('');
+  const [cargandoExplicacion, setCargandoExplicacion] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // 1. Bento cards entrance stagger
+    gsap.fromTo('.bento-card', 
+      { y: 30, opacity: 0, scale: 0.97 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.8, stagger: 0.06, ease: 'power4.out', delay: 0.1 }
+    );
+  }, { scope: containerRef });
+
+  useGSAP(() => {
+    // 2. Stats counter animation
+    const targets = containerRef.current?.querySelectorAll('.stat-number');
+    targets?.forEach((el) => {
+      const targetVal = parseFloat(el.getAttribute('data-target') || '0');
+      if (targetVal > 0) {
+        const obj = { val: 0 };
+        gsap.to(obj, {
+          val: targetVal,
+          duration: 1.5,
+          ease: 'power2.out',
+          delay: 0.3,
+          onUpdate: () => {
+            el.textContent = String(Math.round(obj.val));
+          }
+        });
+      }
+    });
+  }, { scope: containerRef, dependencies: [full, donaciones] });
+
+  // Función para volver a cargar los matches
+  const cargarMatches = async () => {
+    if (!token) return;
+    try {
+      const [m, e] = await Promise.all([
+        obtenerMisMatches(token),
+        obtenerDirectorioEstudiantes(token)
+      ]);
+      setMatches(m);
+      setEstudiantes(e?.data ?? e ?? []);
+
+      // Cargar explicación IA si hay un match sugerido
+      const sug = m.find((x: any) => x.estado === 'sugerido');
+      if (sug) {
+        setCargandoExplicacion(true);
+        try {
+          const exp = await obtenerExplicacionMatchIA(token, sug.id);
+          setExplicacionIA(exp);
+        } catch (err) {
+          console.error("Error al cargar explicación IA:", err);
+        } finally {
+          setCargandoExplicacion(false);
+        }
+      } else {
+        setExplicacionIA('');
+      }
+    } catch (err) {
+      console.error("Error al cargar matches o directorio:", err);
+    } finally {
+      setCargandoMatches(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
     let activo = true;
     Promise.all([obtenerMiPerfilExalumno(token), obtenerCatalogos(token)])
-      .then(([p, c]) => { if (activo) { setFull(p?.perfil ?? null); setCat(c ?? null); } })
+      .then(([p, c]) => { if (activo) { setFull(p?.data?.perfil ?? p?.perfil ?? p ?? null); setCat(c ?? null); } })
       .catch(() => {});
     if (userId) {
       obtenerMisDonaciones(token, userId)
         .then((r) => { if (activo) setDonaciones((Array.isArray(r) ? r : r?.data ?? []) as Donacion[]); })
         .catch(() => { if (activo) setDonaciones(null); });
     }
+    cargarMatches();
     return () => { activo = false; };
   }, [token, userId]);
 
@@ -89,20 +162,70 @@ export default function ExalumnoDashboard({
   const proyectosApoyados = new Set(confirmadas.map((d) => d.id_proyecto).filter(Boolean)).size;
   const dash = (v: number) => (donaciones === null ? '—' : String(v));
 
+  const [procesandoMatchId, setProcesandoMatchId] = useState<string | null>(null);
+
+  const handleConectar = async (matchId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(matchId);
+    try {
+      await contactarMatch(token, matchId);
+      await cargarMatches();
+    } catch (err) {
+      console.error("Error al contactar match:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
+  const handleAceptar = async (matchId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(matchId);
+    try {
+      await aceptarMatch(token, matchId);
+      await cargarMatches();
+    } catch (err) {
+      console.error("Error al aceptar match:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
+  const handleRechazar = async (matchId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(matchId);
+    try {
+      await rechazarMatch(token, matchId);
+      await cargarMatches();
+    } catch (err) {
+      console.error("Error al rechazar match:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
+  const obtenerDetallesEstudiante = (estudianteId: string) => {
+    return estudiantes.find((e: any) => e.id === estudianteId);
+  };
+
+  // Clasificación de matches
+  const matchSugerido = matches.find((m: any) => m.estado === 'sugerido');
+  const solicitudesPendientes = matches.filter((m: any) => m.estado === 'contactado' && m.iniciado_por === 'estudiante');
+  const conexionesActivas = matches.filter((m: any) => m.estado === 'activo');
+
   const STATS = [
-    { valor: experiencia ? `${experiencia}+` : '—', label: 'Años de experiencia', destacado: true },
-    { valor: full?.ofrece_mentoria && full?.horas_disponibles_mes ? `${full.horas_disponibles_mes}h` : '—', label: 'Horas mentoría / mes' },
-    { valor: dash(proyectosApoyados), label: 'Proyectos apoyados' },
-    { valor: dash((donaciones ?? []).length), label: 'Donaciones realizadas' },
+    { rawVal: experiencia ? Number(experiencia) : 0, suffix: '+', label: 'Años de experiencia', destacado: true },
+    { rawVal: full?.ofrece_mentoria && full?.horas_disponibles_mes ? Number(full.horas_disponibles_mes) : 0, suffix: 'h', label: 'Horas mentoría / mes' },
+    { rawVal: donaciones === null ? 0 : (proyectosApoyados || 0), suffix: '', label: 'Proyectos apoyados' },
+    { rawVal: donaciones === null ? 0 : (donaciones ?? []).length, suffix: '', label: 'Donaciones realizadas' },
   ];
 
   return (
-    <div className="min-h-screen bg-background font-body-base text-on-background antialiased">
+    <div ref={containerRef} className="min-h-screen bg-background font-body-base text-on-background antialiased">
       {/* Sidebar */}
       {menuAbierto && (
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
       )}
-      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col gap-2 border-r border-outline-variant bg-surface-container-low p-6 transition-transform duration-300 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto`}>
         <Link href="/" className="mb-8 flex items-center justify-center py-2" aria-label="Alumni UCR — inicio">
           <AlumniLogo height={52} />
         </Link>
@@ -125,14 +248,40 @@ export default function ExalumnoDashboard({
             <Link key={item.key} href={item.href}
               className={item.key === 'dashboard'
                 ? 'flex items-center gap-4 rounded-lg bg-primary-container p-3.5 font-bold text-on-primary-container'
-                : 'flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface'}>
+                : 'flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface'}
+              onMouseEnter={(e) => {
+                const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+                if (icon) {
+                  gsap.to(icon, { scale: 1.15, rotation: 8, duration: 0.3, ease: 'back.out(2)' });
+                }
+              }}
+              onMouseLeave={(e) => {
+                const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+                if (icon) {
+                  gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+                }
+              }}
+            >
               <span className="material-symbols-outlined">{item.icon}</span>
               <span className="font-body-semibold">{item.label}</span>
             </Link>
           ))}
         </nav>
         <button type="button" onClick={onSignOut}
-          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error">
+          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error"
+          onMouseEnter={(e) => {
+            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+            if (icon) {
+              gsap.to(icon, { scale: 1.15, rotation: -8, duration: 0.3, ease: 'back.out(2)' });
+            }
+          }}
+          onMouseLeave={(e) => {
+            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+            if (icon) {
+              gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+            }
+          }}
+        >
           <span className="material-symbols-outlined">logout</span>
           <span className="font-body-semibold">Cerrar sesión</span>
         </button>
@@ -180,7 +329,7 @@ export default function ExalumnoDashboard({
 
           {/* Encabezado de perfil + stats */}
           <section className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 flex flex-col items-start gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-6 md:flex-row md:items-center lg:col-span-8">
+            <div className="col-span-12 flex flex-col items-start gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-6 md:flex-row md:items-center lg:col-span-8 bento-card">
               <div className="relative shrink-0">
                 {foto ? (
                   <img src={foto} alt={nombre} className="h-32 w-32 rounded-full border-4 border-white object-cover shadow-md md:h-36 md:w-36" />
@@ -204,7 +353,7 @@ export default function ExalumnoDashboard({
                 </div>
               </div>
               <div className="flex w-full flex-col gap-2 md:w-auto">
-                <Link href="/mentorias" className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary px-6 py-3 text-sm font-bold text-on-primary shadow-md transition-transform hover:-translate-y-0.5">
+                <Link href="/mentorias/exalumno" className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary px-6 py-3 text-sm font-bold text-on-primary shadow-md transition-transform hover:-translate-y-0.5">
                   <span className="material-symbols-outlined text-[20px]">handshake</span> Ofrecer mentoría
                 </Link>
                 <Link href="/perfil-exalumno" className="flex items-center justify-center gap-2 rounded-lg border border-primary px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/5">
@@ -216,8 +365,10 @@ export default function ExalumnoDashboard({
             {/* Stats */}
             <div className="col-span-12 grid grid-cols-2 gap-4 lg:col-span-4">
               {STATS.map((s) => (
-                <div key={s.label} className={`${card} flex flex-col items-center justify-center p-5 text-center ${s.destacado ? 'bg-primary-container' : ''}`}>
-                  <span className={`font-display-lg text-3xl font-bold ${s.destacado ? 'text-on-primary-container' : 'text-secondary'}`}>{s.valor}</span>
+                <div key={s.label} className={`${card} bento-card flex flex-col items-center justify-center p-5 text-center ${s.destacado ? 'bg-primary-container' : ''}`}>
+                  <span className={`font-display-lg text-3xl font-bold ${s.destacado ? 'text-on-primary-container' : 'text-secondary'}`}>
+                    <span className="stat-number" data-target={s.rawVal}>0</span>{s.suffix}
+                  </span>
                   <p className={`mt-1 text-[10px] font-bold uppercase tracking-wider ${s.destacado ? 'text-on-primary-container/80' : 'text-on-surface-variant'}`}>{s.label}</p>
                 </div>
               ))}
@@ -228,7 +379,7 @@ export default function ExalumnoDashboard({
           <div className="grid grid-cols-12 items-start gap-6">
             <div className="col-span-12 flex flex-col gap-6 lg:col-span-8">
               {/* Biografía */}
-              <section className={`${card} p-6 sm:p-8`}>
+              <section className={`${card} bento-card p-6 sm:p-8`}>
                 <h3 className="mb-4 flex items-center gap-2 font-headline-md text-xl text-primary">
                   <span className="material-symbols-outlined">article</span> Biografía profesional
                 </h3>
@@ -243,7 +394,7 @@ export default function ExalumnoDashboard({
               </section>
 
               {/* Áreas de especialidad */}
-              <section className={`${card} p-6 sm:p-8`}>
+              <section className={`${card} bento-card p-6 sm:p-8`}>
                 <h3 className="mb-6 flex items-center gap-2 font-headline-md text-xl text-primary">
                   <span className="material-symbols-outlined">workspace_premium</span> Áreas de especialidad
                 </h3>
@@ -267,7 +418,7 @@ export default function ExalumnoDashboard({
               </section>
 
               {/* Acciones rápidas (funcionales) */}
-              <section className={`${card} p-6 sm:p-8`}>
+              <section className={`${card} bento-card p-6 sm:p-8`}>
                 <h3 className="mb-5 flex items-center gap-2 font-headline-md text-xl text-primary">
                   <span className="material-symbols-outlined">bolt</span> Acciones rápidas
                 </h3>
@@ -278,7 +429,7 @@ export default function ExalumnoDashboard({
                     { icon: 'post_add', t: 'Publicar una posición', href: '/posiciones/nueva' },
                     { icon: 'work', t: 'Mis posiciones', href: '/mis-posiciones' },
                     { icon: 'groups', t: 'Directorio de estudiantes', href: '/estudiantes' },
-                    { icon: 'handshake', t: 'Ofrecer mentoría', href: '/mentorias' },
+                    { icon: 'handshake', t: 'Ofrecer mentoría', href: '/mentorias/exalumno' },
                   ].map((a) => (
                     <Link key={a.t} href={a.href} className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant/60 p-4 transition-all hover:-translate-y-0.5 hover:border-secondary hover:bg-secondary/5">
                       <span className="flex items-center gap-3">
@@ -295,34 +446,134 @@ export default function ExalumnoDashboard({
             {/* Derecha */}
             <aside className="col-span-12 flex flex-col gap-6 lg:col-span-4">
               {/* Match Estratégico */}
-              <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl">
-                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-                <div className="relative z-10">
-                  <div className="mb-6 flex items-start justify-between">
-                    <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-black uppercase text-on-secondary-container">Match estratégico</span>
-                    <div className="text-right"><span className="font-display-lg text-2xl leading-none">95%</span><p className="text-[10px] font-bold opacity-80">Afinidad</p></div>
-                  </div>
-                  <div className="mb-6 flex items-center justify-center gap-3">
-                    <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-white/40 bg-white/10 font-bold">
-                      {foto ? <img src={foto} alt={nombre} className="h-full w-full object-cover" /> : (iniciales || 'E')}
+              {cargandoMatches ? (
+                <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 text-center text-sm text-on-surface-variant animate-pulse">
+                  Cargando coincidencias...
+                </div>
+              ) : matchSugerido ? (() => {
+                const detalles = obtenerDetallesEstudiante(matchSugerido.usuarios.id);
+                const estInitials = matchSugerido.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                const estAreas = detalles?.areas || ['Tecnología', 'Innovación'];
+                const enProceso = procesandoMatchId === matchSugerido.id;
+                
+                return (
+                  <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl bento-card">
+                    <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+                    <div className="relative z-10">
+                      <div className="mb-6 flex items-start justify-between">
+                        <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-black uppercase text-on-secondary-container">Match estratégico</span>
+                        <div className="text-right"><span className="font-display-lg text-2xl leading-none">{matchSugerido.score_match}%</span><p className="text-[10px] font-bold opacity-80">Afinidad</p></div>
+                      </div>
+                      <div className="mb-6 flex items-center justify-center gap-3">
+                        <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-white/40 bg-white/10 font-bold text-lg">
+                          {estInitials}
+                        </div>
+                        <span className="material-symbols-outlined text-secondary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                        <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-secondary-fixed-dim bg-white/10 font-bold text-lg">{iniciales}</div>
+                      </div>
+                      <p className="mb-2 text-center font-body-semibold">Conexión recomendada con <strong>{matchSugerido.usuarios.nombre}</strong></p>
+                      <p className="mb-3 text-center text-xs opacity-90 italic line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
+                      {cargandoExplicacion ? (
+                        <p className="mb-4 text-xs opacity-75 text-center italic animate-pulse">Analizando afinidad con IA...</p>
+                      ) : explicacionIA ? (
+                        <div className="mb-4 rounded-xl bg-white/10 p-3.5 text-[11px] leading-relaxed border border-white/15 text-left text-on-primary">
+                          <span className="flex items-center gap-1 font-bold text-secondary-fixed-dim mb-1">
+                            <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span> Recomendación de la IA
+                          </span>
+                          {explicacionIA}
+                        </div>
+                      ) : null}
+                      <div className="mb-6 space-y-2 border-t border-white/20 pt-4">
+                        {estAreas.slice(0, 3).map((a: string) => (
+                          <p key={a} className="flex items-center gap-2 text-sm"><span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>{a}</p>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => handleConectar(matchSugerido.id)} disabled={enProceso} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#54BCEB] py-3.5 font-bold text-primary transition-transform hover:scale-[1.02] disabled:opacity-50">
+                        {enProceso ? 'Conectando...' : <>Conectar <span className="material-symbols-outlined">bolt</span></>}
+                      </button>
                     </div>
-                    <span className="material-symbols-outlined text-secondary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
-                    <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-secondary-fixed-dim bg-white/10 font-bold">AS</div>
                   </div>
-                  <p className="mb-5 text-center font-body-semibold">Conexión recomendada con <strong>Adriana Solano</strong></p>
-                  <div className="mb-6 space-y-2 border-t border-white/20 pt-4">
-                    {(areas.length ? areas : ['Tecnología', 'Innovación']).slice(0, 3).map((a) => (
-                      <p key={a} className="flex items-center gap-2 text-sm"><span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>{a}</p>
-                    ))}
-                  </div>
-                  <Link href="/estudiantes" className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#54BCEB] py-3.5 font-bold text-primary transition-transform hover:scale-[1.02]">
-                    Ver estudiantes <span className="material-symbols-outlined">bolt</span>
+                );
+              })() : (
+                <div className="relative overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-7 shadow-sm text-center">
+                  <span className="material-symbols-outlined text-4xl text-outline mb-2">groups</span>
+                  <h4 className="font-body-semibold text-primary mb-1">Sin sugerencias activas</h4>
+                  <p className="text-xs text-on-surface-variant mb-4">Asegúrate de completar tu perfil al 100% y seleccionar tus áreas para recibir recomendaciones.</p>
+                  <Link href="/estudiantes" className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary/5">
+                    Ver directorio de estudiantes
                   </Link>
                 </div>
-              </div>
+              )}
+
+              {/* Solicitudes de contacto de estudiantes */}
+              {!cargandoMatches && solicitudesPendientes.length > 0 && (
+                <div className={`${card} bento-card p-6`}>
+                  <h4 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-primary">
+                    <span className="material-symbols-outlined text-[18px]">handshake</span> Solicitudes Recibidas ({solicitudesPendientes.length})
+                  </h4>
+                  <div className="space-y-4">
+                    {solicitudesPendientes.map((m: any) => {
+                      const detalles = obtenerDetallesEstudiante(m.usuarios.id);
+                      const estInitials = m.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                      const enProceso = procesandoMatchId === m.id;
+                      return (
+                        <div key={m.id} className="flex flex-col gap-2 rounded-xl border border-outline-variant p-4 bg-surface-container-low">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 font-bold text-primary text-sm">{estInitials}</span>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate text-sm font-bold text-primary">{m.usuarios.nombre}</h5>
+                              <p className="truncate text-xs text-on-surface-variant">{detalles?.carreras?.[0] || 'Estudiante UCR'}</p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{m.score_match}%</span>
+                          </div>
+                          <p className="text-xs font-body-semibold italic text-on-surface-variant line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
+                          <div className="mt-2 flex gap-2">
+                            <button type="button" onClick={() => handleAceptar(m.id)} disabled={enProceso} className="flex-1 rounded-lg bg-secondary py-1.5 text-xs font-bold text-on-secondary hover:brightness-110 disabled:opacity-50">
+                              {enProceso ? 'Aceptar...' : 'Aceptar'}
+                            </button>
+                            <button type="button" onClick={() => handleRechazar(m.id)} disabled={enProceso} className="flex-1 rounded-lg border border-outline-variant py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-variant/20 disabled:opacity-50">
+                              Rechazar
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Conexiones Activas (Matches Aceptados) */}
+              {!cargandoMatches && conexionesActivas.length > 0 && (
+                <div className={`${card} bento-card p-6`}>
+                  <h4 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-emerald-700">
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span> Conexiones Activas ({conexionesActivas.length})
+                  </h4>
+                  <div className="space-y-4">
+                    {conexionesActivas.map((m: any) => {
+                      const detalles = obtenerDetallesEstudiante(m.usuarios.id);
+                      const estInitials = m.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                      return (
+                        <div key={m.id} className="flex flex-col gap-1.5 rounded-xl border border-outline-variant p-4 bg-emerald-50/40">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold text-emerald-800 text-sm">{estInitials}</span>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate text-sm font-bold text-primary">{m.usuarios.nombre}</h5>
+                              <p className="truncate text-xs text-on-surface-variant">{detalles?.carreras?.[0] || 'Estudiante UCR'}</p>
+                            </div>
+                          </div>
+                          <p className="text-xs font-body-semibold italic text-on-surface-variant line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
+                          <a href={`mailto:${m.usuarios.correo_electronico}`} className="mt-1 flex items-center gap-1.5 text-xs font-bold text-secondary hover:underline">
+                            <span className="material-symbols-outlined text-[14px]">mail</span> {m.usuarios.correo_electronico}
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Actividad reciente */}
-              <div className={`${card} p-6`}>
+              <div className={`${card} bento-card p-6`}>
                 <h4 className="mb-5 border-b border-outline-variant pb-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Actividad reciente</h4>
                 <div className="space-y-5">
                   {[

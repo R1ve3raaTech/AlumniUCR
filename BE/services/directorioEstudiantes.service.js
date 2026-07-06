@@ -80,6 +80,19 @@ const tarjetaEstudiante = (u, d) => {
   };
 };
 
+// Directorio público (sin sesión): solo las tarjetas públicas de los proyectos.
+// Nunca incluye beca, correo ni estado de solicitud (eso exige sesión de
+// exalumno). Lo usa la página pública /proyectos.
+const obtenerDirectorioPublico = async () => {
+  const d = await cargarDatos();
+  return d.usuarios
+    .map((u) => {
+      const card = tarjetaEstudiante(u, d);
+      return card ? { ...card, solicitud: null } : null;
+    })
+    .filter(Boolean);
+};
+
 // Directorio para un exalumno: cada estudiante incluye el estado de su solicitud
 // y, si fue aceptada, se revelan la beca y el correo de contacto.
 const obtenerDirectorioParaExalumno = async (idExalumno) => {
@@ -135,6 +148,7 @@ const responderSolicitud = async (id, idEstudiante, aceptar) =>
   contacto.responder(id, idEstudiante, aceptar ? 'aceptada' : 'rechazada');
 
 module.exports = {
+  obtenerDirectorioPublico,
   obtenerDirectorioParaExalumno,
   crearSolicitud,
   solicitudesRecibidas,

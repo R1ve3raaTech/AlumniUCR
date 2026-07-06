@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useInView, animate } from 'framer-motion';
 import AtomoImpacto from './AtomoImpacto';
+import { obtenerEstadisticasPublicas } from '@/lib/stats';
 import styles from './landing.module.css';
 
 type IconKey = 'network' | 'target' | 'people' | 'rocket';
 
-const METRICAS: { valor: string; etiqueta: string; color: string; desc: string; icon: IconKey }[] = [
+// Valores de respaldo: se muestran mientras carga /api/stats/publicas o si falla
+// (p. ej. BE caído). En cuanto responde, se reemplazan por datos reales de Supabase.
+const METRICAS_BASE: { valor: string; etiqueta: string; color: string; desc: string; icon: IconKey }[] = [
   { valor: '+1200', etiqueta: 'Conexiones', color: '#54BCEB', icon: 'network', desc: 'Vínculos creados entre estudiantes y profesionales de la red Alumni.' },
   { valor: '85%', etiqueta: 'Éxito de Match', color: '#007D67', icon: 'target', desc: 'De los matches derivan en mentorías activas y sostenidas en el tiempo.' },
   { valor: '450', etiqueta: 'Mentores', color: '#FFC72C', icon: 'people', desc: 'Profesionales acompañando el desarrollo de nuevos talentos UCR.' },
@@ -70,8 +73,23 @@ function Counter({ valor, className, color, inView }: { valor: string; className
 export default function Impacto() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
+  const [metricas, setMetricas] = useState(METRICAS_BASE);
 
-  const card = (m: typeof METRICAS[number]) => (
+  useEffect(() => {
+    let activo = true;
+    obtenerEstadisticasPublicas().then((stats) => {
+      if (!activo || !stats) return;
+      setMetricas([
+        { ...METRICAS_BASE[0], valor: `+${stats.conexiones}` },
+        { ...METRICAS_BASE[1], valor: `${stats.porcentaje_exito}%` },
+        { ...METRICAS_BASE[2], valor: `${stats.mentores}` },
+        { ...METRICAS_BASE[3], valor: `+${stats.proyectos_activos}` },
+      ]);
+    });
+    return () => { activo = false; };
+  }, []);
+
+  const card = (m: typeof METRICAS_BASE[number]) => (
     <div key={m.etiqueta} className={styles.apiCard} style={{ ['--c']: m.color } as React.CSSProperties}>
       <span className={styles.apiIcon}>{ICON[m.icon]}</span>
       <h3 className={styles.apiTitle}>
@@ -86,7 +104,7 @@ export default function Impacto() {
       {/* Izquierda: el átomo (nuestro objeto) sobre degradé suave */}
       <div className={styles.impactoLeft}>
         <div className={styles.atomBox}>
-          <AtomoImpacto />
+          <AtomoImpacto valores={metricas.map((m) => m.valor)} />
         </div>
       </div>
 
@@ -99,7 +117,7 @@ export default function Impacto() {
         </div>
 
         <div ref={ref} className={styles.apiCols}>
-          {METRICAS.map((m) => card(m))}
+          {metricas.map((m) => card(m))}
         </div>
       </div>
     </section>

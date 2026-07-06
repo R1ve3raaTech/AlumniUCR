@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -28,7 +28,7 @@ export default function Navbar() {
     >
       <div className={`${styles.container} ${styles.navInner}`}>
         <div className={styles.navLeft}>
-          <Link href="/" aria-label="UCR Connect — inicio" onClick={cerrar}>
+          <Link href="/" aria-label="Alumni UCR — inicio" onClick={cerrar}>
             <BrandLogo />
           </Link>
         </div>
@@ -72,8 +72,8 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/registro" className={styles.navCta} onClick={cerrar}>
-              Unete
+            <Link href="/login" className={styles.navCta} onClick={cerrar}>
+              ACCEDER
             </Link>
           )}
         </div>

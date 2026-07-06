@@ -73,12 +73,14 @@ const voluntariosRoutes = require('./routes/voluntarios.routes');
 const consultasRoutes = require('./routes/consultas.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const claudeRoutes = require('./routes/claude.routes');
+const replicateRoutes = require('./routes/replicate.routes');
 const matchesMentoriaRoutes = require('./routes/matches.mentoria.routes');
 const matchesPosicionesRoutes = require('./routes/matches.posiciones.routes');
 const adminRoutes = require('./routes/admin.routes');
 const perfilExalumnoRoutes = require('./routes/perfilExalumno.routes');
 const directorioEstudiantesRoutes = require('./routes/directorioEstudiantes.routes');
 const comprobantesRoutes = require('./routes/comprobantes.routes');
+const statsRoutes = require('./routes/stats.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
@@ -117,12 +119,14 @@ app.use('/api/voluntarios', voluntariosRoutes);
 app.use('/api/consultas-soporte', consultasRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/claude', claudeRoutes);
+app.use('/api/replicate', replicateRoutes);
 app.use('/api/matches-mentoria', matchesMentoriaRoutes);
 app.use('/api/matches-posiciones', matchesPosicionesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
 app.use('/api/estudiantes', directorioEstudiantesRoutes);
 app.use('/api/comprobantes', comprobantesRoutes);
+app.use('/api/stats', statsRoutes);
 app.use('/api/perfil-onboarding', require('./routes/perfilOnboarding.routes'));
 app.use('/api/reportes-anomalias', require('./routes/reportes.routes'));
 app.use('/api/faqs', require('./routes/faqs.routes'));
@@ -136,6 +140,25 @@ app.get('/api/health', (req, res) => {
 // Error middleware (siempre al final)
 const errorMiddleware = require('./middlewares/error.middleware');
 app.use(errorMiddleware);
+
+// ======================================================
+// CRON JOBS
+// ======================================================
+
+const cron = require('node-cron');
+const { enviarRecordatorioDonacionesPendientes } = require('./services/admin.service');
+
+// RF-08.2 — cada hora revisa donaciones pendientes > 24h y reenvía el correo al admin.
+cron.schedule('0 * * * *', async () => {
+  try {
+    const resultado = await enviarRecordatorioDonacionesPendientes();
+    if (resultado.recordatorios > 0) {
+      console.log(`⏰ Recordatorio de donaciones: ${resultado.recordatorios} enviado(s) de ${resultado.total_vencidas} vencida(s).`);
+    }
+  } catch (error) {
+    console.error('⚠️ Error al ejecutar el cron de recordatorio de donaciones:', error.message);
+  }
+});
 
 // ======================================================
 // SERVER
