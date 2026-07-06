@@ -32,4 +32,30 @@ function verificarToken(userId, token, scope = '') {
   return crypto.timingSafeEqual(a, b);
 }
 
-module.exports = { generarToken, verificarToken };
+// ── Código de verificación de 6 dígitos (recuperación de contraseña) ────────
+// También stateless: se deriva del id + una ventana de tiempo de 5 minutos.
+// Al verificar se aceptan la ventana actual y las 2 anteriores (vigencia
+// efectiva de 10 a 15 minutos), sin guardar nada en la base.
+
+const VENTANA_CODIGO_MS = 5 * 60 * 1000;
+
+/** Genera el código de 6 dígitos vigente para un usuario. */
+function codigoRecuperacion(userId, desplazamiento = 0) {
+  const ventana = Math.floor(Date.now() / VENTANA_CODIGO_MS) - desplazamiento;
+  const h = crypto.createHmac('sha256', SECRET).update(`codigo-reset:${userId}:${ventana}`).digest();
+  return String(h.readUInt32BE(0) % 1_000_000).padStart(6, '0');
+}
+
+/** Verifica un código de recuperación (comparación de tiempo constante). */
+function verificarCodigoRecuperacion(userId, codigo) {
+  const limpio = String(codigo || '').trim();
+  if (!/^\d{6}$/.test(limpio)) return false;
+  const b = Buffer.from(limpio, 'utf8');
+  for (let d = 0; d <= 2; d++) {
+    const a = Buffer.from(codigoRecuperacion(userId, d), 'utf8');
+    if (a.length === b.length && crypto.timingSafeEqual(a, b)) return true;
+  }
+  return false;
+}
+
+module.exports = { generarToken, verificarToken, codigoRecuperacion, verificarCodigoRecuperacion };
