@@ -7,7 +7,7 @@ import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
-import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
+import { obtenerDirectorioEstudiantes, obtenerProyectosPublicos, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './proyectos.module.css';
@@ -129,10 +129,15 @@ function ProyectosContent() {
   const tieneAccesoDatos = !!(user && token && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario));
 
   useEffect(() => {
-    if (!tieneAccesoDatos || !token) { setCargandoProyectos(false); return; }
     let activo = true;
     setCargandoProyectos(true);
-    obtenerDirectorioEstudiantes(token)
+    // Con sesión de exalumno se usa el directorio completo (incluye el estado
+    // de la solicitud); sin sesión, el endpoint público (mismas tarjetas, sin
+    // datos privados). Cualquier persona puede VER los proyectos.
+    const cargar = tieneAccesoDatos && token
+      ? obtenerDirectorioEstudiantes(token)
+      : obtenerProyectosPublicos();
+    cargar
       .then((res: any) => {
         if (!activo) return;
         const lista: Proyecto[] = (res?.data ?? [])
@@ -409,13 +414,7 @@ function ProyectosContent() {
 
           {/* Grilla de proyectos */}
           <div className={styles.grid} ref={gridAnimRef}>
-            {!tieneAcceso ? (
-              <div className={styles.noResults}>
-                Los proyectos de graduación de los estudiantes son visibles para la red
-                Alumni. Iniciá sesión como <strong>Exalumno</strong> o <strong>Voluntario</strong> para
-                explorarlos y ofrecer tu apoyo.
-              </div>
-            ) : cargandoProyectos ? (
+            {cargandoProyectos ? (
               <div className={styles.noResults}>Cargando proyectos…</div>
             ) : proyectosPag.length === 0 ? (
               <div className={styles.noResults}>
