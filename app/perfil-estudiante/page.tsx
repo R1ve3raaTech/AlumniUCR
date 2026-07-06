@@ -1,20 +1,22 @@
 'use client';
 
-// Mi Perfil (estudiante) — versión desplegable (acordeón). Cada sección muestra
-// poca información por defecto y se expande al tocarla. Datos reales desde la
-// fuente única (PerfilEstudianteContext) y edición real por sección (RF-03):
-// información académica, proyecto TFG, beca, apoyo, intereses, historial y
-// portafolio. Las postulaciones vienen del backend (obtenerMisAplicaciones).
+// Mi Perfil (estudiante) — diseño de tarjetas estilo StudentHub: columna
+// central (información académica, TFG, empleabilidad/trayectoria, historiales)
+// y columna derecha (beca, apoyo, intereses, portafolio, comunidad, seguridad).
+// Datos reales desde la fuente única (PerfilEstudianteContext) y edición real
+// por sección (RF-03). Las postulaciones vienen del backend
+// (obtenerMisAplicaciones) y la cajita de Comunidad muestra el último aporte y
+// evento reales.
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
-import Desplegable from '@/components/student/Desplegable';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type PerfilEstudiante, type ArchivoPortafolio } from '@/context/PerfilEstudianteContext';
 import { FACULTADES_UCR } from '@/lib/catalogoUCR';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerMisAplicaciones } from '@/lib/aplicaciones';
+import { listarBlogs, listarEventos } from '@/lib/comunidad';
 
 const FOTO_MAX_BYTES = 3 * 1024 * 1024;
 
@@ -80,11 +82,14 @@ function CampoLectura({ label, valor, resaltar }: { label: string; valor: string
 
 const inputCls = 'w-full rounded-lg border border-outline-variant/30 bg-surface-container-low p-3 font-body-semibold text-on-surface focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30';
 
-function BotonEditar({ onClick, label = 'Editar' }: { onClick: () => void; label?: string }) {
+// Tarjeta blanca base del diseño StudentHub.
+const tarjetaCls = 'rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-5 shadow-[0_2px_12px_-4px_rgba(0,40,55,0.08)] sm:p-6';
+
+// Lapicito de edición de las cajitas de la columna derecha.
+function LapizEditar({ onClick, label }: { onClick: () => void; label: string }) {
   return (
-    <button type="button" data-real onClick={onClick} className="mb-4 flex items-center gap-1 text-secondary hover:underline">
-      <span className="material-symbols-outlined text-lg">edit</span>
-      <span className="font-body-semibold text-sm">{label}</span>
+    <button type="button" data-real onClick={onClick} aria-label={label} className="grid h-7 w-7 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-secondary/10 hover:text-secondary">
+      <span className="material-symbols-outlined text-[18px]">edit</span>
     </button>
   );
 }
@@ -520,6 +525,9 @@ export default function PerfilEstudiantePage() {
   const [aplicaciones, setAplicaciones] = useState<Aplicacion[]>([]);
   const [verMapaCarrera, setVerMapaCarrera] = useState(false);
   const [categoriaPortafolio, setCategoriaPortafolio] = useState<'educativa' | 'galeria' | null>(null);
+  // Cajita de Comunidad: último aporte y próximo evento reales.
+  const [ultimaNoticia, setUltimaNoticia] = useState<{ tipo?: string; titulo: string; created_at?: string } | null>(null);
+  const [proximoEvento, setProximoEvento] = useState<{ titulo: string; fecha?: string } | null>(null);
 
   const o = (v: string, d = '—') => (v && v.trim() ? v : d);
 
@@ -529,6 +537,13 @@ export default function PerfilEstudiantePage() {
     obtenerMisAplicaciones(token).then((apps) => { if (activo) setAplicaciones(apps ?? []); });
     return () => { activo = false; };
   }, [token]);
+
+  useEffect(() => {
+    let activo = true;
+    listarBlogs().then((bs) => { if (activo) setUltimaNoticia(bs[0] ?? null); });
+    listarEventos().then((es) => { if (activo) setProximoEvento(es[0] ?? null); });
+    return () => { activo = false; };
+  }, []);
 
   const registrarActividad = (texto: string) => {
     const item = { id: `${Date.now()}`, texto, fecha: new Date().toISOString() };
@@ -567,12 +582,6 @@ export default function PerfilEstudiantePage() {
   };
   const eliminarArchivoPortafolio = (id: string) => actualizar({ portafolio: perfil.portafolio.filter((a) => a.id !== id) });
 
-  const apoyosActivos = [
-    perfil.apoyo.mentoria && 'Mentoría',
-    perfil.apoyo.empleo && 'Empleo',
-    perfil.apoyo.pasantia && 'Pasantía',
-    perfil.apoyo.financiamiento && 'Financiamiento',
-  ].filter(Boolean) as string[];
   const nombre = `${perfil.nombre} ${perfil.apellidos}`.trim() || 'Estudiante';
   const iniciales = nombre.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || 'E';
 
@@ -702,61 +711,91 @@ export default function PerfilEstudiantePage() {
 
         {/* ── Columna central ── */}
         <section className="col-span-12 flex flex-col gap-5 lg:col-span-8">
-          <Desplegable titulo="Información Académica" icono="school" resumen={o(perfil.carrera)} defaultOpen>
-            <BotonEditar onClick={() => setEditandoAcademico(true)} />
+          {/* Información Académica */}
+          <div className={tarjetaCls}>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 font-headline-md text-lg text-on-surface">
+                <span className="material-symbols-outlined text-[#FF9B18]">school</span> Información Académica
+              </h2>
+              <button type="button" data-real onClick={() => setEditandoAcademico(true)} className="flex items-center gap-1 text-sm font-bold text-secondary hover:underline">
+                <span className="material-symbols-outlined text-base">edit</span> Editar
+              </button>
+            </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <CampoLectura label="Carné" valor={o(perfil.carne)} />
               <CampoLectura label="Carrera" valor={o(perfil.carrera)} resaltar />
-              <CampoLectura label="Escuela / Facultad" valor={o(perfil.facultad)} />
               <CampoLectura label="Sede" valor={o(perfil.sede)} />
               <CampoLectura label="Año de Ingreso" valor={o(perfil.anioIngreso)} />
+              <CampoLectura label="Escuela / Facultad" valor={o(perfil.facultad)} />
               <CampoLectura label="Nivel Académico" valor={o(perfil.nivel)} />
               <CampoLectura label="Promedio Ponderado" valor={o(perfil.promedioPonderado, 'No registrado')} />
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Proyecto de Graduación (TFG)" icono="terminal" tono="primary" resumen={`${perfil.proyectoAvance}% avance`} defaultOpen>
-            <BotonEditar onClick={() => setEditandoTFG(true)} />
-            <div className="relative overflow-hidden rounded-xl bg-primary p-6 text-on-primary">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <p className="font-body-semibold text-lg leading-tight">{o(perfil.proyectoTitulo, 'Aún no registraste tu proyecto de graduación')}</p>
-                <span className="shrink-0 rounded bg-white/10 px-2 py-1 text-xs font-bold">{perfil.proyectoFinalizado ? 'FINALIZADO' : (perfil.proyectoTipo || 'TFG')}</span>
+          {/* Proyecto de Graduación (TFG): tarjeta con acento naranja */}
+          <div className="relative overflow-hidden rounded-2xl border border-[#FF9B18]/30 bg-gradient-to-br from-[#FFF3E7] via-surface-container-lowest to-surface-container-lowest p-5 shadow-[0_2px_12px_-4px_rgba(0,40,55,0.08)] sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Proyecto de Graduación (TFG)</p>
+                <h2 className="mt-1 font-headline-md text-xl leading-snug text-on-surface">
+                  {o(perfil.proyectoTitulo, 'Aún no registraste tu proyecto de graduación')}
+                </h2>
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  {perfil.areaTematica ? `Área temática: ${perfil.areaTematica} · ` : ''}
+                  {perfil.proyectoFinalizado ? 'Finalizado' : (perfil.proyectoTipo || 'TFG')}
+                </p>
               </div>
-              {perfil.areaTematica && <p className="mb-3 text-xs text-on-primary/70">Área temática: {perfil.areaTematica}</p>}
-              <div className="mb-1 flex justify-between text-xs"><span>Progreso</span><span className="font-bold">{perfil.proyectoAvance}%</span></div>
-              <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-primary-container">
-                <div className="h-full rounded-full bg-secondary-container shadow-[0_0_12px_rgba(106,207,255,0.6)]" style={{ width: `${perfil.proyectoAvance}%` }} />
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {(perfil.proyectoAreas.length ? perfil.proyectoAreas : ['Sin áreas aún']).map((t) => (
-                  <span key={t} className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase">{t}</span>
-                ))}
-              </div>
+              <button type="button" data-real onClick={() => setEditandoTFG(true)} aria-label="Editar proyecto de graduación" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F34B26]/10 text-[#F34B26] transition-colors hover:bg-[#F34B26]/20">
+                <span className="material-symbols-outlined text-[20px]">edit</span>
+              </button>
             </div>
-          </Desplegable>
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <span className="text-on-surface-variant">Progreso de Desarrollo</span>
+              <span className="text-sm font-bold text-[#F34B26]">{perfil.proyectoAvance}%</span>
+            </div>
+            <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-[#FF9B18]/15">
+              <div className="h-full rounded-full bg-gradient-to-r from-[#FF9B18] to-[#F34B26]" style={{ width: `${perfil.proyectoAvance}%` }} />
+            </div>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5">
+              {(perfil.proyectoAreas.length ? perfil.proyectoAreas : ['Sin áreas aún']).map((t) => (
+                <span key={t} className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">{t}</span>
+              ))}
+            </div>
+          </div>
 
-          <Desplegable titulo="Empleabilidad y Trayectoria" icono="work_history" tono="tertiary" defaultOpen>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/40 p-4">
-                <h3 className="font-body-semibold text-primary">Portal Empleabilidad</h3>
-                <p className="text-sm text-on-surface-variant">Vacantes exclusivas para estudiantes y egresados UCR.</p>
-                <Link href="/posiciones" data-real className="mt-auto rounded-lg bg-secondary py-2 text-center text-sm font-bold text-on-secondary transition-opacity hover:opacity-90">Ir a la Bolsa de Empleo</Link>
-              </div>
-              <div className="flex flex-col gap-3 rounded-xl border border-outline-variant/40 p-4">
-                <h3 className="font-body-semibold text-primary">Gestión de Trayectoria</h3>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-container"><div className="h-full bg-tertiary" style={{ width: `${porcentajeCarrera}%` }} /></div>
-                  <span className="text-xs font-bold text-tertiary">{porcentajeCarrera}%</span>
+          {/* Portal Empleabilidad + Gestión de Trayectoria */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className={`${tarjetaCls} flex flex-col items-center gap-2 text-center`}>
+              <span className="material-symbols-outlined text-3xl text-[#FF9B18]">work</span>
+              <h3 className="font-body-semibold text-on-surface">Portal Empleabilidad</h3>
+              <p className="text-sm text-on-surface-variant">Accedé a vacantes exclusivas para estudiantes y egresados UCR.</p>
+              <Link href="/posiciones" data-real className="mt-auto w-full rounded-lg bg-secondary py-2 text-center text-sm font-bold text-on-secondary transition-opacity hover:opacity-90">
+                Ir a la Bolsa de Empleo
+              </Link>
+            </div>
+            <div className={`${tarjetaCls} flex flex-col items-center gap-2 text-center`}>
+              <span className="material-symbols-outlined text-3xl text-[#FF9B18]">auto_awesome</span>
+              <h3 className="font-body-semibold text-on-surface">Gestión de Trayectoria</h3>
+              <div className="w-full">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[#FF9B18]/15">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#FF9B18] to-[#F34B26]" style={{ width: `${porcentajeCarrera}%` }} />
                 </div>
-                <button data-real onClick={() => setVerMapaCarrera(true)} className="mt-auto rounded-lg border border-tertiary py-2 text-center text-sm font-bold text-tertiary transition-colors hover:bg-tertiary/5">Ver Mapa de Carrera</button>
+                <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">{porcentajeCarrera}% completo</p>
               </div>
+              <button data-real onClick={() => setVerMapaCarrera(true)} className="mt-auto w-full rounded-lg border border-secondary py-2 text-center text-sm font-bold text-secondary transition-colors hover:bg-secondary/5">
+                Ver Mapa de Carrera
+              </button>
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Historial Académico y Experiencia" icono="auto_stories" resumen={`${perfil.historialAcademico.length} registro${perfil.historialAcademico.length === 1 ? '' : 's'}`} defaultOpen>
-            <div className="mb-4 flex justify-end">
-              <button data-real onClick={() => setRegistroEditando({ id: null })} className="flex items-center gap-1.5 rounded-full border border-secondary/40 px-3 py-1.5 text-sm font-bold text-secondary transition-colors hover:bg-secondary/5">
-                <span className="material-symbols-outlined text-lg">add_circle</span> Añadir Registro
+          {/* Historial Académico y Experiencia */}
+          <div className={tarjetaCls}>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 font-headline-md text-lg text-on-surface">
+                <span className="material-symbols-outlined text-[#FF9B18]">auto_stories</span> Historial Académico y Experiencia
+              </h2>
+              <button data-real onClick={() => setRegistroEditando({ id: null })} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-sm font-bold text-on-secondary transition-opacity hover:opacity-90">
+                <span className="material-symbols-outlined text-base">add</span> Añadir Registro
               </button>
             </div>
             <div className="space-y-3">
@@ -767,7 +806,7 @@ export default function PerfilEstudiantePage() {
                 </div>
               )}
               {perfil.historialAcademico.map((r) => (
-                <div key={r.id} className="group/reg flex items-center justify-between gap-3 rounded-xl border border-outline-variant/30 p-3 transition-colors hover:bg-surface-container-low">
+                <div key={r.id} className="flex items-center justify-between gap-3 rounded-xl bg-surface-container-low p-3 transition-colors hover:bg-surface-container">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="rounded-lg bg-secondary/10 p-2 text-secondary">
                       <span className="material-symbols-outlined">{r.icono}</span>
@@ -784,9 +823,18 @@ export default function PerfilEstudiantePage() {
                 </div>
               ))}
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Historial de Postulaciones" icono="assignment" tono="primary" resumen={`${aplicaciones.length} postulacion${aplicaciones.length === 1 ? '' : 'es'}`} defaultOpen>
+          {/* Historial de Postulaciones */}
+          <div className={tarjetaCls}>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 font-headline-md text-lg text-on-surface">
+                <span className="material-symbols-outlined text-[#FF9B18]">assignment</span> Historial de Postulaciones
+              </h2>
+              <Link href="/posiciones" data-real className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-sm font-bold text-on-secondary transition-opacity hover:opacity-90">
+                <span className="material-symbols-outlined text-base">add</span> Crear Postulación
+              </Link>
+            </div>
             <div className="space-y-3">
               {aplicaciones.length === 0 && (
                 <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-outline-variant py-8 text-center">
@@ -798,74 +846,68 @@ export default function PerfilEstudiantePage() {
               {aplicaciones.map((p) => {
                 const e = ESTADO_APLICACION[p.estado] || ESTADO_APLICACION.enviada;
                 return (
-                  <div key={p.id} className="flex items-center gap-3 rounded-xl border border-outline-variant/30 p-3">
-                    <div className="rounded-lg bg-primary/10 p-2 text-primary"><span className="material-symbols-outlined">business_center</span></div>
-                    <div className="min-w-0">
-                      <p className="truncate font-body-semibold text-sm">
-                        {p.puestos_empleo?.titulo_puesto || 'Posición'}{p.puestos_empleo?.empresa ? ` — ${p.puestos_empleo.empresa}` : ''}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${e.cls}`}>{e.label}</span>
-                        <span className="text-xs text-on-surface-variant">{fmtFecha(p.created_at)}</span>
+                  <div key={p.id} className="flex items-center justify-between gap-3 rounded-xl bg-surface-container-low p-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="rounded-lg bg-secondary/10 p-2 text-secondary"><span className="material-symbols-outlined">business_center</span></div>
+                      <div className="min-w-0">
+                        <p className="truncate font-body-semibold text-sm">
+                          {p.puestos_empleo?.titulo_puesto || 'Posición'}{p.puestos_empleo?.empresa ? ` — ${p.puestos_empleo.empresa}` : ''}
+                        </p>
+                        <p className="mt-0.5 text-xs text-on-surface-variant">{fmtFecha(p.created_at)}</p>
                       </div>
                     </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${e.cls}`}>{e.label}</span>
                   </div>
                 );
               })}
             </div>
-          </Desplegable>
+          </div>
         </section>
 
         {/* ── Columna derecha ── */}
         <section className="col-span-12 flex flex-col gap-5 lg:col-span-4">
-          <Desplegable titulo="Asistente de IA" icono="smart_toy" tono="primary" defaultOpen>
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-on-surface-variant">Resolvé dudas sobre tu perfil, CV, matches o tu proyecto con el asistente inteligente de Alumni UCR.</p>
-              <button
-                type="button"
-                data-real
-                onClick={() => window.dispatchEvent(new Event('open-global-chatbot'))}
-                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5"
-              >
-                <span className="material-symbols-outlined">smart_toy</span> Abrir asistente
-              </button>
+          {/* Tipo de Beca */}
+          <div className={tarjetaCls}>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Tipo de Beca</h3>
+              <LapizEditar onClick={() => setEditandoBeca(true)} label="Editar tipo de beca" />
             </div>
-          </Desplegable>
-
-          <Desplegable titulo="Tipo de Beca" icono="workspace_premium" tono="amber" resumen={o(perfil.beca, 'Sin asignar')} defaultOpen>
-            <BotonEditar onClick={() => setEditandoBeca(true)} />
-            <div className="flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface-container-low p-4">
-              <div className="flex flex-col">
-                <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Asignada</span>
-                <span className="text-xl font-bold text-primary">{o(perfil.beca, 'Sin asignar')}</span>
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-[#FF9B18]/40 bg-[#FFF7E8] p-4">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Asignada</span>
+                <p className="truncate text-xl font-bold text-[#E8890C]">{o(perfil.beca, 'Sin asignar')}</p>
               </div>
-              <span className="material-symbols-outlined rounded-full bg-primary/10 p-2 text-primary">workspace_premium</span>
+              <span className="material-symbols-outlined shrink-0 text-[#E8890C]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Apoyo Requerido" icono="volunteer_activism" tono="tertiary" resumen={apoyosActivos.length ? `${apoyosActivos.length} tipo${apoyosActivos.length === 1 ? '' : 's'}` : 'Ninguno'} defaultOpen>
-            <div className="flex flex-col gap-2">
+          {/* Apoyo Requerido */}
+          <div className={tarjetaCls}>
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Apoyo Requerido</h3>
+            <div className="flex flex-col gap-1">
               {([
-                { clave: 'mentoria', label: 'Mentoría' },
+                { clave: 'mentoria', label: 'Mentoría Técnica' },
                 { clave: 'empleo', label: 'Ofertas de Empleo' },
                 { clave: 'pasantia', label: 'Pasantía Académica' },
                 { clave: 'financiamiento', label: 'Financiamiento' },
               ] as { clave: keyof PerfilEstudiante['apoyo']; label: string }[]).map((a) => (
-                <label key={a.clave} className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 transition-colors ${perfil.apoyo[a.clave] ? 'border-tertiary/40 bg-tertiary/5' : 'border-outline-variant/30 bg-surface-container-low hover:border-secondary'}`}>
-                  <input data-real type="checkbox" checked={perfil.apoyo[a.clave]} onChange={() => toggleApoyo(a.clave)} className="rounded border-outline-variant accent-secondary" />
-                  <span className="font-body-semibold text-sm">{a.label}</span>
+                <label key={a.clave} className="flex cursor-pointer items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-surface-container-low">
+                  <input data-real type="checkbox" checked={perfil.apoyo[a.clave]} onChange={() => toggleApoyo(a.clave)} className="h-4 w-4 rounded border-outline-variant accent-secondary" />
+                  <span className={`text-sm ${perfil.apoyo[a.clave] ? 'font-body-semibold text-on-surface' : 'text-on-surface-variant'}`}>{a.label}</span>
                 </label>
               ))}
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Intereses" icono="interests" resumen={perfil.intereses.length ? `${perfil.intereses.length}` : 'Ninguno'} defaultOpen>
+          {/* Intereses */}
+          <div className={tarjetaCls}>
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Intereses</h3>
             <div className="flex flex-wrap items-center gap-2">
               {perfil.intereses.length === 0 && <span className="text-xs italic text-on-surface-variant">Sin intereses aún.</span>}
               {perfil.intereses.map((i) => (
-                <span key={i} className="flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-body-semibold text-primary">
+                <span key={i} className="flex items-center gap-1 rounded-full bg-surface-container px-3 py-1.5 text-xs font-body-semibold text-on-surface">
                   {i}
-                  <button data-real type="button" onClick={() => quitarInteres(i)} aria-label={`Quitar ${i}`} className="text-primary/60 hover:text-error">
+                  <button data-real type="button" onClick={() => quitarInteres(i)} aria-label={`Quitar ${i}`} className="text-on-surface-variant hover:text-error">
                     <span className="material-symbols-outlined text-xs">close</span>
                   </button>
                 </span>
@@ -876,57 +918,100 @@ export default function PerfilEstudiantePage() {
                 onChange={(e) => setNuevoInteres(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarInteres(); } }}
                 placeholder="Nuevo interés…"
-                className="w-32 rounded-full border border-dashed border-outline-variant bg-transparent px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+                className="w-28 rounded-full border border-dashed border-outline-variant bg-transparent px-3 py-1.5 text-xs focus:border-secondary focus:outline-none"
               />
-              <button data-real type="button" onClick={agregarInteres} aria-label="Agregar interés" className="rounded-full border border-dashed border-outline-variant p-1.5 text-on-surface-variant transition-all hover:border-primary hover:text-primary">
-                <span className="material-symbols-outlined text-xs">add</span>
+              <button data-real type="button" onClick={agregarInteres} aria-label="Agregar interés" className="grid h-7 w-7 place-items-center rounded-full bg-surface-container text-on-surface-variant transition-colors hover:bg-secondary/15 hover:text-secondary">
+                <span className="material-symbols-outlined text-sm">add</span>
               </button>
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Portafolio" icono="folder" tono="primary" resumen={`${perfil.portafolio.length} archivo${perfil.portafolio.length === 1 ? '' : 's'}`} defaultOpen>
+          {/* Portafolio (mismo estilo de cajita que las demás) */}
+          <div className={tarjetaCls}>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Portafolio</h3>
+              <span className="text-[11px] font-bold text-on-surface-variant">{perfil.portafolio.length} archivo{perfil.portafolio.length === 1 ? '' : 's'}</span>
+            </div>
             <div className="grid grid-cols-2 gap-2">
-              <button data-real onClick={() => setCategoriaPortafolio('educativa')} className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-transparent bg-surface-container p-3 transition-all hover:border-secondary">
-                <span className="material-symbols-outlined text-3xl text-secondary">folder</span>
-                <span className="text-center text-xs font-bold uppercase">Info Educativa</span>
-                <span className="text-[11px] text-on-surface-variant">{perfil.portafolio.filter((a) => a.categoria === 'educativa').length} archivo(s)</span>
+              <button data-real onClick={() => setCategoriaPortafolio('educativa')} className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl bg-surface-container-low p-3 transition-colors hover:bg-surface-container">
+                <span className="material-symbols-outlined text-2xl text-secondary">folder</span>
+                <span className="text-center text-[11px] font-bold uppercase">Info Educativa</span>
+                <span className="text-[10px] text-on-surface-variant">{perfil.portafolio.filter((a) => a.categoria === 'educativa').length} archivo(s)</span>
               </button>
-              <button data-real onClick={() => setCategoriaPortafolio('galeria')} className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-transparent bg-surface-container p-3 transition-all hover:border-secondary">
-                <span className="material-symbols-outlined text-3xl text-primary">collections</span>
-                <span className="text-center text-xs font-bold uppercase">Galería TFG</span>
-                <span className="text-[11px] text-on-surface-variant">{perfil.portafolio.filter((a) => a.categoria === 'galeria').length} archivo(s)</span>
+              <button data-real onClick={() => setCategoriaPortafolio('galeria')} className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl bg-surface-container-low p-3 transition-colors hover:bg-surface-container">
+                <span className="material-symbols-outlined text-2xl text-[#FF9B18]">collections</span>
+                <span className="text-center text-[11px] font-bold uppercase">Galería TFG</span>
+                <span className="text-[10px] text-on-surface-variant">{perfil.portafolio.filter((a) => a.categoria === 'galeria').length} archivo(s)</span>
               </button>
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Comunidad" icono="forum" defaultOpen>
+          {/* Comunidad: último aporte y próximo evento reales */}
+          <div className={tarjetaCls}>
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Comunidad</h3>
             <div className="space-y-3">
-              <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-3">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-secondary/10 px-1 text-xs font-bold uppercase text-secondary">NOTICIA</span>
-                  <span className="text-xs text-on-surface-variant">Hace 2 días</span>
+              <Link href="/comunidad" data-real className="flex items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-center text-sm font-bold text-on-primary transition-opacity hover:opacity-90">
+                <span className="material-symbols-outlined text-base">forum</span> Ir a Comunidad
+              </Link>
+              {ultimaNoticia && (
+                <div className="rounded-xl bg-surface-container-low p-3">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="rounded bg-secondary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-secondary">{ultimaNoticia.tipo || 'Noticia'}</span>
+                    {ultimaNoticia.created_at && <span className="text-[11px] text-on-surface-variant">{fmtFecha(ultimaNoticia.created_at)}</span>}
+                  </div>
+                  <p className="line-clamp-2 text-xs font-body-semibold">{ultimaNoticia.titulo}</p>
                 </div>
-                <p className="line-clamp-2 text-xs font-body-semibold">Nuevos avances en el Sistema de Gestión de Talento IA</p>
-              </div>
-              <Link href="/comunidad" data-real className="block rounded-lg bg-primary py-2 text-center text-sm font-bold text-on-primary">Ir a Comunidad</Link>
+              )}
+              {proximoEvento && (
+                <div className="rounded-xl bg-surface-container-low p-3">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="rounded bg-[#FF9B18]/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#E8890C]">Evento</span>
+                    {proximoEvento.fecha && <span className="text-[11px] text-on-surface-variant">{fmtFecha(proximoEvento.fecha)}</span>}
+                  </div>
+                  <p className="line-clamp-2 text-xs font-body-semibold">{proximoEvento.titulo}</p>
+                </div>
+              )}
+              {!ultimaNoticia && !proximoEvento && (
+                <p className="text-xs italic text-on-surface-variant">Aún no hay publicaciones ni eventos.</p>
+              )}
+              <Link href="/comunidad" data-real className="block text-center text-xs font-bold text-[#E8890C] hover:underline">Ver toda la actividad</Link>
             </div>
-          </Desplegable>
+          </div>
 
-          <Desplegable titulo="Seguridad y Reportes" icono="security" tono="error" resumen="Cuenta segura" defaultOpen>
+          {/* Seguridad y Reportes */}
+          <div className={tarjetaCls}>
+            <h3 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-error">
+              <span className="material-symbols-outlined text-base">error</span> Seguridad y Reportes
+            </h3>
             <div className="flex flex-col gap-3">
-              <div className="rounded-lg border border-outline-variant/30 bg-surface-container-low p-3">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase text-primary">Estado de Cuenta</span>
-                  <span className="rounded bg-green-500/10 px-2 py-0.5 text-xs font-bold text-green-600">SEGURO</span>
+              <div className="rounded-xl bg-surface-container-low p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-on-surface">Estado de Cuenta</span>
+                  <span className="rounded bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-600">SEGURO</span>
                 </div>
-                <p className="text-xs text-on-surface-variant">Tu cuenta está activa y en buen estado.</p>
               </div>
-              <p className="text-xs italic leading-tight text-on-surface-variant">3 reportes generan una suspensión temporal automática. Los reportes son 100% anónimos.</p>
+              <p className="text-xs leading-relaxed text-on-surface-variant">
+                Cualquier usuario puede reportar un perfil. 3 reportes generan una suspensión automática temporal. Los reportes son 100% anónimos.
+              </p>
               <Link href="/reportes" data-real className="flex items-center justify-center gap-2 rounded-lg border border-error py-2 text-center text-sm font-bold text-error transition-colors hover:bg-error/5">
-                <span className="material-symbols-outlined text-sm">flag</span> Ir a Reportes
+                <span className="material-symbols-outlined text-sm">flag</span> Reportar Perfil
               </Link>
             </div>
-          </Desplegable>
+          </div>
+
+          {/* Asistente de IA */}
+          <div className={tarjetaCls}>
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Asistente de IA</h3>
+            <p className="mb-3 text-sm text-on-surface-variant">Resolvé dudas sobre tu perfil, CV, matches o tu proyecto con el asistente inteligente de Alumni UCR.</p>
+            <button
+              type="button"
+              data-real
+              onClick={() => window.dispatchEvent(new Event('open-global-chatbot'))}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-on-primary transition-transform hover:-translate-y-0.5"
+            >
+              <span className="material-symbols-outlined">smart_toy</span> Abrir asistente
+            </button>
+          </div>
         </section>
 
         {/* ── Modales ── */}

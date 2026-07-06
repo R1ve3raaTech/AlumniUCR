@@ -10,9 +10,14 @@ const exigirRol = require('../middlewares/role.middleware');
 router.get('/blogs', c.listarBlogs);
 router.get('/eventos', c.listarEventos);
 
-// Estudiantes, exalumnos y voluntarios publican (queda pendiente de aprobación) y ven lo suyo.
+// Estudiantes, exalumnos y voluntarios publican (publicación directa) y ven lo suyo.
 router.post('/blogs', autenticar, exigirRol(['estudiante', 'exalumno', 'voluntario', 'admin']), c.crearBlog);
 router.get('/blogs/mios', autenticar, c.misBlogs);
+
+// El autor edita o elimina su propia publicación (la edición queda marcada
+// con updated_at y el FE muestra la etiqueta "Editada").
+router.put('/blogs/:id', autenticar, exigirRol(['estudiante', 'exalumno', 'voluntario', 'admin']), c.actualizarBlog);
+router.delete('/blogs/:id', autenticar, exigirRol(['estudiante', 'exalumno', 'voluntario', 'admin']), c.eliminarBlog);
 
 // Administración: moderación de blogs y gestión de eventos.
 router.get('/admin', autenticar, exigirRol('admin'), c.panelAdmin);
