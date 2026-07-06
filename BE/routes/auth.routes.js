@@ -26,8 +26,10 @@ router.get('/rechazar/:userId', authController.rechazarCuenta);
 // Confirmación de cuenta del exalumno (registro por autodeclaración).
 router.get('/confirmar-exalumno/:userId', authController.confirmarExalumno);
 
-// Recuperación de contraseña (solicitar enlace y definir nueva contraseña).
+// Recuperación de contraseña: solicitar código por correo, verificar el
+// código de 6 dígitos y definir la nueva contraseña con el token resultante.
 router.post('/recuperar', authController.solicitarRecuperacion);
+router.post('/recuperar/verificar', authController.verificarCodigoRecuperacion);
 router.post('/restablecer', authController.restablecerContrasena);
 
 module.exports = router;

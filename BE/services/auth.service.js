@@ -1,7 +1,7 @@
 const supabase = require('../config/supabase');
 const supabaseAuth = require('../config/supabaseAuth');
 const { mapDbError } = require('../utils/dbError');
-const { generarToken, verificarToken } = require('../utils/aprobacionToken');
+const { generarToken, verificarToken, codigoRecuperacion, verificarCodigoRecuperacion } = require('../utils/aprobacionToken');
 const {
   enviarCorreoAprobacion,
   enviarCorreoRecuperacion,
@@ -356,7 +356,7 @@ const rechazarCuenta = async (userId, token) => {
 
 /**
  * Etapa 1: el usuario pide restablecer su contraseña desde su correo.
- * Genera un token firmado (scope 'reset') y envía el enlace a /restablecer.
+ * Envía un código de verificación de 6 dígitos (vigencia ~10-15 min).
  * Por seguridad NO revela si el correo existe: responde igual en ambos casos.
  */
 const solicitarRecuperacion = async (correo) => {
@@ -366,15 +366,36 @@ const solicitarRecuperacion = async (correo) => {
     .eq('correo_electronico', correo)
     .maybeSingle();
 
-  // Si la cuenta existe, se envía el enlace; si no, se ignora en silencio
+  // Si la cuenta existe, se envía el código; si no, se ignora en silencio
   // (respuesta uniforme para no filtrar qué correos están registrados).
   if (perfil) {
-    const token = generarToken(perfil.id, 'reset');
-    const url = `${FRONTEND_URL}/restablecer?uid=${perfil.id}&token=${token}`;
-    await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, url });
+    const codigo = codigoRecuperacion(perfil.id);
+    await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, codigo });
   }
 
   return { enviado: true };
+};
+
+/**
+ * Etapa 1.5: verifica el código de 6 dígitos que llegó por correo. Si es
+ * válido, devuelve uid + token firmado (scope 'reset') con los que la página
+ * /restablecer permite definir la nueva contraseña.
+ */
+const verificarCodigoDeRecuperacion = async (correo, codigo) => {
+  const { data: perfil } = await supabase
+    .from('usuarios')
+    .select('id')
+    .eq('correo_electronico', correo)
+    .maybeSingle();
+
+  // Mensaje uniforme: no revela si el correo está registrado o no.
+  if (!perfil || !verificarCodigoRecuperacion(perfil.id, codigo)) {
+    const err = new Error('Código incorrecto o expirado. Verificá el código o solicitá uno nuevo.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  return { uid: perfil.id, token: generarToken(perfil.id, 'reset') };
 };
 
 /**
@@ -410,5 +431,6 @@ module.exports = {
   aprobarCuenta,
   rechazarCuenta,
   solicitarRecuperacion,
+  verificarCodigoDeRecuperacion,
   restablecerContrasena,
 };

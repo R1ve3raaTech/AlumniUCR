@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { solicitarRecuperacion } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { solicitarRecuperacion, verificarCodigoRecuperacion } from '@/lib/auth';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import styles from './recuperar.module.css';
 
@@ -27,15 +28,37 @@ const ISpinner = ({ className }: { className?: string }) => (
 );
 
 export default function RecuperarPage() {
+  const router = useRouter();
   const { error, loading, run } = useAuthForm();
   const [correo, setCorreo] = useState('');
+  const [codigo, setCodigo] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [reenviado, setReenviado] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     run(async () => {
       await solicitarRecuperacion(correo.trim());
       setEnviado(true);
+    });
+  }
+
+  // Paso 2: verifica el código de 6 dígitos y redirige a /restablecer con el
+  // token firmado que permite cambiar la contraseña.
+  function handleVerificar(e: React.FormEvent) {
+    e.preventDefault();
+    run(async () => {
+      const data = await verificarCodigoRecuperacion(correo.trim(), codigo.trim());
+      if (!data?.uid || !data?.token) throw new Error('No se pudo verificar el código. Intentá de nuevo.');
+      router.push(`/restablecer?uid=${encodeURIComponent(data.uid)}&token=${encodeURIComponent(data.token)}`);
+    });
+  }
+
+  function reenviarCodigo() {
+    run(async () => {
+      await solicitarRecuperacion(correo.trim());
+      setReenviado(true);
+      setTimeout(() => setReenviado(false), 4000);
     });
   }
 
@@ -46,26 +69,63 @@ export default function RecuperarPage() {
 
       <div className={styles.card}>
         {enviado ? (
-          // Vista de confirmación
-          <div className={styles.success}>
+          // Paso 2: ingresar el código de verificación que llegó por correo
+          <>
             <span className={styles.icon}><IMailSent /></span>
-            <h1 className={styles.title}>Revisa tu correo</h1>
+            <h1 className={styles.title}>Ingresá el código</h1>
             <p className={styles.text}>
-              Si <strong>{correo}</strong> está registrado, te enviamos un enlace para
-              restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de
+              Si <strong>{correo}</strong> está registrado, te enviamos un código de
+              verificación de 6 dígitos. Revisá tu bandeja de entrada y la carpeta de
               spam.
             </p>
+
+            <form className={styles.form} onSubmit={handleVerificar} noValidate>
+              {error && <div className={styles.formError}>{error}</div>}
+              {reenviado && <div className={styles.formOk}>Te reenviamos el código.</div>}
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="codigo">Código de verificación</label>
+                <input
+                  id="codigo"
+                  className={styles.codeInput}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="••••••"
+                  maxLength={6}
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <button type="submit" className={styles.submit} disabled={loading || codigo.length !== 6}>
+                {loading ? (
+                  <><ISpinner className={styles.spinner} /> Verificando…</>
+                ) : (
+                  'Verificar código'
+                )}
+              </button>
+            </form>
+
+            <button type="button" onClick={reenviarCodigo} className={styles.linkBtn} disabled={loading}>
+              ¿No te llegó? Reenviar código
+            </button>
+            <button type="button" onClick={() => { setEnviado(false); setCodigo(''); }} className={styles.linkBtn}>
+              Usar otro correo
+            </button>
             <Link href="/login" className={styles.back}>
               <IArrowLeft /> Volver al Inicio de Sesión
             </Link>
-          </div>
+          </>
         ) : (
           <>
             <span className={styles.icon}><ILockReset /></span>
             <h1 className={styles.title}>¿Olvidaste tu contraseña?</h1>
             <p className={styles.text}>
-              Ingresa el correo asociado a tu cuenta y te enviaremos las instrucciones
-              para crear una nueva contraseña.
+              Ingresa el correo asociado a tu cuenta y te enviaremos un código de
+              verificación para crear una nueva contraseña.
             </p>
 
             <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -92,7 +152,7 @@ export default function RecuperarPage() {
                 {loading ? (
                   <><ISpinner className={styles.spinner} /> Enviando…</>
                 ) : (
-                  <><ISend /> Enviar instrucciones</>
+                  <><ISend /> Enviar código</>
                 )}
               </button>
             </form>

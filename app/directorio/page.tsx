@@ -301,7 +301,7 @@ export default function DirectorioPage() {
 
       <footer className={styles.footer}>
         <AlumniLogo height={30} />
-        <span className={styles.footerCopy}>© 2025 Alumni UCR. Universidad de Costa Rica.</span>
+        <span className={styles.footerCopy}>© 2026 Alumni UCR. Universidad de Costa Rica.</span>
       </footer>
     </div>
   );
