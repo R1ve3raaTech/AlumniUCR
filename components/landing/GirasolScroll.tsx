@@ -66,9 +66,9 @@ export default function GirasolScroll() {
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          transition: 'transform 0.15s linear',
+          // Sin transition ni drop-shadow: la rotación la suaviza el propio
+          // requestAnimationFrame y así el scroll no acumula trabajo de pintado.
           willChange: 'transform',
-          filter: 'drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35))',
         }}
       />
       {/* Oculto en pantallas chicas: taparía demasiado contenido. */}
