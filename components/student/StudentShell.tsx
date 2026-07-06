@@ -103,7 +103,7 @@ export default function StudentShell({
             </button>
             <div className="absolute left-0 top-0 h-3 w-3 rounded-full border-2 border-surface-container-low bg-green-500 shadow-sm" title="En línea" />
           </div>
-          <h2 className="max-w-full truncate font-body-semibold text-primary" title={nombreMostrar}>{nombreCompacto}</h2>
+          <h2 className="max-w-full truncate font-body-semibold text-primary" title={nombreMostrar}>{nombreMostrar}</h2>
           <p className="max-w-full truncate text-xs font-bold uppercase tracking-tighter text-on-surface-variant" title={subtitulo}>{subtitulo}</p>
         </div>
 

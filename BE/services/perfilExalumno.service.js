@@ -63,7 +63,7 @@ const leerMetadata = async (userId) => {
 
 const obtenerPerfil = async (userId) => {
   const [usuarioRes, infoRes, carrerasRes, areasRes, sectoresRes, meta] = await Promise.all([
-    supabase.from('usuarios').select('id,nombre,correo_electronico').eq('id', userId).maybeSingle(),
+    supabase.from('usuarios').select('id,nombre,correo_electronico,estado').eq('id', userId).maybeSingle(),
     supabase.from('informacion_exalumno').select('*').eq('id_usuario', userId).maybeSingle(),
     supabase.from('carreras_usuario').select('id_carrera,ano_graduacion').eq('id_usuario', userId),
     supabase.from('areas_interes_exalumno').select('id_area_tematica').eq('id_exalumno', userId),
