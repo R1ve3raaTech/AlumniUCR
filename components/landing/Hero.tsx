@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import styles from './landing.module.css';
 
@@ -12,9 +13,29 @@ const fadeUp = {
 };
 
 export default function Hero() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // El video de fondo solo se reproduce mientras el hero está en pantalla:
+  // decodificar video durante todo el scroll era una de las causas de que la
+  // página se sintiera trabada.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      },
+      { threshold: 0.05 },
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <section id="inicio" className={styles.hero}>
       <video
+        ref={videoRef}
         className={styles.heroBgVideo}
         src="/images/UCR.mp4"
         autoPlay
