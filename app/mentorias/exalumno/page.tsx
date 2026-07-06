@@ -53,7 +53,8 @@ const NAV = [
   { key: 'perfil', icon: 'person', label: 'Mi Perfil', href: '/perfil-exalumno' },
   { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias/exalumno' },
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
-  { key: 'donaciones', icon: 'volunteer_activism', label: 'Donaciones', href: '/donaciones' },
+  { key: 'hacer-donacion', icon: 'volunteer_activism', label: 'Hacer donación', href: '/donaciones' },
+  { key: 'mis-donaciones', icon: 'history', label: 'Mis donaciones', href: '/mis-donaciones' },
   { key: 'posiciones', icon: 'work', label: 'Posiciones', href: '/mis-posiciones' },
   { key: 'comunidad', icon: 'forum', label: 'Comunidad', href: '/blog' },
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
@@ -160,8 +161,13 @@ export default function MentoriasExalumnoPage() {
         obtenerDirectorioEstudiantes(token),
       ]);
 
-      const perf = perfData?.perfil ?? perfData?.data?.perfil ?? perfData?.data ?? perfData;
-      setPerfil(perf);
+      const data = perfData?.data || perfData;
+      const perf = data?.perfil ?? data;
+      setPerfil({
+        ...(perf ?? {}),
+        nombre: data?.usuario?.nombre || '',
+        estado: data?.usuario?.estado || 'activo',
+      });
       setCatalogos(catData);
       setMatches(matchesData);
       setEstudiantes(directorioData?.data ?? directorioData ?? []);
@@ -198,8 +204,13 @@ export default function MentoriasExalumnoPage() {
         ofrece_mentoria: ofreceMentoria,
         horas_disponibles_mes: horasMes === '' ? null : Number(horasMes),
       });
-      const updatedPerf = res?.perfil ?? res?.data?.perfil ?? res?.data ?? res;
-      setPerfil(updatedPerf);
+      const data = res?.data || res;
+      const updatedPerf = data?.perfil ?? data;
+      setPerfil({
+        ...(updatedPerf ?? {}),
+        nombre: data?.usuario?.nombre || perfil?.nombre || '',
+        estado: data?.usuario?.estado || perfil?.estado || 'activo',
+      });
       setNotifPreferencias({ tipo: 'ok', msg: '✓ Preferencias actualizadas correctamente.' });
       setTimeout(() => setNotifPreferencias(null), 4000);
     } catch (err: any) {
@@ -395,7 +406,7 @@ export default function MentoriasExalumnoPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden text-right lg:block">
-              <p className="text-sm font-bold text-on-surface">{primerNombre}</p>
+              <p className="text-sm font-bold text-on-surface">{nombre}</p>
               <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
             </div>
             {foto

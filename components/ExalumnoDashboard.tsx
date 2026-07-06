@@ -6,12 +6,12 @@
 // donaciones. Conserva la lógica de aprobación (pendiente/activo) y los enlaces
 // funcionales (perfil, mentorías, estudiantes, donaciones, posiciones, ayuda).
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import AlumniLogo from './AlumniLogo';
 import { obtenerMisDonaciones } from '@/lib/donaciones';
 import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
-import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA } from '@/lib/matchesEstudiante';
+import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA, generarMatches } from '@/lib/matchesEstudiante';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -30,7 +30,8 @@ const NAV = [
   { key: 'perfil', icon: 'person', label: 'Mi Perfil', href: '/perfil-exalumno' },
   { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias/exalumno' },
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
-  { key: 'donaciones', icon: 'volunteer_activism', label: 'Donaciones', href: '/donaciones' },
+  { key: 'hacer-donacion', icon: 'volunteer_activism', label: 'Hacer donación', href: '/donaciones' },
+  { key: 'mis-donaciones', icon: 'history', label: 'Mis donaciones', href: '/mis-donaciones' },
   { key: 'posiciones', icon: 'work', label: 'Posiciones', href: '/mis-posiciones' },
   { key: 'comunidad', icon: 'forum', label: 'Comunidad', href: '/blog' },
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
@@ -124,7 +125,7 @@ export default function ExalumnoDashboard({
     if (!token) return;
     let activo = true;
     Promise.all([obtenerMiPerfilExalumno(token), obtenerCatalogos(token)])
-      .then(([p, c]) => { if (activo) { setFull(p?.data?.perfil ?? p?.perfil ?? p ?? null); setCat(c ?? null); } })
+      .then(([p, c]) => { if (activo) { setFull(p?.data?.perfil ?? p?.perfil ?? p ?? null); setCat(c?.data ?? c ?? null); } })
       .catch(() => {});
     if (userId) {
       obtenerMisDonaciones(token, userId)
@@ -177,6 +178,30 @@ export default function ExalumnoDashboard({
     }
   };
 
+  const handleConectarClientSide = async (estudianteId: string) => {
+    if (!token) return;
+    setProcesandoMatchId(estudianteId);
+    try {
+      // 1. Generar los matches en BD para asegurar que exista la fila
+      await generarMatches(token);
+      // 2. Volver a cargar matches para obtener su ID
+      const actualizados = await obtenerMisMatches(token);
+      setMatches(actualizados);
+      // 3. Buscar el match correspondiente
+      const match = actualizados.find((m: any) => m.usuarios?.id === estudianteId);
+      if (match && match.estado === 'sugerido') {
+        await contactarMatch(token, match.id);
+        await cargarMatches();
+      } else {
+        throw new Error('No se encontró el match sugerido tras generarlo.');
+      }
+    } catch (err) {
+      console.error("Error al conectar client side:", err);
+    } finally {
+      setProcesandoMatchId(null);
+    }
+  };
+
   const handleAceptar = async (matchId: string) => {
     if (!token) return;
     setProcesandoMatchId(matchId);
@@ -207,10 +232,98 @@ export default function ExalumnoDashboard({
     return estudiantes.find((e: any) => e.id === estudianteId);
   };
 
+  const puntuarEstudiante = (est: any) => {
+    let score = 0;
+    const comunes: string[] = [];
+
+    // 1. Carreras (30 pts)
+    const tieneCarreraComun = (est.carreras || []).some((c: string) => 
+      carreras.some((ec: string) => ec.toLowerCase().trim() === c.toLowerCase().trim())
+    );
+    if (tieneCarreraComun) score += 30;
+
+    // 2. Áreas de interés comunes (30 pts)
+    const mias = new Set(areas.map(a => a.toLowerCase().trim()));
+    (est.areas || []).forEach((a: string) => {
+      if (mias.has(a.toLowerCase().trim())) {
+        comunes.push(a);
+      }
+    });
+    if (areas.length > 0) {
+      score += Math.round((comunes.length / areas.length) * 30);
+    }
+
+    // 3. Sector <-> Area proyecto (20 pts)
+    const tieneSectorComun = (est.areas || []).some((a: string) =>
+      sectores.some((s: string) => s.toLowerCase().trim() === a.toLowerCase().trim())
+    );
+    if (tieneSectorComun) score += 20;
+
+    // 4. Apoyo (20 pts)
+    const exaOfreceMentoria = full?.ofrece_mentoria;
+    const exaOfreceEmpleo = full?.ofrece_empleo;
+    const exaOfrecePasantia = full?.ofrece_pasantia;
+    const exaOfreceDonacion = full?.ofrece_donacion;
+
+    const apoyoComun =
+      (exaOfreceMentoria && est.busca?.mentoria) ||
+      (exaOfreceEmpleo && est.busca?.empleo) ||
+      (exaOfrecePasantia && est.busca?.pasantia) ||
+      (exaOfreceDonacion && est.busca?.financiamiento);
+    if (apoyoComun) score += 20;
+
+    return { score: Math.min(score, 100), comunes };
+  };
+
+  const estudiantesPuntuados = useMemo(() => {
+    if (cargandoMatches || estudiantes.length === 0) return [];
+    // Excluir estudiantes que ya tienen match (activo, contactado, rechazado, etc.)
+    const idsConMatch = new Set(matches.map((m: any) => m.usuarios?.id).filter(Boolean));
+    const disponibles = estudiantes.filter((e: any) => !idsConMatch.has(e.id));
+    
+    return disponibles
+      .map((e: any) => {
+        const { score, comunes } = puntuarEstudiante(e);
+        return { ...e, score_match: score, comunes };
+      })
+      .sort((a: any, b: any) => b.score_match - a.score_match);
+  }, [cargandoMatches, estudiantes, matches, carreras, areas, sectores, full]);
+
+  const topEstudiante = useMemo(() => {
+    if (estudiantesPuntuados.length === 0) return null;
+    return estudiantesPuntuados[0];
+  }, [estudiantesPuntuados]);
+
   // Clasificación de matches
   const matchSugerido = matches.find((m: any) => m.estado === 'sugerido');
   const solicitudesPendientes = matches.filter((m: any) => m.estado === 'contactado' && m.iniciado_por === 'estudiante');
   const conexionesActivas = matches.filter((m: any) => m.estado === 'activo');
+
+  const matchRender = useMemo(() => {
+    if (matchSugerido) {
+      const detalles = obtenerDetallesEstudiante(matchSugerido.usuarios.id);
+      return {
+        id: matchSugerido.id,
+        isClientSide: false,
+        estudianteId: matchSugerido.usuarios.id,
+        nombre: matchSugerido.usuarios.nombre,
+        score_match: matchSugerido.score_match,
+        proyectoTitulo: detalles?.proyecto?.titulo || 'Proyecto de Graduación',
+        areas: detalles?.areas || ['Tecnología', 'Innovación'],
+      };
+    } else if (topEstudiante) {
+      return {
+        id: topEstudiante.id,
+        isClientSide: true,
+        estudianteId: topEstudiante.id,
+        nombre: topEstudiante.nombre,
+        score_match: topEstudiante.score_match,
+        proyectoTitulo: topEstudiante.proyecto?.titulo || 'Proyecto de Graduación',
+        areas: topEstudiante.areas || ['Tecnología', 'Innovación'],
+      };
+    }
+    return null;
+  }, [matchSugerido, topEstudiante, estudiantes]);
 
   const STATS = [
     { rawVal: experiencia ? Number(experiencia) : 0, suffix: '+', label: 'Años de experiencia', destacado: true },
@@ -304,8 +417,8 @@ export default function ExalumnoDashboard({
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden text-right lg:block">
-              <p className="text-sm font-bold text-on-surface">{primerNombre} Machado</p>
-              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor Senior</p>
+              <p className="text-sm font-bold text-on-surface">{nombre}</p>
+              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
             </div>
             {foto
               ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
@@ -450,19 +563,17 @@ export default function ExalumnoDashboard({
                 <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 text-center text-sm text-on-surface-variant animate-pulse">
                   Cargando coincidencias...
                 </div>
-              ) : matchSugerido ? (() => {
-                const detalles = obtenerDetallesEstudiante(matchSugerido.usuarios.id);
-                const estInitials = matchSugerido.usuarios.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
-                const estAreas = detalles?.areas || ['Tecnología', 'Innovación'];
-                const enProceso = procesandoMatchId === matchSugerido.id;
+              ) : matchRender ? (() => {
+                const estInitials = matchRender.nombre.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+                const enProceso = procesandoMatchId === matchRender.id;
                 
                 return (
                   <div className="relative overflow-hidden rounded-2xl border border-primary bg-gradient-to-br from-primary to-secondary p-7 text-on-primary shadow-xl bento-card">
                     <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
                     <div className="relative z-10">
                       <div className="mb-6 flex items-start justify-between">
-                        <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-black uppercase text-on-secondary-container">Match estratégico</span>
-                        <div className="text-right"><span className="font-display-lg text-2xl leading-none">{matchSugerido.score_match}%</span><p className="text-[10px] font-bold opacity-80">Afinidad</p></div>
+                        <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-black uppercase text-on-secondary-container">Match sugerido</span>
+                        <div className="text-right"><span className="font-display-lg text-2xl leading-none">{matchRender.score_match}%</span><p className="text-[10px] font-bold opacity-80">Afinidad</p></div>
                       </div>
                       <div className="mb-6 flex items-center justify-center gap-3">
                         <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-white/40 bg-white/10 font-bold text-lg">
@@ -471,24 +582,36 @@ export default function ExalumnoDashboard({
                         <span className="material-symbols-outlined text-secondary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
                         <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-secondary-fixed-dim bg-white/10 font-bold text-lg">{iniciales}</div>
                       </div>
-                      <p className="mb-2 text-center font-body-semibold">Conexión recomendada con <strong>{matchSugerido.usuarios.nombre}</strong></p>
-                      <p className="mb-3 text-center text-xs opacity-90 italic line-clamp-2">“{detalles?.proyecto?.titulo || 'Proyecto de Graduación'}”</p>
-                      {cargandoExplicacion ? (
+                      <p className="mb-2 text-center font-body-semibold">Conexión recomendada con <strong>{matchRender.nombre}</strong></p>
+                      <p className="mb-3 text-center text-xs opacity-90 italic line-clamp-2">“{matchRender.proyectoTitulo}”</p>
+                      {!matchRender.isClientSide && cargandoExplicacion ? (
                         <p className="mb-4 text-xs opacity-75 text-center italic animate-pulse">Analizando afinidad con IA...</p>
-                      ) : explicacionIA ? (
+                      ) : !matchRender.isClientSide && explicacionIA ? (
                         <div className="mb-4 rounded-xl bg-white/10 p-3.5 text-[11px] leading-relaxed border border-white/15 text-left text-on-primary">
                           <span className="flex items-center gap-1 font-bold text-secondary-fixed-dim mb-1">
                             <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span> Recomendación de la IA
                           </span>
                           {explicacionIA}
                         </div>
+                      ) : matchRender.isClientSide ? (
+                        <div className="mb-4 rounded-xl bg-white/10 p-3.5 text-[11px] leading-relaxed border border-white/15 text-left text-on-primary">
+                          <span className="flex items-center gap-1 font-bold text-secondary-fixed-dim mb-1">
+                            <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span> Recomendación por Afinidad
+                          </span>
+                          Este estudiante comparte áreas de especialidad, carreras o industrias de tu perfil.
+                        </div>
                       ) : null}
                       <div className="mb-6 space-y-2 border-t border-white/20 pt-4">
-                        {estAreas.slice(0, 3).map((a: string) => (
+                        {matchRender.areas.slice(0, 3).map((a: string) => (
                           <p key={a} className="flex items-center gap-2 text-sm"><span className="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>{a}</p>
                         ))}
                       </div>
-                      <button type="button" onClick={() => handleConectar(matchSugerido.id)} disabled={enProceso} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#54BCEB] py-3.5 font-bold text-primary transition-transform hover:scale-[1.02] disabled:opacity-50">
+                      <button 
+                        type="button" 
+                        onClick={() => matchRender.isClientSide ? handleConectarClientSide(matchRender.estudianteId) : handleConectar(matchRender.id)} 
+                        disabled={enProceso} 
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#54BCEB] py-3.5 font-bold text-primary transition-transform hover:scale-[1.02] disabled:opacity-50"
+                      >
                         {enProceso ? 'Conectando...' : <>Conectar <span className="material-symbols-outlined">bolt</span></>}
                       </button>
                     </div>
