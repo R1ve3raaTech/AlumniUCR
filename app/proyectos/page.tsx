@@ -7,6 +7,7 @@ import Navbar from '@/components/landing/Navbar';
 import AlumniLogo from '@/components/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfil } from '@/lib/auth';
+import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './proyectos.module.css';
@@ -32,148 +33,58 @@ const ILock    = () => <svg {...base}><rect x="3" y="11" width="18" height="11" 
 const IClose   = () => <svg {...base}><path d="M18 6 6 18M6 6l12 12" /></svg>;
 
 // ─── Datos ────────────────────────────────────────────────────────────────
-const AREAS = ['Todas las áreas', 'Ingeniería', 'Artes y Letras', 'Ciencias Sociales', 'Salud'];
 const POR_PAGINA = 3;
 
+// Proyecto real de graduación (RF-05 / Journey 1): viene del directorio de
+// estudiantes con perfil completo; nada es inventado.
 type Proyecto = {
+  id: string; // id del estudiante autor
   img: string;
   area: string;
   titulo: string;
-  afinidad: number;
-  fechaMs: number;
-  impacto: number;
-  autor: { iniciales?: string; img?: string; nombre: string };
-  cta: string;
-  ctaVariant: 'primary' | 'outline';
-} & (
-  | { tipo: 'meta'; metaLabel: string; meta: string; progreso: number }
-  | { tipo: 'requerimiento'; requerimiento: string }
-);
+  avance: number;
+  tipoProyecto: string;
+  autor: { iniciales: string; nombre: string };
+  busca: string[]; // apoyos que el estudiante declaró buscar
+  solicitud: null | 'pendiente' | 'aceptada' | 'rechazada';
+};
 
-// Fotografía de alto contenido gráfico (Unsplash), consistente con el set real
-// de proyectos que ya se muestra en el landing (components/landing/ProyectosGraduacion).
+// Ilustraciones decorativas (Unsplash) rotadas por tarjeta; los datos del
+// proyecto son reales, la foto es solo ambiente visual.
 const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
-const DIA = 24 * 60 * 60 * 1000;
+const IMGS_DECORATIVAS = [
+  IMG('1576091160550-2173dba999ef'),
+  IMG('1500382017468-9049fed747ef'),
+  IMG('1509391366360-2e959784a276'),
+  IMG('1487958449943-2429e8be8625'),
+  IMG('1554224155-6726b3ff858f'),
+  IMG('1485827404703-89b55fcc595e'),
+];
 
-const PROYECTOS: Proyecto[] = [
-  {
-    img: IMG('1576091160550-2173dba999ef'),
-    area: 'Salud',
-    titulo: 'Med-Link CR — Telemedicina rural',
-    afinidad: 98,
-    fechaMs: Date.now() - 1 * DIA,
-    impacto: 90,
-    autor: { iniciales: 'CT', nombre: 'Carlos Torres' },
-    tipo: 'meta',
-    metaLabel: 'Meta de financiamiento',
-    meta: '$3,200',
-    progreso: 65,
-    cta: 'Apoyar proyecto',
-    ctaVariant: 'primary',
-  },
-  {
-    img: IMG('1573497019940-1c28c88b4f3e'),
-    area: 'Salud',
-    titulo: 'Bienestar UCR — Salud mental estudiantil',
-    afinidad: 91,
-    fechaMs: Date.now() - 7 * DIA,
-    impacto: 99,
-    autor: { iniciales: 'DC', nombre: 'Daniela Campos' },
-    tipo: 'meta',
-    metaLabel: 'Meta de impacto',
-    meta: '$3,800',
-    progreso: 80,
-    cta: 'Apoyar proyecto',
-    ctaVariant: 'primary',
-  },
-  {
-    img: IMG('1500382017468-9049fed747ef'),
-    area: 'Ingeniería',
-    titulo: 'AgroSensor Café — IoT para cafetaleros',
-    afinidad: 88,
-    fechaMs: Date.now() - 3 * DIA,
-    impacto: 84,
-    autor: { iniciales: 'MV', nombre: 'Mariana Vargas' },
-    tipo: 'requerimiento',
-    requerimiento: 'Busca: Mentoría en Ing. Eléctrica',
-    cta: 'Conectar con Mariana',
-    ctaVariant: 'outline',
-  },
-  {
-    img: IMG('1509391366360-2e959784a276'),
-    area: 'Ingeniería',
-    titulo: 'SolarComunidad — Microredes solares',
-    afinidad: 85,
-    fechaMs: Date.now() - 5 * DIA,
-    impacto: 88,
-    autor: { iniciales: 'DM', nombre: 'Diego Mora' },
-    tipo: 'meta',
-    metaLabel: 'Financiamiento requerido',
-    meta: '$5,000',
-    progreso: 45,
-    cta: 'Apoyar proyecto',
-    ctaVariant: 'primary',
-  },
-  {
-    img: IMG('1487958449943-2429e8be8625'),
-    area: 'Artes y Letras',
-    titulo: 'Casa Trópico — Vivienda bioclimática',
-    afinidad: 92,
-    fechaMs: Date.now() - 2 * DIA,
-    impacto: 80,
-    autor: { iniciales: 'SB', nombre: 'Sofía Blanco' },
-    tipo: 'requerimiento',
-    requerimiento: 'Busca: Mentoría técnica en arquitectura',
-    cta: 'Conectar con Sofía',
-    ctaVariant: 'outline',
-  },
-  {
-    img: IMG('1504384308090-c894fdcc538d'),
-    area: 'Artes y Letras',
-    titulo: 'Voces UCR — Podcast de divulgación',
-    afinidad: 77,
-    fechaMs: Date.now() - 10 * DIA,
-    impacto: 72,
-    autor: { iniciales: 'VN', nombre: 'Valeria Núñez' },
-    tipo: 'meta',
-    metaLabel: 'Meta de producción',
-    meta: '$1,800',
-    progreso: 55,
-    cta: 'Apoyar proyecto',
-    ctaVariant: 'primary',
-  },
-  {
-    img: IMG('1554224155-6726b3ff858f'),
-    area: 'Ciencias Sociales',
-    titulo: 'Fin-Connect — Educación financiera',
-    afinidad: 90,
-    fechaMs: Date.now() - 4 * DIA,
-    impacto: 86,
-    autor: { iniciales: 'AR', nombre: 'Ana Rojas' },
-    tipo: 'meta',
-    metaLabel: 'Meta académica',
-    meta: '$2,500',
-    progreso: 30,
-    cta: 'Ver detalles',
-    ctaVariant: 'primary',
-  },
-  {
-    img: IMG('1485827404703-89b55fcc595e'),
-    area: 'Ciencias Sociales',
-    titulo: 'EduRobótica — STEM en colegios',
-    afinidad: 89,
-    fechaMs: Date.now() - 6 * DIA,
-    impacto: 83,
-    autor: { iniciales: 'JR', nombre: 'José Ramírez' },
-    tipo: 'requerimiento',
-    requerimiento: 'Busca: Ingeniero de software voluntario',
-    cta: 'Conectar con José',
-    ctaVariant: 'outline',
-  },
+const TIPO_PROYECTO_LABEL: Record<string, string> = {
+  tfg: 'TFG',
+  tesis: 'Tesis',
+  practica_dirigida: 'Práctica Dirigida',
+  seminario: 'Seminario',
+};
+
+const BUSCA_LABEL: Record<string, string> = {
+  financiamiento: 'Financiamiento',
+  mentoria: 'Mentoría',
+  empleo: 'Empleo',
+  pasantia: 'Pasantía',
+};
+
+// Tipos de apoyo del modal "Ofrecer apoyo" (Journey 1 del requerimiento).
+const TIPOS_APOYO = [
+  { clave: 'mentoria', label: 'Mentoría', desc: 'Tiempo y conocimiento para guiar el proyecto' },
+  { clave: 'pasantia', label: 'Pasantía', desc: 'Práctica profesional relacionada con el proyecto' },
+  { clave: 'proyecto', label: 'Proyecto empresarial', desc: 'Colaboración en la tesis/TFG con tu empresa' },
+  { clave: 'donacion', label: 'Donación económica', desc: 'Aporte monetario directo al proyecto' },
 ];
 
 // ─── Roles con acceso completo ────────────────────────────────────────────
-const ROLES_PERMITIDOS = ['exalumno', 'voluntario', 'administrador'];
+const ROLES_PERMITIDOS = ['exalumno', 'voluntario', 'admin', 'administrador'];
 
 export default function ProyectosPage() {
   return (
@@ -189,7 +100,7 @@ function ProyectosContent() {
 
   // ─── Estado de filtros / orden / página / búsqueda ─────────────────────
   const [areaActiva, setAreaActiva]   = useState(0);
-  const [orden, setOrden]             = useState<'recientes' | 'afinidad' | 'impacto'>('recientes');
+  const [orden, setOrden]             = useState<'avance' | 'titulo'>('avance');
   const [pagina, setPagina]           = useState(1);
   const [query, setQuery]             = useState('');
 
@@ -198,9 +109,80 @@ function ProyectosContent() {
   useEffect(() => {
     if (!user || !token) return;
     obtenerPerfil(token)
-      .then((perfil: { rol?: string }) => setRolUsuario(perfil?.rol ?? null))
+      .then((res: any) => {
+        // El perfil viene en data.roles.nombre (join a la tabla roles).
+        const rol = res?.data?.roles?.nombre?.toLowerCase().trim();
+        setRolUsuario(rol ?? null);
+      })
       .catch(() => setRolUsuario(null));
   }, [user, token]);
+
+  // ─── Proyectos reales (directorio de estudiantes, RF-05) ──────────────
+  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [cargandoProyectos, setCargandoProyectos] = useState(true);
+
+  // ─── Modal "Ofrecer apoyo" (Journey 1) ─────────────────────────────────
+  const [apoyoProyecto, setApoyoProyecto] = useState<Proyecto | null>(null);
+  const [apoyoEnviando, setApoyoEnviando] = useState(false);
+  const [apoyoResultado, setApoyoResultado] = useState<'ok' | 'error' | null>(null);
+
+  const tieneAccesoDatos = !!(user && token && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario));
+
+  useEffect(() => {
+    if (!tieneAccesoDatos || !token) { setCargandoProyectos(false); return; }
+    let activo = true;
+    setCargandoProyectos(true);
+    obtenerDirectorioEstudiantes(token)
+      .then((res: any) => {
+        if (!activo) return;
+        const lista: Proyecto[] = (res?.data ?? [])
+          .filter((e: any) => e.proyecto?.titulo)
+          .map((e: any, i: number) => ({
+            id: e.id,
+            img: IMGS_DECORATIVAS[i % IMGS_DECORATIVAS.length],
+            area: e.proyecto?.area_tematica || e.areas?.[0] || 'Proyecto de graduación',
+            titulo: e.proyecto.titulo,
+            avance: e.proyecto?.avance ?? 0,
+            tipoProyecto: TIPO_PROYECTO_LABEL[e.proyecto?.tipo || ''] || 'TFG',
+            autor: {
+              iniciales: (e.nombre || '?').split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase(),
+              nombre: e.nombre || 'Estudiante UCR',
+            },
+            busca: Object.entries(e.busca || {})
+              .filter(([, v]) => v)
+              .map(([k]) => BUSCA_LABEL[k])
+              .filter(Boolean) as string[],
+            solicitud: e.solicitud ?? null,
+          }));
+        setProyectos(lista);
+      })
+      .catch(() => { if (activo) setProyectos([]); })
+      .finally(() => { if (activo) setCargandoProyectos(false); });
+    return () => { activo = false; };
+  }, [tieneAccesoDatos, token]);
+
+  // Ofrecer apoyo: donación → módulo de donaciones con el proyecto destino;
+  // mentoría/pasantía/proyecto → solicitud de contacto real al estudiante.
+  const elegirApoyo = async (tipo: string) => {
+    if (!apoyoProyecto || !token) return;
+    if (tipo === 'donacion') {
+      router.push(`/donaciones?proyecto=${encodeURIComponent(apoyoProyecto.id)}`);
+      return;
+    }
+    setApoyoEnviando(true);
+    try {
+      const label = TIPOS_APOYO.find((t) => t.clave === tipo)?.label || tipo;
+      await solicitarContacto(token, apoyoProyecto.id, `Ofrezco ${label.toLowerCase()} para tu proyecto "${apoyoProyecto.titulo}".`);
+      setProyectos((prev) => prev.map((p) => (p.id === apoyoProyecto.id ? { ...p, solicitud: 'pendiente' } : p)));
+      setApoyoResultado('ok');
+    } catch {
+      setApoyoResultado('error');
+    } finally {
+      setApoyoEnviando(false);
+    }
+  };
+
+  const cerrarApoyo = () => { setApoyoProyecto(null); setApoyoResultado(null); };
 
   // ─── Modal GSAP ──────────────────────────────────────────────────────
   const overlayRef  = useRef<HTMLDivElement>(null);
@@ -304,11 +286,11 @@ function ProyectosContent() {
   // ─── Acceso del usuario (mismo criterio para CTA y buscador) ──────────
   const tieneAcceso = !!(user && rolUsuario && ROLES_PERMITIDOS.includes(rolUsuario));
 
-  // ─── Guard del CTA ────────────────────────────────────────────────────
-  const handleCta = (e: React.MouseEvent) => {
-    e.preventDefault();
+  // ─── CTA "Ofrecer apoyo": sin acceso → modal de cuenta; con acceso → tipos de apoyo ─
+  const abrirApoyo = (p: Proyecto) => {
     if (!tieneAcceso) { abrirModal(); return; }
-    // Con acceso: aquí iría la navegación real al detalle
+    setApoyoProyecto(p);
+    setApoyoResultado(null);
   };
 
   // ─── Guard del buscador: sin acceso → mismo modal que "Apoyar proyecto" ─
@@ -316,10 +298,13 @@ function ProyectosContent() {
     if (!tieneAcceso) { e.preventDefault(); abrirModal(); return; }
   };
 
-  // ─── Filtrado + ordenamiento + paginación ────────────────────────────
-  const areaSeleccionada = AREAS[areaActiva];
+  // ─── Áreas construidas desde los proyectos reales ─────────────────────
+  const AREAS = ['Todas las áreas', ...Array.from(new Set(proyectos.map(p => p.area))).sort()];
 
-  const proyectosFiltrados = PROYECTOS
+  // ─── Filtrado + ordenamiento + paginación ────────────────────────────
+  const areaSeleccionada = AREAS[areaActiva] ?? 'Todas las áreas';
+
+  const proyectosFiltrados = proyectos
     .filter(p => {
       if (areaSeleccionada !== 'Todas las áreas' && p.area !== areaSeleccionada) return false;
       if (query) {
@@ -329,9 +314,8 @@ function ProyectosContent() {
       return true;
     })
     .sort((a, b) => {
-      if (orden === 'afinidad') return b.afinidad - a.afinidad;
-      if (orden === 'impacto')  return b.impacto  - a.impacto;
-      return b.fechaMs - a.fechaMs; // recientes
+      if (orden === 'titulo') return a.titulo.localeCompare(b.titulo);
+      return b.avance - a.avance; // avance
     });
 
   const totalPaginas  = Math.max(1, Math.ceil(proyectosFiltrados.length / POR_PAGINA));
@@ -417,61 +401,69 @@ function ProyectosContent() {
                 value={orden}
                 onChange={e => cambiarOrden(e.target.value)}
               >
-                <option value="recientes">Recientes</option>
-                <option value="afinidad">Afinidad</option>
-                <option value="impacto">Impacto</option>
+                <option value="avance">Avance</option>
+                <option value="titulo">A-Z</option>
               </select>
             </div>
           </section>
 
           {/* Grilla de proyectos */}
           <div className={styles.grid} ref={gridAnimRef}>
-            {proyectosPag.length === 0 ? (
-              <div className={styles.noResults}>No se encontraron proyectos.</div>
+            {!tieneAcceso ? (
+              <div className={styles.noResults}>
+                Los proyectos de graduación de los estudiantes son visibles para la red
+                Alumni. Iniciá sesión como <strong>Exalumno</strong> o <strong>Voluntario</strong> para
+                explorarlos y ofrecer tu apoyo.
+              </div>
+            ) : cargandoProyectos ? (
+              <div className={styles.noResults}>Cargando proyectos…</div>
+            ) : proyectosPag.length === 0 ? (
+              <div className={styles.noResults}>
+                {proyectos.length === 0
+                  ? 'Aún no hay proyectos de graduación publicados por estudiantes.'
+                  : 'No se encontraron proyectos con esos criterios.'}
+              </div>
             ) : (
               proyectosPag.map((p) => (
-                <article key={p.titulo} className={`${styles.card} prj-card`}>
+                <article key={p.id} className={`${styles.card} prj-card`}>
                   <div className={styles.cardMedia}>
-                    <img className={styles.cardImg} src={p.img} alt={p.titulo} />
-                    <span className={styles.afinidad}>{p.afinidad}% Afinidad</span>
+                    <img className={styles.cardImg} src={p.img} alt="" />
+                    <span className={styles.afinidad}>{p.avance}% Avance</span>
                   </div>
                   <div className={styles.cardBody}>
-                    <p className={styles.cardArea}>{p.area}</p>
+                    <p className={styles.cardArea}>{p.area} · {p.tipoProyecto}</p>
                     <h3 className={styles.cardTitle}>{p.titulo}</h3>
 
                     <div className={styles.autor}>
-                      {p.autor.img ? (
-                        <img className={styles.autorImg} src={p.autor.img} alt={p.autor.nombre} />
-                      ) : (
-                        <span className={styles.autorIniciales}>{p.autor.iniciales}</span>
-                      )}
+                      <span className={styles.autorIniciales}>{p.autor.iniciales}</span>
                       <span className={styles.autorNombre}>{p.autor.nombre}</span>
                     </div>
 
                     <div className={styles.cardFooter}>
-                      {p.tipo === 'meta' ? (
-                        <>
-                          <div className={styles.metaRow}>
-                            <span className={styles.metaLabel}>{p.metaLabel}</span>
-                            <span className={styles.metaValor}>{p.meta}</span>
-                          </div>
-                          <div className={styles.barra}>
-                            <span className={`${styles.barraFill} prj-bar`} style={{ width: `${p.progreso}%` }} />
-                          </div>
-                        </>
-                      ) : (
+                      <div className={styles.metaRow}>
+                        <span className={styles.metaLabel}>Avance del proyecto</span>
+                        <span className={styles.metaValor}>{p.avance}%</span>
+                      </div>
+                      <div className={styles.barra}>
+                        <span className={`${styles.barraFill} prj-bar`} style={{ width: `${p.avance}%` }} />
+                      </div>
+                      {p.busca.length > 0 && (
                         <div className={styles.requerimiento}>
-                          <p className={styles.requerimientoLabel}>Requerimiento</p>
-                          <p className={styles.requerimientoTexto}>{p.requerimiento}</p>
+                          <p className={styles.requerimientoLabel}>Busca</p>
+                          <p className={styles.requerimientoTexto}>{p.busca.join(' · ')}</p>
                         </div>
                       )}
                       <button
-                        id={`cta-${p.titulo.replace(/\s+/g, '-').toLowerCase()}`}
+                        id={`cta-${p.id}`}
                         type="button"
-                        className={p.ctaVariant === 'primary' ? styles.ctaPrimary : styles.ctaOutline}
-                        onClick={handleCta}
+                        className={p.solicitud ? styles.ctaOutline : styles.ctaPrimary}
+                        onClick={() => abrirApoyo(p)}
+                        disabled={p.solicitud === 'pendiente' || p.solicitud === 'aceptada'}
+                        style={p.solicitud === 'pendiente' || p.solicitud === 'aceptada' ? { opacity: 0.65, cursor: 'default' } : undefined}
                       >
-                        {p.cta}
+                        {p.solicitud === 'pendiente' ? 'Solicitud enviada'
+                          : p.solicitud === 'aceptada' ? 'Conectado ✓'
+                          : 'Ofrecer apoyo'}
                       </button>
                     </div>
                   </div>
@@ -620,6 +612,64 @@ function ProyectosContent() {
           </div>
         </div>
       </div>
+
+      {/* ─── Modal "Ofrecer apoyo" (Journey 1: tipo de apoyo → contacto o donación) ─── */}
+      {apoyoProyecto && (
+        <div
+          className={styles.modalOverlay}
+          style={{ opacity: 1, visibility: 'visible', pointerEvents: 'all' }}
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => { if (e.target === e.currentTarget && !apoyoEnviando) cerrarApoyo(); }}
+        >
+          <div className={styles.modalBox} style={{ opacity: 1, transform: 'none' }}>
+            <button type="button" className={styles.modalClose} onClick={cerrarApoyo} aria-label="Cerrar">
+              <IClose />
+            </button>
+
+            {apoyoResultado === 'ok' ? (
+              <>
+                <p className={styles.modalTag}>Solicitud enviada</p>
+                <h2 className={styles.modalTitle}>¡Listo! 🎉</h2>
+                <p className={styles.modalText}>
+                  Tu ofrecimiento le llegó a <strong>{apoyoProyecto.autor.nombre}</strong>. Cuando
+                  acepte tu solicitud vas a poder coordinar directamente.
+                </p>
+                <div className={styles.modalActions}>
+                  <button type="button" className={styles.modalBtnPrimary} onClick={cerrarApoyo}>Entendido</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className={styles.modalTag}>Ofrecer apoyo</p>
+                <h2 className={styles.modalTitle}>{apoyoProyecto.titulo}</h2>
+                <p className={styles.modalText}>
+                  Elegí cómo querés apoyar el proyecto de <strong>{apoyoProyecto.autor.nombre}</strong>:
+                </p>
+                {apoyoResultado === 'error' && (
+                  <p className={styles.modalText} style={{ color: '#dc2626' }}>
+                    No se pudo enviar la solicitud. Probá de nuevo.
+                  </p>
+                )}
+                <div className={styles.modalActions}>
+                  {TIPOS_APOYO.map((t) => (
+                    <button
+                      key={t.clave}
+                      type="button"
+                      className={t.clave === 'donacion' ? styles.modalBtnPrimary : styles.modalBtnSecondary}
+                      onClick={() => elegirApoyo(t.clave)}
+                      disabled={apoyoEnviando}
+                      title={t.desc}
+                    >
+                      {apoyoEnviando ? 'Enviando…' : t.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
