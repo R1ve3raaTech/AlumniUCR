@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
+import {
+  Link2, GraduationCap, CreditCard, Handshake,
+  TriangleAlert, Megaphone, MessageSquare,
+  Zap, Clock, Bell, X
+} from 'lucide-react';
 import AlumniLogo from './AlumniLogo';
 import AdminSolicitudes from './AdminSolicitudes';
 import AdminConsultas from './AdminConsultas';
@@ -11,6 +16,7 @@ import AdminDonacionesPendientes from './AdminDonacionesPendientes';
 import AdminReportesAnomalias from './AdminReportesAnomalias';
 import AdminComunidad from './AdminComunidad';
 import KPICard from './ui/KPICard';
+import MatchingModal from './MatchingModal';
 import { obtenerMatching } from '@/lib/matching';
 import styles from './AdminDashboard.module.css';
 
@@ -63,6 +69,18 @@ const fadeItem: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 };
 
+type TabId = 'matching' | 'exalumnos' | 'donaciones' | 'solicitudes' | 'reportes' | 'comunidad' | 'soporte';
+
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+  { id: 'matching',    label: 'Matching',    icon: <Link2 size={15} strokeWidth={2.2} /> },
+  { id: 'exalumnos',  label: 'Exalumnos',   icon: <GraduationCap size={15} strokeWidth={2.2} /> },
+  { id: 'donaciones', label: 'Donaciones',   icon: <CreditCard size={15} strokeWidth={2.2} /> },
+  { id: 'solicitudes',label: 'Solicitudes',  icon: <Handshake size={15} strokeWidth={2.2} /> },
+  { id: 'reportes',   label: 'Reportes',     icon: <TriangleAlert size={15} strokeWidth={2.2} /> },
+  { id: 'comunidad',  label: 'Comunidad',    icon: <Megaphone size={15} strokeWidth={2.2} /> },
+  { id: 'soporte',    label: 'Soporte',      icon: <MessageSquare size={15} strokeWidth={2.2} /> },
+];
+
 export default function AdminDashboard({
   correo,
   onSignOut,
@@ -73,6 +91,9 @@ export default function AdminDashboard({
   const [token, setToken] = useState<string>('');
   const [matching, setMatching] = useState<MatchingData | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabId>('matching');
+  const [alertDismissed, setAlertDismissed] = useState(false);
+  const [selectedProyecto, setSelectedProyecto] = useState<Proyecto | null>(null);
 
   useEffect(() => {
     let activo = true;
@@ -99,6 +120,12 @@ export default function AdminDashboard({
     { icon: <IUsers />, valor: r?.mentores ?? '—', label: 'Mentores' },
     { icon: <ILink />, valor: r?.coincidencias ?? '—', label: 'Coincidencias' },
     { icon: <IShuffle />, valor: r?.interdisciplinarias ?? '—', label: 'Interdisciplinarias' },
+  ];
+
+  // Alertas de prioridad
+  const alertas = [
+    { id: 'sla',      color: '#e65100', icon: <Clock size={13} />,          msg: 'Donaciones cerca de vencer SLA 24h — revisa la pestaña Donaciones' },
+    { id: 'reportes', color: '#b71c1c', icon: <Bell size={13} />,            msg: 'Nuevos reportes de estudiantes pendientes de revisión' },
   ];
 
   return (
@@ -163,189 +190,170 @@ export default function AdminDashboard({
             ))}
           </motion.section>
 
-          {/* Matching interdisciplinario */}
-          <section className={styles.bloque}>
-            <motion.div
-              className={styles.bloqueHead}
-              initial={{ opacity: 0, x: -16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-            >
-              <h2 className={styles.bloqueTitulo}>Matching Interdisciplinario</h2>
-              <span className={styles.bloqueHint}>
-                Proyecto · estudiante · mentores recomendados por áreas en común
-              </span>
-            </motion.div>
 
-            {cargando ? (
-              <p className={styles.vacio}>Calculando coincidencias…</p>
-            ) : !matching || matching.proyectos.length === 0 ? (
-              <p className={styles.vacio}>
-                Aún no hay proyectos con áreas temáticas para cruzar. Cuando existan proyectos,
-                estudiantes y mentores con áreas asignadas, aquí aparecerán las coincidencias.
-              </p>
-            ) : (
+
+          {/* ─── Banner de alertas urgentes ─────────────────────────── */}
+          <AnimatePresence>
+            {!alertDismissed && (
               <motion.div
-                className={styles.matchGrid}
-                variants={stagger}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
+                className={styles.alertBanner}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
               >
-                {matching.proyectos.map((p) => (
-                  <motion.article key={p.id} className={styles.matchCard} variants={fadeItem}>
-                    <div className={styles.matchTop}>
-                      <h3 className={styles.matchTitulo}>{p.titulo}</h3>
-                      <div className={styles.estudiante}>
-                        <span className={styles.estudianteIcon}><IStudent /></span>
-                        <span>
-                          <strong>{p.estudiante.nombre}</strong>
-                          {p.estudiante.facultad ? <em> · {p.estudiante.facultad}</em> : null}
-                        </span>
+                <div className={styles.alertBannerInner}>
+                  <span className={styles.alertBannerTitle}>
+                    <Zap size={13} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }} />
+                    Atención requerida
+                  </span>
+                  <div className={styles.alertList}>
+                    {alertas.map((a) => (
+                      <div key={a.id} className={styles.alertItem} style={{ '--alert-color': a.color } as React.CSSProperties}>
+                        <span className={styles.alertIcon}>{a.icon}</span>
+                        <span>{a.msg}</span>
                       </div>
-                      <div className={styles.areas}>
-                        {p.areas.map((a) => (
-                          <span key={a} className={styles.areaChip}>{a}</span>
-                        ))}
-                      </div>
-                      <div className={styles.barra}>
-                        <motion.span
-                          className={styles.barraFill}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${p.avance}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.9, delay: 0.3, ease: 'easeOut' }}
-                        />
-                      </div>
-                      <span className={styles.avanceTxt}>{p.avance}% de avance</span>
-                    </div>
-
-                    <div className={styles.mentores}>
-                      <span className={styles.mentoresLabel}>
-                        Mentores recomendados ({p.mentores.length})
-                      </span>
-                      {p.mentores.length === 0 ? (
-                        <p className={styles.sinMentores}>Sin coincidencias por ahora.</p>
-                      ) : (
-                        p.mentores.map((m) => (
-                          <div key={m.id} className={styles.mentor}>
-                            <div className={styles.mentorHead}>
-                              <strong>{m.nombre}</strong>
-                              {m.interdisciplinario && (
-                                <span className={styles.interBadge}>Interdisciplinario</span>
-                              )}
-                            </div>
-                            {(m.cargo || m.facultad) && (
-                              <span className={styles.mentorSub}>
-                                {m.cargo}{m.empresa ? ` @ ${m.empresa}` : ''}
-                                {m.facultad ? ` · ${m.facultad}` : ''}
-                              </span>
-                            )}
-                            <div className={styles.areasComunes}>
-                              {m.areasComunes.map((a) => (
-                                <span key={a} className={styles.comunChip}>{a}</span>
-                              ))}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </motion.article>
-                ))}
+                    ))}
+                  </div>
+                </div>
+                <button
+                  className={styles.alertClose}
+                  onClick={() => setAlertDismissed(true)}
+                  aria-label="Cerrar alertas"
+                >
+                  <X size={14} strokeWidth={2.5} />
+                </button>
               </motion.div>
             )}
+          </AnimatePresence>
+
+          {/* ─── Sistema de pestañas ────────────────────────────────── */}
+          <section className={styles.bloque}>
+            <div className={styles.tabBar} role="tablist">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={`${styles.tabBtn} ${activeTab === tab.id ? styles.tabBtnActive : ''}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <span className={styles.tabIcon}>{tab.icon}</span>
+                  <span className={styles.tabLabel}>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                className={styles.tabPanel}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                role="tabpanel"
+              >
+                {activeTab === 'matching' && (
+                  <>
+                    <p className={styles.tabDesc}>Proyecto · estudiante · mentores recomendados por áreas en común.</p>
+                    {cargando ? (
+                      <p className={styles.vacio}>Calculando coincidencias…</p>
+                    ) : !matching || matching.proyectos.length === 0 ? (
+                      <p className={styles.vacio}>
+                        Aún no hay proyectos con áreas temáticas para cruzar.
+                      </p>
+                    ) : (
+                      <motion.div
+                        className={styles.matchGridCompact}
+                        variants={stagger}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        {matching.proyectos.map((p) => (
+                          <motion.article key={p.id} className={styles.matchCardCompact} variants={fadeItem}>
+                            {/* Mini barra de avance */}
+                            <div className={styles.miniBarraWrap}>
+                              <span
+                                className={styles.miniBarraFill}
+                                style={{ width: `${p.avance}%` }}
+                              />
+                            </div>
+                            <div className={styles.compactBody}>
+                              <h3 className={styles.compactTitulo}>{p.titulo}</h3>
+                              <div className={styles.compactMeta}>
+                                <span className={styles.compactEstudiante}>
+                                  <IStudent />
+                                  {p.estudiante.nombre}
+                                </span>
+                                <span className={styles.compactSeparator}>·</span>
+                                <span className={styles.compactAreas}>{p.areas.length} áreas</span>
+                                <span className={styles.compactSeparator}>·</span>
+                                <span className={styles.compactMentores}>{p.mentores.length} mentores</span>
+                              </div>
+                              <div className={styles.compactChips}>
+                                {p.areas.slice(0, 2).map((a) => (
+                                  <span key={a} className={styles.areaChip}>{a}</span>
+                                ))}
+                                {p.areas.length > 2 && (
+                                  <span className={styles.moreChip}>+{p.areas.length - 2}</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className={styles.compactFooter}>
+                              <span className={styles.avanceBadge}>{p.avance}%</span>
+                              <button
+                                className={styles.verBtn}
+                                onClick={() => setSelectedProyecto(p)}
+                              >
+                                Ver detalles
+                              </button>
+                            </div>
+                          </motion.article>
+                        ))}
+                      </motion.div>
+                    )}
+                  </>
+                )}
+                {activeTab === 'exalumnos' && (
+                  <>
+                    <p className={styles.tabDesc}>Aprueba o rechaza el ingreso de nuevos egresados a la plataforma.</p>
+                    {token && <AdminExalumnosPendientes token={token} />}
+                  </>
+                )}
+                {activeTab === 'donaciones' && (
+                  <>
+                    <p className={styles.tabDesc}>Cola por antigüedad · alerta a las 24 h hábiles sin confirmar.</p>
+                    {token && <AdminDonacionesPendientes token={token} />}
+                  </>
+                )}
+                {activeTab === 'solicitudes' && (
+                  <>
+                    <p className={styles.tabDesc}>Voluntarios externos y solicitudes de accesos especiales.</p>
+                    {token && <AdminSolicitudes token={token} />}
+                  </>
+                )}
+                {activeTab === 'reportes' && (
+                  <>
+                    <p className={styles.tabDesc}>Denuncias, quejas y sugerencias enviadas por estudiantes.</p>
+                    {token && <AdminReportesAnomalias token={token} />}
+                  </>
+                )}
+                {activeTab === 'comunidad' && (
+                  <>
+                    <p className={styles.tabDesc}>Aprobá aportes de la comunidad y publicá eventos.</p>
+                    {token && <AdminComunidad token={token} />}
+                  </>
+                )}
+                {activeTab === 'soporte' && (
+                  <>
+                    <p className={styles.tabDesc}>Mensajes enviados desde el Centro de Ayuda.</p>
+                    {token && <AdminConsultas token={token} />}
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </section>
-
-          {/* Exalumnos pendientes de aprobación (RF-01 / RF-08) */}
-          <motion.section
-            className={styles.bloque}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className={styles.bloqueHead}>
-              <h2 className={styles.bloqueTitulo}>Exalumnos pendientes de aprobación</h2>
-              <span className={styles.bloqueHint}>Aprueba o rechaza el ingreso de nuevos egresados</span>
-            </div>
-            {token && <AdminExalumnosPendientes token={token} />}
-          </motion.section>
-
-          {/* Donaciones pendientes con alerta SLA 24h (RF-07 / RF-08.2) */}
-          <motion.section
-            className={styles.bloque}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className={styles.bloqueHead}>
-              <h2 className={styles.bloqueTitulo}>Donaciones por confirmar</h2>
-              <span className={styles.bloqueHint}>Cola por antigüedad · alerta a las 24 h hábiles</span>
-            </div>
-            {token && <AdminDonacionesPendientes token={token} />}
-          </motion.section>
-
-          {/* Solicitudes de colaboración */}
-          <motion.section
-            className={styles.bloque}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className={styles.bloqueHead}>
-              <h2 className={styles.bloqueTitulo}>Solicitudes de colaboración</h2>
-              <span className={styles.bloqueHint}>Voluntarios externos y accesos</span>
-            </div>
-            {token && <AdminSolicitudes token={token} />}
-          </motion.section>
-
-          {/* Reportes: denuncias / quejas / sugerencias de estudiantes */}
-          <motion.section
-            className={styles.bloque}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className={styles.bloqueHead}>
-              <h2 className={styles.bloqueTitulo}>Reportes y denuncias</h2>
-              <span className={styles.bloqueHint}>Denuncias, quejas y sugerencias enviadas por estudiantes</span>
-            </div>
-            {token && <AdminReportesAnomalias token={token} />}
-          </motion.section>
-
-          {/* Comunidad: modera blogs y gestiona eventos */}
-          <motion.section
-            className={styles.bloque}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className={styles.bloqueHead}>
-              <h2 className={styles.bloqueTitulo}>Comunidad: blogs y eventos</h2>
-              <span className={styles.bloqueHint}>Aprobá aportes de la comunidad y publicá eventos</span>
-            </div>
-            {token && <AdminComunidad token={token} />}
-          </motion.section>
-
-          {/* Consultas de soporte (enviadas desde el Centro de Ayuda) */}
-          <motion.section
-            className={styles.bloque}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className={styles.bloqueHead}>
-              <h2 className={styles.bloqueTitulo}>Consultas de soporte</h2>
-              <span className={styles.bloqueHint}>Mensajes enviados desde el Centro de Ayuda</span>
-            </div>
-            {token && <AdminConsultas token={token} />}
-          </motion.section>
         </div>
       </main>
 
@@ -353,6 +361,12 @@ export default function AdminDashboard({
         <AlumniLogo height={30} />
         <span className={styles.footerCopy}>Sesión: {correo} · © 2026 Alumni UCR</span>
       </footer>
+
+      {/* Modal GSAP */}
+      <MatchingModal
+        proyecto={selectedProyecto}
+        onClose={() => setSelectedProyecto(null)}
+      />
     </div>
   );
 }

@@ -122,6 +122,56 @@ const enviarCorreoRecuperacion = async ({ correo, codigo }) => {
 };
 
 /**
+ * Envía al voluntario aprobado el enlace para definir su contraseña y entrar
+ * a la plataforma (su cuenta se crea al aprobar la solicitud de colaboración).
+ * @param {object} params
+ * @param {string} params.nombre
+ * @param {string} params.correo  Destinatario.
+ * @param {string} params.url     Enlace para definir la contraseña (con token).
+ * @returns {Promise<boolean>}
+ */
+const enviarCorreoBienvenidaVoluntario = async ({ nombre, correo, url }) => {
+  if (!resend) {
+    console.warn(
+      '⚠️  RESEND_API_KEY no configurada: no se envió el correo de bienvenida del voluntario. ' +
+        `Definir contraseña manualmente: ${url}`,
+    );
+    return false;
+  }
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a2e">
+      <h2 style="color:#004C63">¡Tu solicitud fue aprobada!</h2>
+      <p>Hola ${nombre || ''}, la administración de Alumni UCR aprobó tu solicitud de colaboración como voluntario.</p>
+      <p>Ya creamos tu cuenta con este correo. Para empezar, definí tu contraseña:</p>
+      <p style="margin:24px 0">
+        <a href="${url}" style="background:#F34B26;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">Definir mi contraseña</a>
+      </p>
+      <p style="font-size:13px;color:#666">Después podrás iniciar sesión en la plataforma y explorar los proyectos de los estudiantes. Si no enviaste esta solicitud, ignorá este correo.</p>
+    </div>`;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: REMITENTE,
+      to: correo,
+      subject: '¡Bienvenido a Alumni UCR! Definí tu contraseña para empezar',
+      html,
+    });
+    if (error) {
+      console.error('🔴 Error al enviar la bienvenida del voluntario:', error.message || error);
+      console.warn(`🔗 Enlace para definir contraseña de ${correo}: ${url}`);
+      return false;
+    }
+    console.log(`📧 Correo de bienvenida de voluntario enviado a ${correo}.`);
+    return true;
+  } catch (err) {
+    console.error('🔴 Excepción al enviar la bienvenida del voluntario:', err.message);
+    console.warn(`🔗 Enlace para definir contraseña de ${correo}: ${url}`);
+    return false;
+  }
+};
+
+/**
  * Envía al exalumno el enlace para confirmar su cuenta (registro por
  * autodeclaración). Hasta confirmar, la cuenta queda pendiente.
  * @param {object} params
@@ -186,7 +236,8 @@ const enviarCorreoNuevoContacto = async ({ nombre_remitente, correo_destinatario
     return false;
   }
 
-  const tipoRemitente = rol_remitente === 'exalumno' ? 'un exalumno' : 'un estudiante';
+  const TIPO_REMITENTE = { exalumno: 'un exalumno', voluntario: 'un voluntario', estudiante: 'un estudiante' };
+  const tipoRemitente = TIPO_REMITENTE[rol_remitente] || 'un miembro de la red';
   const botonAceptar = aceptar_url
     ? `<p style="margin:24px 0">
         <a href="${aceptar_url}" style="background:#16a34a;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">✓ Aceptar conexión</a>
@@ -540,6 +591,7 @@ module.exports = {
   enviarCorreoAprobacion,
   enviarCorreoRecuperacion,
   enviarCorreoConfirmacionExalumno,
+  enviarCorreoBienvenidaVoluntario,
   enviarCorreoNuevoContacto,
   enviarCorreoMatchActivo,
   enviarCorreoMatchActivoAdmin,

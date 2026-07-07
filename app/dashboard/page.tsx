@@ -7,6 +7,7 @@ import { obtenerPerfil } from '@/lib/auth';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import DashboardEstudiante from '@/components/student/DashboardEstudiante';
+import VoluntarioDashboard from '@/components/VoluntarioDashboard';
 
 interface Perfil {
   nombre?: string;
@@ -80,6 +81,11 @@ export default function DashboardPage() {
   // Panel del administrador (se mantiene intacto).
   if (rol === 'admin') {
     return <AdminDashboard correo={correo} onSignOut={handleSignOut} />;
+  }
+
+  // Panel del voluntario: centro de accesos según lo que el admin le habilitó.
+  if (rol === 'voluntario') {
+    return <VoluntarioDashboard correo={correo} onSignOut={handleSignOut} token={token ?? undefined} />;
   }
 
   // Dashboard del estudiante: pizarrón práctico ligado a la fuente única.

@@ -1,86 +1,105 @@
 // Almacén de solicitudes de voluntarios/colaboradores externos (opción "Otros"
-// del registro). Persiste en un archivo JSON local.
-//
-// NOTA: se usa un store en archivo porque la creación de la tabla en Supabase
-// no estaba disponible al implementar la función. Para migrarlo a Postgres,
-// crear la tabla `solicitudes_voluntarios` (ver BE/db/solicitudes_voluntarios.sql)
-// y reemplazar estas funciones por consultas con el cliente service_role.
+// del registro). Persiste en la tabla `solicitudes_voluntarios` de Supabase
+// (ver BE/db/solicitudes_voluntarios.sql). El acceso es solo del backend con la
+// service_role: la tabla tiene RLS habilitado sin políticas.
 
-const fs = require('fs/promises');
-const path = require('path');
-const crypto = require('crypto');
+const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const FILE = path.join(DATA_DIR, 'solicitudes-voluntarios.json');
-
-// Lee el arreglo completo; si el archivo no existe, devuelve [].
-const leerTodo = async () => {
-  try {
-    const raw = await fs.readFile(FILE, 'utf8');
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
-  }
-};
-
-// Guarda el arreglo completo, creando la carpeta si hace falta.
-const guardarTodo = async (lista) => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(FILE, JSON.stringify(lista, null, 2), 'utf8');
-};
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Lista las solicitudes, de la más reciente a la más antigua. */
 const listar = async () => {
-  const lista = await leerTodo();
-  return [...lista].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  const { data, error } = await supabase
+    .from('solicitudes_voluntarios')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw mapDbError(error);
+  return data ?? [];
 };
 
 /** Crea una solicitud nueva en estado 'pendiente'. */
 const crear = async (datos) => {
-  const lista = await leerTodo();
-  const ahora = new Date().toISOString();
-  const solicitud = {
-    id: crypto.randomUUID(),
-    nombre: datos.nombre,
-    correo_electronico: datos.correo_electronico,
-    telefono: datos.telefono,
-    organizacion: datos.organizacion,
-    area_colaboracion: datos.area_colaboracion,
-    disponibilidad: datos.disponibilidad,
-    mensaje: datos.mensaje,
-    estado: 'pendiente',
-    acceso_proyectos: false,
-    acceso_mentorias: false,
-    acceso_estudiantes: false,
-    created_at: ahora,
-    updated_at: ahora,
-  };
-  lista.push(solicitud);
-  await guardarTodo(lista);
-  return solicitud;
+  const { data, error } = await supabase
+    .from('solicitudes_voluntarios')
+    .insert([
+      {
+        nombre: datos.nombre,
+        correo_electronico: datos.correo_electronico,
+        telefono: datos.telefono,
+        organizacion: datos.organizacion,
+        area_colaboracion: datos.area_colaboracion,
+        disponibilidad: datos.disponibilidad,
+        mensaje: datos.mensaje,
+        tipo_ayuda: datos.tipo_ayuda,
+        area: datos.area,
+        modalidad: datos.modalidad,
+        monto: datos.monto,
+        frecuencia: datos.frecuencia,
+        empresa: datos.empresa,
+        duracion: datos.duracion,
+        tema: datos.tema,
+        estado: 'pendiente',
+      },
+    ])
+    .select()
+    .single();
+  if (error) throw mapDbError(error);
+  return data;
 };
 
 /**
  * Actualiza los accesos otorgados por el administrador y marca la solicitud
  * como 'aprobado' (o 'rechazado' si no se otorga ningún acceso y se indica).
+ * Devuelve null si la solicitud no existe (el controlador responde 404).
  */
 const actualizarAccesos = async (id, { acceso_proyectos, acceso_mentorias, acceso_estudiantes, estado }) => {
-  const lista = await leerTodo();
-  const i = lista.findIndex((s) => s.id === id);
-  if (i === -1) return null;
+  if (!UUID_RE.test(String(id))) return null;
 
-  lista[i] = {
-    ...lista[i],
-    acceso_proyectos: Boolean(acceso_proyectos),
-    acceso_mentorias: Boolean(acceso_mentorias),
-    acceso_estudiantes: Boolean(acceso_estudiantes),
-    estado: estado || 'aprobado',
-    updated_at: new Date().toISOString(),
-  };
-  await guardarTodo(lista);
-  return lista[i];
+  const { data, error } = await supabase
+    .from('solicitudes_voluntarios')
+    .update({
+      acceso_proyectos: Boolean(acceso_proyectos),
+      acceso_mentorias: Boolean(acceso_mentorias),
+      acceso_estudiantes: Boolean(acceso_estudiantes),
+      estado: estado || 'aprobado',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+  if (error) throw mapDbError(error);
+  return data;
 };
 
-module.exports = { listar, crear, actualizarAccesos };
+/**
+ * El propio voluntario edita su modalidad, disponibilidad y biografía.
+ * Devuelve null si no tiene ninguna solicitud (no puede editar lo que no existe).
+ */
+const actualizarPerfilPropio = async (correoElectronico, { modalidad, disponibilidad, biografia }) => {
+  const { data: propia, error: errorBusqueda } = await supabase
+    .from('solicitudes_voluntarios')
+    .select('id')
+    .eq('correo_electronico', correoElectronico)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (errorBusqueda) throw mapDbError(errorBusqueda);
+  if (!propia) return null;
+
+  const cambios = { updated_at: new Date().toISOString() };
+  if (modalidad !== undefined) cambios.modalidad = modalidad;
+  if (disponibilidad !== undefined) cambios.disponibilidad = disponibilidad;
+  if (biografia !== undefined) cambios.biografia = biografia;
+
+  const { data, error } = await supabase
+    .from('solicitudes_voluntarios')
+    .update(cambios)
+    .eq('id', propia.id)
+    .select()
+    .single();
+  if (error) throw mapDbError(error);
+  return data;
+};
+
+module.exports = { listar, crear, actualizarAccesos, actualizarPerfilPropio };

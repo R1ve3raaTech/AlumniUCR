@@ -47,7 +47,7 @@ const VACIO: Form = {
 
 export default function PerfilExalumnoPage() {
   const router = useRouter();
-  const { token, loading: authLoading } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
   const { verificando, autorizado } = useRequireRole(['exalumno']);
 
   const [cargando, setCargando] = useState(true);
@@ -350,6 +350,34 @@ export default function PerfilExalumnoPage() {
                   <span className={styles.hint}>El monto es privado: solo lo ven tú y la administración.</span>
                 </div>
               )}
+            </div>
+          </section>
+
+          {/* ── Sección 6: Configuración de la cuenta ── */}
+          <section className={styles.seccion}>
+            <h2 className={styles.seccionTitulo}>6 · Configuración de la cuenta</h2>
+            <div className={styles.confLista}>
+              <div className={styles.confFila}>
+                <div>
+                  <p className={styles.confTitulo}>Correo electrónico</p>
+                  <p className={styles.confDesc}>{user?.email ?? 'Sin correo'} — usado para iniciar sesión, no es editable</p>
+                </div>
+                <span className="material-symbols-outlined" aria-hidden>lock</span>
+              </div>
+              <div className={styles.confFila}>
+                <div>
+                  <p className={styles.confTitulo}>Contraseña</p>
+                  <p className={styles.confDesc}>Cambiala con un código de verificación que llega a tu correo.</p>
+                </div>
+                <Link href="/recuperar" className={styles.confBtn}>Cambiar contraseña</Link>
+              </div>
+              <div className={styles.confFila}>
+                <div>
+                  <p className={styles.confTitulo}>Ayuda y soporte</p>
+                  <p className={styles.confDesc}>Preguntas frecuentes, guías y contacto con soporte.</p>
+                </div>
+                <Link href="/ayuda" className={styles.confBtn}>Ir a Ayuda</Link>
+              </div>
             </div>
           </section>
 

@@ -23,5 +23,7 @@ create table if not exists public.solicitudes_voluntarios (
 -- para impedir el acceso directo con la clave anon.
 alter table public.solicitudes_voluntarios enable row level security;
 
+grant select, insert, update on public.solicitudes_voluntarios to service_role;
+
 comment on table public.solicitudes_voluntarios is
   'Solicitudes de voluntarios/colaboradores externos (opción "Otros" del registro). Las revisa el administrador y otorga acceso a paneles.';

@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { solicitarMagicLink, registrarExalumno, correoYaRegistrado } from '@/lib/auth';
+import { solicitarMagicLink, registrarEstudiante, registrarExalumno, correoYaRegistrado } from '@/lib/auth';
 import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/validaciones';
+import { useAuth } from '@/context/AuthContext';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import AlumniLogo from '@/components/AlumniLogo';
 import AlumniMascot from '@/components/landing/AlumniMascot';
@@ -63,6 +65,8 @@ const EASE_OUT: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
 const EASE_IN: [number, number, number, number] = [0.55, 0.055, 0.675, 0.19];
 
 export default function RegistroPage() {
+  const router = useRouter();
+  const { establecerSesion } = useAuth();
   const { error, loading, run, reset } = useAuthForm();
   const reduced = useReducedMotion();
 
@@ -105,28 +109,35 @@ export default function RegistroPage() {
   const toggleCarrera = (c: string) =>
     setCarreras((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  function enviarEnlace() {
+  // Registro directo del estudiante: crea la cuenta (activa, sin aprobación) y
+  // entra al panel al instante — sin magic link ni re-escribir credenciales.
+  function registrarComoEstudiante() {
     run(async () => {
       // El correo es el determinante: si ya existe, avisamos y ofrecemos login.
       if (await correoYaRegistrado(correo.trim())) {
         setExistente(correo.trim());
         return;
       }
-      const res = await solicitarMagicLink('estudiante', correo.trim());
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(
-          'ct_registro_datos',
-          JSON.stringify({
-            nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
-            apellidos: apellidos.trim(),
-            carne: carne.trim(),
-            cedula: cedula.trim(),
-            rol: 'estudiante',
-          }),
-        );
+      const res = await registrarEstudiante({
+        correo: correo.trim(),
+        contrasena,
+        nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
+      });
+      const token = res?.data?.token;
+      if (token) {
+        establecerSesion(token);
+        router.replace('/dashboard');
+        return;
       }
-      // En desarrollo el backend devuelve token_hash → enlace directo (ruta
-      // relativa, funciona en cualquier puerto y sin depender del correo).
+      // Respaldo improbable: sin sesión, mandamos al login.
+      router.replace('/login');
+    });
+  }
+
+  // Reenvío del magic link (solo lo usa la pantalla de respaldo, ya en desuso).
+  function enviarEnlace() {
+    run(async () => {
+      const res = await solicitarMagicLink('estudiante', correo.trim());
       const th = res?.token_hash;
       setConfirmUrl(th ? `/auth/confirmar?token_hash=${encodeURIComponent(th)}` : null);
       setModoExito('magiclink');
@@ -158,6 +169,15 @@ export default function RegistroPage() {
         correo: correo.trim(), contrasena, nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
         carreras, facultad, anioGraduacion: anio,
       });
+      // Auto-login: si el backend devolvió sesión, entramos directo al panel
+      // (la cuenta queda pendiente; el panel muestra el aviso de revisión).
+      const token = res?.data?.token;
+      if (token) {
+        establecerSesion(token);
+        router.replace('/dashboard');
+        return;
+      }
+      // Respaldo: si no vino sesión, se muestra la pantalla de confirmación.
       setConfirmUrl(res?.data?.confirmUrl ?? null);
       setModoExito('exalumno');
       setEnviado(true);
@@ -175,7 +195,9 @@ export default function RegistroPage() {
     const err = validarCorreoPorRol(correo, 'estudiante');
     setErrorCorreo(err);
     if (err) return;
-    enviarEnlace();
+    const errPass = validarContrasena(contrasena);
+    if (errPass) return setErrorForm(errPass);
+    registrarComoEstudiante();
   }
 
   function abrirCorreo() {
@@ -524,6 +546,36 @@ export default function RegistroPage() {
                             required />
                         </div>
                       </div>
+
+                      {/* Contraseña del estudiante — con su cuenta directa */}
+                      <AnimatePresence>
+                        {rol === 'estudiante' && (
+                          <motion.div
+                            className={styles.fieldFull}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2, ease: EASE_OUT }}
+                          >
+                            <div className={styles.field}>
+                              <label className={styles.label} htmlFor="contrasena-est">Contraseña <span className={styles.req}>*</span></label>
+                              <div className={styles.inputWrap}>
+                                <span className={styles.inputIcon}><ILock /></span>
+                                <input id="contrasena-est" className={styles.input}
+                                  type={verPass ? 'text' : 'password'} placeholder="••••••••"
+                                  autoComplete="new-password" value={contrasena}
+                                  onChange={(e) => setContrasena(e.target.value)} required />
+                                <button type="button" className={styles.toggle}
+                                  onClick={() => setVerPass((v) => !v)}
+                                  aria-label={verPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+                                  {verPass ? 'Ocultar' : 'Mostrar'}
+                                </button>
+                              </div>
+                              <span className={styles.hint}>Mín. 8 caracteres, 1 mayúscula y 1 número.</span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* Campos exclusivos exalumno — fade in/out según rol */}
                       <AnimatePresence>

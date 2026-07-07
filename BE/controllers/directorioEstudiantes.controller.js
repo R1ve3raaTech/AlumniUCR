@@ -32,10 +32,12 @@ const solicitarContacto = async (req, res, next) => {
       throw err;
     }
     const nombreExalumno = req.user.profile?.nombre || 'Un exalumno';
+    const rolExalumno = req.user.profile?.roles?.nombre?.toLowerCase().trim();
     const data = await servicio.crearSolicitud({
       idEstudiante,
       idExalumno: req.user.id,
       nombreExalumno,
+      rolExalumno,
       mensaje,
     });
     res.status(201).json({ success: true, mensaje: 'Solicitud de contacto enviada.', data });

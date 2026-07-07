@@ -27,7 +27,7 @@
 .campo { display: flex; flex-direction: column; gap: 6px; font-size: .88rem; font-weight: 600;
   color: var(--ucr-on-surface); }
 .campo input, .campo select, .campo textarea {
-  padding: 11px 14px; border: 1px solid var(--ucr-outline-variant); border-radius: 10px;
+  padding: 11px 14px; border: 1px solid var(--ucr-outline-variant); border-radius: 16px;
   font-family: inherit; font-size: .95rem; font-weight: 400; color: var(--ucr-on-surface); background: #fff; }
 .campo input:focus, .campo select:focus, .campo textarea:focus {
   outline: none; border-color: var(--brand-esmeralda); box-shadow: 0 0 0 3px rgba(0,125,103,.15); }

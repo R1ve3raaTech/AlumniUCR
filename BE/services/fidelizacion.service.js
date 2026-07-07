@@ -518,7 +518,7 @@ const obtenerLeaderboards = async () => {
             supabase.from('carreras_usuario').select('id_usuario, ano_graduacion'),
             supabase.from('donaciones').select('id_usuario_exalumno, monto, moneda').eq('estado', 'confirmada'),
             supabase.from('matches_mentoria').select('id_exalumno').in('estado', ['activo', 'cerrado']),
-            supabase.from('informacion_exalumno').select('id_usuario, escuela_facultad').eq('estado', true)
+            supabase.from('informacion_exalumno').select('id_usuario').eq('estado', true)
         ]);
 
         if (carrerasUsuariosRes.error) throw carrerasUsuariosRes.error;
@@ -531,35 +531,30 @@ const obtenerLeaderboards = async () => {
         const matches = matchesRes.data || [];
         const infoExalumnos = infoExalumnosRes.data || [];
 
-        // Mapear cada exalumno a su año de graduación y su facultad
+        // Mapear cada exalumno a su año de graduación.
+        // Nota: el leaderboard por facultad quedó deshabilitado — informacion_exalumno
+        // no tiene columna de facultad (eso vive en carreras_usuario→carreras→facultades,
+        // requeriría un join adicional). Queda pendiente si se necesita ese ranking.
         const usuarioGraduacionMap = new Map(carreras.map(c => [c.id_usuario, c.ano_graduacion]));
-        const usuarioFacultadMap = new Map(infoExalumnos.map(i => [i.id_usuario, i.escuela_facultad]));
 
         // Inicializar contenedores de agregación
         const genStats = {}; // { '1995': { mentores: 0, donadoCRC: 0, matches: 0 } }
-        const facStats = {}; // { 'Ingeniería': { mentores: 0, donadoCRC: 0, matches: 0 } }
+        const facStats = {}; // deshabilitado por ahora (ver nota arriba)
 
-        // 1. Contabilizar mentores por generación y facultad
+        // 1. Contabilizar mentores por generación
         infoExalumnos.forEach(info => {
             const gen = usuarioGraduacionMap.get(info.id_usuario);
-            const fac = info.escuela_facultad;
 
             if (gen) {
                 const sGen = String(gen);
                 if (!genStats[sGen]) genStats[sGen] = { gen: sGen, mentores: 0, donadoCRC: 0, matches: 0 };
                 genStats[sGen].mentores += 1;
             }
-
-            if (fac && fac !== '—') {
-                if (!facStats[fac]) facStats[fac] = { facultad: fac, mentores: 0, donadoCRC: 0, matches: 0 };
-                facStats[fac].mentores += 1;
-            }
         });
 
         // 2. Contabilizar donaciones (conversión simple: 1 USD = 520 CRC para fines del ranking)
         donaciones.forEach(d => {
             const gen = usuarioGraduacionMap.get(d.id_usuario_exalumno);
-            const fac = usuarioFacultadMap.get(d.id_usuario_exalumno);
 
             const montoCRC = d.moneda === 'CRC' ? Number(d.monto) : Number(d.monto) * 520;
 
@@ -568,27 +563,16 @@ const obtenerLeaderboards = async () => {
                 if (!genStats[sGen]) genStats[sGen] = { gen: sGen, mentores: 0, donadoCRC: 0, matches: 0 };
                 genStats[sGen].donadoCRC += montoCRC;
             }
-
-            if (fac && fac !== '—') {
-                if (!facStats[fac]) facStats[fac] = { facultad: fac, mentores: 0, donadoCRC: 0, matches: 0 };
-                facStats[fac].donadoCRC += montoCRC;
-            }
         });
 
         // 3. Contabilizar matches
         matches.forEach(m => {
             const gen = usuarioGraduacionMap.get(m.id_exalumno);
-            const fac = usuarioFacultadMap.get(m.id_exalumno);
 
             if (gen) {
                 const sGen = String(gen);
                 if (!genStats[sGen]) genStats[sGen] = { gen: sGen, mentores: 0, donadoCRC: 0, matches: 0 };
                 genStats[sGen].matches += 1;
-            }
-
-            if (fac && fac !== '—') {
-                if (!facStats[fac]) facStats[fac] = { facultad: fac, mentores: 0, donadoCRC: 0, matches: 0 };
-                facStats[fac].matches += 1;
             }
         });
 
