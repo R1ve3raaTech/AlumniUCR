@@ -9,6 +9,9 @@
 
 const supabase = require('../config/supabase');
 const contacto = require('./contacto.store');
+const { enviarCorreoNuevoContacto } = require('./email.service');
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 const cargarDatos = async () => {
   const [
@@ -124,8 +127,8 @@ const obtenerDirectorioParaExalumno = async (idExalumno) => {
     .filter(Boolean);
 };
 
-// Solicitud de contacto creada por un exalumno hacia un estudiante.
-const crearSolicitud = async ({ idEstudiante, idExalumno, nombreExalumno, mensaje }) => {
+// Solicitud de contacto creada por un exalumno/voluntario hacia un estudiante.
+const crearSolicitud = async ({ idEstudiante, idExalumno, nombreExalumno, rolExalumno, mensaje }) => {
   const d = await cargarDatos();
   const u = d.usuarios.find((x) => x.id === idEstudiante);
   if (!u) {
@@ -133,7 +136,32 @@ const crearSolicitud = async ({ idEstudiante, idExalumno, nombreExalumno, mensaj
     err.statusCode = 404;
     throw err;
   }
-  return contacto.crear({ id_estudiante: idEstudiante, id_exalumno: idExalumno, nombre_exalumno: nombreExalumno, mensaje });
+
+  // ¿Ya había una solicitud del par? Solo se notifica al estudiante cuando la
+  // solicitud es nueva o se reactiva una rechazada (no en clics repetidos).
+  const previa = (await contacto.listar()).find(
+    (s) => s.id_estudiante === idEstudiante && s.id_exalumno === idExalumno,
+  );
+
+  const solicitud = await contacto.crear({
+    id_estudiante: idEstudiante,
+    id_exalumno: idExalumno,
+    nombre_exalumno: nombreExalumno,
+    mensaje,
+  });
+
+  if (!previa || previa.estado === 'rechazada') {
+    // Fire-and-forget: el correo no bloquea ni tumba la solicitud si falla.
+    enviarCorreoNuevoContacto({
+      nombre_remitente: nombreExalumno,
+      correo_destinatario: u.correo_electronico,
+      nombre_destinatario: u.nombre,
+      rol_remitente: rolExalumno || 'exalumno',
+      aceptar_url: `${FRONTEND_URL}/perfil-estudiante`,
+    }).catch(() => {});
+  }
+
+  return solicitud;
 };
 
 // Solicitudes recibidas por un estudiante (para aceptar/rechazar).

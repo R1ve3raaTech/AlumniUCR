@@ -78,6 +78,49 @@ const registerUser = async (correo, contrasena, rol) => {
 };
 
 /**
+ * Registro directo de estudiante (correo @ucr.ac.cr + contraseña). A diferencia
+ * del exalumno, el estudiante NO requiere aprobación del administrador: la cuenta
+ * nace ACTIVA y confirmada. Devuelve una sesión para el auto-login inmediato.
+ */
+const registrarEstudianteAutodeclaracion = async ({ correo, contrasena, nombre }) => {
+  const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
+    email: correo,
+    password: contrasena,
+    options: { data: { rol: 'estudiante', nombre } },
+  });
+  if (authError) {
+    authError.statusCode = authError.message?.includes('already') ? 409 : 400;
+    throw authError;
+  }
+
+  const { data: perfil, error: perfilError } = await supabase
+    .from('usuarios')
+    .upsert(
+      {
+        id: authData.user.id,
+        nombre: (nombre || correo.split('@')[0]).trim(),
+        correo_electronico: correo,
+        id_rol: ROLES.estudiante,
+        confirmado: true,
+        estado: 'activo',
+      },
+      { onConflict: 'id' },
+    )
+    .select()
+    .single();
+  if (perfilError) throw mapDbError(perfilError);
+
+  // Auto-login: sesión inmediata para entrar directo al panel tras el registro.
+  let sesion = null;
+  try {
+    const { data: login } = await supabaseAuth.auth.signInWithPassword({ email: correo, password: contrasena });
+    if (login?.session) sesion = { token: login.session.access_token, user: login.user };
+  } catch { /* si falla, el front cae al login normal */ }
+
+  return { perfil, sesion };
+};
+
+/**
  * Registro de exalumno por autodeclaración (RF). Crea la cuenta con correo +
  * contraseña y guarda los datos académicos autodeclarados en el user_metadata
  * de Auth (carreras, escuela/facultad, año de graduación). La cuenta queda
@@ -136,9 +179,18 @@ const registrarExalumnoAutodeclaracion = async ({
   const url = `${BACKEND_URL}/api/auth/confirmar-exalumno/${perfil.id}?token=${token}`;
   enviarCorreoConfirmacionExalumno({ nombre: nombre.trim(), correo, url }).catch(() => {});
 
+  // Auto-login: se devuelve una sesión para que el registro entre directo al
+  // panel, sin re-escribir credenciales ni esperar el correo. La cuenta queda
+  // 'pendiente'; el panel muestra el aviso de revisión hasta la aprobación.
+  let sesion = null;
+  try {
+    const { data: login } = await supabaseAuth.auth.signInWithPassword({ email: correo, password: contrasena });
+    if (login?.session) sesion = { token: login.session.access_token, user: login.user };
+  } catch { /* si falla, el front cae al flujo normal de confirmación/login */ }
+
   // Se devuelve la URL de confirmación; el controlador decide si exponerla
   // (solo en desarrollo, como respaldo cuando el correo no se entrega).
-  return { perfil, confirmUrl: url };
+  return { perfil, confirmUrl: url, sesion };
 };
 
 /**
@@ -177,20 +229,30 @@ const loginUser = async (correo, contrasena) => {
     throw error;
   }
 
-  // Bloquear el acceso si la cuenta aún no fue aprobada por la administración.
   const { data: perfil } = await supabase
     .from('usuarios')
     .select('estado')
     .eq('id', data.user.id)
     .maybeSingle();
 
-  if (perfil && perfil.estado !== 'activo') {
+  // Un usuario de Auth sin fila en 'usuarios' no es una cuenta de la plataforma
+  // (p. ej. registro que nunca completó el perfil): no debe obtener sesión.
+  if (!perfil) {
+    const err = new Error('Tu cuenta no completó el registro. Registrate de nuevo para continuar.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  // Solo se bloquea a cuentas rechazadas o suspendidas. Las cuentas 'pendiente'
+  // SÍ inician sesión y entran a su panel, que muestra el aviso de "cuenta en
+  // revisión" y mantiene bloqueadas las acciones hasta que el admin apruebe
+  // (misma experiencia que ya tenía el estudiante recién registrado).
+  if (perfil.estado === 'rechazado' || perfil.estado === 'suspendido') {
     const mensajes = {
-      pendiente: 'Tu cuenta está pendiente de aprobación. Te avisaremos cuando sea aprobada.',
       rechazado: 'Tu solicitud de cuenta fue rechazada. Contacta a la administración.',
       suspendido: 'Tu cuenta ha sido suspendida por la administración.',
     };
-    const err = new Error(mensajes[perfil.estado] || 'Tu cuenta no está activa.');
+    const err = new Error(mensajes[perfil.estado]);
     err.statusCode = 403;
     throw err;
   }
@@ -357,7 +419,8 @@ const rechazarCuenta = async (userId, token) => {
 /**
  * Etapa 1: el usuario pide restablecer su contraseña desde su correo.
  * Envía un código de verificación de 6 dígitos (vigencia ~10-15 min).
- * Por seguridad NO revela si el correo existe: responde igual en ambos casos.
+ * Si el correo no está registrado, responde 404 para avisarle a la persona
+ * (decisión de producto: se prefiere el aviso claro sobre ocultar si existe).
  */
 const solicitarRecuperacion = async (correo) => {
   const { data: perfil } = await supabase
@@ -366,12 +429,14 @@ const solicitarRecuperacion = async (correo) => {
     .eq('correo_electronico', correo)
     .maybeSingle();
 
-  // Si la cuenta existe, se envía el código; si no, se ignora en silencio
-  // (respuesta uniforme para no filtrar qué correos están registrados).
-  if (perfil) {
-    const codigo = codigoRecuperacion(perfil.id);
-    await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, codigo });
+  if (!perfil) {
+    const err = new Error('No encontramos una cuenta registrada con ese correo. Revisá que esté bien escrito.');
+    err.statusCode = 404;
+    throw err;
   }
+
+  const codigo = codigoRecuperacion(perfil.id);
+  await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, codigo });
 
   return { enviado: true };
 };
@@ -422,6 +487,7 @@ const restablecerContrasena = async (uid, token, contrasena) => {
 
 module.exports = {
   registerUser,
+  registrarEstudianteAutodeclaracion,
   registrarExalumnoAutodeclaracion,
   confirmarExalumno,
   loginUser,

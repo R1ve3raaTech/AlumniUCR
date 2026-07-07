@@ -1,78 +1,82 @@
 // Almacén de solicitudes de contacto (exalumno → estudiante) del RF-03.
-// Persiste en archivo JSON (mismo patrón que voluntarios.store) para no requerir
-// cambios de esquema en producción. Migrable a una tabla cuando se desee.
+// Persiste en la tabla `solicitudes_contacto` de Supabase (ver
+// BE/db/solicitudes_contacto.sql). Acceso solo del backend con la service_role.
 
-const fs = require('fs/promises');
-const path = require('path');
-const crypto = require('crypto');
+const supabase = require('../config/supabase');
+const { mapDbError } = require('../utils/dbError');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const FILE = path.join(DATA_DIR, 'solicitudes-contacto.json');
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const leerTodo = async () => {
-  try {
-    const raw = await fs.readFile(FILE, 'utf8');
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
-  }
+/** Lista todas las solicitudes, de la más reciente a la más antigua. */
+const listar = async () => {
+  const { data, error } = await supabase
+    .from('solicitudes_contacto')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw mapDbError(error);
+  return data ?? [];
 };
-
-const guardarTodo = async (lista) => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(FILE, JSON.stringify(lista, null, 2), 'utf8');
-};
-
-const listar = () => leerTodo();
 
 /** Crea una solicitud (evita duplicar el mismo par; reactiva una rechazada). */
 const crear = async ({ id_estudiante, id_exalumno, nombre_exalumno, mensaje }) => {
-  const lista = await leerTodo();
-  const i = lista.findIndex(
-    (s) => s.id_estudiante === id_estudiante && s.id_exalumno === id_exalumno,
-  );
-  if (i !== -1) {
+  const { data: existente, error: errorBusqueda } = await supabase
+    .from('solicitudes_contacto')
+    .select('*')
+    .eq('id_estudiante', id_estudiante)
+    .eq('id_exalumno', id_exalumno)
+    .maybeSingle();
+  if (errorBusqueda) throw mapDbError(errorBusqueda);
+
+  if (existente) {
     // Si ya existe una pendiente/aceptada, se reutiliza. Si estaba rechazada,
     // se reactiva a 'pendiente' en lugar de crear un duplicado huérfano.
-    if (lista[i].estado === 'rechazada') {
-      lista[i] = {
-        ...lista[i],
+    if (existente.estado !== 'rechazada') return existente;
+
+    const { data: reactivada, error: errorUpdate } = await supabase
+      .from('solicitudes_contacto')
+      .update({
         estado: 'pendiente',
         nombre_exalumno,
         mensaje: mensaje || '',
         updated_at: new Date().toISOString(),
-      };
-      await guardarTodo(lista);
-    }
-    return lista[i];
+      })
+      .eq('id', existente.id)
+      .select()
+      .single();
+    if (errorUpdate) throw mapDbError(errorUpdate);
+    return reactivada;
   }
 
-  const ahora = new Date().toISOString();
-  const solicitud = {
-    id: crypto.randomUUID(),
-    id_estudiante,
-    id_exalumno,
-    nombre_exalumno,
-    mensaje: mensaje || '',
-    estado: 'pendiente',
-    created_at: ahora,
-    updated_at: ahora,
-  };
-  lista.push(solicitud);
-  await guardarTodo(lista);
-  return solicitud;
+  const { data, error } = await supabase
+    .from('solicitudes_contacto')
+    .insert([
+      {
+        id_estudiante,
+        id_exalumno,
+        nombre_exalumno,
+        mensaje: mensaje || '',
+        estado: 'pendiente',
+      },
+    ])
+    .select()
+    .single();
+  if (error) throw mapDbError(error);
+  return data;
 };
 
-/** El estudiante responde su solicitud (aceptada | rechazada). */
+/** El estudiante responde su solicitud (aceptada | rechazada). Null si no es suya. */
 const responder = async (id, idEstudiante, estado) => {
-  const lista = await leerTodo();
-  const i = lista.findIndex((s) => s.id === id && s.id_estudiante === idEstudiante);
-  if (i === -1) return null;
-  lista[i] = { ...lista[i], estado, updated_at: new Date().toISOString() };
-  await guardarTodo(lista);
-  return lista[i];
+  if (!UUID_RE.test(String(id))) return null;
+
+  const { data, error } = await supabase
+    .from('solicitudes_contacto')
+    .update({ estado, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('id_estudiante', idEstudiante)
+    .select()
+    .maybeSingle();
+  if (error) throw mapDbError(error);
+  return data;
 };
 
 module.exports = { listar, crear, responder };

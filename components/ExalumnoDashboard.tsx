@@ -14,6 +14,7 @@ import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno'
 import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA, generarMatches } from '@/lib/matchesEstudiante';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
 import { obtenerMiLegado, obtenerLeaderboards } from '@/lib/fidelizacion';
+import { useTema } from '@/lib/useTema';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -41,6 +42,16 @@ const NAV = [
 
 const card = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_44px_-16px_rgba(0,40,55,0.25)] hover:border-secondary/35';
 
+// Accesos rápidos, espejo de los del dashboard del estudiante.
+const ACCESOS: { titulo: string; icon: string; href: string }[] = [
+  { titulo: 'Mi Perfil', icon: 'person', href: '/perfil-exalumno' },
+  { titulo: 'Mentorías', icon: 'handshake', href: '/mentorias/exalumno' },
+  { titulo: 'Estudiantes', icon: 'group', href: '/estudiantes' },
+  { titulo: 'Donaciones', icon: 'volunteer_activism', href: '/donaciones' },
+  { titulo: 'Posiciones', icon: 'work', href: '/mis-posiciones' },
+  { titulo: 'Comunidad', icon: 'forum', href: '/blog' },
+];
+
 export default function ExalumnoDashboard({
   perfil, correo, onSignOut, userId, token,
 }: { perfil: Perfil | null; correo: string; onSignOut: () => void; userId?: string; token?: string }) {
@@ -64,6 +75,7 @@ export default function ExalumnoDashboard({
   const [legado, setLegado] = useState<any | null>(null);
   const [leaderboards, setLeaderboards] = useState<any | null>(null);
   const [cargandoLegado, setCargandoLegado] = useState(true);
+  useTema(); // aplica el modo claro/oscuro guardado (misma preferencia que el estudiante)
   const [subTab, setSubTab] = useState<'timeline' | 'insignias' | 'arbol' | 'leaderboard' | 'portafolio'>('timeline');
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -182,6 +194,21 @@ export default function ExalumnoDashboard({
   const confirmadas = (donaciones ?? []).filter((d) => (d.estado || '').toLowerCase() === 'confirmada');
   const proyectosApoyados = new Set(confirmadas.map((d) => d.id_proyecto).filter(Boolean)).size;
   const dash = (v: number) => (donaciones === null ? '—' : String(v));
+
+  // % de perfil completo (espejo de las reglas de /perfil-exalumno), para el
+  // anillo de progreso del hero — igual que en el dashboard del estudiante.
+  const pctPerfil = useMemo(() => {
+    const p = full || {};
+    const t = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+    const req = [
+      t(p.pais), t(p.ciudad), t(p.url_linkedin), t(p.biografia),
+      (p.carreras?.length ?? 0) > 0, t(p.escuela_facultad), !!p.anio_graduacion,
+      t(p.empresa), t(p.cargo), (p.sectores?.length ?? 0) > 0,
+      p.anos_experiencia !== '' && p.anos_experiencia != null,
+      (p.areas?.length ?? 0) > 0,
+    ];
+    return Math.round((req.filter(Boolean).length / req.length) * 100);
+  }, [full]);
 
   const [procesandoMatchId, setProcesandoMatchId] = useState<string | null>(null);
 
@@ -400,24 +427,31 @@ export default function ExalumnoDashboard({
             </Link>
           ))}
         </nav>
-        <button type="button" onClick={onSignOut}
-          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error"
-          onMouseEnter={(e) => {
-            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
-            if (icon) {
-              gsap.to(icon, { scale: 1.15, rotation: -8, duration: 0.3, ease: 'back.out(2)' });
-            }
-          }}
-          onMouseLeave={(e) => {
-            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
-            if (icon) {
-              gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
-            }
-          }}
-        >
-          <span className="material-symbols-outlined">logout</span>
-          <span className="font-body-semibold">Cerrar sesión</span>
-        </button>
+        <div className="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-4">
+          <Link href="/configuracion-exalumno"
+            className="flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface">
+            <span className="material-symbols-outlined">settings</span>
+            <span className="font-body-semibold">Configuración</span>
+          </Link>
+          <button type="button" onClick={onSignOut}
+            className="flex items-center gap-4 rounded-lg p-3.5 text-left text-on-surface-variant transition-all hover:text-error"
+            onMouseEnter={(e) => {
+              const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+              if (icon) {
+                gsap.to(icon, { scale: 1.15, rotation: -8, duration: 0.3, ease: 'back.out(2)' });
+              }
+            }}
+            onMouseLeave={(e) => {
+              const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+              if (icon) {
+                gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+              }
+            }}
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-body-semibold">Cerrar sesión</span>
+          </button>
+        </div>
       </aside>
 
       {/* Header */}
@@ -459,6 +493,46 @@ export default function ExalumnoDashboard({
                 : 'Un administrador validará tu registro. Completá tu perfil para agilizar la aprobación; las acciones se habilitan al aprobarse.'}
             </div>
           )}
+
+          {/* Saludo + progreso (mismo hero del dashboard del estudiante) */}
+          <section className="relative overflow-hidden rounded-2xl bg-primary p-8 text-on-primary bento-card">
+            <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+            <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+              <div>
+                <p className="text-sm text-on-primary/70">¡Hola de nuevo!</p>
+                <h1 className="font-headline-md text-2xl font-bold sm:text-3xl">{nombre}</h1>
+                <p className="mt-1 max-w-lg text-sm text-on-primary/85">
+                  Es un placer tenerte de vuelta. Tu experiencia puede marcar la diferencia para un estudiante becado de la UCR.
+                </p>
+              </div>
+              {/* Anillo de progreso */}
+              <div className="flex items-center gap-3 rounded-xl bg-white/10 p-3 pr-5">
+                <div className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#fb923c ${pctPerfil * 3.6}deg, rgba(255,255,255,0.25) 0deg)` }}>
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-sm font-bold">{pctPerfil}%</span>
+                </div>
+                <div>
+                  <p className="font-body-semibold text-sm">Perfil Completo</p>
+                  <Link href="/perfil-exalumno" className="text-xs text-on-primary/70 underline hover:text-on-primary">
+                    {pctPerfil >= 100 ? '¡Tu perfil se ve genial para los estudiantes!' : 'Completar ahora →'}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Accesos rápidos */}
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {ACCESOS.map((s) => (
+              <Link
+                key={`acceso-${s.titulo}`}
+                href={s.href}
+                className="bento-card flex flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5 hover:border-secondary"
+              >
+                <span className="material-symbols-outlined text-secondary">{s.icon}</span>
+                <span className="text-xs font-bold text-on-surface">{s.titulo}</span>
+              </Link>
+            ))}
+          </div>
 
           {/* Encabezado de perfil + stats */}
           <section className="grid grid-cols-12 gap-6">

@@ -52,8 +52,17 @@ export default function DashboardPage() {
     router.replace('/login');
   }
 
+  // El voluntario no tiene panel propio: su espacio de trabajo es el
+  // explorador de proyectos (con su sesión puede ofrecer apoyo).
+  const rolPerfil = perfil?.roles?.nombre?.toLowerCase().trim();
+  useEffect(() => {
+    if (!perfilCargando && rolPerfil === 'voluntario') {
+      router.replace('/proyectos');
+    }
+  }, [perfilCargando, rolPerfil, router]);
+
   // Evita parpadeo de contenido protegido mientras se hidrata o se redirige.
-  if (loading || !token || perfilCargando) {
+  if (loading || !token || perfilCargando || rolPerfil === 'voluntario') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">
         Cargando…

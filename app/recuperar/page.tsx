@@ -74,8 +74,8 @@ export default function RecuperarPage() {
             <span className={styles.icon}><IMailSent /></span>
             <h1 className={styles.title}>Ingresá el código</h1>
             <p className={styles.text}>
-              Si <strong>{correo}</strong> está registrado, te enviamos un código de
-              verificación de 6 dígitos. Revisá tu bandeja de entrada y la carpeta de
+              Te enviamos un código de verificación de 6 dígitos a{' '}
+              <strong>{correo}</strong>. Revisá tu bandeja de entrada y la carpeta de
               spam.
             </p>
 
