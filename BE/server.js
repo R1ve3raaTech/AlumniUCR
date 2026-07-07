@@ -99,6 +99,7 @@ const perfilExalumnoRoutes = require('./routes/perfilExalumno.routes');
 const directorioEstudiantesRoutes = require('./routes/directorioEstudiantes.routes');
 const comprobantesRoutes = require('./routes/comprobantes.routes');
 const statsRoutes = require('./routes/stats.routes');
+const fidelizacionRoutes = require('./routes/fidelizacion.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
@@ -145,6 +146,7 @@ app.use('/api/perfil-exalumno', perfilExalumnoRoutes);
 app.use('/api/estudiantes', directorioEstudiantesRoutes);
 app.use('/api/comprobantes', comprobantesRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/fidelizacion', fidelizacionRoutes);
 app.use('/api/perfil-onboarding', require('./routes/perfilOnboarding.routes'));
 app.use('/api/reportes-anomalias', require('./routes/reportes.routes'));
 app.use('/api/faqs', require('./routes/faqs.routes'));
