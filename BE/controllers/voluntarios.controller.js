@@ -66,8 +66,15 @@ const crearCuentaVoluntario = async (solicitud) => {
 };
 
 const AREAS_VALIDAS = ['Proyectos', 'Mentorías', 'Estudiantes', 'Varios'];
+const TIPOS_AYUDA_VALIDOS = ['donacion', 'pasantia', 'mentoria', 'taller'];
 
 // POST /api/voluntarios  (público)
+// Dos formularios distintos comparten este endpoint:
+//  1. /registro/otros (histórico): nombre, correo, telefono, organizacion,
+//     area_colaboracion, disponibilidad, mensaje — todos obligatorios.
+//  2. /voluntariado (formulario dinámico por tipo de ayuda): nombre, correo,
+//     tipo_ayuda, area, modalidad, mensaje + campos según tipo_ayuda
+//     (donación: monto/frecuencia · pasantía: empresa/duracion · mentoría/taller: tema).
 const crearSolicitud = async (req, res, next) => {
   try {
     const {
@@ -78,21 +85,49 @@ const crearSolicitud = async (req, res, next) => {
       area_colaboracion,
       disponibilidad,
       mensaje,
+      tipo_ayuda,
+      area,
+      modalidad,
+      monto,
+      frecuencia,
+      empresa,
+      duracion,
+      tema,
     } = req.body || {};
 
-    // Todos los campos son obligatorios.
-    const campos = { nombre, correo, telefono, organizacion, area_colaboracion, disponibilidad, mensaje };
-    for (const [clave, valor] of Object.entries(campos)) {
-      if (!valor || String(valor).trim() === '') {
-        throw errorValidacion('Todos los campos son obligatorios.');
-      }
-    }
-
+    // Comunes a ambos formularios.
+    if (!nombre || !String(nombre).trim()) throw errorValidacion('Ingresá tu nombre.');
+    if (!correo || !String(correo).trim()) throw errorValidacion('Ingresá tu correo.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
       throw errorValidacion('El formato del correo no es válido.');
     }
-    if (!AREAS_VALIDAS.includes(area_colaboracion)) {
-      throw errorValidacion('Selecciona un área de colaboración válida.');
+    if (!mensaje || !String(mensaje).trim()) throw errorValidacion('Contanos cómo te gustaría ayudar.');
+
+    if (tipo_ayuda) {
+      // Formulario dinámico de /voluntariado.
+      if (!TIPOS_AYUDA_VALIDOS.includes(tipo_ayuda)) {
+        throw errorValidacion('Selecciona un tipo de ayuda válido.');
+      }
+      if (tipo_ayuda === 'donacion' && (!monto || Number(monto) <= 0 || !frecuencia)) {
+        throw errorValidacion('Indicá el monto y la frecuencia de tu donación.');
+      }
+      if (tipo_ayuda === 'pasantia' && (!empresa || !duracion)) {
+        throw errorValidacion('Indicá la empresa y la duración de la pasantía.');
+      }
+      if ((tipo_ayuda === 'mentoria' || tipo_ayuda === 'taller') && !tema) {
+        throw errorValidacion('Indicá el tema de la mentoría o el taller.');
+      }
+    } else {
+      // Formulario histórico de /registro/otros: todos sus campos son obligatorios.
+      const campos = { telefono, organizacion, area_colaboracion, disponibilidad };
+      for (const [, valor] of Object.entries(campos)) {
+        if (!valor || String(valor).trim() === '') {
+          throw errorValidacion('Todos los campos son obligatorios.');
+        }
+      }
+      if (!AREAS_VALIDAS.includes(area_colaboracion)) {
+        throw errorValidacion('Selecciona un área de colaboración válida.');
+      }
     }
 
     // El correo no puede tener ya una cuenta en la plataforma.
@@ -121,11 +156,19 @@ const crearSolicitud = async (req, res, next) => {
     const solicitud = await store.crear({
       nombre: nombre.trim(),
       correo_electronico: correo.trim(),
-      telefono: telefono.trim(),
-      organizacion: organizacion.trim(),
-      area_colaboracion,
-      disponibilidad,
+      telefono: telefono ? telefono.trim() : null,
+      organizacion: organizacion ? organizacion.trim() : null,
+      area_colaboracion: area_colaboracion || null,
+      disponibilidad: disponibilidad || null,
       mensaje: mensaje.trim(),
+      tipo_ayuda: tipo_ayuda || null,
+      area: area || null,
+      modalidad: modalidad || null,
+      monto: monto ? Number(monto) : null,
+      frecuencia: frecuencia || null,
+      empresa: empresa || null,
+      duracion: duracion || null,
+      tema: tema || null,
     });
 
     res.status(201).json({
@@ -133,6 +176,57 @@ const crearSolicitud = async (req, res, next) => {
       mensaje: 'Tu formulario fue entregado con éxito.',
       data: { id: solicitud.id },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/voluntarios/mis-accesos  (el propio voluntario autenticado)
+// Devuelve su solicitud aprobada (accesos otorgados + lo que pidió al postularse),
+// para armar su dashboard sin exponer las solicitudes de los demás.
+const misAccesos = async (req, res, next) => {
+  try {
+    const correo = req.user.email;
+    const solicitudes = await store.listar();
+    const propia =
+      solicitudes.find((s) => s.correo_electronico === correo && s.estado === 'aprobado') ||
+      solicitudes.find((s) => s.correo_electronico === correo) ||
+      null;
+
+    res.status(200).json({ success: true, data: propia });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const MODALIDADES_VALIDAS = ['Presencial', 'Remoto', 'Híbrido'];
+const DISPONIBILIDAD_VALIDA = ['Tiempo completo', 'Medio tiempo', 'Por horas', 'Puntual / por proyecto'];
+
+// PUT /api/voluntarios/mi-perfil  (el propio voluntario autenticado)
+// Edita modalidad, disponibilidad y biografía de su propia solicitud.
+const actualizarMiPerfil = async (req, res, next) => {
+  try {
+    const { modalidad, disponibilidad, biografia } = req.body || {};
+    if (modalidad !== undefined && modalidad !== '' && !MODALIDADES_VALIDAS.includes(modalidad)) {
+      throw errorValidacion('Selecciona una modalidad válida.');
+    }
+    if (disponibilidad !== undefined && disponibilidad !== '' && !DISPONIBILIDAD_VALIDA.includes(disponibilidad)) {
+      throw errorValidacion('Selecciona una disponibilidad válida.');
+    }
+
+    const actualizado = await store.actualizarPerfilPropio(req.user.email, {
+      modalidad: modalidad === '' ? null : modalidad,
+      disponibilidad: disponibilidad === '' ? null : disponibilidad,
+      biografia: biografia === '' ? null : biografia,
+    });
+
+    if (!actualizado) {
+      const err = new Error('No tenés ninguna solicitud de voluntariado registrada.');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    res.status(200).json({ success: true, mensaje: 'Perfil actualizado.', data: actualizado });
   } catch (error) {
     next(error);
   }
@@ -186,4 +280,4 @@ const actualizarAccesos = async (req, res, next) => {
   }
 };
 
-module.exports = { crearSolicitud, listarSolicitudes, actualizarAccesos };
+module.exports = { crearSolicitud, misAccesos, actualizarMiPerfil, listarSolicitudes, actualizarAccesos };

@@ -69,7 +69,9 @@ const fadeItem: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 };
 
-const TABS: { id: string; label: string; icon: React.ReactNode }[] = [
+type TabId = 'matching' | 'exalumnos' | 'donaciones' | 'solicitudes' | 'reportes' | 'comunidad' | 'soporte';
+
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'matching',    label: 'Matching',    icon: <Link2 size={15} strokeWidth={2.2} /> },
   { id: 'exalumnos',  label: 'Exalumnos',   icon: <GraduationCap size={15} strokeWidth={2.2} /> },
   { id: 'donaciones', label: 'Donaciones',   icon: <CreditCard size={15} strokeWidth={2.2} /> },
@@ -78,7 +80,6 @@ const TABS: { id: string; label: string; icon: React.ReactNode }[] = [
   { id: 'comunidad',  label: 'Comunidad',    icon: <Megaphone size={15} strokeWidth={2.2} /> },
   { id: 'soporte',    label: 'Soporte',      icon: <MessageSquare size={15} strokeWidth={2.2} /> },
 ];
-type TabId = 'matching' | 'exalumnos' | 'donaciones' | 'solicitudes' | 'reportes' | 'comunidad' | 'soporte';
 
 export default function AdminDashboard({
   correo,
