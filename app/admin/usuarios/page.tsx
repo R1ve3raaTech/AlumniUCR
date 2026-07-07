@@ -10,14 +10,10 @@
 // cambios de backend.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
 import { obtenerUsuarios, cambiarEstadoUsuario, eliminarUsuario } from '@/lib/usuarios';
 import styles from './usuarios.module.css';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
 
 interface Usuario {
   id: string;
@@ -87,45 +83,6 @@ export default function AdminUsuariosPage() {
     }
   }
 
-  // Refs GSAP
-  const heroTitleRef = React.useRef<HTMLHeadingElement>(null);
-  const heroTextRef = React.useRef<HTMLParagraphElement>(null);
-  const heroBgRef = React.useRef<HTMLElement>(null);
-  const controlsRef = React.useRef<HTMLDivElement>(null);
-
-  useGSAP(() => {
-    const tl = gsap.timeline({ delay: 0.1 });
-    if (heroTitleRef.current) {
-      tl.fromTo(heroTitleRef.current,
-        { opacity: 0, y: 30, skewY: 1.5 },
-        { opacity: 1, y: 0, skewY: 0, duration: 0.6 }, '-=0.25');
-    }
-    if (heroTextRef.current) {
-      tl.fromTo(heroTextRef.current,
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 }, '-=0.35');
-    }
-    if (controlsRef.current) {
-      tl.fromTo(controlsRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5 }, '-=0.2');
-    }
-
-    if (heroBgRef.current) {
-      const blobs = heroBgRef.current.querySelectorAll('.blob-anim');
-      gsap.to(blobs, {
-        x: 'random(-50, 50)',
-        y: 'random(-30, 30)',
-        rotation: 'random(-15, 15)',
-        scale: 'random(0.85, 1.15)',
-        duration: 'random(5, 8)',
-        ease: 'sine.inOut',
-        yoyo: true,
-        repeat: -1,
-        stagger: 0.5
-      });
-    }
-  }, []);
 
   useEffect(() => {
     if (!authLoading && !token) router.replace('/login');
@@ -216,51 +173,8 @@ export default function AdminUsuariosPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
-        <div className={styles.headerLinks}>
-          <Link href="/" className={styles.back}>Inicio</Link>
-          <Link href="/admin/matches" className={styles.back}>Matches</Link>
-          <Link href="/admin/usuarios" className={styles.back}>Usuarios</Link>
-          <Link href="/admin/donaciones" className={styles.back}>Donaciones</Link>
-          <Link href="/admin/reportes" className={styles.back}>Impacto</Link>
-          <Link href="/dashboard" className={styles.back}>Panel Principal ✨</Link>
-        </div>
-      </header>
-
-      {/* ── HERO CON VIDEO UCR ───────────────────────────── */}
-      <section className={styles.heroClean} ref={heroBgRef}>
-        <video
-          className={styles.heroBgVideo}
-          src="/images/video-ucr.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-        />
-        <div className={styles.heroOverlay} />
-
-        <div className={styles.heroBlobs}>
-          <div className={`${styles.blob} ${styles.blobOrange} blob-anim`}></div>
-          <div className={`${styles.blob} ${styles.blobBlue} blob-anim`}></div>
-          <div className={`${styles.blob} ${styles.blobCyan} blob-anim`}></div>
-        </div>
-
-        <div className={styles.heroInnerCenter}>
-          <div className={styles.heroGlassPanel}>
-            <h1 className={styles.titleMassive} ref={heroTitleRef}>
-              Gestión de <span className={styles.textGradientMassive}>Usuarios</span>
-            </h1>
-            <p className={styles.textElevated} ref={heroTextRef}>
-              Administrá las cuentas de la plataforma: suspendé el acceso, reactivá o eliminá
-              usuarios. Un usuario suspendido no puede iniciar sesión.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div className={styles.controlsSection} ref={controlsRef}>
+    <div className={styles.pageContent}>
+      <div className={styles.controlsSection}>
         <div className={styles.resumen}>
           <span className={styles.resChip}>Activos: <strong>{conteo.activo}</strong></span>
           <span className={styles.resChip}>Suspendidos: <strong>{conteo.suspendido}</strong></span>
