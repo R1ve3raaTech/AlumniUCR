@@ -13,6 +13,8 @@ import { obtenerMisDonaciones } from '@/lib/donaciones';
 import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
 import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA, generarMatches } from '@/lib/matchesEstudiante';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
+import { obtenerMiLegado, obtenerLeaderboards } from '@/lib/fidelizacion';
+import { useTema } from '@/lib/useTema';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -27,6 +29,7 @@ interface Donacion { estado?: string; id_proyecto?: string | null }
 
 const NAV = [
   { key: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/dashboard' },
+  { key: 'mi-legado', icon: 'auto_awesome', label: 'Mi Legado', href: '/mi-legado' },
   { key: 'perfil', icon: 'person', label: 'Mi Perfil', href: '/perfil-exalumno' },
   { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias/exalumno' },
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
@@ -38,6 +41,16 @@ const NAV = [
 ];
 
 const card = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_44px_-16px_rgba(0,40,55,0.25)] hover:border-secondary/35';
+
+// Accesos rápidos, espejo de los del dashboard del estudiante.
+const ACCESOS: { titulo: string; icon: string; href: string }[] = [
+  { titulo: 'Mi Perfil', icon: 'person', href: '/perfil-exalumno' },
+  { titulo: 'Mentorías', icon: 'handshake', href: '/mentorias/exalumno' },
+  { titulo: 'Estudiantes', icon: 'group', href: '/estudiantes' },
+  { titulo: 'Donaciones', icon: 'volunteer_activism', href: '/donaciones' },
+  { titulo: 'Posiciones', icon: 'work', href: '/mis-posiciones' },
+  { titulo: 'Comunidad', icon: 'forum', href: '/blog' },
+];
 
 export default function ExalumnoDashboard({
   perfil, correo, onSignOut, userId, token,
@@ -57,6 +70,13 @@ export default function ExalumnoDashboard({
   const [cargandoMatches, setCargandoMatches] = useState(true);
   const [explicacionIA, setExplicacionIA] = useState<string>('');
   const [cargandoExplicacion, setCargandoExplicacion] = useState(false);
+
+  // Estados de fidelización y gamificación
+  const [legado, setLegado] = useState<any | null>(null);
+  const [leaderboards, setLeaderboards] = useState<any | null>(null);
+  const [cargandoLegado, setCargandoLegado] = useState(true);
+  useTema(); // aplica el modo claro/oscuro guardado (misma preferencia que el estudiante)
+  const [subTab, setSubTab] = useState<'timeline' | 'insignias' | 'arbol' | 'leaderboard' | 'portafolio'>('timeline');
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +147,18 @@ export default function ExalumnoDashboard({
     Promise.all([obtenerMiPerfilExalumno(token), obtenerCatalogos(token)])
       .then(([p, c]) => { if (activo) { setFull(p?.data?.perfil ?? p?.perfil ?? p ?? null); setCat(c?.data ?? c ?? null); } })
       .catch(() => {});
+    
+    // Carga de datos de fidelización
+    setCargandoLegado(true);
+    obtenerMiLegado(token)
+      .then((res) => { if (activo) setLegado(res?.data ?? res ?? null); })
+      .catch((err) => console.error("Error al cargar legado:", err))
+      .finally(() => { if (activo) setCargandoLegado(false); });
+
+    obtenerLeaderboards(token)
+      .then((res) => { if (activo) setLeaderboards(res?.data ?? res ?? null); })
+      .catch((err) => console.error("Error al cargar leaderboards:", err));
+
     if (userId) {
       obtenerMisDonaciones(token, userId)
         .then((r) => { if (activo) setDonaciones((Array.isArray(r) ? r : r?.data ?? []) as Donacion[]); })
@@ -162,6 +194,21 @@ export default function ExalumnoDashboard({
   const confirmadas = (donaciones ?? []).filter((d) => (d.estado || '').toLowerCase() === 'confirmada');
   const proyectosApoyados = new Set(confirmadas.map((d) => d.id_proyecto).filter(Boolean)).size;
   const dash = (v: number) => (donaciones === null ? '—' : String(v));
+
+  // % de perfil completo (espejo de las reglas de /perfil-exalumno), para el
+  // anillo de progreso del hero — igual que en el dashboard del estudiante.
+  const pctPerfil = useMemo(() => {
+    const p = full || {};
+    const t = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+    const req = [
+      t(p.pais), t(p.ciudad), t(p.url_linkedin), t(p.biografia),
+      (p.carreras?.length ?? 0) > 0, t(p.escuela_facultad), !!p.anio_graduacion,
+      t(p.empresa), t(p.cargo), (p.sectores?.length ?? 0) > 0,
+      p.anos_experiencia !== '' && p.anos_experiencia != null,
+      (p.areas?.length ?? 0) > 0,
+    ];
+    return Math.round((req.filter(Boolean).length / req.length) * 100);
+  }, [full]);
 
   const [procesandoMatchId, setProcesandoMatchId] = useState<string | null>(null);
 
@@ -380,24 +427,31 @@ export default function ExalumnoDashboard({
             </Link>
           ))}
         </nav>
-        <button type="button" onClick={onSignOut}
-          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error"
-          onMouseEnter={(e) => {
-            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
-            if (icon) {
-              gsap.to(icon, { scale: 1.15, rotation: -8, duration: 0.3, ease: 'back.out(2)' });
-            }
-          }}
-          onMouseLeave={(e) => {
-            const icon = e.currentTarget.querySelector('.material-symbols-outlined');
-            if (icon) {
-              gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
-            }
-          }}
-        >
-          <span className="material-symbols-outlined">logout</span>
-          <span className="font-body-semibold">Cerrar sesión</span>
-        </button>
+        <div className="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-4">
+          <Link href="/configuracion-exalumno"
+            className="flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface">
+            <span className="material-symbols-outlined">settings</span>
+            <span className="font-body-semibold">Configuración</span>
+          </Link>
+          <button type="button" onClick={onSignOut}
+            className="flex items-center gap-4 rounded-lg p-3.5 text-left text-on-surface-variant transition-all hover:text-error"
+            onMouseEnter={(e) => {
+              const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+              if (icon) {
+                gsap.to(icon, { scale: 1.15, rotation: -8, duration: 0.3, ease: 'back.out(2)' });
+              }
+            }}
+            onMouseLeave={(e) => {
+              const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+              if (icon) {
+                gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+              }
+            }}
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-body-semibold">Cerrar sesión</span>
+          </button>
+        </div>
       </aside>
 
       {/* Header */}
@@ -440,6 +494,46 @@ export default function ExalumnoDashboard({
             </div>
           )}
 
+          {/* Saludo + progreso (mismo hero del dashboard del estudiante) */}
+          <section className="relative overflow-hidden rounded-2xl bg-primary p-8 text-on-primary bento-card">
+            <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+            <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+              <div>
+                <p className="text-sm text-on-primary/70">¡Hola de nuevo!</p>
+                <h1 className="font-headline-md text-2xl font-bold sm:text-3xl">{nombre}</h1>
+                <p className="mt-1 max-w-lg text-sm text-on-primary/85">
+                  Es un placer tenerte de vuelta. Tu experiencia puede marcar la diferencia para un estudiante becado de la UCR.
+                </p>
+              </div>
+              {/* Anillo de progreso */}
+              <div className="flex items-center gap-3 rounded-xl bg-white/10 p-3 pr-5">
+                <div className="relative grid h-14 w-14 shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#fb923c ${pctPerfil * 3.6}deg, rgba(255,255,255,0.25) 0deg)` }}>
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-sm font-bold">{pctPerfil}%</span>
+                </div>
+                <div>
+                  <p className="font-body-semibold text-sm">Perfil Completo</p>
+                  <Link href="/perfil-exalumno" className="text-xs text-on-primary/70 underline hover:text-on-primary">
+                    {pctPerfil >= 100 ? '¡Tu perfil se ve genial para los estudiantes!' : 'Completar ahora →'}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Accesos rápidos */}
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {ACCESOS.map((s) => (
+              <Link
+                key={`acceso-${s.titulo}`}
+                href={s.href}
+                className="bento-card flex flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5 hover:border-secondary"
+              >
+                <span className="material-symbols-outlined text-secondary">{s.icon}</span>
+                <span className="text-xs font-bold text-on-surface">{s.titulo}</span>
+              </Link>
+            ))}
+          </div>
+
           {/* Encabezado de perfil + stats */}
           <section className="grid grid-cols-12 gap-6">
             <div className="col-span-12 flex flex-col items-start gap-6 rounded-2xl border border-outline-variant bg-surface-container-low p-6 md:flex-row md:items-center lg:col-span-8 bento-card">
@@ -456,7 +550,9 @@ export default function ExalumnoDashboard({
               <div className="flex-1">
                 <div className="mb-2 flex flex-wrap items-center gap-3">
                   <h2 className="font-headline-md text-2xl text-primary sm:text-3xl">{nombre}</h2>
-                  <span className="rounded-full bg-secondary-container px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-on-secondary-container">Mentor Senior</span>
+                  <span className="rounded-full bg-secondary-container px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-on-secondary-container">
+                    {legado?.cicloVida?.etapa || "Mentor Senior"}
+                  </span>
                 </div>
                 <p className="mb-4 text-lg text-on-surface-variant">{cargo}{empresa ? ` · ${empresa}` : ''}</p>
                 <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-on-surface-variant">
@@ -552,6 +648,54 @@ export default function ExalumnoDashboard({
                       <span className="material-symbols-outlined text-outline">chevron_right</span>
                     </Link>
                   ))}
+                </div>
+              </section>
+
+              {/* Promo Banner: Mi Legado UCR */}
+              <section className="relative overflow-hidden rounded-2xl border border-secondary/30 bg-gradient-to-r from-primary to-[#002B3A] p-6 sm:p-8 bento-card shadow-md text-white">
+                <div className="absolute -right-20 -bottom-20 h-44 w-44 rounded-full bg-secondary/15 blur-2xl pointer-events-none" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-secondary mb-2 bg-white/10 px-2.5 py-1 rounded-full border border-white/15">
+                      <span className="material-symbols-outlined text-[12px] fill-current">auto_awesome</span> Mi Legado UCR
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-white mb-2">
+                      ¡Estás dejando huella, {primerNombre}!
+                    </h3>
+                    <p className="text-sm text-white/90 max-w-xl leading-relaxed font-brand-body font-light">
+                      Actualmente te encuentras en la etapa de <strong className="text-secondary font-bold">{legado?.cicloVida?.etapa || "Mentor Senior"}</strong>. 
+                      Descubre tus insignias acumuladas, tu árbol de impacto multigeneracional, la línea de tiempo de tus donaciones y tu portafolio de co-creaciones.
+                    </p>
+                    
+                    {/* Pequeño preview de insignias */}
+                    {legado?.insignias && (
+                      <div className="mt-4 flex items-center gap-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">Tus Insignias:</p>
+                        <div className="flex gap-1.5">
+                          {legado.insignias.map((ins: any) => (
+                            <span 
+                              key={ins.id} 
+                              className={`material-symbols-outlined text-lg p-1 rounded-full ${
+                                ins.desbloqueado ? 'text-secondary bg-white/10 border border-white/15' : 'text-white/20 bg-white/5 border border-white/5 grayscale opacity-30'
+                              }`}
+                              title={ins.nombre}
+                            >
+                              {ins.icono}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="shrink-0 flex items-center justify-center">
+                    <Link 
+                      href="/mi-legado" 
+                      className="flex items-center justify-center gap-2 rounded-xl bg-secondary px-6 py-3.5 text-sm font-bold text-primary shadow-md transition-all hover:scale-[1.03] hover:shadow-lg font-brand-body hover:brightness-110"
+                    >
+                      Ver mi Legado completo <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </Link>
+                  </div>
                 </div>
               </section>
             </div>

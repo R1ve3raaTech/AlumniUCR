@@ -4,11 +4,13 @@
 // (criterios RF-03) + conexiones sugeridas reales (RF-06). 100% ligado a la
 // fuente única (perfil); sin datos quemados.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import { obtenerSugeridos } from '@/lib/matchesEstudiante';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 const card = 'rounded-xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5';
 
@@ -40,6 +42,15 @@ function completitud(p: PerfilEstudiante): number {
 export default function DashboardEstudiante() {
   const { perfil } = usePerfilEstudiante();
   const [sugeridos, setSugeridos] = useState<any[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Entrada escalonada de las tarjetas (misma animación del panel de exalumno).
+  useGSAP(() => {
+    gsap.fromTo('.anim-card',
+      { y: 30, opacity: 0, scale: 0.97 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.8, stagger: 0.06, ease: 'power4.out', delay: 0.1 },
+    );
+  }, { scope: containerRef });
 
   useEffect(() => {
     let activo = true;
@@ -74,9 +85,9 @@ export default function DashboardEstudiante() {
 
   return (
     <StudentShell active="dashboard">
-      <div className="mx-auto w-full max-w-[1280px] space-y-6 p-6 lg:p-8">
+      <div ref={containerRef} className="mx-auto w-full max-w-[1280px] space-y-6 p-6 lg:p-8">
         {/* Saludo + progreso */}
-        <section className="relative overflow-hidden rounded-2xl bg-primary p-8 text-on-primary">
+        <section className="anim-card relative overflow-hidden rounded-2xl bg-primary p-8 text-on-primary">
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div>
@@ -107,7 +118,7 @@ export default function DashboardEstudiante() {
             <Link
               key={`acceso-${s.titulo}`}
               href={s.href}
-              className="flex flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5 hover:border-secondary"
+              className="anim-card flex flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-center shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all hover:-translate-y-0.5 hover:border-secondary"
             >
               <span className="material-symbols-outlined text-secondary">{s.icon}</span>
               <span className="text-xs font-bold text-on-surface">{s.titulo}</span>
@@ -116,7 +127,7 @@ export default function DashboardEstudiante() {
         </div>
 
         {/* Próximos pasos */}
-        <div className={`${card} p-6`}>
+        <div className={`${card} anim-card p-6`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-body-semibold text-primary">Próximos pasos</h2>
             {proximoPaso && (
@@ -145,7 +156,7 @@ export default function DashboardEstudiante() {
         </div>
 
         {/* Conexiones sugeridas */}
-        <div className={`${card} p-6`}>
+        <div className={`${card} anim-card p-6`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-body-semibold text-primary">Conexiones sugeridas para ti</h2>
             <Link href="/mis-matches" className="text-xs font-bold text-secondary hover:underline">Ver todos los perfiles</Link>
