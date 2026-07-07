@@ -236,7 +236,8 @@ const enviarCorreoNuevoContacto = async ({ nombre_remitente, correo_destinatario
     return false;
   }
 
-  const tipoRemitente = rol_remitente === 'exalumno' ? 'un exalumno' : 'un estudiante';
+  const TIPO_REMITENTE = { exalumno: 'un exalumno', voluntario: 'un voluntario', estudiante: 'un estudiante' };
+  const tipoRemitente = TIPO_REMITENTE[rol_remitente] || 'un miembro de la red';
   const botonAceptar = aceptar_url
     ? `<p style="margin:24px 0">
         <a href="${aceptar_url}" style="background:#16a34a;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">✓ Aceptar conexión</a>

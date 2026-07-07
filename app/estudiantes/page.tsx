@@ -397,19 +397,6 @@ function EstudiantesPageContent() {
                     </div>
 
                     <div className="mt-auto flex flex-col gap-2">
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('open-global-chatbot', { 
-                            detail: { mensaje: `Analiza mi match con ${e.nombre}` } 
-                          }));
-                        }}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-ucr-secondary/10 py-2 text-sm font-semibold text-ucr-secondary transition hover:bg-ucr-secondary/20"
-                      >
-                        <span className="material-symbols-outlined text-base">psychology</span>
-                        Ver Match Emocional (IA)
-                      </button>
-
                       {e.solicitud === 'aceptada' ? (
                         <div className="rounded-2xl bg-ucr-esmeralda/10 p-3 text-sm">
                           <p className="font-semibold text-ucr-esmeralda">Contacto revelado</p>
