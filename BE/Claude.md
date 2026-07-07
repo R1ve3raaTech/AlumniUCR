@@ -1,126 +1,149 @@
 # Asistente de IA (Claude) — Conectando Talento UCR
 
-Este documento proporciona un contexto detallado, estructurado y técnico de la integración del asistente virtual (basado en la API de Claude de Anthropic) en la plataforma **Alumni UCR — Conectando Talento**. Sirve como manual de referencia para comprender el comportamiento adaptativo del chatbot, sus directrices de seguridad y su arquitectura técnica.
+> Verificado contra el código real del repo el 2026-07-07. Si algo de este documento
+> contradice lo que ves en el código, **gana el código** — actualizá este archivo.
+
+Este documento describe la integración de la API de Claude (Anthropic) en la plataforma
+**Alumni UCR — Conectando Talento**. Hay **dos integraciones de IA distintas y separadas**,
+no una sola — es el punto que más confusión genera, léelo con cuidado antes de tocar nada
+relacionado con "el chatbot".
 
 ---
 
-## 📌 1. Visión General del Asistente
-El asistente virtual está diseñado para guiar a los usuarios dentro de la plataforma **Alumni UCR**. Su comportamiento y las instrucciones del sistema (**System Prompts**) se adaptan de forma dinámica en tiempo real según:
-1. El **Rol del usuario** (Visitante, Estudiante, Exalumno/Mentor, Administrador).
-2. La **Sección o ruta del sitio** (ej. si está editando proyectos, buscando mentorías, etc.).
+## 🌻 0. Las dos integraciones de IA (no confundir)
+
+| | Mascota Alumni | Asistente Adaptativo (GlobalChatbot) |
+|---|---|---|
+| Componente FE | `components/landing/AlumniMascot.tsx` | `components/GlobalChatbot.tsx` (+ `ChatbotAvatar.tsx`) |
+| Endpoint | `POST /api/alumni-chat` (route handler de **Next.js**, no del BE Express) | `POST /api/claude/chat` (BE Express real) |
+| Dónde se renderiza hoy | `app/page.tsx` (landing) y `app/registro/page.tsx` | **Solo** `app/mi-curriculum/plantillas/page.tsx` |
+| Prompts | Fijo, genérico para visitantes | Dinámico por rol + ruta (ver sección 2) |
+| Propósito | Widget flotante de bienvenida/orientación pública | Asistente contextual "consciente del rol" (CV Advisor, Asesor de TFG, etc.) |
+
+**⚠️ Discrepancia real detectada (2026-07-07):** el `GlobalChatbot.tsx` implementa toda la
+lógica adaptativa por rol descrita en la sección 2 (admin, exalumno, estudiante en
+mentorías/proyectos/CV), pero en el código actual **solo está montado en una página**
+(`/mi-curriculum/plantillas`). No aparece en `StudentShell`, `ExalumnoDashboard`,
+`AdminDashboard` ni `VoluntarioDashboard`. Si ves comportamiento adaptativo del chatbot
+"desaparecer" fuera de esa página, no es un bug — es que ese componente todavía no está
+integrado ahí. Confirmar con el equipo si la intención es expandirlo a más pantallas antes
+de asumir que es un error.
 
 ---
 
-## 👥 2. Roles, Contextos e Instrucciones del Sistema
+## 👥 1. Roles y categorías de FAQ autorizadas (Asistente Adaptativo)
 
-### 1️⃣ Contexto Público (Visitantes / No Autenticados)
-* **Ubicación típica**: Ayuda pública, Login, Registro (`/`).
-* **Propósito**: Resolver dudas sobre el registro de usuarios y el propósito del sitio.
-* **Mensajes clave a comunicar**:
-  * **Estudiantes**: Es **obligatorio** registrarse con correo institucional `@ucr.ac.cr` y poseer una **beca socioeconómica de nivel 4 o 5** otorgada por la UCR para ingresar y recibir beneficios.
-  * **Exalumnos**: Pueden registrarse con cualquier correo, pero deben indicar obligatoriamente carrera, facultad de procedencia y año de graduación. Su cuenta queda pendiente de aprobación manual por un Administrador.
-  * **Soporte**: Horario L-V 8 AM a 5 PM en `soporte@ucrconnect.cr`.
-* **Guardrail (Seguridad)**: Tiene prohibido divulgar información interna, bases de datos o funcionalidades de usuarios autenticados.
+Constante real en `BE/services/claude.service.js` (`CATEGORIAS_PERMITIDAS`):
 
----
+| Rol | Categorías de FAQ permitidas |
+|---|---|
+| `visitante` (default si no hay rol o no coincide) | Registro y Cuenta, Seguridad y Privacidad |
+| `estudiante` | Registro y Cuenta, Estudiantes y Becas, Proyectos y Financiamiento, Seguridad y Privacidad, Exalumnos y Mentorías |
+| `exalumno` | Registro y Cuenta, Exalumnos y Mentorías, Proyectos y Financiamiento, Donaciones, Seguridad y Privacidad |
+| `admin` | Registro y Cuenta, Estudiantes y Becas, Exalumnos y Mentorías, Proyectos y Financiamiento, Donaciones, Seguridad y Privacidad |
 
-### 2️⃣ Estudiante — Dashboard General
-* **Ubicación típica**: Panel principal del estudiante (`/dashboard`, `/`).
-* **Propósito**: Orientar sobre el uso general de la plataforma.
-* **Mensajes clave a comunicar**:
-  * Exclusividad de los beneficios para estudiantes con beca socioeconómica de nivel 4 o 5.
-  * Invitación a completar el perfil en `/perfil-estudiante` para llamar la atención de mentores.
-  * Navegar en `/mentorias` para buscar exalumnos.
-  * Registrar su proyecto de graduación (TFG) o postularse a empleos y pasantías exclusivas.
-* **Guardrail (Seguridad)**: Prohibido responder o simular acciones administrativas (como aprobación de cuentas, ver reportes de comportamiento o auditar donaciones).
+> No existe categoría específica para `voluntario` en `CATEGORIAS_PERMITIDAS` — si ese rol
+> llega al prompt, cae en el rama `else` (prompt `PUBLICO`), igual que un visitante. Revisar
+> si esto es intencional antes de asumir que el voluntario debería tener su propio contexto.
 
----
+Si el usuario pregunta algo fuera de sus categorías autorizadas, el sistema deniega con un
+mensaje fijo (ver `seguridadFaqs` en `obtenerPromptDeSistema`), sin importar el rol.
 
-### 3️⃣ Estudiante — Asesor de Proyectos (TFG Advisor)
-* **Ubicación típica**: Sección de proyectos y perfil académico (`/proyectos`, `/perfil-estudiante`, `/completar-perfil`).
-* **Propósito**: Asesoramiento metodológico enfocado.
-* **Mensajes clave a comunicar**:
-  * Ayudar a redactar y estructurar el **Título** y la **Descripción** del proyecto de graduación.
-  * **Objetivos**: Orientar a que se redacte un **Objetivo General** (usando un único verbo fuerte en infinitivo) y **Objetivos Específicos** (pasos metodológicos secuenciales).
-  * **Áreas Temáticas**: Explicar la importancia de seleccionar áreas temáticas correctas (Tecnología, Salud, Agro, Ciencias Sociales, Medio Ambiente, Investigación) para el correcto funcionamiento del motor de matching.
-  * Explicar el **Matching Interdisciplinario** (mayor puntuación a mentores que cooperen desde otras facultades).
+### Prompts de sistema por rol + ruta (`obtenerPromptDeSistema`)
 
----
+1. **Admin** (`rol === 'admin'`) → `PROMPTS.ADMIN` (fijo, sin variación por ruta).
+2. **Exalumno** (`rol === 'exalumno'`) → `PROMPTS.EXALUMNO_GENERAL` (fijo, sin variación por ruta).
+3. **Estudiante** (`rol === 'estudiante'`), variación por `pathname`:
+   - `/mi-curriculum` → `PROMPTS.ESTUDIANTE_CV`, con el CV real del estudiante inyectado en
+     el prompt (primero intenta con `contexto.perfil` en tiempo real del editor; si no,
+     consulta `cv.service.js` por `usuario.id`).
+   - `/proyectos`, `/perfil-estudiante`, `/completar-perfil` → `PROMPTS.ESTUDIANTE_PROYECTOS`
+     (Asesor de TFG: título, descripción, objetivo general/específicos, áreas temáticas).
+   - `/mentorias` → `PROMPTS.ESTUDIANTE_MENTORIAS`.
+   - Cualquier otra ruta → `PROMPTS.ESTUDIANTE_GENERAL`.
+4. **Cualquier otro rol / sin rol** → `PROMPTS.PUBLICO` (visitante).
 
-### 4️⃣ Estudiante — Sección de Mentorías
-* **Ubicación típica**: Pestaña de mentorías (`/mentorias`).
-* **Propósito**: Ayudar al estudiante a prepararse para su mentoría.
-* **Mensajes clave a comunicar**:
-  * Preparar preguntas clave para el primer contacto con el mentor (networking, alcance de tesis, mercado laboral).
-  * Protocolo de conducta (puntualidad, profesionalismo, minutas de seguimiento).
-  * Cómo funciona el matching (cruza áreas temáticas + otorga bono interdisciplinar).
+Guardrails de seguridad (aplican mediante el bloque `seguridadFaqs`, no son prompts separados):
+- El visitante nunca ve funcionalidades ni datos de usuarios autenticados.
+- El estudiante nunca puede simular acciones administrativas.
+- El exalumno nunca puede gestionar reportes de comportamiento ni aprobar su propia cuenta.
+- El admin sí tiene acceso a las 6 categorías completas.
 
----
+### Función extra: exalumno analizando a un estudiante
 
-### 5️⃣ Exalumno / Mentor
-* **Ubicación típica**: Dashboard de egresados/mentores (`/dashboard`).
-* **Propósito**: Guiar a los graduados en su rol de apoyo.
-* **Mensajes clave a comunicar**:
-  * Aclarar que guiarán a estudiantes vulnerables (beca 4 o 5 de la UCR).
-  * Explicar los pasos para postularse como mentor (completar datos y enviar solicitud, sujeta a aprobación de administración).
-  * Cómo publicar ofertas de empleo o pasantías.
-  * Cómo registrar y reportar donaciones para apoyar proyectos estudiantiles.
-  * Visualización de proyectos recomendados para tutorías.
-* **Guardrail (Seguridad)**: Prohibido interactuar con la gestión de reportes de comportamiento de otros usuarios o aprobar su propia cuenta.
+En `generarRespuestaSoporte`, si `rol === 'exalumno'` y hay usuario autenticado, el servicio
+intenta detectar si el mensaje menciona el nombre de un estudiante (`buscarEstudiantePorNombre`)
+para inyectar su perfil (onboarding + proyecto de graduación + CV) en el contexto y que Claude
+pueda comentar sobre un match específico.
 
 ---
 
-### 6️⃣ Administrador (Co-pilot Administrativo)
-* **Ubicación típica**: Panel administrativo (`/dashboard`, `/admin`).
-* **Propósito**: Soporte analítico y operativo de alto nivel.
-* **Mensajes clave a comunicar**:
-  * Guía en la aprobación manual de exalumnos y postulaciones en "Solicitudes Pendientes".
-  * Explicar detalladamente el matching interdisciplinario (fórmula del score base + bono de 1 punto por facultades distintas).
-  * Guía para auditar y resolver reportes de comportamiento inapropiado (`/api/reportes-usuarios/`).
-  * Mantenimiento de tablas de control (sedes, carreras, facultades, becas socioeconómicas).
-
----
-
-## 🛠️ 3. Arquitectura Técnica de la Integración
-
-El flujo de ejecución del chatbot sigue la siguiente secuencia:
+## 🛠️ 2. Arquitectura técnica (Asistente Adaptativo — GlobalChatbot)
 
 ```mermaid
 graph TD
-    A[GlobalChatbot.tsx - Frontend] -- POST /api/claude/chat con Historial y Contexto --> B[server.js]
+    A[GlobalChatbot.tsx - Frontend] -- POST /claude/chat via apiFetch, con historial y contexto rol+pathname --> B[server.js]
     B --> C[claude.routes.js]
     C --> D[claude.controller.js]
     D --> E[claude.service.js]
-    E -- Obtener Prompt del Sistema --> F(obtenerPromptDeSistema)
-    E -- Formatear Mensajes para Claude --> G(Adaptación de Historial)
+    E -- obtenerPromptDeSistema --> F(Prompt dinámico por rol + ruta + FAQs)
+    E -- Adaptación de historial --> G(Alternancia estricta user/assistant)
     E -- API Request --> H[SDK Anthropic - Claude API]
-    H -- Response --> E
-    E --> D
-    D --> A
+    H -- Response --> E --> D --> A
 ```
 
-### 📁 Archivos Clave del Sistema:
+### Archivos clave
 
-1. **[BE/config/claude.js](file:///c:/Users/Natalia%20Villareal/Desktop/conectando%20talento/Conectando-Talento-UCR/BE/config/claude.js)**:
-   * Inicializa el cliente oficial `@anthropic-ai/sdk` usando `process.env.ANTHROPIC_API_KEY`.
-2. **[BE/services/claude.service.js](file:///c:/Users/Natalia%20Villareal/Desktop/conectando%20talento/Conectando-Talento-UCR/BE/services/claude.service.js)**:
-   * Contiene los prompts de sistema y la lógica de enrutamiento adaptativo.
-   * Realiza la transformación y limpieza del historial de mensajes para cumplir los requisitos de Anthropic.
-3. **[BE/controllers/claude.controller.js](file:///c:/Users/Natalia%20Villareal/Desktop/conectando%20talento/Conectando-Talento-UCR/BE/controllers/claude.controller.js)**:
-   * Valida la estructura del payload (historial y contexto) y maneja las respuestas HTTP.
-4. **[BE/routes/claude.routes.js](file:///c:/Users/Natalia%20Villareal/Desktop/conectando%20talento/Conectando-Talento-UCR/BE/routes/claude.routes.js)**:
-   * Define la ruta POST `/chat`.
-5. **[components/GlobalChatbot.tsx](file:///c:/Users/Natalia%20Villareal/Desktop/conectando%20talento/Conectando-Talento-UCR/components/GlobalChatbot.tsx)**:
-   * Componente reactivo flotante (frontend) que mantiene el historial local de la sesión, envía el contexto dinámico (rol de la sesión y pathname actual de Next.js) y renderiza la conversación en burbujas con formato Markdown básico.
+1. **`BE/config/claude.js`** — inicializa el cliente `@anthropic-ai/sdk` con `process.env.ANTHROPIC_API_KEY`.
+2. **`BE/services/claude.service.js`** — prompts de sistema, `CATEGORIAS_PERMITIDAS`, FAQs,
+   lógica de enrutamiento por rol/ruta, formateo de CV, y adaptación del historial.
+3. **`BE/controllers/claude.controller.js`** — expone `chatSoporte` (público, valida
+   opcionalmente el Bearer token para enriquecer el contexto) y `careerAnalysis` (protegido,
+   requiere `autenticarUsuario`).
+4. **`BE/routes/claude.routes.js`**:
+   - `POST /claude/chat` — pública (`chatSoporte`).
+   - `POST /claude/career-analysis` — protegida (`autenticarUsuario` + `careerAnalysis`).
+5. **`components/GlobalChatbot.tsx`** — widget flotante con `ChatbotAvatar.tsx`; usa
+   `usePathname()` + `useAuth()` para armar el `contexto` (`{ rol, pathname }`) que envía en
+   cada request junto con el historial local de la sesión.
+
+### Mascota Alumni (integración separada)
+
+- **`app/api/alumni-chat/route.ts`** — route handler de Next.js (no pasa por el BE Express).
+- **`components/landing/AlumniMascot.tsx`** — widget flotante, imagen
+  `public/images/3 sin fondo.png`, chat con streaming.
+- Renderizada hoy en la landing (`app/page.tsx`) y en `app/registro/page.tsx`.
+- Pendiente (según `CLAUDE.md` raíz): integrarla en más puntos de la landing.
 
 ---
 
-## ⚙️ 4. Parámetros y Reglas de la API de Claude
+## ⚙️ 3. Parámetros reales de la API de Claude
 
-* **Modelo Activo**: `claude-sonnet-4-6` (sobreescribible con `CLAUDE_MODEL` en las variables de entorno).
-* **Temperatura**: `0.3` (para asegurar respuestas coherentes, predecibles y enfocadas a las reglas del sistema).
-* **Límite de Tokens**: `1024` tokens máximos por respuesta.
-* **Reglas del Historial (Requisitos de Claude)**:
-  * **Inicio obligatorio**: El historial de mensajes enviado a Claude debe iniciar con un rol de tipo `user`. Se filtra automáticamente el saludo estático inicial del chatbot de asistencia del arreglo que va a la API.
-  * **Alternancia Estricta**: Los roles deben alternar estrictamente: `user` ➔ `assistant` ➔ `user` ➔ `assistant`.
-  * **Prevención de Repetición**: Si ocurren dos roles consecutivos iguales, el backend concatena automáticamente sus textos en un único bloque de contenido para evitar fallos de esquema de la API.
+- **Modelo por defecto**: `claude-sonnet-5` (`process.env.CLAUDE_MODEL || 'claude-sonnet-5'`
+  en `claude.service.js`, líneas ~482 y ~705). Overrideable con `CLAUDE_MODEL` en el `.env`.
+  El chat de la mascota (`app/api/alumni-chat/route.ts`) usa por defecto
+  `claude-haiku-4-5-20251001` (ver `CLAUDE.md` raíz) — **son modelos distintos a propósito**
+  (el adaptativo necesita más razonamiento contextual; la mascota es liviana).
+- **Temperatura**: `0.3` en ambas llamadas de `generarRespuestaSoporte`.
+- **Límite de tokens**: `1024` por defecto, `1500` si el contexto es de CV (`esContextoCV`),
+  `1200` en la segunda llamada (career-analysis). No es un valor único fijo como decía la
+  versión anterior de este documento.
+- **Reglas del historial** (obligatorias para la API de Anthropic):
+  - Debe iniciar con un mensaje de rol `user` — el código busca el primer índice con
+    `role === 'user'` y descarta lo anterior (incluyendo el saludo estático inicial).
+  - Alternancia estricta `user` → `assistant` → `user` → `assistant`.
+  - Si dos mensajes consecutivos tienen el mismo rol, se concatenan en un solo bloque de
+    `content` para no romper el esquema de la API.
+  - Si tras este proceso no queda ningún mensaje, se devuelve un saludo genérico fijo sin
+    llamar a la API.
+
+---
+
+## Antes de asumir que hay un bug en el chatbot
+
+1. Confirmá **cuál** de las dos integraciones estás mirando (sección 0) — comparten look and
+   feel pero son código y endpoints completamente distintos.
+2. Si es el Asistente Adaptativo y "no aparece" fuera de `/mi-curriculum/plantillas`, no es un
+   bug — todavía no está montado en otras pantallas.
+3. Si el rol es `voluntario`, hoy cae en el prompt público por diseño actual (no tiene
+   categoría propia) — no es un error de permisos.

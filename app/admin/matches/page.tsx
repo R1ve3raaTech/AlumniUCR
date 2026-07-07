@@ -115,6 +115,7 @@ export default function AdminMatchesPage() {
   const [notaDraft,   setNotaDraft]   = useState('');
   const [estadoDraft, setEstadoDraft] = useState('');
   const [guardando,   setGuardando]   = useState(false);
+  const [quickActMsg, setQuickActMsg] = useState('');
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -310,6 +311,9 @@ export default function AdminMatchesPage() {
         </div>
 
         {error && <div className={styles.error}>⚠️ {error}</div>}
+        {quickActMsg && (
+          <div className={styles.error} style={{ background: '#d8f5e3', color: '#14794a' }}>{quickActMsg}</div>
+        )}
 
         {cargando ? (
           <div className={styles.loadingState}>
