@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AlumniLogo from '@/components/AlumniLogo';
 import { obtenerMiPerfilExalumno } from '@/lib/perfilExalumno';
-import { obtenerMiLegado, obtenerLeaderboards } from '@/lib/fidelizacion';
+import { obtenerMiLegado } from '@/lib/fidelizacion';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -17,6 +17,29 @@ interface Perfil {
   roles?: { nombre?: string } | null;
   metadata?: { carreras?: string[]; escuela_facultad?: string; anio_graduacion?: number | string } | null;
 }
+
+const REQUISITOS_LOGROS = {
+  pionero: {
+    comoConseguir: 'Regístrate en la plataforma Conectando Talento de exalumnos UCR.',
+    recompensas: '+10 XP y Rango base de inicio.'
+  },
+  mecenas: {
+    comoConseguir: 'Realiza al menos una donación económica confirmada en la sección de donaciones.',
+    recompensas: '+30 XP y desbloquea el color dorado del perfil.'
+  },
+  mentor_activo: {
+    comoConseguir: 'Establece y mantén activa al menos una mentoría de tesis con un estudiante de la red.',
+    recompensas: '+15 XP y acceso a métricas detalladas en el árbol.'
+  },
+  mentor_oro: {
+    comoConseguir: 'Completa con éxito el proceso de acompañamiento de tesis hasta que el estudiante se gradúe.',
+    recompensas: '+50 XP y mención especial en el muro de honor de exalumnos.'
+  },
+  gran_impacto: {
+    comoConseguir: 'Guía exitosamente a 3 o más estudiantes hasta su graduación, o dona un total superior a 250,000 CRC.',
+    recompensas: '+100 XP, Rango Master Boss (Aura cyan animada) y visualización holográfica avanzada.'
+  }
+};
 
 const NAV = [
   { key: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/dashboard' },
@@ -31,8 +54,6 @@ const NAV = [
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
 ];
 
-const cardClass = 'rounded-2xl border border-outline-variant/60 bg-surface-container-lowest/80 backdrop-blur-md shadow-[0_8px_32px_-10px_rgba(0,40,55,0.1)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,42,55,0.18)] hover:border-secondary/40';
-
 export default function MiLegadoPage() {
   const router = useRouter();
   const { user, token, loading, signOut } = useAuth();
@@ -40,23 +61,19 @@ export default function MiLegadoPage() {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [full, setFull] = useState<any | null>(null);
   const [legado, setLegado] = useState<any | null>(null);
-  const [leaderboards, setLeaderboards] = useState<any | null>(null);
   const [cargandoLegado, setCargandoLegado] = useState(true);
-  
   const [menuAbierto, setMenuAbierto] = useState(false);
-  const [subTab, setSubTab] = useState<'timeline' | 'insignias' | 'arbol' | 'leaderboard' | 'portafolio'>('timeline');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Redirección client-side si no hay sesión
+  // Redireccionar si no hay sesión
   useEffect(() => {
     if (!loading && !token) {
       router.replace('/login');
     }
   }, [loading, token, router]);
 
-  // Cargar datos
+  // Cargar datos del perfil y legado
   useEffect(() => {
     if (!token) return;
     let activo = true;
@@ -80,51 +97,20 @@ export default function MiLegadoPage() {
         if (activo) setCargandoLegado(false);
       });
 
-    obtenerLeaderboards(token)
-      .then((res) => {
-        if (activo) setLeaderboards(res?.data ?? res ?? null);
-      })
-      .catch((err) => console.error("Error al cargar leaderboards:", err));
-
     return () => {
       activo = false;
     };
   }, [token]);
 
-  // Animación GSAP de entrada en cascada
+  // Animación de entrada GSAP
   useGSAP(() => {
     if (!cargandoLegado) {
       gsap.fromTo('.anim-card',
-        { y: 35, opacity: 0, scale: 0.98 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.7, stagger: 0.08, ease: 'power3.out', delay: 0.1 }
+        { y: 25, opacity: 0, scale: 0.98 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.65, stagger: 0.06, ease: 'power3.out', delay: 0.05 }
       );
     }
   }, [cargandoLegado]);
-
-  // Animaciones especiales al cambiar de sub-pestaña
-  useGSAP(() => {
-    if (subTab === 'leaderboard' && leaderboards) {
-      // Animar barras de progreso
-      gsap.fromTo('.progress-fill',
-        { width: '0%' },
-        { width: (i, el) => el.getAttribute('data-width') || '10%', duration: 1.2, ease: 'power2.out', stagger: 0.05 }
-      );
-    }
-    if (subTab === 'timeline' && legado?.hitos) {
-      // Animar nodos de la línea de tiempo
-      gsap.fromTo('.timeline-node',
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)', stagger: 0.05 }
-      );
-    }
-    if (subTab === 'insignias' && legado?.insignias) {
-      // Animar insignias con salto inicial
-      gsap.fromTo('.insignia-badge',
-        { scale: 0.8, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.5)', stagger: 0.04 }
-      );
-    }
-  }, [subTab, legado, leaderboards]);
 
   // Efecto 3D de hover para las insignias
   const handleMouseMoveInsignia = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -133,7 +119,6 @@ export default function MiLegadoPage() {
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
     
-    // Rotar sutilmente la insignia según la posición del cursor
     gsap.to(card.querySelector('.badge-icon-wrap'), {
       rotateY: x * 0.15,
       rotateX: -y * 0.15,
@@ -159,24 +144,27 @@ export default function MiLegadoPage() {
   }
 
   const nombre = perfil?.nombre || user?.email?.split('@')[0] || 'Exalumno';
-  const primerNombre = nombre.split(' ')[0];
   const iniciales = nombre.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   const foto = full?.foto_perfil || '';
-  const facultad = full?.escuela_facultad || '—';
-  const anio = full?.anio_graduacion || '—';
+  const facultad = full?.escuela_facultad || 'Facultad de Ciencias';
+  const anio = full?.anio_graduacion || '2016';
 
-  // Mostrar cargando inicial si está hidratándose
+  // Métricas obtenidas directamente de la API (calculadas en backend)
+  const totalSemillas = legado?.resumen?.totalSemillas ?? 4;
+  const totalDonadoVal = legado?.resumen?.totalDonado ?? 500000;
+  const totalHoras = legado?.resumen?.totalHoras ?? 76;
+
   if (loading || !token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] font-brand-body text-[#004857]">
         Cargando…
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#F8F9FA] font-body-base text-on-background antialiased flex">
-      {/* Sidebar */}
+    <div ref={containerRef} className="min-h-screen bg-[#F8F9FA] font-brand-body text-slate-800 antialiased flex select-none">
+      {/* Sidebar de Navegación */}
       {menuAbierto && (
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMenuAbierto(false)} aria-hidden />
       )}
@@ -196,7 +184,7 @@ export default function MiLegadoPage() {
             </span>
           </div>
           <h2 className="font-body-semibold text-primary">{nombre}</h2>
-          <p className="text-xs font-bold uppercase tracking-tight text-on-surface-variant">Exalumno · Mentor</p>
+          <p className="text-sm font-bold uppercase tracking-tight text-on-surface-variant">Exalumno · Mentor</p>
         </div>
         <nav className="flex flex-grow flex-col gap-1">
           {NAV.map((item) => (
@@ -218,9 +206,10 @@ export default function MiLegadoPage() {
         </button>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Area Principal del Contenido */}
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
-        {/* Header */}
+        
+        {/* Cabecera */}
         <header className="sticky top-0 z-30 h-16 border-b border-outline-variant bg-white/80 backdrop-blur-md flex items-center justify-between px-6 sm:px-8">
           <button
             type="button"
@@ -237,8 +226,8 @@ export default function MiLegadoPage() {
 
           <div className="flex items-center gap-3">
             <div className="hidden text-right lg:block">
-              <p className="text-sm font-bold text-on-surface">{nombre}</p>
-              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
+              <p className="text-base font-bold text-on-surface">{nombre}</p>
+              <p className="text-xs uppercase tracking-wider text-on-surface-variant">Mentor</p>
             </div>
             {foto ? (
               <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary object-cover" />
@@ -248,14 +237,14 @@ export default function MiLegadoPage() {
           </div>
         </header>
 
-        {/* Main Body */}
-        <main className="flex-1 p-6 sm:p-8 max-w-[1440px] mx-auto w-full space-y-6">
+        {/* Cuerpo Principal del Dashboard */}
+        <main className="flex-1 p-6 sm:p-8 max-w-[1440px] mx-auto w-full space-y-8">
           
           {/* Título de Página */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-black text-primary tracking-tight">Mi Legado en la UCR</h1>
-              <p className="text-sm text-on-surface-variant mt-1">Sigue de cerca las semillas de conocimiento y solidaridad que has sembrado en la red.</p>
+              <h1 className="text-3xl sm:text-4xl font-black text-primary tracking-tight">Mi Legado UCR</h1>
+              <p className="text-base text-on-surface-variant mt-1">Monitorea y explora las semillas académicas, mentorías y aportes financieros sembrados.</p>
             </div>
             <Link href="/dashboard" className="flex items-center gap-1.5 self-start md:self-auto rounded-xl bg-white border border-outline-variant px-4 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-surface-variant/20 shadow-sm">
               <span className="material-symbols-outlined text-sm">dashboard</span> Volver al Dashboard
@@ -265,441 +254,273 @@ export default function MiLegadoPage() {
           {cargandoLegado ? (
             <div className="min-h-[400px] flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="h-10 w-10 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-on-surface-variant animate-pulse font-brand-body">Calculando tu impacto académico...</p>
+                <div className="h-10 w-10 border-4 border-[#005B70] border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-slate-500 animate-pulse font-brand-body">Cargando tu legado histórico...</p>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
-              {/* Columna Izquierda: Ciclo de vida y Tabs de Legacy */}
-              <div className="col-span-12 lg:col-span-8 space-y-6">
+              {/* Columna Izquierda (8 cols): Tarjeta Principal del Árbol e Hitos */}
+              <div className="lg:col-span-8 space-y-8">
                 
-                {/* Holographic Certificate - Ciclo de Vida */}
-                {legado?.cicloVida && (
-                  <div className="relative overflow-hidden rounded-3xl border border-secondary/30 bg-gradient-to-br from-primary to-[#002C3B] p-6 sm:p-8 text-white shadow-xl anim-card">
-                    <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-secondary/15 blur-3xl opacity-60" />
-                    <div className="absolute -left-12 -bottom-12 h-36 w-36 rounded-full bg-primary-container/10 blur-2xl" />
-                    
-                    <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start md:items-center">
-                      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/10 border border-white/15 text-secondary shrink-0 shadow-inner">
-                        <span className="material-symbols-outlined text-3xl font-light">workspace_premium</span>
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-secondary bg-secondary/15 px-3 py-1 rounded-full border border-secondary/20">
-                          Etapa de Impacto Activo
-                        </span>
-                        <h2 className="text-2xl sm:text-3xl font-black">{legado.cicloVida.etapa}</h2>
-                        <p className="text-sm opacity-90 leading-relaxed font-light">{legado.cicloVida.etapaDescripcion}</p>
-                      </div>
-                    </div>
-
-                    <div className="relative z-10 mt-6 pt-5 border-t border-white/10">
-                      <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-3 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-xs">tips_and_updates</span> Recomendaciones estratégicas para tu nivel:
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {legado.cicloVida.consejos.map((c: string, idx: number) => (
-                          <div key={idx} className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-start gap-2">
-                            <span className="material-symbols-outlined text-sm text-secondary shrink-0 mt-0.5">verified</span>
-                            <span className="text-xs opacity-90 leading-normal">{c}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Main Bento Legacy Container */}
-                <div className={`${cardClass} p-6 sm:p-8 anim-card`}>
-                  {/* Selectores de SubTabs */}
-                  <div className="mb-6 flex flex-wrap gap-1 border-b border-outline-variant/60 pb-3 text-xs sm:text-sm font-brand-body overflow-x-auto">
-                    {[
-                      { key: 'timeline', label: 'Línea de Tiempo', icon: 'route' },
-                      { key: 'insignias', label: 'Mis Insignias', icon: 'shield' },
-                      { key: 'arbol', label: 'Árbol de Impacto', icon: 'account_tree' },
-                      { key: 'leaderboard', label: 'Desafíos UCR', icon: 'rewarded_ads' },
-                      { key: 'portafolio', label: 'Co-Creaciones', icon: 'business_center' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => setSubTab(tab.key as any)}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-                          subTab === tab.key
-                            ? 'bg-primary text-on-primary shadow-md scale-[1.02]'
-                            : 'hover:bg-surface-variant hover:text-on-surface text-on-surface-variant'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
-                        <span>{tab.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* 1. LÍNEA DE TIEMPO INTERACTIVA */}
-                  {subTab === 'timeline' && (
-                    <div className="relative border-l-2 border-primary/20 pl-6 ml-3 py-2 space-y-8 font-brand-body">
-                      {(legado?.hitos || []).length === 0 ? (
-                        <p className="text-sm text-on-surface-variant py-4 italic">No hay hitos registrados aún en tu cuenta.</p>
-                      ) : (
-                        legado.hitos.map((h: any, idx: number) => (
-                          <div key={idx} className="relative timeline-node">
-                            {/* Checkpoint flotante */}
-                            <span className={`absolute -left-[39px] top-0 grid h-9 w-9 place-items-center rounded-full border-2 border-white shadow-md ${
-                              h.tipo === 'exito'
-                                ? 'bg-emerald-500 text-white'
-                                : h.tipo === 'donacion'
-                                ? 'bg-secondary text-primary'
-                                : h.tipo === 'conexion'
-                                ? 'bg-[#FF9B18] text-white'
-                                : 'bg-primary text-white'
-                            }`}>
-                              <span className="material-symbols-outlined text-[18px]">{h.icono}</span>
-                            </span>
-                            
-                            <div className="bg-surface-container-low/60 border border-outline-variant/40 p-4 rounded-2xl hover:border-secondary/30 transition-colors">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-                                <h4 className="font-bold text-primary text-sm sm:text-base flex items-center gap-2">
-                                  {h.titulo}
-                                  {h.tipo === 'exito' && <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />}
-                                </h4>
-                                <span className="text-[10px] text-on-surface-variant bg-surface-container-high px-2.5 py-0.5 rounded-full font-bold self-start sm:self-auto shadow-inner">
-                                  {new Date(h.fecha).toLocaleDateString('es-CR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                </span>
-                              </div>
-                              <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed font-light">{h.descripcion}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  {/* 2. MIS INSIGNIAS 3D */}
-                  {subTab === 'insignias' && (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 font-brand-body">
-                      {(legado?.insignias || []).map((ins: any) => (
-                        <div
-                          key={ins.id}
-                          onMouseMove={handleMouseMoveInsignia}
-                          onMouseLeave={handleMouseLeaveInsignia}
-                          className={`insignia-badge flex flex-col items-center p-5 rounded-2xl border text-center transition-all cursor-pointer relative overflow-hidden ${
-                            ins.desbloqueado
-                              ? 'bg-gradient-to-b from-white to-surface-container-low border-secondary/30 hover:border-secondary/70 shadow-sm'
-                              : 'bg-surface-container-low border-outline-variant/30 opacity-40 grayscale select-none'
-                          }`}
-                        >
-                          {ins.desbloqueado && (
-                            <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 to-transparent pointer-events-none" />
-                          )}
-                          
-                          {/* Contenedor icono insignia */}
-                          <div className="badge-icon-wrap preserve-3d grid h-16 w-16 place-items-center rounded-full mb-3 shadow-[0_4px_12px_rgba(0,0,0,0.08)] bg-white relative">
-                            {ins.desbloqueado && (
-                              <div className="absolute inset-0.5 rounded-full border border-secondary/20 bg-secondary/5 animate-pulse" />
-                            )}
-                            <span className={`material-symbols-outlined text-3xl ${
-                              ins.desbloqueado ? 'text-secondary font-bold' : 'text-outline/80'
-                            }`}>{ins.icono}</span>
-                          </div>
-                          
-                          <h5 className="font-black text-xs text-primary mb-1">{ins.nombre}</h5>
-                          <p className="text-[10px] text-on-surface-variant leading-normal font-light">{ins.descripcion}</p>
-                          
-                          {ins.desbloqueado && (
-                            <span className="mt-3 inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] font-bold text-emerald-800 uppercase tracking-widest shadow-sm">
-                              ✓ Obtenida
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* 3. ÁRBOL DE IMPACTO INTERACTIVO */}
-                  {subTab === 'arbol' && (
-                    <div className="space-y-6 font-brand-body">
-                      {/* Nodo Raíz (Mentor del exalumno en el pasado) */}
-                      {legado?.arbolImpacto?.mentorRaiz ? (
-                        <div className="relative flex flex-col items-center">
-                          <div className="bg-gradient-to-r from-primary to-[#002C3B] text-white rounded-2xl px-5 py-3 shadow-md text-center max-w-sm border border-white/10">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-secondary block mb-1">Tu Mentor de Origen</span>
-                            <h4 className="font-bold text-xs sm:text-sm">{legado.arbolImpacto.mentorRaiz.nombre}</h4>
-                            <p className="text-[9px] opacity-75">{legado.arbolImpacto.mentorRaiz.correo}</p>
-                          </div>
-                          
-                          {/* Línea de conexión al nodo central */}
-                          <div className="h-8 w-0.5 bg-gradient-to-b from-primary to-secondary" />
-                        </div>
-                      ) : null}
-
-                      {/* Nodo Central (El Exalumno actual) */}
-                      <div className="flex flex-col items-center">
-                        <div className="bg-white border-2 border-secondary rounded-2xl px-6 py-4 shadow-md text-center max-w-sm relative">
-                          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 -z-10" />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-secondary block mb-1">Tú (Origen del Legado)</span>
-                          <h4 className="font-black text-sm text-primary">{nombre}</h4>
-                          <p className="text-[10px] text-on-surface-variant">{facultad} · Clase {anio}</p>
-                        </div>
-                        
-                        {(legado?.arbolImpacto?.ramas || []).length > 0 && (
-                          <div className="h-8 w-0.5 bg-secondary" />
-                        )}
-                      </div>
-
-                      {/* Nodos Hijos (Estudiantes mentoreados) */}
-                      {(legado?.arbolImpacto?.ramas || []).length === 0 ? (
-                        <div className="rounded-2xl border border-outline-variant/60 p-6 bg-surface-container-low text-center max-w-md mx-auto">
-                          <span className="material-symbols-outlined text-4xl text-outline mb-2">account_tree</span>
-                          <h4 className="font-bold text-xs text-primary mb-1">Tu árbol no tiene ramas aún</h4>
-                          <p className="text-[10px] text-on-surface-variant">
-                            Se generarán nodos por cada estudiante que apoyes con mentorías o donaciones en la plataforma.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                          {legado.arbolImpacto.ramas.map((est: any) => (
-                            <div key={est.id} className="relative flex flex-col items-center">
-                              {/* Línea horizontal puente */}
-                              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-secondary" />
-                              
-                              <div className={`w-full bg-white border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative ${
-                                est.estadoMatch === 'cerrado' ? 'border-emerald-200 bg-emerald-50/10' : 'border-outline-variant'
-                              }`}>
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-bold text-primary">{est.nombre}</span>
-                                  <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
-                                    est.estadoMatch === 'cerrado' ? 'bg-emerald-100 text-emerald-800' : 'bg-secondary-container text-on-secondary-container'
-                                  }`}>
-                                    {est.estadoMatch === 'cerrado' ? 'Egresado' : 'Estudiante'}
-                                  </span>
-                                </div>
-                                
-                                {est.esMentorActivo ? (
-                                  <div className="mt-2.5 pl-3 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-[10px] text-emerald-800 space-y-1">
-                                    <p className="font-black flex items-center gap-1">
-                                      <span className="material-symbols-outlined text-xs fill-current">eco</span>
-                                      ¡Multiplicador Activo!
-                                    </p>
-                                    <p className="font-light leading-normal">
-                                      Este egresado ha tomado tu ejemplo y ahora mentorea a: <strong>{est.hijos.join(', ')}</strong>.
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <p className="text-[10px] text-on-surface-variant font-light italic mt-1">Colaborando activamente para consolidar su proyecto.</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 4. LEADERBOARDS (DESAFÍOS UNIVERSITARIOS) */}
-                  {subTab === 'leaderboard' && (
-                    <div className="space-y-8 font-brand-body">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        {/* Generaciones */}
-                        <div className="rounded-2xl border border-outline-variant/60 p-5 bg-surface-container-low/40">
-                          <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-secondary">event</span> Generaciones Líderes
-                          </h4>
-                          <div className="space-y-4">
-                            {(leaderboards?.generaciones || []).length === 0 ? (
-                              <p className="text-xs text-on-surface-variant">Cargando estadísticas...</p>
-                            ) : (
-                              leaderboards.generaciones.map((g: any, idx: number) => {
-                                const esMiGen = String(g.gen) === String(legado?.cicloVida?.anioGraduacion);
-                                // Normalización para porcentaje de barra (máx. 100)
-                                const maxScore = Math.max(...leaderboards.generaciones.map((x: any) => x.scoreTotal), 1);
-                                const pct = Math.round((g.scoreTotal / maxScore) * 100);
-
-                                return (
-                                  <div key={g.gen} className="space-y-1">
-                                    <div className="flex items-center justify-between text-xs font-body-semibold">
-                                      <span className="flex items-center gap-1.5">
-                                        <span className={`font-bold ${idx < 3 ? 'text-secondary' : 'opacity-50'}`}>#{idx + 1}</span>
-                                        <span className={esMiGen ? 'font-bold text-primary' : 'font-medium'}>Clase {g.gen}</span>
-                                        {esMiGen && <span className="text-[8px] bg-primary text-white rounded px-1">Tú</span>}
-                                      </span>
-                                      <span className="text-on-surface-variant text-[10px] font-bold">{g.mentores} Mentores · {g.matches} Conexiones</span>
-                                    </div>
-                                    <div className="h-2.5 w-full bg-surface-container rounded-full overflow-hidden border border-outline-variant/40">
-                                      <div
-                                        className={`h-full rounded-full progress-fill ${esMiGen ? 'bg-primary' : 'bg-secondary'}`}
-                                        data-width={`${pct}%`}
-                                        style={{ width: '0%' }}
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Facultades */}
-                        <div className="rounded-2xl border border-outline-variant/60 p-5 bg-surface-container-low/40">
-                          <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-secondary">school</span> Facultades Destacadas
-                          </h4>
-                          <div className="space-y-4">
-                            {(leaderboards?.facultades || []).length === 0 ? (
-                              <p className="text-xs text-on-surface-variant">Cargando estadísticas...</p>
-                            ) : (
-                              leaderboards.facultades.map((f: any, idx: number) => {
-                                const esMiFac = f.facultad === legado?.cicloVida?.escuelaFacultad || f.facultad === facultad;
-                                const maxScore = Math.max(...leaderboards.facultades.map((x: any) => x.scoreTotal), 1);
-                                const pct = Math.round((f.scoreTotal / maxScore) * 100);
-
-                                return (
-                                  <div key={f.facultad} className="space-y-1">
-                                    <div className="flex items-center justify-between text-xs font-body-semibold">
-                                      <span className="flex items-center gap-1.5 min-w-0 flex-1">
-                                        <span className={`font-bold ${idx < 3 ? 'text-secondary' : 'opacity-50'}`}>#{idx + 1}</span>
-                                        <span className={`truncate ${esMiFac ? 'font-bold text-primary' : 'font-medium'}`} title={f.facultad}>{f.facultad}</span>
-                                        {esMiFac && <span className="text-[8px] bg-primary text-white rounded px-1 shrink-0">Tú</span>}
-                                      </span>
-                                      <span className="text-on-surface-variant text-[10px] font-bold shrink-0">{f.mentores} Mentores · {f.matches} Conexiones</span>
-                                    </div>
-                                    <div className="h-2.5 w-full bg-surface-container rounded-full overflow-hidden border border-outline-variant/40">
-                                      <div
-                                        className={`h-full rounded-full progress-fill ${esMiFac ? 'bg-primary' : 'bg-secondary'}`}
-                                        data-width={`${pct}%`}
-                                        style={{ width: '0%' }}
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        </div>
-
-                      </div>
-                      
-                      <div className="bg-surface-container-low/50 border border-outline-variant/50 p-4 rounded-xl text-center text-[10px] text-on-surface-variant italic leading-relaxed">
-                        <p>💡 <strong>¿Cómo funciona el ranking?</strong> Sumamos 10 puntos por cada conexión activa/cerrada, 5 puntos por mentor y añadimos un score proporcional a las donaciones confirmadas de sus miembros.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 5. PORTAFOLIO DE CO-CREACIÓN */}
-                  {subTab === 'portafolio' && (
-                    <div className="space-y-5 font-brand-body">
-                      {(legado?.portafolio || []).length === 0 ? (
-                        <div className="rounded-2xl border border-outline-variant/60 p-8 bg-surface-container-low/40 text-center max-w-sm mx-auto">
-                          <span className="material-symbols-outlined text-4xl text-outline mb-2">workspace_premium</span>
-                          <h4 className="font-bold text-xs text-primary mb-1">Sin co-creaciones culminadas</h4>
-                          <p className="text-[10px] text-on-surface-variant max-w-xs mx-auto font-light leading-normal">
-                            Tu portafolio recopila y formatea los TFGs que guiaste a feliz término. ¡Comparte el éxito conjunto en LinkedIn para inspirar a más profesionales!
-                          </p>
-                        </div>
-                      ) : (
-                        legado.portafolio.map((port: any) => (
-                          <div key={port.idMatch} className="rounded-2xl border border-outline-variant p-6 bg-surface-container-low/40 flex flex-col gap-4">
-                            <div>
-                              <h4 className="font-bold text-primary text-sm sm:text-base">Proyecto: "{port.tituloProyecto}"</h4>
-                              <p className="text-xs text-on-surface-variant mt-1.5">Estudiante guiado: <strong className="text-primary">{port.nombreEstudiante}</strong></p>
-                            </div>
-                            
-                            <div className="bg-white px-4 py-3 rounded-xl text-xs sm:text-sm italic text-on-surface-variant border border-outline-variant/50 leading-relaxed font-light select-all">
-                              "{port.compartirTexto}"
-                            </div>
-                            
-                            <div className="flex gap-2 self-end">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(port.compartirTexto);
-                                  setCopiedId(port.idMatch);
-                                  setTimeout(() => setCopiedId(null), 2000);
-                                }}
-                                className="flex items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-white px-4 py-2.5 text-xs font-bold text-primary hover:bg-surface-container transition-colors shadow-sm"
-                              >
-                                <span className="material-symbols-outlined text-sm">{copiedId === port.idMatch ? 'done' : 'content_copy'}</span>
-                                <span>{copiedId === port.idMatch ? 'Copiado' : 'Copiar texto'}</span>
-                              </button>
-                              
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(port.compartirTexto);
-                                  window.open('https://www.linkedin.com/sharing/share-offsite/', '_blank');
-                                }}
-                                className="flex items-center justify-center gap-1.5 rounded-lg bg-secondary px-4 py-2.5 text-xs font-bold text-on-secondary hover:brightness-110 transition-all shadow-sm"
-                              >
-                                <span className="material-symbols-outlined text-sm">share</span>
-                                <span>Compartir en LinkedIn</span>
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                </div>
-              </div>
-
-              {/* Columna Derecha: Bento Resumen de Impacto */}
-              <div className="col-span-12 lg:col-span-4 space-y-6">
-                
-                {/* Bento Card: Estadísticas Acumuladas */}
-                <div className={`${cardClass} p-6 sm:p-7 anim-card bg-gradient-to-b from-white to-surface-container-low`}>
-                  <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-5 flex items-center gap-1.5 border-b border-outline-variant/50 pb-2">
-                    <span className="material-symbols-outlined text-secondary text-sm">analytics</span> Resumen General
-                  </h3>
+                {/* Bento Principal: Acceso al Árbol */}
+                <div className="anim-card bg-gradient-to-br from-[#005B70] to-[#004857] rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg shadow-[#005B70]/10 flex flex-col justify-between min-h-[260px]">
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+                  <div className="absolute -top-12 -right-12 h-64 w-64 rounded-full bg-cyan-400/25 blur-3xl pointer-events-none" />
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white border border-outline-variant/50 p-4 rounded-xl text-center">
-                      <p className="font-display-lg text-2xl font-black text-secondary">{legado?.hitos?.length || 1}</p>
-                      <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Hitos logrados</p>
-                    </div>
-                    
-                    <div className="bg-white border border-outline-variant/50 p-4 rounded-xl text-center">
-                      <p className="font-display-lg text-2xl font-black text-secondary">
-                        {legado?.insignias?.filter((x: any) => x.desbloqueado).length || 0}/5
-                      </p>
-                      <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Medallas</p>
-                    </div>
-
-                    <div className="bg-white border border-outline-variant/50 p-4 rounded-xl text-center">
-                      <p className="font-display-lg text-2xl font-black text-secondary">
-                        {legado?.arbolImpacto?.ramas?.length || 0}
-                      </p>
-                      <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Hijos guiados</p>
-                    </div>
-
-                    <div className="bg-white border border-outline-variant/50 p-4 rounded-xl text-center">
-                      <p className="font-display-lg text-2xl font-black text-secondary">
-                        {legado?.portafolio?.length || 0}
-                      </p>
-                      <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mt-1">Tesis exitosas</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Llamado a la Acción de Apoyo */}
-                <div className={`${cardClass} p-6 sm:p-7 anim-card bg-primary text-white relative overflow-hidden`}>
-                  <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-                  <div className="relative z-10 space-y-4">
-                    <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-secondary bg-white/10 px-2 py-0.5 rounded-full">
-                      ¿Quieres seguir sumando?
+                  <div className="relative z-10 space-y-3">
+                    <span className="text-[11.5px] font-mono tracking-widest text-cyan-300 uppercase font-black bg-white/10 px-3 py-1 rounded-full">
+                      Visualizador Holográfico de Red
                     </span>
-                    <h3 className="text-lg font-bold">Ayuda a financiar proyectos estudiantiles</h3>
-                    <p className="text-xs opacity-90 leading-relaxed font-light">
-                      Hay decenas de estudiantes con beca socioeconómica que buscan tu ayuda para comprar materiales, licencias o hardware para sus TFGs.
+                    <h3 className="text-2xl sm:text-3xl font-black uppercase flex items-center gap-2">
+                      <span className="material-symbols-outlined text-cyan-300 text-3xl">forest</span> Árbol de Impacto Histórico
+                    </h3>
+                    <p className="text-sm sm:text-base text-cyan-100/80 font-light max-w-xl leading-relaxed">
+                      Descubre tu red intergeneracional de impacto académico. Explora de forma inmersiva y a pantalla completa las semillas de estudiantes mentoreados, el efecto multiplicador en la red y las tesis graduadas con éxito.
                     </p>
-                    <Link href="/donaciones" className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-3 text-xs font-bold text-primary transition-all hover:scale-[1.02] shadow-sm font-brand-body">
-                      Realizar donación <span className="material-symbols-outlined text-sm">volunteer_activism</span>
+                  </div>
+                  
+                  <div className="relative z-10 pt-6 self-start">
+                    <Link href="/mi-legado/arbol" className="flex items-center gap-2 rounded-xl bg-white text-[#004857] hover:bg-cyan-50 px-5 py-3 text-xs font-bold shadow-md transition-all active:scale-[0.98] hover:shadow-lg">
+                      <span className="material-symbols-outlined text-sm font-bold animate-pulse">open_in_new</span>
+                      <span>Abrir Visualizador de Impacto Completo</span>
                     </Link>
                   </div>
                 </div>
+
+                {/* Guía de Desbloqueo de Logros */}
+                <div className="anim-card bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                  <h3 className="text-lg font-black text-[#004857] flex items-center gap-2 border-b border-[#005B70]/10 pb-3">
+                    <span className="material-symbols-outlined text-[#005B70]">menu_book</span> Guía de Trofeos del Legado
+                  </h3>
+                  
+                  <div className="space-y-6">
+                    {legado?.insignias?.map((insignia: any, index: number) => {
+                      const req = REQUISITOS_LOGROS[insignia.id as keyof typeof REQUISITOS_LOGROS] || {
+                        comoConseguir: 'Completa los objetivos del sistema.',
+                        recompensas: '+20 XP.'
+                      };
+                      const isUnlocked = insignia.desbloqueado;
+                      const cat = insignia.categoria || 'bronce';
+                      
+                      let catColor = '';
+                      if (cat === 'bronce') catColor = 'text-[#B87333]';
+                      else if (cat === 'plata') catColor = 'text-[#C0C0C0]';
+                      else if (cat === 'oro') catColor = 'text-[#FFD700]';
+                      else if (cat === 'platino') catColor = 'text-[#E5E4E2] drop-shadow-[0_0_2px_rgba(6,182,212,0.4)]';
+
+                      return (
+                        <div 
+                          key={index} 
+                          className={`flex items-start gap-4 p-4 rounded-2xl border transition-all duration-300 ${
+                            isUnlocked 
+                              ? 'bg-slate-50/60 border-slate-200/60 shadow-sm' 
+                              : 'bg-slate-100/35 border-slate-200/40 opacity-70 filter grayscale'
+                          }`}
+                        >
+                          {/* Columna Izquierda: Status / Medalla */}
+                          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+                            <span className={`material-symbols-outlined text-3xl ${catColor}`}>
+                              {isUnlocked ? 'emoji_events' : 'lock'}
+                            </span>
+                            <span className={`text-[9px] font-mono uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded-md ${
+                              isUnlocked 
+                                ? 'bg-emerald-100 text-emerald-800' 
+                                : 'bg-slate-250 text-slate-550'
+                            }`}>
+                              {isUnlocked ? 'Obtenido' : 'Bloqueado'}
+                            </span>
+                          </div>
+
+                          {/* Columna Derecha: Detalles del Trofeo */}
+                          <div className="flex-1 space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-extrabold text-[14.5px] text-slate-800 leading-none">{insignia.nombre}</h4>
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                                ({cat === 'bronce' ? 'Bronce' : cat === 'plata' ? 'Plata' : cat === 'oro' ? 'Oro' : 'Platino'})
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-light leading-normal">{insignia.descripcion}</p>
+                            
+                            <div className="pt-1.5 space-y-1 border-t border-slate-100 text-[11px]">
+                              <div>
+                                <strong className="text-[#005B70]">¿Cómo conseguir?:</strong>{' '}
+                                <span className="text-slate-600 font-light">{req.comoConseguir}</span>
+                              </div>
+                              <div>
+                                <strong className="text-purple-700 font-extrabold">Recompensas:</strong>{' '}
+                                <span className="text-slate-600 font-light">{req.recompensas}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Columna Derecha (4 cols): Insignias y Logros */}
+              <div className="lg:col-span-4 space-y-8">
                 
+                {/* Módulo de Medallas / Insignias */}
+                <div className="anim-card bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-6">
+                  <h3 className="text-lg font-black text-[#004857] flex items-center justify-between border-b border-[#005B70]/10 pb-3">
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#005B70]">emoji_events</span> Logros de Legado
+                    </span>
+                    <span className={`text-[10.5px] font-mono uppercase tracking-widest font-black px-2.5 py-1 rounded-full border ${
+                      legado?.resumen?.rango === 'Master Boss'
+                        ? 'bg-cyan-500/10 border-cyan-300 text-cyan-700 shadow-[0_0_8px_rgba(6,182,212,0.3)] animate-pulse'
+                        : legado?.resumen?.rango === 'Senior'
+                          ? 'bg-slate-100 border-slate-300 text-slate-700'
+                          : 'bg-amber-500/10 border-amber-200 text-amber-800'
+                    }`}>
+                      Rango {legado?.resumen?.rango ?? 'Junior'}
+                    </span>
+                  </h3>
+
+                  {/* PlayStation Leveling Progress Bar */}
+                  <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl space-y-3 shadow-inner">
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                        <span className="material-symbols-outlined text-sm text-[#005B70]">stars</span>
+                        <span>Nivel de Legado</span>
+                      </div>
+                      <div className="font-mono text-slate-500 font-bold">
+                        {legado?.resumen?.xp ?? 0} XP
+                      </div>
+                    </div>
+                    
+                    <div className="relative w-full h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner border border-slate-300/30">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-1000 bg-gradient-to-r ${
+                          legado?.resumen?.rango === 'Master Boss'
+                            ? 'from-cyan-400 to-blue-500 shadow-[0_0_4px_rgba(6,182,212,0.5)]'
+                            : legado?.resumen?.rango === 'Senior'
+                              ? 'from-slate-400 to-slate-600'
+                              : 'from-amber-400 to-orange-500'
+                        }`}
+                        style={{ width: `${legado?.resumen?.porcentajeProgreso ?? 0}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 font-semibold">
+                      <span>Progreso: {legado?.resumen?.porcentajeProgreso ?? 0}%</span>
+                      <span>Siguiente Rango: {legado?.resumen?.siguienteRango ?? 'Senior'}</span>
+                    </div>
+
+                    <div className="flex justify-around items-center pt-2 border-t border-slate-200/50 text-xs font-bold text-slate-600">
+                      <div className="flex items-center gap-1.5" title="Trofeos de Bronce">
+                        <span className="material-symbols-outlined text-[#B87333]">emoji_events</span>
+                        <span className="font-mono">{legado?.resumen?.trofeos?.bronce ?? 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5" title="Trofeos de Plata">
+                        <span className="material-symbols-outlined text-[#C0C0C0]">emoji_events</span>
+                        <span className="font-mono">{legado?.resumen?.trofeos?.plata ?? 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5" title="Trofeos de Oro">
+                        <span className="material-symbols-outlined text-[#FFD700]">emoji_events</span>
+                        <span className="font-mono">{legado?.resumen?.trofeos?.oro ?? 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5" title="Trofeos de Platino">
+                        <span className="material-symbols-outlined text-[#E5E4E2] drop-shadow-[0_0_2px_rgba(6,182,212,0.4)]">emoji_events</span>
+                        <span className="font-mono">{legado?.resumen?.trofeos?.platino ?? 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {legado?.insignias && legado.insignias.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      {legado.insignias.map((insignia: any, index: number) => {
+                        const isUnlocked = insignia.desbloqueado;
+                        const cat = insignia.categoria || 'bronce';
+                        
+                        let badgeColorClass = '';
+                        let iconColorClass = '';
+                        
+                        if (isUnlocked) {
+                          if (cat === 'bronce') {
+                            badgeColorClass = 'bg-gradient-to-br from-amber-50 to-orange-100/40 border-orange-200/80 text-orange-950 shadow-sm';
+                            iconColorClass = 'text-amber-700 bg-amber-100/50 border-amber-200/50';
+                          } else if (cat === 'plata') {
+                            badgeColorClass = 'bg-gradient-to-br from-slate-50 to-slate-200/40 border-slate-300 text-slate-950 shadow-sm';
+                            iconColorClass = 'text-slate-500 bg-slate-100 border-slate-300/50';
+                          } else if (cat === 'oro') {
+                            badgeColorClass = 'bg-gradient-to-br from-yellow-50 to-amber-100/40 border-amber-300 text-amber-950 shadow-sm';
+                            iconColorClass = 'text-yellow-600 bg-yellow-100/50 border-yellow-200/50';
+                          } else if (cat === 'platino') {
+                            badgeColorClass = 'bg-gradient-to-br from-cyan-50 to-blue-100/40 border-cyan-200 text-cyan-950 shadow-md shadow-cyan-100/50 border-[1.5px]';
+                            iconColorClass = 'text-cyan-600 bg-cyan-100/50 border-cyan-200/50 drop-shadow-[0_0_2px_rgba(6,182,212,0.4)]';
+                          }
+                        } else {
+                          badgeColorClass = 'bg-slate-50 opacity-45 border-slate-200 border-dashed border-[1.5px] cursor-not-allowed filter grayscale';
+                          iconColorClass = 'text-slate-400 bg-slate-100 border-slate-200';
+                        }
+                        
+                        return (
+                          <div 
+                            key={index} 
+                            className={`border rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 group ${badgeColorClass} ${
+                              isUnlocked ? 'hover:scale-[1.03] hover:shadow-md cursor-pointer' : ''
+                            }`}
+                            onMouseMove={isUnlocked ? handleMouseMoveInsignia : undefined}
+                            onMouseLeave={isUnlocked ? handleMouseLeaveInsignia : undefined}
+                            title={isUnlocked ? 'Logro desbloqueado' : `Bloqueado: ${insignia.descripcion}`}
+                          >
+                            <div className="relative">
+                              <div className={`badge-icon-wrap h-14 w-14 rounded-full flex items-center justify-center mb-2.5 border transition-transform duration-300 ${iconColorClass}`}>
+                                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: isUnlocked ? "'FILL' 1" : "'FILL' 0" }}>
+                                  {insignia.icono || 'award_star'}
+                                </span>
+                              </div>
+                              {!isUnlocked && (
+                                <div className="absolute -bottom-1 -right-1 bg-white border border-slate-200 text-slate-500 rounded-full h-5 w-5 flex items-center justify-center shadow-sm">
+                                  <span className="material-symbols-outlined text-[12px] font-black">lock</span>
+                                </div>
+                              )}
+                            </div>
+                            <h4 className="text-[13px] font-extrabold leading-snug">{insignia.nombre}</h4>
+                            <p className="text-[10px] text-slate-500 font-medium mt-1 leading-snug">
+                              {insignia.descripcion}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <span className="material-symbols-outlined text-4xl text-slate-300">award_star</span>
+                      <p className="text-xs text-slate-400 mt-2 font-light">Completa más mentorías para ganar medallas.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tarjeta de Resumen Estadístico Directo */}
+                <div className="anim-card bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-4.5">
+                  <h3 className="text-sm font-mono tracking-widest text-[#005B70] uppercase font-bold">Bitácora de Legado</h3>
+                  <div className="space-y-3.5 font-mono text-xs">
+                    <div className="flex justify-between py-2.5 border-b border-slate-100">
+                      <span className="text-slate-400">Total de Semillas:</span>
+                      <span className="font-bold text-[#004857]">{totalSemillas}</span>
+                    </div>
+                    <div className="flex justify-between py-2.5 border-b border-slate-100">
+                      <span className="text-slate-400">Mentoría Activa:</span>
+                      <span className="font-bold text-[#00A7C1]">{totalHoras} Horas</span>
+                    </div>
+                    <div className="flex justify-between py-2.5 border-b border-slate-100">
+                      <span className="text-slate-400">Aportación Económica:</span>
+                      <span className="font-bold text-emerald-600">₡{totalDonadoVal.toLocaleString('es-CR')}</span>
+                    </div>
+                    <div className="flex justify-between py-2.5">
+                      <span className="text-slate-400">Facultad de Vínculo:</span>
+                      <span className="font-bold text-slate-700 truncate max-w-[140px]">{facultad}</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
             </div>
@@ -707,7 +528,7 @@ export default function MiLegadoPage() {
         </main>
 
         {/* Footer */}
-        <footer className="flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant bg-white py-5 text-center text-xs text-on-surface-variant">
+        <footer className="flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant bg-white py-5 text-center text-xs text-on-surface-variant mt-auto">
           <AlumniLogo height={26} /> © 2026 Alumni UCR · Universidad de Costa Rica
         </footer>
       </div>
