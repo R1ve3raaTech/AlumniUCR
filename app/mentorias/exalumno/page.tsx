@@ -19,6 +19,7 @@ import {
   obtenerCatalogos,
 } from '@/lib/perfilExalumno';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
+import { useTema } from '@/lib/useTema';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -60,7 +61,9 @@ const NAV = [
   { key: 'ayuda', icon: 'help', label: 'Ayuda', href: '/ayuda' },
 ];
 
-const cardClass = 'rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_44px_-16px_rgba(0,40,55,0.25)] hover:border-secondary/35 p-6 bento-card';
+// Mismo lenguaje visual de las tarjetas del estudiante (perfil-estudiante):
+// esquinas redondas, borde tenue y sombra sutil, sin saltos agresivos al hover.
+const cardClass = 'rounded-3xl border border-outline-variant/40 bg-surface-container-lowest shadow-[0_2px_12px_-4px_rgba(0,40,55,0.08)] transition-shadow duration-300 hover:shadow-[0_8px_24px_-10px_rgba(0,40,55,0.18)] p-6 bento-card';
 
 // Helper simple para renderizar Markdown a HTML con estilos de marca
 function parseMarkdownToHtml(markdown: string) {
@@ -109,6 +112,7 @@ export default function MentoriasExalumnoPage() {
   // Control de UI
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [procesandoMatchId, setProcesandoMatchId] = useState<string | null>(null);
+  useTema(); // aplica el modo claro/oscuro guardado (misma preferencia que el estudiante)
 
   // Copiloto de IA
   const [analisisIa, setAnalisisIa] = useState<{ activo: boolean; estudianteNombre: string; contenido: string; cargando: boolean }>({
@@ -369,8 +373,13 @@ export default function MentoriasExalumnoPage() {
             </Link>
           ))}
         </nav>
+        <Link href="/configuracion-exalumno"
+          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:bg-surface-variant hover:text-on-surface">
+          <span className="material-symbols-outlined">settings</span>
+          <span className="font-body-semibold">Configuración</span>
+        </Link>
         <button type="button" onClick={handleSignOut}
-          className="mt-auto flex items-center gap-4 rounded-lg border-t border-outline-variant p-3.5 pt-6 text-on-surface-variant transition-all hover:text-error"
+          className="flex items-center gap-4 rounded-lg p-3.5 text-on-surface-variant transition-all hover:text-error"
           onMouseEnter={(e) => {
             const icon = e.currentTarget.querySelector('.material-symbols-outlined');
             if (icon) {
@@ -498,14 +507,14 @@ export default function MentoriasExalumnoPage() {
               </section>
 
               {/* Tarjeta de Resumen Estadístico */}
-              <section className={`${cardClass} bg-[#F4F6F7] border-none`}>
+              <section className={cardClass}>
                 <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Resumen de Actividad</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl bg-white p-4 text-center shadow-sm">
+                  <div className="rounded-2xl bg-surface-container-low p-4 text-center">
                     <span className="block font-display-lg text-2xl font-bold text-primary">{conexionesActivas.length}</span>
                     <span className="text-[10px] uppercase font-bold text-on-surface-variant">Estudiantes Activos</span>
                   </div>
-                  <div className="rounded-xl bg-white p-4 text-center shadow-sm">
+                  <div className="rounded-2xl bg-surface-container-low p-4 text-center">
                     <span className="block font-display-lg text-2xl font-bold text-secondary">{solicitudesPendientes.length}</span>
                     <span className="text-[10px] uppercase font-bold text-on-surface-variant">Solicitudes</span>
                   </div>

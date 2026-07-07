@@ -15,6 +15,20 @@ import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
 import AvatarUploader from '@/components/student/AvatarUploader';
 import { useTema } from '@/lib/useTema';
+import { gsap } from 'gsap';
+
+// Micro-animación de los íconos del menú al pasar el mouse (misma que en el
+// panel de exalumno): el ícono escala y rota levemente, y vuelve al salir.
+const animarIcono = {
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+    const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+    if (icon) gsap.to(icon, { scale: 1.15, rotation: 8, duration: 0.3, ease: 'back.out(2)' });
+  },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+    const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+    if (icon) gsap.to(icon, { scale: 1, rotation: 0, duration: 0.4, ease: 'power2.out' });
+  },
+};
 
 // Departamentos del estudiante. Todos activos.
 const NAV: { key: string; href: string; icon: string; label: string; proximamente?: boolean }[] = [
@@ -133,7 +147,7 @@ export default function StudentShell({
             }
 
             return (
-              <Link key={item.key} href={item.href} className={claseBase}>
+              <Link key={item.key} href={item.href} className={claseBase} {...animarIcono}>
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span className="font-body-semibold">{item.label}</span>
               </Link>
@@ -145,6 +159,7 @@ export default function StudentShell({
         <div className="flex shrink-0 flex-col gap-1 border-t border-outline-variant pt-6">
           <Link
             href="/configuracion"
+            {...animarIcono}
             className={
               active === 'configuracion'
                 ? 'flex items-center gap-4 rounded-lg bg-primary-container p-4 font-bold text-on-primary-container'

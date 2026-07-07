@@ -261,7 +261,7 @@
   width: 100%;
   padding: 0.75rem 0.9rem;
   border: 2px solid var(--ucr-surface-variant);
-  border-radius: 0.4rem;
+  border-radius: 0.9rem;
   font-family: var(--font-brand-body);
   font-size: 1rem;
   color: var(--ucr-on-surface);
@@ -311,7 +311,7 @@
   gap: 0.4rem 1rem;
   padding: 0.85rem 1rem;
   border: 2px solid var(--ucr-surface-variant);
-  border-radius: 0.4rem;
+  border-radius: 1.1rem;
   background: var(--brand-blanco);
 }
 
@@ -344,6 +344,7 @@
   background: var(--ucr-surface-container);
   color: var(--ucr-on-surface-variant);
   border: 1px solid var(--ucr-outline-variant);
+  border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 0.4rem 0.9rem;
@@ -388,7 +389,56 @@
   margin: -0.25rem 0 0.5rem 1.75rem;
   padding: 1rem;
   border-left: 3px solid var(--brand-esmeralda);
+  border-radius: 0 0.9rem 0.9rem 0;
   background: rgba(0, 76, 99, 0.04);
+}
+
+/* Configuración de la cuenta */
+.confLista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confFila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  border: 2px solid var(--ucr-surface-variant);
+  border-radius: 1.1rem;
+  background: var(--brand-blanco);
+  color: var(--ucr-outline);
+}
+
+.confTitulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ucr-on-surface);
+}
+
+.confDesc {
+  font-size: 0.8rem;
+  color: var(--ucr-on-surface-variant);
+  margin-top: 0.15rem;
+}
+
+.confBtn {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--ucr-outline-variant);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--brand-esmeralda);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.confBtn:hover {
+  border-color: var(--brand-esmeralda);
+  background: rgba(0, 76, 99, 0.05);
 }
 
 /* Acciones */
