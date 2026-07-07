@@ -6,10 +6,10 @@ const exigirRol = require('../middlewares/role.middleware');
 
 router.get('/', autenticarUsuario, exigirRol('admin'), donacionesController.obtenerDonaciones);
 router.get('/estado/:estado', autenticarUsuario, exigirRol('admin'), donacionesController.obtenerDonacionesPorEstado);
-router.get('/usuario/:idUsuarioExalumno', autenticarUsuario, exigirRol(['admin', 'exalumno']), donacionesController.obtenerDonacionesPorUsuario);
+router.get('/usuario/:idUsuarioExalumno', autenticarUsuario, exigirRol(['admin', 'exalumno', 'voluntario']), donacionesController.obtenerDonacionesPorUsuario);
 router.get('/proyecto/:idProyecto', autenticarUsuario, exigirRol(['admin', 'estudiante']), donacionesController.obtenerDonacionesPorProyecto);
-router.get('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno']), donacionesController.obtenerDonacionPorId);
-router.post('/', autenticarUsuario, exigirRol('exalumno'), donacionesController.crearDonacion);
+router.get('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno', 'voluntario']), donacionesController.obtenerDonacionPorId);
+router.post('/', autenticarUsuario, exigirRol(['exalumno', 'voluntario']), donacionesController.crearDonacion);
 router.put('/:id/confirmar', autenticarUsuario, exigirRol('admin'), donacionesController.confirmarDonacion);
 router.put('/:id/rechazar', autenticarUsuario, exigirRol('admin'), donacionesController.rechazarDonacion);
 router.put('/:id', autenticarUsuario, exigirRol('admin'), donacionesController.actualizarDonacion);

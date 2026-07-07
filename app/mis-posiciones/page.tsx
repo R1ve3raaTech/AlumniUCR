@@ -38,7 +38,7 @@ function estadoVisible(p: Posicion): { label: string; clase: string } {
 export default function MisPosicionesPage() {
   const router = useRouter();
   const { token, user } = useAuth();
-  const { verificando, autorizado } = useRequireRole(['exalumno']);
+  const { verificando, autorizado } = useRequireRole(['exalumno', 'voluntario']);
   const [lista, setLista] = useState<Posicion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');

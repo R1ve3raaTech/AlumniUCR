@@ -28,7 +28,7 @@ const arr = (res: unknown) => (Array.isArray(res) ? res : (res as { data?: unkno
 export default function DonacionesPage() {
   const router = useRouter();
   const { token, user } = useAuth();
-  const { verificando, autorizado } = useRequireRole(['exalumno']);
+  const { verificando, autorizado } = useRequireRole(['exalumno', 'voluntario']);
 
   const [tiposPago, setTiposPago] = useState<Opcion[]>([]);
   const [proyectos, setProyectos] = useState<Opcion[]>([]);

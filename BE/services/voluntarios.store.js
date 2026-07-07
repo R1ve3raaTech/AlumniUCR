@@ -31,6 +31,14 @@ const crear = async (datos) => {
         area_colaboracion: datos.area_colaboracion,
         disponibilidad: datos.disponibilidad,
         mensaje: datos.mensaje,
+        tipo_ayuda: datos.tipo_ayuda,
+        area: datos.area,
+        modalidad: datos.modalidad,
+        monto: datos.monto,
+        frecuencia: datos.frecuencia,
+        empresa: datos.empresa,
+        duracion: datos.duracion,
+        tema: datos.tema,
         estado: 'pendiente',
       },
     ])
@@ -64,4 +72,34 @@ const actualizarAccesos = async (id, { acceso_proyectos, acceso_mentorias, acces
   return data;
 };
 
-module.exports = { listar, crear, actualizarAccesos };
+/**
+ * El propio voluntario edita su modalidad, disponibilidad y biografía.
+ * Devuelve null si no tiene ninguna solicitud (no puede editar lo que no existe).
+ */
+const actualizarPerfilPropio = async (correoElectronico, { modalidad, disponibilidad, biografia }) => {
+  const { data: propia, error: errorBusqueda } = await supabase
+    .from('solicitudes_voluntarios')
+    .select('id')
+    .eq('correo_electronico', correoElectronico)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (errorBusqueda) throw mapDbError(errorBusqueda);
+  if (!propia) return null;
+
+  const cambios = { updated_at: new Date().toISOString() };
+  if (modalidad !== undefined) cambios.modalidad = modalidad;
+  if (disponibilidad !== undefined) cambios.disponibilidad = disponibilidad;
+  if (biografia !== undefined) cambios.biografia = biografia;
+
+  const { data, error } = await supabase
+    .from('solicitudes_voluntarios')
+    .update(cambios)
+    .eq('id', propia.id)
+    .select()
+    .single();
+  if (error) throw mapDbError(error);
+  return data;
+};
+
+module.exports = { listar, crear, actualizarAccesos, actualizarPerfilPropio };
