@@ -165,5 +165,6 @@ npm run lint
 
 ## Reglas de git del equipo
 
-- **Solo Carlos hace PR/merge hacia `Dev`.** Pushear a ramas de otros compañeros requiere su autorización explícita.
+- El repositorio vive en `github.com/R1ve3raaTech/Conectando-Talento-UCR` (dueño: Camil, líder del proyecto desde 2026-07-06). Equipo: Camil, Stacy, Braksley, Steven.
+- **Camil aprueba/mergea los PRs hacia `Dev`.** Pushear a ramas de otros compañeros requiere su autorización explícita.
 - Antes de mergear `Dev` en otra rama, verificar con `git merge-tree` que no haya conflictos con trabajo en curso de otro compañero (p. ej. `admin/matches` tiene dos versiones distintas: Braks vs. RF-08.1).
