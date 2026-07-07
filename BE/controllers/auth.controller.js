@@ -276,10 +276,9 @@ const solicitarRecuperacion = async (req, res, next) => {
 
     await authService.solicitarRecuperacion(correo.trim());
 
-    // Respuesta uniforme: nunca se revela si el correo está registrado.
     res.status(200).json({
       success: true,
-      mensaje: 'Si el correo está registrado, te enviamos un código de verificación.',
+      mensaje: 'Te enviamos un código de verificación a tu correo.',
     });
   } catch (error) {
     next(error);

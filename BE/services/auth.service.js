@@ -184,7 +184,15 @@ const loginUser = async (correo, contrasena) => {
     .eq('id', data.user.id)
     .maybeSingle();
 
-  if (perfil && perfil.estado !== 'activo') {
+  // Un usuario de Auth sin fila en 'usuarios' no es una cuenta de la plataforma
+  // (p. ej. registro que nunca completó el perfil): no debe obtener sesión.
+  if (!perfil) {
+    const err = new Error('Tu cuenta no completó el registro. Registrate de nuevo para continuar.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (perfil.estado !== 'activo') {
     const mensajes = {
       pendiente: 'Tu cuenta está pendiente de aprobación. Te avisaremos cuando sea aprobada.',
       rechazado: 'Tu solicitud de cuenta fue rechazada. Contacta a la administración.',
@@ -357,7 +365,8 @@ const rechazarCuenta = async (userId, token) => {
 /**
  * Etapa 1: el usuario pide restablecer su contraseña desde su correo.
  * Envía un código de verificación de 6 dígitos (vigencia ~10-15 min).
- * Por seguridad NO revela si el correo existe: responde igual en ambos casos.
+ * Si el correo no está registrado, responde 404 para avisarle a la persona
+ * (decisión de producto: se prefiere el aviso claro sobre ocultar si existe).
  */
 const solicitarRecuperacion = async (correo) => {
   const { data: perfil } = await supabase
@@ -366,12 +375,14 @@ const solicitarRecuperacion = async (correo) => {
     .eq('correo_electronico', correo)
     .maybeSingle();
 
-  // Si la cuenta existe, se envía el código; si no, se ignora en silencio
-  // (respuesta uniforme para no filtrar qué correos están registrados).
-  if (perfil) {
-    const codigo = codigoRecuperacion(perfil.id);
-    await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, codigo });
+  if (!perfil) {
+    const err = new Error('No encontramos una cuenta registrada con ese correo. Revisá que esté bien escrito.');
+    err.statusCode = 404;
+    throw err;
   }
+
+  const codigo = codigoRecuperacion(perfil.id);
+  await enviarCorreoRecuperacion({ correo: perfil.correo_electronico, codigo });
 
   return { enviado: true };
 };

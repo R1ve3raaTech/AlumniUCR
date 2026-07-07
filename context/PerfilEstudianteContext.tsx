@@ -5,7 +5,7 @@
 // (dashboard, perfil, CV+IA, matches, etc.) leen de aquí y prellenan sus campos.
 // Más adelante se respalda en la base de datos sin cambiar las pantallas.
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerPerfilOnboarding, guardarPerfilOnboarding } from '@/lib/perfilOnboarding';
 
@@ -159,20 +159,42 @@ const PerfilEstudianteContext = createContext<Ctx | null>(null);
 const CLAVE = 'ct_perfil_estudiante';
 
 export function PerfilEstudianteProvider({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
+  const { token, user, loading } = useAuth();
   const [perfil, setPerfil] = useState<PerfilEstudiante>(PERFIL_VACIO);
   const [cargado, setCargado] = useState(false);
+  const uid = user?.id ?? null;
+  const uidPrevio = useRef<string | null>(null);
 
-  // 1) Carga inmediata desde localStorage (caché).
+  // 1) Carga desde localStorage (caché) una vez hidratada la sesión. La caché
+  //    guarda el id de su dueño (__uid): si pertenece a otra cuenta, se descarta
+  //    para no mostrar el perfil de una sesión anterior.
   useEffect(() => {
+    if (loading || cargado) return;
     try {
       const raw = localStorage.getItem(CLAVE);
-      if (raw) setPerfil({ ...PERFIL_VACIO, ...JSON.parse(raw) });
+      if (raw) {
+        const { __uid, ...datos } = JSON.parse(raw);
+        if (uid && __uid !== uid) {
+          localStorage.removeItem(CLAVE);
+        } else {
+          setPerfil({ ...PERFIL_VACIO, ...datos });
+        }
+      }
     } catch {
       /* almacenamiento no disponible */
     }
+    uidPrevio.current = uid;
     setCargado(true);
-  }, []);
+  }, [loading, uid, cargado]);
+
+  // 1b) Si la sesión cambia de usuario sin recargar la página (login/logout),
+  //     el perfil en memoria y la caché del usuario anterior se descartan.
+  useEffect(() => {
+    if (!cargado || uidPrevio.current === uid) return;
+    uidPrevio.current = uid;
+    try { localStorage.removeItem(CLAVE); } catch { /* ignora */ }
+    setPerfil(PERFIL_VACIO);
+  }, [uid, cargado]);
 
   // 2) Al haber sesión, la BD (Supabase) es la fuente autoritativa: si hay un
   //    perfil guardado, se usa ese y se refresca la caché local.
@@ -184,17 +206,17 @@ export function PerfilEstudianteProvider({ children }: { children: React.ReactNo
       if (activo && datos) {
         const completo = { ...PERFIL_VACIO, ...datos } as PerfilEstudiante;
         setPerfil(completo);
-        try { localStorage.setItem(CLAVE, JSON.stringify(completo)); } catch { /* ignora */ }
+        try { localStorage.setItem(CLAVE, JSON.stringify({ ...completo, __uid: uid })); } catch { /* ignora */ }
       }
     })();
     return () => { activo = false; };
-  }, [token]);
+  }, [token, uid]);
 
   const actualizar = (parcial: Partial<PerfilEstudiante>) =>
     setPerfil((p) => {
       const next = { ...p, ...parcial };
       try {
-        localStorage.setItem(CLAVE, JSON.stringify(next));
+        localStorage.setItem(CLAVE, JSON.stringify({ ...next, __uid: uid }));
       } catch {
         /* ignora */
       }
