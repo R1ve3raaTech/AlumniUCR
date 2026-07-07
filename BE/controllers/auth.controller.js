@@ -96,14 +96,34 @@ const completarPerfil = async (req, res, next) => {
 // ─────────────────────────────────────────────
 const registerEstudiante = async (req, res, next) => {
   try {
-    const { correo, contrasena } = req.body;
+    const { correo, contrasena, nombre } = req.body || {};
 
-    if (!correo || !contrasena) {
-      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    // El estudiante debe usar correo institucional @ucr.ac.cr.
+    const errorCorreo = validarCorreoPorRol(correo, 'estudiante');
+    if (errorCorreo) throw errorValidacion(errorCorreo);
+    const errorPass = validarContrasena(contrasena);
+    if (errorPass) throw errorValidacion(errorPass);
+
+    const result = await authService.registrarEstudianteAutodeclaracion({
+      correo: correo.trim(),
+      contrasena,
+      nombre: (nombre || '').trim(),
+    });
+
+    // Sesión para el auto-login: el front la establece y entra directo al panel.
+    const data = { id: result.perfil.id };
+    if (result.sesion) {
+      data.token = result.sesion.token;
+      data.user = result.sesion.user;
     }
 
-    const result = await authService.registerUser(correo, contrasena, 'estudiante');
-    res.status(201).json({ success: true, data: result });
+    res.status(201).json({
+      success: true,
+      mensaje: result.sesion
+        ? 'Cuenta creada. Iniciamos tu sesión automáticamente.'
+        : 'Cuenta creada.',
+      data,
+    });
   } catch (error) {
     next(error);
   }
@@ -154,10 +174,17 @@ const registerExalumno = async (req, res, next) => {
     const esProduccion = process.env.NODE_ENV === 'production';
     const data = { id: result.perfil.id };
     if (!esProduccion) data.confirmUrl = result.confirmUrl;
+    // Sesión para el auto-login: el front la establece y entra directo al panel.
+    if (result.sesion) {
+      data.token = result.sesion.token;
+      data.user = result.sesion.user;
+    }
 
     res.status(201).json({
       success: true,
-      mensaje: 'Cuenta creada. Revisa tu correo para confirmar y activar tu cuenta.',
+      mensaje: result.sesion
+        ? 'Cuenta creada. Iniciamos tu sesión automáticamente.'
+        : 'Cuenta creada. Revisa tu correo para confirmar y activar tu cuenta.',
       data,
     });
   } catch (error) {
