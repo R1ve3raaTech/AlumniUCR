@@ -35,7 +35,7 @@ const esPdf = (url: string) => url.toLowerCase().includes('.pdf');
 export default function MisDonacionesPage() {
   const router = useRouter();
   const { token, user } = useAuth();
-  const { verificando, autorizado } = useRequireRole(['exalumno']);
+  const { verificando, autorizado } = useRequireRole(['exalumno', 'voluntario']);
   const [lista, setLista] = useState<Donacion[]>([]);
   const [metodos, setMetodos] = useState<Record<string, string>>({});
   const [proyectos, setProyectos] = useState<Record<string, string>>({});

@@ -7,6 +7,7 @@ import { obtenerPerfil } from '@/lib/auth';
 import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import DashboardEstudiante from '@/components/student/DashboardEstudiante';
+import VoluntarioDashboard from '@/components/VoluntarioDashboard';
 
 interface Perfil {
   nombre?: string;
@@ -52,17 +53,8 @@ export default function DashboardPage() {
     router.replace('/login');
   }
 
-  // El voluntario no tiene panel propio: su espacio de trabajo es el
-  // explorador de proyectos (con su sesión puede ofrecer apoyo).
-  const rolPerfil = perfil?.roles?.nombre?.toLowerCase().trim();
-  useEffect(() => {
-    if (!perfilCargando && rolPerfil === 'voluntario') {
-      router.replace('/proyectos');
-    }
-  }, [perfilCargando, rolPerfil, router]);
-
   // Evita parpadeo de contenido protegido mientras se hidrata o se redirige.
-  if (loading || !token || perfilCargando || rolPerfil === 'voluntario') {
+  if (loading || !token || perfilCargando) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">
         Cargando…
@@ -89,6 +81,11 @@ export default function DashboardPage() {
   // Panel del administrador (se mantiene intacto).
   if (rol === 'admin') {
     return <AdminDashboard correo={correo} onSignOut={handleSignOut} />;
+  }
+
+  // Panel del voluntario: centro de accesos según lo que el admin le habilitó.
+  if (rol === 'voluntario') {
+    return <VoluntarioDashboard correo={correo} onSignOut={handleSignOut} token={token ?? undefined} />;
   }
 
   // Dashboard del estudiante: pizarrón práctico ligado a la fuente única.
