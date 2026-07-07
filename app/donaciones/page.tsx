@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRequireRole } from '@/lib/useRequireRole';
 import AlumniLogo from '@/components/AlumniLogo';
 import { crearDonacion, obtenerTiposPago, obtenerProyectos, subirComprobante } from '@/lib/donaciones';
+import CargandoGirasol from '@/components/CargandoGirasol';
 import styles from './donaciones.module.css';
 
 interface Opcion { id: number | string; label: string }
@@ -102,7 +103,7 @@ export default function DonacionesPage() {
   }
 
   if (verificando || !autorizado) {
-    return <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">Cargando…</div>;
+    return <CargandoGirasol />;
   }
 
   return (

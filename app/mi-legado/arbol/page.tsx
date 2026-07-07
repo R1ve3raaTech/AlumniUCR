@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { obtenerMiPerfilExalumno } from '@/lib/perfilExalumno';
 import { obtenerMiLegado } from '@/lib/fidelizacion';
 import ArbolImpactoCibernetico from '@/components/ArbolImpactoCibernetico';
+import CargandoGirasol from '@/components/CargandoGirasol';
 
 interface Perfil {
   nombre?: string;
@@ -62,14 +63,7 @@ export default function ArbolImpactoFullscreenPage() {
   const anioGraduacion = perfil?.metadata?.anio_graduacion || '';
 
   if (cargando) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center font-brand-body text-[#004857]">
-        <div className="flex flex-col items-center gap-3">
-          <span className="h-10 w-10 border-4 border-[#005B70] border-t-transparent rounded-full animate-spin"></span>
-          <p className="text-sm font-bold uppercase tracking-wider">Cargando red de impacto...</p>
-        </div>
-      </div>
-    );
+    return <CargandoGirasol texto="Cargando red de impacto…" />;
   }
 
   return (

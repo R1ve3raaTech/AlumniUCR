@@ -9,8 +9,9 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import AlumniLogo from './AlumniLogo';
+import AvatarUploader from './student/AvatarUploader';
 import { obtenerMisDonaciones } from '@/lib/donaciones';
-import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
+import { obtenerMiPerfilExalumno, obtenerCatalogos, guardarMiPerfilExalumno } from '@/lib/perfilExalumno';
 import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA, generarMatches } from '@/lib/matchesEstudiante';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
 import { obtenerMiLegado, obtenerLeaderboards } from '@/lib/fidelizacion';
@@ -65,6 +66,8 @@ export default function ExalumnoDashboard({
   const [cat, setCat] = useState<any | null>(null);
   const [donaciones, setDonaciones] = useState<Donacion[] | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [editorFoto, setEditorFoto] = useState(false);
   const [matches, setMatches] = useState<any[]>([]);
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [cargandoMatches, setCargandoMatches] = useState(true);
@@ -209,6 +212,19 @@ export default function ExalumnoDashboard({
     ];
     return Math.round((req.filter(Boolean).length / req.length) * 100);
   }, [full]);
+
+  async function guardarFoto(dataUrl: string) {
+    if (!token) return;
+    setFull((f: any) => ({ ...(f ?? {}), foto_perfil: dataUrl }));
+    setSubiendoFoto(true);
+    try {
+      await guardarMiPerfilExalumno(token, { ...full, foto_perfil: dataUrl });
+    } catch {
+      /* si falla, la foto queda en pantalla pero no se persistió; el usuario puede reintentar */
+    } finally {
+      setSubiendoFoto(false);
+    }
+  }
 
   const [procesandoMatchId, setProcesandoMatchId] = useState<string | null>(null);
 
@@ -396,7 +412,16 @@ export default function ExalumnoDashboard({
             ) : (
               <div className="grid h-24 w-24 place-items-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary">{iniciales || 'E'}</div>
             )}
-            <span className="absolute bottom-1 right-1 grid h-6 w-6 place-items-center rounded-full border-2 border-surface-container-low bg-secondary text-on-secondary" title="Exalumno verificado">
+            <button
+              type="button"
+              onClick={() => setEditorFoto(true)}
+              title="Cambiar foto"
+              aria-label="Cambiar foto de perfil"
+              className="absolute bottom-0 right-0 rounded-full border-2 border-surface-container-low bg-secondary p-1.5 text-on-secondary transition-transform hover:scale-110"
+            >
+              <span className="material-symbols-outlined text-sm">{subiendoFoto ? 'progress_activity' : 'photo_camera'}</span>
+            </button>
+            <span className="absolute left-0 top-0 grid h-6 w-6 place-items-center rounded-full border-2 border-surface-container-low bg-primary text-white" title="Exalumno verificado">
               <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </span>
           </div>
@@ -454,32 +479,31 @@ export default function ExalumnoDashboard({
         </div>
       </aside>
 
-      {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
-        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-8">
-          <button
-            type="button"
-            onClick={() => setMenuAbierto(true)}
-            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-variant lg:hidden"
-            aria-label="Abrir menú"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <div className="hidden max-w-md flex-1 items-center gap-2 rounded-full bg-surface-container px-4 py-2 md:flex">
-            <span className="material-symbols-outlined text-on-surface-variant">search</span>
-            <input className="w-full border-none bg-transparent text-sm outline-none placeholder:text-on-surface-variant" placeholder="Buscar mentores, egresados o eventos..." />
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right lg:block">
-              <p className="text-sm font-bold text-on-surface">{nombre}</p>
-              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
-            </div>
-            {foto
-              ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
-              : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales || 'E'}</div>}
-          </div>
+      {/* Botón de menú móvil, flotante */}
+      <button
+        type="button"
+        onClick={() => setMenuAbierto(true)}
+        className="fixed left-4 top-4 z-30 rounded-full border border-outline-variant bg-surface-container-lowest p-2.5 text-on-surface-variant shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] transition-colors hover:bg-surface-variant lg:hidden"
+        aria-label="Abrir menú"
+      >
+        <span className="material-symbols-outlined">menu</span>
+      </button>
+
+      {/* Perfil flotante estilo píldora (sin barra de fondo) */}
+      <Link
+        href="/perfil-exalumno"
+        aria-label="Ir a mi perfil"
+        title="Mi Perfil"
+        className="fixed right-4 top-4 z-30 flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40 sm:right-8"
+      >
+        <div className="hidden text-right lg:block">
+          <p className="text-sm font-bold text-on-surface">{nombre}</p>
+          <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
         </div>
-      </header>
+        {foto
+          ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
+          : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales || 'E'}</div>}
+      </Link>
 
       {/* Main */}
       <main className="ml-0 min-h-screen px-4 pb-12 pt-24 sm:px-8 lg:ml-64">
@@ -863,6 +887,13 @@ export default function ExalumnoDashboard({
       <footer className="ml-0 flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant bg-surface-container-lowest py-5 text-center text-xs text-on-surface-variant lg:ml-64">
         <AlumniLogo height={26} /> © 2026 Alumni UCR · Universidad de Costa Rica
       </footer>
+
+      <AvatarUploader
+        abierto={editorFoto}
+        fotoActual={foto}
+        onGuardar={guardarFoto}
+        onCerrar={() => setEditorFoto(false)}
+      />
     </div>
   );
 }
