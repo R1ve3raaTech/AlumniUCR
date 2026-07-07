@@ -13,6 +13,7 @@ import { obtenerMisDonaciones } from '@/lib/donaciones';
 import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
 import { obtenerMisMatches, contactarMatch, aceptarMatch, rechazarMatch, obtenerExplicacionMatchIA, generarMatches } from '@/lib/matchesEstudiante';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
+import { obtenerMiLegado, obtenerLeaderboards } from '@/lib/fidelizacion';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -27,6 +28,7 @@ interface Donacion { estado?: string; id_proyecto?: string | null }
 
 const NAV = [
   { key: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/dashboard' },
+  { key: 'mi-legado', icon: 'auto_awesome', label: 'Mi Legado', href: '/mi-legado' },
   { key: 'perfil', icon: 'person', label: 'Mi Perfil', href: '/perfil-exalumno' },
   { key: 'mentorias', icon: 'handshake', label: 'Mentorías', href: '/mentorias/exalumno' },
   { key: 'estudiantes', icon: 'group', label: 'Estudiantes', href: '/estudiantes' },
@@ -57,6 +59,12 @@ export default function ExalumnoDashboard({
   const [cargandoMatches, setCargandoMatches] = useState(true);
   const [explicacionIA, setExplicacionIA] = useState<string>('');
   const [cargandoExplicacion, setCargandoExplicacion] = useState(false);
+
+  // Estados de fidelización y gamificación
+  const [legado, setLegado] = useState<any | null>(null);
+  const [leaderboards, setLeaderboards] = useState<any | null>(null);
+  const [cargandoLegado, setCargandoLegado] = useState(true);
+  const [subTab, setSubTab] = useState<'timeline' | 'insignias' | 'arbol' | 'leaderboard' | 'portafolio'>('timeline');
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +135,18 @@ export default function ExalumnoDashboard({
     Promise.all([obtenerMiPerfilExalumno(token), obtenerCatalogos(token)])
       .then(([p, c]) => { if (activo) { setFull(p?.data?.perfil ?? p?.perfil ?? p ?? null); setCat(c?.data ?? c ?? null); } })
       .catch(() => {});
+    
+    // Carga de datos de fidelización
+    setCargandoLegado(true);
+    obtenerMiLegado(token)
+      .then((res) => { if (activo) setLegado(res?.data ?? res ?? null); })
+      .catch((err) => console.error("Error al cargar legado:", err))
+      .finally(() => { if (activo) setCargandoLegado(false); });
+
+    obtenerLeaderboards(token)
+      .then((res) => { if (activo) setLeaderboards(res?.data ?? res ?? null); })
+      .catch((err) => console.error("Error al cargar leaderboards:", err));
+
     if (userId) {
       obtenerMisDonaciones(token, userId)
         .then((r) => { if (activo) setDonaciones((Array.isArray(r) ? r : r?.data ?? []) as Donacion[]); })
@@ -456,7 +476,9 @@ export default function ExalumnoDashboard({
               <div className="flex-1">
                 <div className="mb-2 flex flex-wrap items-center gap-3">
                   <h2 className="font-headline-md text-2xl text-primary sm:text-3xl">{nombre}</h2>
-                  <span className="rounded-full bg-secondary-container px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-on-secondary-container">Mentor Senior</span>
+                  <span className="rounded-full bg-secondary-container px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-on-secondary-container">
+                    {legado?.cicloVida?.etapa || "Mentor Senior"}
+                  </span>
                 </div>
                 <p className="mb-4 text-lg text-on-surface-variant">{cargo}{empresa ? ` · ${empresa}` : ''}</p>
                 <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-on-surface-variant">
@@ -552,6 +574,54 @@ export default function ExalumnoDashboard({
                       <span className="material-symbols-outlined text-outline">chevron_right</span>
                     </Link>
                   ))}
+                </div>
+              </section>
+
+              {/* Promo Banner: Mi Legado UCR */}
+              <section className="relative overflow-hidden rounded-2xl border border-secondary/30 bg-gradient-to-r from-primary to-[#002B3A] p-6 sm:p-8 bento-card shadow-md text-white">
+                <div className="absolute -right-20 -bottom-20 h-44 w-44 rounded-full bg-secondary/15 blur-2xl pointer-events-none" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-secondary mb-2 bg-white/10 px-2.5 py-1 rounded-full border border-white/15">
+                      <span className="material-symbols-outlined text-[12px] fill-current">auto_awesome</span> Mi Legado UCR
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-white mb-2">
+                      ¡Estás dejando huella, {primerNombre}!
+                    </h3>
+                    <p className="text-sm text-white/90 max-w-xl leading-relaxed font-brand-body font-light">
+                      Actualmente te encuentras en la etapa de <strong className="text-secondary font-bold">{legado?.cicloVida?.etapa || "Mentor Senior"}</strong>. 
+                      Descubre tus insignias acumuladas, tu árbol de impacto multigeneracional, la línea de tiempo de tus donaciones y tu portafolio de co-creaciones.
+                    </p>
+                    
+                    {/* Pequeño preview de insignias */}
+                    {legado?.insignias && (
+                      <div className="mt-4 flex items-center gap-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">Tus Insignias:</p>
+                        <div className="flex gap-1.5">
+                          {legado.insignias.map((ins: any) => (
+                            <span 
+                              key={ins.id} 
+                              className={`material-symbols-outlined text-lg p-1 rounded-full ${
+                                ins.desbloqueado ? 'text-secondary bg-white/10 border border-white/15' : 'text-white/20 bg-white/5 border border-white/5 grayscale opacity-30'
+                              }`}
+                              title={ins.nombre}
+                            >
+                              {ins.icono}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="shrink-0 flex items-center justify-center">
+                    <Link 
+                      href="/mi-legado" 
+                      className="flex items-center justify-center gap-2 rounded-xl bg-secondary px-6 py-3.5 text-sm font-bold text-primary shadow-md transition-all hover:scale-[1.03] hover:shadow-lg font-brand-body hover:brightness-110"
+                    >
+                      Ver mi Legado completo <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </Link>
+                  </div>
                 </div>
               </section>
             </div>
