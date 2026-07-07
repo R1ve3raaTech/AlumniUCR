@@ -76,7 +76,7 @@ const actualizarAccesos = async (id, { acceso_proyectos, acceso_mentorias, acces
  * El propio voluntario edita su modalidad, disponibilidad y biografía.
  * Devuelve null si no tiene ninguna solicitud (no puede editar lo que no existe).
  */
-const actualizarPerfilPropio = async (correoElectronico, { modalidad, disponibilidad, biografia }) => {
+const actualizarPerfilPropio = async (correoElectronico, { modalidad, disponibilidad, biografia, foto_perfil }) => {
   const { data: propia, error: errorBusqueda } = await supabase
     .from('solicitudes_voluntarios')
     .select('id')
@@ -91,6 +91,7 @@ const actualizarPerfilPropio = async (correoElectronico, { modalidad, disponibil
   if (modalidad !== undefined) cambios.modalidad = modalidad;
   if (disponibilidad !== undefined) cambios.disponibilidad = disponibilidad;
   if (biografia !== undefined) cambios.biografia = biografia;
+  if (foto_perfil !== undefined) cambios.foto_perfil = foto_perfil;
 
   const { data, error } = await supabase
     .from('solicitudes_voluntarios')

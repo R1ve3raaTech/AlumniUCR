@@ -10,6 +10,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import AlumniLogo from './AlumniLogo';
 import { obtenerMisAccesosVoluntario, actualizarMiPerfilVoluntario } from '@/lib/voluntarios';
+import CargandoGirasol from './CargandoGirasol';
+import AvatarUploader from './student/AvatarUploader';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -22,6 +24,7 @@ interface Solicitud {
   disponibilidad?: string | null;
   mensaje?: string;
   biografia?: string | null;
+  foto_perfil?: string | null;
   acceso_proyectos?: boolean;
   acceso_mentorias?: boolean;
   acceso_estudiantes?: boolean;
@@ -55,6 +58,8 @@ export default function VoluntarioDashboard({
   const [cargando, setCargando] = useState(true);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [editando, setEditando] = useState(false);
+  const [editorFoto, setEditorFoto] = useState(false);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState<string | null>(null);
   const [form, setForm] = useState({ modalidad: '', disponibilidad: '', biografia: '' });
@@ -118,15 +123,22 @@ export default function VoluntarioDashboard({
     }
   }
 
+  async function guardarFoto(dataUrl: string) {
+    if (!token) return;
+    setSolicitud((s) => (s ? { ...s, foto_perfil: dataUrl } : s));
+    setSubiendoFoto(true);
+    try {
+      const actualizado = await actualizarMiPerfilVoluntario(token, { foto_perfil: dataUrl });
+      setSolicitud((s) => (s ? { ...s, ...actualizado } : actualizado));
+    } catch {
+      /* si falla, la foto queda en pantalla pero no se persistió; el usuario puede reintentar */
+    } finally {
+      setSubiendoFoto(false);
+    }
+  }
+
   if (cargando) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background font-body-base text-on-background">
-        <div className="flex flex-col items-center gap-3">
-          <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
-          <span className="text-sm font-semibold text-primary">Cargando tu panel…</span>
-        </div>
-      </div>
-    );
+    return <CargandoGirasol texto="Cargando tu panel…" />;
   }
 
   return (
@@ -140,8 +152,23 @@ export default function VoluntarioDashboard({
           <AlumniLogo height={52} />
         </Link>
         <div className="mb-8 flex flex-col items-center px-4 text-center">
-          <div className="mb-3 grid h-24 w-24 place-items-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary">
-            {iniciales || 'V'}
+          <div className="relative mb-3">
+            {solicitud?.foto_perfil ? (
+              <img src={solicitud.foto_perfil} alt={nombre} className="h-24 w-24 rounded-full border-2 border-primary object-cover shadow-sm" />
+            ) : (
+              <div className="grid h-24 w-24 place-items-center rounded-full border-2 border-primary bg-primary/10 font-display-lg text-2xl font-bold text-primary">
+                {iniciales || 'V'}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setEditorFoto(true)}
+              title="Cambiar foto"
+              aria-label="Cambiar foto de perfil"
+              className="absolute bottom-0 right-0 rounded-full border-2 border-surface-container-low bg-secondary p-1.5 text-on-secondary transition-transform hover:scale-110"
+            >
+              <span className="material-symbols-outlined text-sm">{subiendoFoto ? 'progress_activity' : 'photo_camera'}</span>
+            </button>
           </div>
           <h2 className="font-body-semibold text-primary">{nombre}</h2>
           <p className="text-xs font-bold uppercase tracking-tight text-on-surface-variant">Voluntario · Alumni UCR</p>
@@ -172,19 +199,28 @@ export default function VoluntarioDashboard({
         </div>
       </aside>
 
-      {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
-        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-8">
-          <button type="button" onClick={() => setMenuAbierto(true)}
-            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-variant lg:hidden" aria-label="Abrir menú">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <div className="flex items-center gap-3">
-            <p className="text-sm font-bold text-on-surface">{nombre}</p>
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales}</div>
-          </div>
-        </div>
-      </header>
+      {/* Botón de menú móvil, flotante */}
+      <button type="button" onClick={() => setMenuAbierto(true)}
+        className="fixed left-4 top-4 z-30 rounded-full border border-outline-variant bg-surface-container-lowest p-2.5 text-on-surface-variant shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] transition-colors hover:bg-surface-variant lg:hidden" aria-label="Abrir menú">
+        <span className="material-symbols-outlined">menu</span>
+      </button>
+
+      {/* Perfil flotante estilo píldora (sin barra de fondo). El voluntario no
+          tiene una página de perfil aparte: la píldora abre el editor. */}
+      <button
+        type="button"
+        onClick={() => setEditando(true)}
+        aria-label="Ver y editar mi perfil"
+        title="Mi Perfil"
+        className="fixed right-4 top-4 z-30 flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40 sm:right-8"
+      >
+        <p className="text-sm font-bold text-on-surface">{nombre}</p>
+        {solicitud?.foto_perfil ? (
+          <img src={solicitud.foto_perfil} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
+        ) : (
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales}</div>
+        )}
+      </button>
 
       {/* Main */}
       <main className="ml-0 min-h-screen px-4 pb-12 pt-24 sm:px-8 lg:ml-64">
@@ -304,9 +340,10 @@ export default function VoluntarioDashboard({
                     </p>
                   </div>
                   {solicitud?.mensaje && (
-                    <p className="rounded-xl bg-surface-container-low p-3 text-xs italic text-on-surface-variant">
-                      “{solicitud.mensaje}”
-                    </p>
+                    <div className="rounded-xl bg-surface-container-low p-3">
+                      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-on-surface-variant">Mensaje de tu solicitud</p>
+                      <p className="text-xs italic text-on-surface-variant">“{solicitud.mensaje}”</p>
+                    </div>
                   )}
                 </div>
               </section>
@@ -384,6 +421,13 @@ export default function VoluntarioDashboard({
           </div>
         </div>
       )}
+
+      <AvatarUploader
+        abierto={editorFoto}
+        fotoActual={solicitud?.foto_perfil ?? undefined}
+        onGuardar={guardarFoto}
+        onCerrar={() => setEditorFoto(false)}
+      />
     </div>
   );
 }
