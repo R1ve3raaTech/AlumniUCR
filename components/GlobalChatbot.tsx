@@ -305,8 +305,11 @@ export default function GlobalChatbot() {
   if (loading) return null;
 
   // En el perfil del estudiante el asistente no flota: se abre desde un
-  // desplegable de esa pantalla (evento 'open-global-chatbot').
-  const ocultarFab = !!pathname && pathname.startsWith('/perfil-estudiante');
+  // desplegable de esa pantalla (evento 'open-global-chatbot'). En el landing
+  // y en registro ya vive la mascota AlumniMascot — no duplicar el widget.
+  const ocultarFab =
+    !!pathname &&
+    (pathname.startsWith('/perfil-estudiante') || pathname === '/' || pathname.startsWith('/registro'));
 
   return (
     <>
