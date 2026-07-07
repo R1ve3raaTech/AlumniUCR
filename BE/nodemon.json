@@ -1,3 +1,5 @@
 {
-  "ignore": ["data/**", "data/*.json"]
+  "ignore": ["data/**", "data/*.json"],
+  "delay": "1000",
+  "restartable": "rs"
 }

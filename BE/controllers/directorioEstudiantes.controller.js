@@ -2,6 +2,16 @@
 
 const servicio = require('../services/directorioEstudiantes.service');
 
+// Directorio público (sin sesión): tarjetas de proyectos sin datos privados.
+const obtenerDirectorioPublico = async (_req, res, next) => {
+  try {
+    const data = await servicio.obtenerDirectorioPublico();
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Directorio para el exalumno autenticado (incluye estado de su solicitud).
 const obtenerDirectorio = async (req, res, next) => {
   try {
@@ -61,4 +71,4 @@ const responderSolicitud = async (req, res, next) => {
   }
 };
 
-module.exports = { obtenerDirectorio, solicitarContacto, misSolicitudes, responderSolicitud };
+module.exports = { obtenerDirectorioPublico, obtenerDirectorio, solicitarContacto, misSolicitudes, responderSolicitud };

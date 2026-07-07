@@ -266,7 +266,7 @@ const rechazarCuenta = async (req, res, next) => {
 //  RECUPERACIÓN DE CONTRASEÑA
 // ─────────────────────────────────────────────
 
-// Etapa 1: el usuario ingresa su correo para recibir el enlace de cambio.
+// Etapa 1: el usuario ingresa su correo para recibir el código de verificación.
 const solicitarRecuperacion = async (req, res, next) => {
   try {
     const { correo } = req.body;
@@ -279,8 +279,27 @@ const solicitarRecuperacion = async (req, res, next) => {
     // Respuesta uniforme: nunca se revela si el correo está registrado.
     res.status(200).json({
       success: true,
-      mensaje: 'Si el correo está registrado, te enviamos las instrucciones.',
+      mensaje: 'Si el correo está registrado, te enviamos un código de verificación.',
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Etapa 1.5: verifica el código de 6 dígitos y entrega el token de reset con
+// el que la página /restablecer permite definir la nueva contraseña.
+const verificarCodigoRecuperacion = async (req, res, next) => {
+  try {
+    const { correo, codigo } = req.body;
+    if (!correo || !correo.includes('@')) {
+      throw errorValidacion('Ingresa un correo válido.');
+    }
+    if (!codigo || !/^\d{6}$/.test(String(codigo).trim())) {
+      throw errorValidacion('El código debe tener 6 dígitos.');
+    }
+
+    const data = await authService.verificarCodigoDeRecuperacion(correo.trim(), String(codigo).trim());
+    res.status(200).json({ success: true, data, mensaje: 'Código verificado.' });
   } catch (error) {
     next(error);
   }
@@ -342,6 +361,7 @@ module.exports = {
   rechazarCuenta,
   confirmarExalumno,
   solicitarRecuperacion,
+  verificarCodigoRecuperacion,
   restablecerContrasena,
   obtenerPerfil,
 };

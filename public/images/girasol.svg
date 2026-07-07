@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-260 -260 520 520">
+  <!-- Girasol Alumni UCR: recreación vectorial del mural (pétalos facetados
+       amarillo/naranja + centro tejido). Fondo transparente. -->
+  <defs>
+    <linearGradient id="gradA" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#FF9B18"/>
+      <stop offset="1" stop-color="#FFD34D"/>
+    </linearGradient>
+    <linearGradient id="gradB" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#F34B26"/>
+      <stop offset="1" stop-color="#FF9B18"/>
+    </linearGradient>
+
+    <!-- Pétalo facetado: rombo puntiagudo con líneas internas tipo mosaico -->
+    <g id="petA">
+      <path d="M 0 -118 L 30 -178 L 0 -246 L -30 -178 Z" fill="url(#gradA)" stroke="#8a3100" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M 0 -118 L 0 -246 M 0 -118 L 30 -178 M 0 -118 L -30 -178 M -30 -178 L 0 -196 L 30 -178" fill="none" stroke="#8a3100" stroke-width="1.4" opacity="0.55"/>
+    </g>
+    <g id="petB">
+      <path d="M 0 -118 L 30 -178 L 0 -246 L -30 -178 Z" fill="url(#gradB)" stroke="#8a3100" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M 0 -118 L 0 -246 M 0 -118 L 30 -178 M 0 -118 L -30 -178 M -30 -178 L 0 -196 L 30 -178" fill="none" stroke="#8a3100" stroke-width="1.4" opacity="0.55"/>
+    </g>
+    <!-- Pétalo interior, más corto y oscuro -->
+    <g id="petC">
+      <path d="M 0 -104 L 24 -150 L 0 -200 L -24 -150 Z" fill="#E86A1C" stroke="#8a3100" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M 0 -104 L 0 -200" fill="none" stroke="#8a3100" stroke-width="1.2" opacity="0.5"/>
+    </g>
+  </defs>
+
+  <!-- Anillo interior de pétalos (desfasado medio paso) -->
+  <g>
+    <use href="#petC" transform="rotate(9)"/>
+    <use href="#petC" transform="rotate(27)"/>
+    <use href="#petC" transform="rotate(45)"/>
+    <use href="#petC" transform="rotate(63)"/>
+    <use href="#petC" transform="rotate(81)"/>
+    <use href="#petC" transform="rotate(99)"/>
+    <use href="#petC" transform="rotate(117)"/>
+    <use href="#petC" transform="rotate(135)"/>
+    <use href="#petC" transform="rotate(153)"/>
+    <use href="#petC" transform="rotate(171)"/>
+    <use href="#petC" transform="rotate(189)"/>
+    <use href="#petC" transform="rotate(207)"/>
+    <use href="#petC" transform="rotate(225)"/>
+    <use href="#petC" transform="rotate(243)"/>
+    <use href="#petC" transform="rotate(261)"/>
+    <use href="#petC" transform="rotate(279)"/>
+    <use href="#petC" transform="rotate(297)"/>
+    <use href="#petC" transform="rotate(315)"/>
+    <use href="#petC" transform="rotate(333)"/>
+    <use href="#petC" transform="rotate(351)"/>
+  </g>
+
+  <!-- Anillo exterior de pétalos, alternando amarillo y naranja -->
+  <g>
+    <use href="#petA" transform="rotate(0)"/>
+    <use href="#petB" transform="rotate(18)"/>
+    <use href="#petA" transform="rotate(36)"/>
+    <use href="#petB" transform="rotate(54)"/>
+    <use href="#petA" transform="rotate(72)"/>
+    <use href="#petB" transform="rotate(90)"/>
+    <use href="#petA" transform="rotate(108)"/>
+    <use href="#petB" transform="rotate(126)"/>
+    <use href="#petA" transform="rotate(144)"/>
+    <use href="#petB" transform="rotate(162)"/>
+    <use href="#petA" transform="rotate(180)"/>
+    <use href="#petB" transform="rotate(198)"/>
+    <use href="#petA" transform="rotate(216)"/>
+    <use href="#petB" transform="rotate(234)"/>
+    <use href="#petA" transform="rotate(252)"/>
+    <use href="#petB" transform="rotate(270)"/>
+    <use href="#petA" transform="rotate(288)"/>
+    <use href="#petB" transform="rotate(306)"/>
+    <use href="#petA" transform="rotate(324)"/>
+    <use href="#petB" transform="rotate(342)"/>
+  </g>
+
+  <!-- Centro: mosaico rojo/azul con tejido de círculos entrelazados -->
+  <circle r="126" fill="#7C1F2E" stroke="#8a3100" stroke-width="4"/>
+  <g opacity="0.9">
+    <path d="M 0 0 L 126 0 A 126 126 0 0 1 63 109.1 Z" fill="#3B3B7A"/>
+    <path d="M 0 0 L -63 109.1 A 126 126 0 0 1 -126 0 Z" fill="#A63324"/>
+    <path d="M 0 0 L -63 -109.1 A 126 126 0 0 1 0 -126 Z" fill="#3B3B7A"/>
+    <path d="M 0 0 L 63 -109.1 A 126 126 0 0 1 126 0 Z" fill="#A63324" opacity="0.7"/>
+  </g>
+  <g fill="none" stroke="#F3E3AE" stroke-width="8">
+    <circle cx="63" cy="0" r="63" transform="rotate(0)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(30)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(60)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(90)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(120)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(150)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(180)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(210)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(240)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(270)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(300)"/>
+    <circle cx="63" cy="0" r="63" transform="rotate(330)"/>
+  </g>
+  <circle r="10" fill="#FFD34D" stroke="#8a3100" stroke-width="2"/>
+</svg>

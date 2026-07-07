@@ -133,8 +133,9 @@
   top: 0;
   z-index: 50;
   width: 100%;
-  background: rgba(252, 249, 248, 0.95);
-  backdrop-filter: blur(10px);
+  /* Fondo sólido: el backdrop-filter obligaba a re-desenfocar el contenido
+     bajo el navbar en cada frame de scroll y causaba tirones en PC. */
+  background: #fcf9f8;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
@@ -884,8 +885,8 @@
 
 .testiCard {
   position: relative;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
+  /* Sin backdrop-filter (costoso al scrollear); se compensa con más opacidad. */
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(84, 188, 235, 0.2);
   padding: 2.5rem;
 }
@@ -1265,11 +1266,12 @@
 }
 
 /* â”€â”€â”€ BotÃ³n flotante "Volver al inicio" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Solo visible en las secciones proyectos / impacto / historias. Sube
-   al hero con scroll suave. Comparte la identidad de .navCta (celeste). */
+   Visible siempre que el usuario no estÃ© en el tope de la landing. Sube
+   al hero con scroll suave. Comparte la identidad de .navCta (celeste).
+   A la izquierda para no chocar con la mascota IA (esquina derecha). */
 .scrollTop {
   position: fixed;
-  right: clamp(1rem, 3vw, 2.5rem);
+  left: clamp(1rem, 3vw, 2.5rem);
   bottom: clamp(1rem, 3vw, 2.5rem);
   z-index: 60;
   display: flex;

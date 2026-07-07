@@ -1,41 +1,24 @@
 'use client';
 
-// Botón flotante "Volver al inicio" del landing. Solo es visible cuando alguna
-// de las secciones proyectos / impacto / historias está en viewport; al pulsarlo
-// hace scroll suave hasta la sección hero (#inicio).
+// Botón flotante "Volver al inicio" del landing (esquina inferior izquierda).
+// Visible siempre que el usuario no esté en el tope de la página; al pulsarlo
+// hace scroll suave hasta arriba.
 
 import React, { useEffect, useState } from 'react';
 import { ArrowUp } from './icons';
 import styles from './landing.module.css';
 
-// Secciones donde el botón debe mostrarse (ver ids en cada componente de sección).
-const SECCIONES = ['matching', 'impacto', 'historias'];
+// Píxeles de scroll a partir de los cuales aparece el botón.
+const UMBRAL = 200;
 
 export default function ScrollToHero() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const objetivos = SECCIONES
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-
-    if (objetivos.length === 0) return;
-
-    // Mantiene el conteo de secciones visibles para mostrar/ocultar el botón.
-    const visibles = new Set<Element>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) visibles.add(entry.target);
-          else visibles.delete(entry.target);
-        }
-        setVisible(visibles.size > 0);
-      },
-      { threshold: 0.25 },
-    );
-
-    objetivos.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    const onScroll = () => setVisible(window.scrollY > UMBRAL);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const subirAlHero = () => {

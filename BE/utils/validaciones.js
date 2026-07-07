@@ -47,6 +47,10 @@ function validarNombre(nombre) {
   if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 3) {
     return 'El nombre completo debe tener al menos 3 caracteres.';
   }
+  const partes = nombre.trim().split(/\s+/);
+  if (partes.length < 2) {
+    return 'Por favor, ingresa tu nombre y al menos un apellido (nombre completo).';
+  }
   return null;
 }
 
