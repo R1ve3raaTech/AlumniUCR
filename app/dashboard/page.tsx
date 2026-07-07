@@ -8,6 +8,7 @@ import ExalumnoDashboard from '@/components/ExalumnoDashboard';
 import AdminDashboard from '@/components/AdminDashboard';
 import DashboardEstudiante from '@/components/student/DashboardEstudiante';
 import VoluntarioDashboard from '@/components/VoluntarioDashboard';
+import CargandoGirasol from '@/components/CargandoGirasol';
 
 interface Perfil {
   nombre?: string;
@@ -55,11 +56,7 @@ export default function DashboardPage() {
 
   // Evita parpadeo de contenido protegido mientras se hidrata o se redirige.
   if (loading || !token || perfilCargando) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-ucr-surface font-brand-body text-ucr-on-surface">
-        Cargando…
-      </div>
-    );
+    return <CargandoGirasol />;
   }
 
   const correo = user?.email ?? perfil?.correo_electronico ?? '—';

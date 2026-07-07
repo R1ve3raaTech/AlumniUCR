@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { useAuth } from '@/context/AuthContext';
 import BrandLogo from './BrandLogo';
 import styles from './landing.module.css';
 
@@ -16,7 +15,6 @@ const LINKS = [
 ];
 
 export default function Navbar() {
-  const { user, signOut } = useAuth();
   const [abierto, setAbierto] = useState(false);
   const pathname = usePathname();
 
@@ -58,24 +56,9 @@ export default function Navbar() {
         </div>
 
         <div className={styles.navRight}>
-          {user ? (
-            <>
-              <Link href="/dashboard" className={styles.navCta} onClick={cerrar}>
-                Dashboard
-              </Link>
-              <button
-                type="button"
-                className={styles.navCta}
-                onClick={() => { signOut(); cerrar(); }}
-              >
-                Salir
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className={styles.navCta} onClick={cerrar}>
-              ACCEDER
-            </Link>
-          )}
+          <Link href="/login" className={styles.navCta} onClick={cerrar}>
+            ACCEDER
+          </Link>
         </div>
 
         <button
