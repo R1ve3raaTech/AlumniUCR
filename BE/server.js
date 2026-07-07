@@ -7,6 +7,21 @@ const cors = require('cors');
 
 const app = express();
 
+// ======================================================
+// RED DE SEGURIDAD GLOBAL
+// ======================================================
+// Sin esto, cualquier excepción o promesa rechazada que escape de un
+// try/catch tumba TODO el proceso (nodemon se queda en "app crashed" hasta
+// el próximo cambio de archivo, dejando el BE caído para todo el equipo).
+// Loggear y seguir vivo es preferible a caerse en un servidor de desarrollo
+// compartido.
+process.on('uncaughtException', (error) => {
+  console.error('🔴 uncaughtException (el servidor sigue corriendo):', error);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('🔴 unhandledRejection (el servidor sigue corriendo):', reason);
+});
+
 // CORS
 // El frontend (Next.js) puede arrancar en distintos puertos locales (3000, 3001,
 // 3002…) si el 3000 está ocupado. Para que el backend SIEMPRE conecte con el
@@ -30,7 +45,10 @@ app.use(
   }),
 );
 
-app.use(express.json());
+// Límite por defecto de Express (100kb) es insuficiente para payloads con foto
+// de perfil en base64 (p. ej. PUT /api/perfil-exalumno) — rechazaba con
+// PayloadTooLargeError en uso normal.
+app.use(express.json({ limit: '10mb' }));
 
 // ======================================================
 // ROUTES
