@@ -162,7 +162,7 @@ export default function AlumniMascot() {
             src="/images/3 sin fondo.png"
             alt="Alumni Robot"
             width={130}
-            height={93}
+            height={107}
             style={{ objectFit: 'contain' }}
             priority
           />
@@ -197,7 +197,7 @@ export default function AlumniMascot() {
             >
               {msg.role === 'assistant' && (
                 <span className={styles.bubbleAvatar}>
-                  <Image src="/images/3 sin fondo.png" alt="Alumni" width={56} height={40} style={{ objectFit: 'contain' }} />
+                  <Image src="/images/3 sin fondo.png" alt="Alumni" width={56} height={46} style={{ objectFit: 'contain' }} />
                 </span>
               )}
               <p className={styles.bubbleText}>
@@ -212,7 +212,7 @@ export default function AlumniMascot() {
           {loading && messages[messages.length - 1]?.role !== 'assistant' && (
             <div className={`${styles.bubble} ${styles.bubbleBot}`}>
               <span className={styles.bubbleAvatar}>
-                <Image src="/images/3 sin fondo.png" alt="Alumni" width={56} height={40} style={{ objectFit: 'contain' }} />
+                <Image src="/images/3 sin fondo.png" alt="Alumni" width={56} height={46} style={{ objectFit: 'contain' }} />
               </span>
               <p className={styles.bubbleText}>
                 <span className={styles.typing}><span /><span /><span /></span>
@@ -269,8 +269,8 @@ export default function AlumniMascot() {
         <Image
           src="/images/3 sin fondo.png"
           alt="Alumni Robot"
-          width={260}
-          height={185}
+          width={220}
+          height={181}
           className={styles.mascotImg}
           priority
         />

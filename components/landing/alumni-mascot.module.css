@@ -39,7 +39,7 @@
      "no salía" en el teléfono. Con aspect-ratio, el alto siempre acompaña al
      ancho y nunca se recorta la imagen. */
   width: clamp(155px, 40vw, 260px);
-  aspect-ratio: 666 / 375;
+  aspect-ratio: 190 / 156;
   border: none;
   cursor: pointer;
   padding: 0;
