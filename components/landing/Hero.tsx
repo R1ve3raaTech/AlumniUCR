@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from './landing.module.css';
 
@@ -14,15 +14,17 @@ const fadeUp = {
 
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [enPantalla, setEnPantalla] = useState(true);
 
-  // El video de fondo solo se reproduce mientras el hero está en pantalla:
-  // decodificar video durante todo el scroll era una de las causas de que la
-  // página se sintiera trabada.
+  // El video de fondo y los blobs animados solo corren mientras el hero está
+  // en pantalla: decodificar video y componer 3 capas gigantes durante todo el
+  // scroll era una de las causas de que la página se sintiera trabada.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     const io = new IntersectionObserver(
       ([e]) => {
+        setEnPantalla(e.isIntersecting);
         if (e.isIntersecting) v.play().catch(() => {});
         else v.pause();
       },
@@ -33,7 +35,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="inicio" className={styles.hero}>
+    <section id="inicio" className={`${styles.hero} ${enPantalla ? '' : styles.heroQuieto}`}>
       {/* video-ucr.mp4 (4.7MB) en lugar de UCR.mp4 (71MB): el video pesado hacía
           que la landing tardara en cargar y se sintiera pegada. */}
       <video

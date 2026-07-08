@@ -51,7 +51,7 @@ type Proyecto = {
 
 // Ilustraciones decorativas (Unsplash) rotadas por tarjeta; los datos del
 // proyecto son reales, la foto es solo ambiente visual.
-const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
+const IMG = (id: string) => `/images/unsplash/${id}.jpg`;
 const IMGS_DECORATIVAS = [
   IMG('1576091160550-2173dba999ef'),
   IMG('1500382017468-9049fed747ef'),

@@ -7,7 +7,7 @@ import styles from './landing.module.css';
 // del equipo, el chat 24/7 y la seguridad/discreción de los datos.
 // Imágenes de alta calidad (Unsplash) por tema. Va debajo del CTA final.
 
-const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
+const IMG = (id: string) => `/images/unsplash/${id}.jpg`;
 
 const Check = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
