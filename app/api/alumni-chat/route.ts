@@ -56,16 +56,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // Se abre la conexión con Anthropic ANTES de crear el stream de respuesta:
-    // así, si falla la autenticación o el modelo, el error se captura acá
-    // (con detalle real) en vez de que el stream ya iniciado rompa la
-    // respuesta a medias con un error genérico e indiagnosticable.
-    //
-    // Se usa client.messages.create({ stream: true }) (iterador async plano)
-    // en vez del helper client.messages.stream() — este último (MessageStream)
-    // es también un EventEmitter, y emitir "error" sin listener registrado
-    // hace que Node lo trate como excepción no capturada que se salta
-    // cualquier try/catch (así se manifestaba como 500 genérico de Next.js).
+    // Iterador async plano (no el helper client.messages.stream(), que es
+    // también un EventEmitter y emitir "error" sin listener se salta el
+    // try/catch). OJO: crear el stream con .create({stream:true}) NO abre la
+    // conexión real ni valida auth/modelo — eso solo ocurre al pedir el
+    // primer chunk. Por eso se consume ese primer chunk ACÁ, todavía dentro
+    // de este try/catch externo: si la key o el modelo son inválidos, el
+    // error real se captura y responde como JSON diagnosticable, en vez de
+    // reventar más tarde dentro del ReadableStream (donde se perdía el
+    // detalle y Vercel mostraba su página de error genérica).
     const anthropicStream = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 400,
@@ -73,20 +72,28 @@ export async function POST(req: Request) {
       messages: messages.slice(-10), // últimos 10 mensajes para context window
       stream: true,
     });
+    const iterator = anthropicStream[Symbol.asyncIterator]();
+    const primerResultado = await iterator.next();
 
     /* Streaming SSE */
     const encoder = new TextEncoder();
+
+    const procesarChunk = (chunk: typeof primerResultado.value, controller: ReadableStreamDefaultController) => {
+      if (chunk?.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+        const data = JSON.stringify({ delta: { text: chunk.delta.text } });
+        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+      }
+    };
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of anthropicStream) {
-            if (
-              chunk.type === 'content_block_delta' &&
-              chunk.delta.type === 'text_delta'
-            ) {
-              const data = JSON.stringify({ delta: { text: chunk.delta.text } });
-              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-            }
+          if (!primerResultado.done) procesarChunk(primerResultado.value, controller);
+
+          let resultado = await iterator.next();
+          while (!resultado.done) {
+            procesarChunk(resultado.value, controller);
+            resultado = await iterator.next();
           }
 
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
