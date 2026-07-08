@@ -38,27 +38,27 @@ router.delete(
 // RF-13: RUTAS DE EXALUMNO
 // ======================================================
 
-// GET /api/aplicantes/posicion/:idPosicion — exalumno ve aplicantes de su posición
+// GET /api/aplicantes/posicion/:idPosicion — exalumno/voluntario ve aplicantes de su posición
 router.get(
     '/posicion/:idPosicion',
     autenticarUsuario,
-    exigirRol(['exalumno', 'admin']),
+    exigirRol(['exalumno', 'voluntario', 'admin']),
     aplicantesController.obtenerAplicantesPorPosicion
 );
 
-// PUT /api/aplicantes/:id — exalumno cambia estado (en_revision / seleccionado / descartado)
+// PUT /api/aplicantes/:id — exalumno/voluntario cambia estado (en_revision / seleccionado / descartado)
 router.put(
     '/:id',
     autenticarUsuario,
-    exigirRol(['exalumno', 'admin']),
+    exigirRol(['exalumno', 'voluntario', 'admin']),
     aplicantesController.actualizarAplicante
 );
 
-// PUT /api/aplicantes/:id/seleccionar — exalumno selecciona candidato (notifica a todos)
+// PUT /api/aplicantes/:id/seleccionar — exalumno/voluntario selecciona candidato (notifica a todos)
 router.put(
     '/:id/seleccionar',
     autenticarUsuario,
-    exigirRol(['exalumno']),
+    exigirRol(['exalumno', 'voluntario']),
     aplicantesController.seleccionarCandidato
 );
 
@@ -79,7 +79,7 @@ router.get(
 router.get(
     '/empleo/:idEmpleo',
     autenticarUsuario,
-    exigirRol(['admin', 'exalumno']),
+    exigirRol(['admin', 'exalumno', 'voluntario']),
     aplicantesController.obtenerAplicantesPorEmpleo
 );
 
@@ -95,7 +95,7 @@ router.get(
 router.get(
     '/:id',
     autenticarUsuario,
-    exigirRol(['admin', 'exalumno']),
+    exigirRol(['admin', 'exalumno', 'voluntario']),
     aplicantesController.obtenerAplicantePorId
 );
 
