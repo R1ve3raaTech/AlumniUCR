@@ -34,10 +34,12 @@ export default function Hero() {
 
   return (
     <section id="inicio" className={styles.hero}>
+      {/* video-ucr.mp4 (4.7MB) en lugar de UCR.mp4 (71MB): el video pesado hacía
+          que la landing tardara en cargar y se sintiera pegada. */}
       <video
         ref={videoRef}
         className={styles.heroBgVideo}
-        src="/images/UCR.mp4"
+        src="/images/video-ucr.mp4"
         autoPlay
         loop
         muted
