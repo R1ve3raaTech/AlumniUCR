@@ -204,6 +204,17 @@ const confirmarExalumno = async (userId, token) => {
     throw err;
   }
 
+  // Sincroniza el estado interno de Supabase Auth: sin esto, si el proyecto
+  // exige confirmar el correo, signInWithPassword sigue rechazando el login
+  // aunque nuestra propia columna 'confirmado' ya diga true (dos sistemas de
+  // confirmación separados que deben coincidir).
+  // Nota: .auth.admin.* requiere la key service_role — se usa 'supabase'
+  // (el cliente principal), no 'supabaseAuth' (que es de key anon, sin
+  // privilegios de admin).
+  try {
+    await supabase.auth.admin.updateUserById(userId, { email_confirm: true });
+  } catch { /* si falla, seguimos igual: no bloquea la confirmación de nuestro lado */ }
+
   const { data: perfil, error } = await supabase
     .from('usuarios')
     .update({ confirmado: true, estado: 'pendiente' })
