@@ -180,51 +180,34 @@ export default function StudentShell({
         </div>
       </aside>
 
-      {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
-        <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between gap-2 px-4 sm:px-8">
-          {/* En móvil el logo va en el header (el sidebar está oculto). */}
-          <Link href="/dashboard" className="lg:hidden" aria-label="Inicio">
-            <AlumniLogo className="!h-8 w-auto" />
-          </Link>
-          <div className="hidden max-w-xl flex-1 lg:block">
-            <div className="relative">
-              <svg
-                className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden
-              >
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-              </svg>
-              <input
-                className="w-full rounded-full border border-outline-variant bg-surface-container py-2 pl-11 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30"
-                placeholder="Buscar en la red UCR..."
-                aria-label="Buscar en la red UCR"
-                type="text"
-              />
-            </div>
+      {/* En móvil el logo flota arriba a la izquierda (el sidebar está oculto). */}
+      <Link href="/dashboard" className="fixed left-4 top-4 z-30 lg:hidden" aria-label="Inicio">
+        <AlumniLogo className="!h-8 w-auto" />
+      </Link>
+
+      {/* Perfil flotante estilo píldora (sin barra de fondo) */}
+      <Link
+        href="/perfil-estudiante"
+        aria-label="Ir a mi perfil"
+        title="Mi Perfil"
+        className="fixed right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest p-1 pr-3 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40 sm:right-8"
+      >
+        {perfil.foto ? (
+          <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+            {iniciales || 'E'}
           </div>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/perfil-estudiante"
-              aria-label="Ir a mi perfil"
-              title="Mi Perfil"
-              className="flex items-center gap-2 rounded-full p-1 outline-none transition-all hover:bg-surface-container focus-visible:ring-2 focus-visible:ring-secondary/40"
-            >
-              {perfil.foto ? (
-                <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
-              ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  {iniciales || 'E'}
-                </div>
-              )}
-              <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+        )}
+        <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
+      </Link>
 
       {/* Main */}
       <main className="ml-0 min-h-screen pb-16 pt-16 lg:ml-64 lg:pb-0">{children}</main>
+
+      <footer className="ml-0 flex flex-wrap items-center justify-center gap-3 border-t border-outline-variant bg-surface-container-lowest py-5 text-center text-xs text-on-surface-variant lg:ml-64">
+        <AlumniLogo height={26} /> © 2026 Alumni UCR · Universidad de Costa Rica
+      </footer>
 
       {/* Barra inferior estilo app (solo móvil): SOLO íconos, con indicador
           activo en píldora (Material 3). El resto de opciones vive en el Menú. */}

@@ -10,10 +10,8 @@
 // correspondiente al exalumno. Implementados por Adri.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
 import {
   obtenerDonaciones,
   actualizarEstadoDonacion,
@@ -183,19 +181,7 @@ export default function AdminDonacionesPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio"><AlumniLogo height={38} /></Link>
-        <div className={styles.headerLinks}>
-          <Link href="/" className={styles.back}>Inicio</Link>
-          <Link href="/admin/matches" className={styles.back}>Matches</Link>
-          <Link href="/admin/usuarios" className={styles.back}>Usuarios</Link>
-          <Link href="/admin/donaciones" className={styles.back}>Donaciones</Link>
-          <Link href="/admin/reportes" className={styles.back}>Impacto</Link>
-          <Link href="/dashboard" className={styles.back}>Panel Principal ✨</Link>
-        </div>
-      </header>
-
+    <div className={styles.pageContent}>
       <section className={styles.hero}>
         <h1 className={styles.heroTitle}>Gestión de Donaciones</h1>
         <p className={styles.heroText}>

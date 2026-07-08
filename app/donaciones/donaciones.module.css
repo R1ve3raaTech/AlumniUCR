@@ -27,8 +27,12 @@
 .campo { display: flex; flex-direction: column; gap: 6px; font-size: .88rem; font-weight: 600;
   color: var(--ucr-on-surface); }
 .campo input, .campo select, .campo textarea {
-  padding: 11px 14px; border: 1px solid var(--ucr-outline-variant); border-radius: 16px;
+  padding: 11px 16px; border: 1px solid var(--ucr-outline-variant); border-radius: 999px;
   font-family: inherit; font-size: .95rem; font-weight: 400; color: var(--ucr-on-surface); background: #fff; }
+.campo textarea { border-radius: 20px; }
+.campo select { appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; padding-right: 40px; }
 .campo input:focus, .campo select:focus, .campo textarea:focus {
   outline: none; border-color: var(--brand-esmeralda); box-shadow: 0 0 0 3px rgba(0,125,103,.15); }
 .campo textarea { resize: vertical; }

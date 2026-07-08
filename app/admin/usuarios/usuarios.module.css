@@ -1,14 +1,6 @@
-/* Gestión de usuarios del admin (RF-08). Mismo molde que donaciones.module.css. */
-.page { min-height: 100vh; background: var(--ucr-surface); color: var(--ucr-on-surface);
-  font-family: var(--font-brand-body); }
+/* Gestión de usuarios del admin (RF-08). */
+.pageContent { width: 100%; }
 
-.header { display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 32px; background: var(--ucr-primary); }
-.brand { display: block; }
-.headerLinks { display: flex; gap: 18px; flex-wrap: wrap; }
-.back { color: #fff; text-decoration: none; font-family: var(--font-ucr-display);
-  font-size: .95rem; opacity: .9; }
-.back:hover { opacity: 1; text-decoration: underline; }
 
 /* ── HERO CON VIDEO UCR (Tomado de Matches) ── */
 .heroClean {

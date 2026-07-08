@@ -4,7 +4,7 @@
 // indicador de % de completitud y guardado. Diseño de marca; estilos en
 // perfil-exalumno.module.css.
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -50,6 +50,7 @@ export default function PerfilExalumnoPage() {
   const { token, user, loading: authLoading } = useAuth();
   const { verificando, autorizado } = useRequireRole(['exalumno']);
 
+  const fotoInputRef = useRef<HTMLInputElement>(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -197,11 +198,28 @@ export default function PerfilExalumnoPage() {
             <div className={styles.grid}>
               <div className={`${styles.campo} ${styles.full}`}>
                 <label className={styles.label}>Foto de perfil <span className={styles.opcional}>(opcional · JPG/PNG/WEBP, máx 2MB)</span></label>
-                <div className={styles.fotoRow}>
-                  {form.foto_perfil
-                    ? <img src={form.foto_perfil} alt="Foto de perfil" className={styles.fotoPrev} />
-                    : <span className={styles.fotoPlaceholder} aria-hidden>—</span>}
-                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onFoto} className={styles.file} />
+                <div className="relative inline-block">
+                  {form.foto_perfil ? (
+                    <img src={form.foto_perfil} alt="Foto de perfil" className="h-24 w-24 rounded-full border-2 border-ucr-primary object-cover object-center shadow-sm" />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-ucr-primary bg-ucr-primary/10 text-2xl font-bold text-ucr-primary shadow-sm">—</div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fotoInputRef.current?.click()}
+                    title="Cambiar foto"
+                    aria-label="Cambiar foto de perfil"
+                    className="absolute bottom-0 right-0 rounded-full border-2 border-white bg-ucr-secondary p-1.5 text-white transition-transform hover:scale-110"
+                  >
+                    <span className="material-symbols-outlined text-sm">photo_camera</span>
+                  </button>
+                  <input
+                    ref={fotoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={onFoto}
+                    className="hidden"
+                  />
                 </div>
               </div>
               <div className={styles.campo}>

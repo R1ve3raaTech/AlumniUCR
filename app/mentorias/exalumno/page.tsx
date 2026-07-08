@@ -20,6 +20,7 @@ import {
 } from '@/lib/perfilExalumno';
 import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
 import { useTema } from '@/lib/useTema';
+import CargandoGirasol from '@/components/CargandoGirasol';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -315,14 +316,7 @@ export default function MentoriasExalumnoPage() {
   const conexionesActivas = useMemo(() => matches.filter((m) => m.estado === 'activo'), [matches]);
 
   if (verificando || !autorizado || cargandoDatos) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background font-body-base text-on-background">
-        <div className="flex flex-col items-center gap-3">
-          <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
-          <span className="text-sm font-semibold text-primary">Cargando panel de mentorías…</span>
-        </div>
-      </div>
-    );
+    return <CargandoGirasol texto="Cargando panel de mentorías…" />;
   }
 
   return (
@@ -398,32 +392,26 @@ export default function MentoriasExalumnoPage() {
         </button>
       </aside>
 
-      {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-outline-variant bg-surface-container-lowest lg:left-64">
-        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between gap-2 px-4 sm:px-8">
-          <button
-            type="button"
-            onClick={() => setMenuAbierto(true)}
-            className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-variant lg:hidden"
-            aria-label="Abrir menú"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <div className="hidden max-w-md flex-1 items-center gap-2 rounded-full bg-surface-container px-4 py-2 md:flex">
-            <span className="material-symbols-outlined text-on-surface-variant">search</span>
-            <input className="w-full border-none bg-transparent text-sm outline-none placeholder:text-on-surface-variant" placeholder="Buscar..." />
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right lg:block">
-              <p className="text-sm font-bold text-on-surface">{nombre}</p>
-              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
-            </div>
-            {foto
-              ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
-              : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales}</div>}
-          </div>
+      {/* Botón de menú móvil, flotante */}
+      <button
+        type="button"
+        onClick={() => setMenuAbierto(true)}
+        className="fixed left-4 top-4 z-30 rounded-full border border-outline-variant bg-surface-container-lowest p-2.5 text-on-surface-variant shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] transition-colors hover:bg-surface-variant lg:hidden"
+        aria-label="Abrir menú"
+      >
+        <span className="material-symbols-outlined">menu</span>
+      </button>
+
+      {/* Perfil flotante estilo píldora (sin barra de fondo) */}
+      <div className="fixed right-4 top-4 z-30 flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] sm:right-8">
+        <div className="hidden text-right lg:block">
+          <p className="text-sm font-bold text-on-surface">{nombre}</p>
+          <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
         </div>
-      </header>
+        {foto
+          ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
+          : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales}</div>}
+      </div>
 
       {/* Main Content */}
       <main className="ml-0 min-h-screen px-4 pb-12 pt-24 sm:px-8 lg:ml-64">

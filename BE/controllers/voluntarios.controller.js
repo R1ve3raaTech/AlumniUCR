@@ -203,10 +203,10 @@ const MODALIDADES_VALIDAS = ['Presencial', 'Remoto', 'Híbrido'];
 const DISPONIBILIDAD_VALIDA = ['Tiempo completo', 'Medio tiempo', 'Por horas', 'Puntual / por proyecto'];
 
 // PUT /api/voluntarios/mi-perfil  (el propio voluntario autenticado)
-// Edita modalidad, disponibilidad y biografía de su propia solicitud.
+// Edita modalidad, disponibilidad, biografía y/o foto de su propia solicitud.
 const actualizarMiPerfil = async (req, res, next) => {
   try {
-    const { modalidad, disponibilidad, biografia } = req.body || {};
+    const { modalidad, disponibilidad, biografia, foto_perfil } = req.body || {};
     if (modalidad !== undefined && modalidad !== '' && !MODALIDADES_VALIDAS.includes(modalidad)) {
       throw errorValidacion('Selecciona una modalidad válida.');
     }
@@ -218,6 +218,7 @@ const actualizarMiPerfil = async (req, res, next) => {
       modalidad: modalidad === '' ? null : modalidad,
       disponibilidad: disponibilidad === '' ? null : disponibilidad,
       biografia: biografia === '' ? null : biografia,
+      foto_perfil,
     });
 
     if (!actualizado) {
