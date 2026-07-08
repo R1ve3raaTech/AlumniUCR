@@ -31,7 +31,15 @@ const origenPermitido = (origin) => {
   // Peticiones sin origin (curl, Postman, health checks) se permiten.
   if (!origin) return true;
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
-  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return true;
+  if (process.env.FRONTEND_URL) {
+    // Acepta el dominio configurado con o sin "www.": Vercel redirige el apex
+    // (alumniucr.com) a "www.alumniucr.com", así que el origen real que llega
+    // al backend puede no coincidir exactamente con FRONTEND_URL si solo se
+    // configuró una de las dos variantes.
+    const sinWww = process.env.FRONTEND_URL.replace(/^(https?:\/\/)www\./, '$1');
+    const conWww = sinWww.replace(/^(https?:\/\/)/, '$1www.');
+    if (origin === sinWww || origin === conWww) return true;
+  }
   return false;
 };
 
