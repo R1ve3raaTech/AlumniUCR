@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { PerfilEstudianteProvider } from "@/context/PerfilEstudianteContext";
+import { ProyectoGraduacionProvider } from "@/context/ProyectoGraduacionContext";
 import NavigationSpinner from "@/components/NavigationSpinner";
 import TitleUpdater from "@/components/TitleUpdater";
 import AlumniMascot from "@/components/landing/AlumniMascot";
@@ -36,10 +37,12 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <PerfilEstudianteProvider>
-            <NavigationSpinner />
-            <TitleUpdater />
-            {children}
-            <AlumniMascot />
+            <ProyectoGraduacionProvider>
+              <NavigationSpinner />
+              <TitleUpdater />
+              {children}
+              <AlumniMascot />
+            </ProyectoGraduacionProvider>
           </PerfilEstudianteProvider>
         </AuthProvider>
       </body>

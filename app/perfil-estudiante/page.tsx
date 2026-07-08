@@ -13,6 +13,11 @@ import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type PerfilEstudiante, type ArchivoPortafolio } from '@/context/PerfilEstudianteContext';
+import {
+  useProyectoGraduacion,
+  calcularPorcentajeCompletitud,
+  calcularChecklistReglamento,
+} from '@/context/ProyectoGraduacionContext';
 import { FACULTADES_UCR } from '@/lib/catalogoUCR';
 import { useAuth } from '@/context/AuthContext';
 import { obtenerMisAplicaciones } from '@/lib/aplicaciones';
@@ -516,6 +521,9 @@ interface Aplicacion {
 export default function PerfilEstudiantePage() {
   const { token } = useAuth();
   const { perfil, actualizar } = usePerfilEstudiante();
+  const { proyecto: propuesta } = useProyectoGraduacion();
+  const porcentajePropuesta = calcularPorcentajeCompletitud(propuesta);
+  const checklistPropuesta = calcularChecklistReglamento(propuesta);
   const [editandoAcademico, setEditandoAcademico] = useState(false);
   const [editandoTFG, setEditandoTFG] = useState(false);
   const [editandoBeca, setEditandoBeca] = useState(false);
@@ -759,6 +767,47 @@ export default function PerfilEstudiantePage() {
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5">
               {(perfil.proyectoAreas.length ? perfil.proyectoAreas : ['Sin áreas aún']).map((t) => (
                 <span key={t} className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Propuesta de Proyecto de Graduación (asistente de 9 pasos) */}
+          <div className={tarjetaCls}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Propuesta de Proyecto de Graduación</p>
+                <h2 className="mt-1 font-headline-md text-xl leading-snug text-on-surface">
+                  {propuesta.titulo || 'Aún no iniciaste tu propuesta'}
+                </h2>
+                {propuesta.modalidad && (
+                  <p className="mt-1 text-xs text-on-surface-variant">Modalidad: {propuesta.modalidad}</p>
+                )}
+              </div>
+              <Link
+                href={propuesta.titulo ? '/proyecto-graduacion/vista-previa' : '/proyecto-graduacion/informacion'}
+                data-real
+                className="shrink-0 rounded-lg bg-secondary px-3 py-1.5 text-center text-xs font-bold text-on-secondary transition-opacity hover:opacity-90"
+              >
+                {propuesta.titulo ? 'Ver propuesta' : 'Comenzar'}
+              </Link>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <span className="text-on-surface-variant">Apartados del Reglamento completos</span>
+              <span className="text-sm font-bold text-secondary">{porcentajePropuesta}%</span>
+            </div>
+            <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-secondary/15">
+              <div className="h-full rounded-full bg-secondary" style={{ width: `${porcentajePropuesta}%` }} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-3">
+              {checklistPropuesta.map((item) => (
+                <div key={item.key} className="flex items-center gap-1.5 text-xs">
+                  <span className={`material-symbols-outlined text-base ${item.completo ? 'text-secondary' : 'text-outline-variant'}`}>
+                    {item.completo ? 'check_circle' : 'radio_button_unchecked'}
+                  </span>
+                  <span className={item.completo ? 'text-on-surface' : 'text-on-surface-variant'}>{item.label}</span>
+                </div>
               ))}
             </div>
           </div>
