@@ -34,6 +34,7 @@ const animarIcono = {
 const NAV: { key: string; href: string; icon: string; label: string; proximamente?: boolean }[] = [
   { key: 'dashboard', href: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
   { key: 'perfil', href: '/perfil-estudiante', icon: 'person', label: 'Mi Perfil' },
+  { key: 'proyecto-graduacion', href: '/proyecto-graduacion', icon: 'school', label: 'Proyecto de Graduación' },
   { key: 'cv', href: '/mi-curriculum', icon: 'description', label: 'CV + IA' },
   { key: 'matches', href: '/mis-matches', icon: 'handshake', label: 'Matches' },
   { key: 'directorio', href: '/directorio', icon: 'list_alt', label: 'Directorio' },
