@@ -56,18 +56,22 @@ export async function POST(req: Request) {
       });
     }
 
+    // Se abre la conexión con Anthropic ANTES de crear el stream de respuesta:
+    // así, si falla la autenticación o el modelo, el error se captura acá
+    // (con detalle real) en vez de que el stream ya iniciado rompa la
+    // respuesta a medias con un error genérico e indiagnosticable.
+    const anthropicStream = await client.messages.stream({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: SYSTEM_PROMPT,
+      messages: messages.slice(-10), // últimos 10 mensajes para context window
+    });
+
     /* Streaming SSE */
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const anthropicStream = await client.messages.stream({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 400,
-            system: SYSTEM_PROMPT,
-            messages: messages.slice(-10), // últimos 10 mensajes para context window
-          });
-
           for await (const chunk of anthropicStream) {
             if (
               chunk.type === 'content_block_delta' &&
@@ -95,7 +99,10 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Alumni chat error:', error);
-    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), {
+    // TODO: una vez diagnosticado el 500 en producción, volver a un mensaje
+    // genérico (no exponer detalles internos del error al cliente).
+    const detalle = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: 'Error interno del servidor', detalle }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
