@@ -66,6 +66,11 @@ export async function POST(req: Request) {
       system: SYSTEM_PROMPT,
       messages: messages.slice(-10), // últimos 10 mensajes para context window
     });
+    // MessageStream también es un EventEmitter: si emite "error" sin ningún
+    // listener registrado, Node lo trata como una excepción no capturada que
+    // se salta el try/catch entero (así se manifestaba como un 500 genérico
+    // de Next.js). El error real se sigue manejando vía el for-await de abajo.
+    anthropicStream.on('error', () => {});
 
     /* Streaming SSE */
     const encoder = new TextEncoder();
@@ -99,10 +104,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Alumni chat error:', error);
-    // TODO: una vez diagnosticado el 500 en producción, volver a un mensaje
-    // genérico (no exponer detalles internos del error al cliente).
-    const detalle = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: 'Error interno del servidor', detalle }), {
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
