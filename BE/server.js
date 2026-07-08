@@ -167,6 +167,7 @@ app.use(errorMiddleware);
 
 const cron = require('node-cron');
 const { enviarRecordatorioDonacionesPendientes } = require('./services/admin.service');
+const { cerrarPosicionesVencidas } = require('./services/puestoEmpleoService');
 
 // RF-08.2 — cada hora revisa donaciones pendientes > 24h y reenvía el correo al admin.
 cron.schedule('0 * * * *', async () => {
@@ -177,6 +178,18 @@ cron.schedule('0 * * * *', async () => {
     }
   } catch (error) {
     console.error('⚠️ Error al ejecutar el cron de recordatorio de donaciones:', error.message);
+  }
+});
+
+// RF-10 — cada hora cierra automáticamente las posiciones (empleo/pasantía) cuya fecha límite ya pasó.
+cron.schedule('0 * * * *', async () => {
+  try {
+    const resultado = await cerrarPosicionesVencidas();
+    if (resultado.cerradas > 0) {
+      console.log(`🔒 Posiciones cerradas automáticamente por cron: ${resultado.cerradas}.`);
+    }
+  } catch (error) {
+    console.error('⚠️ Error al ejecutar el cron de cierre de posiciones vencidas:', error.message);
   }
 });
 

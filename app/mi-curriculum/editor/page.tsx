@@ -187,9 +187,21 @@ export default function EditorCurriculumPage() {
   };
 
   // ── Experiencias ──
+  const MAX_CHARS_BULLET = 120;
+  // Cada línea de "descripción" es un bullet de logro/responsabilidad — se limita a 120 caracteres c/u.
+  const limitarBullets = (valor: string) =>
+    valor
+      .split('\n')
+      .map((linea) => linea.slice(0, MAX_CHARS_BULLET))
+      .join('\n');
+
   const addExp = () => set({ experiencias: [...perfil.experiencias, { puesto: '', empresa: '', periodo: '', descripcion: '' }] });
   const updExp = (i: number, campo: keyof Experiencia, valor: string) =>
-    set({ experiencias: perfil.experiencias.map((e, j) => (j === i ? { ...e, [campo]: valor } : e)) });
+    set({
+      experiencias: perfil.experiencias.map((e, j) =>
+        j === i ? { ...e, [campo]: campo === 'descripcion' ? limitarBullets(valor) : valor } : e
+      ),
+    });
   const delExp = (i: number) => set({ experiencias: perfil.experiencias.filter((_, j) => j !== i) });
 
   return (
@@ -421,14 +433,17 @@ export default function EditorCurriculumPage() {
                         {renderConsejo(`experiencia_${i}_periodo`)}
                       </div>
                       <div>
-                        <textarea 
-                          className={`${input} min-h-[70px]`} 
-                          value={exp.descripcion} 
-                          onChange={(e) => updExp(i, 'descripcion', e.target.value)} 
-                          onBlur={(e) => updExp(i, 'descripcion', limpiarTexto(e.target.value))} 
+                        <textarea
+                          className={`${input} min-h-[70px]`}
+                          value={exp.descripcion}
+                          onChange={(e) => updExp(i, 'descripcion', e.target.value)}
+                          onBlur={(e) => updExp(i, 'descripcion', limpiarTexto(e.target.value))}
                           onFocus={() => setFocusedField(`experiencia_${i}_descripcion`)}
-                          placeholder="Logros y responsabilidades…" 
+                          placeholder="Logros y responsabilidades… (una línea = un bullet, máx. 120 caracteres)"
                         />
+                        <p className="mt-1 text-right text-[0.7rem] text-on-surface-variant">
+                          Máx. 120 caracteres por línea/logro
+                        </p>
                         {renderConsejo(`experiencia_${i}_descripcion`)}
                       </div>
                     </div>

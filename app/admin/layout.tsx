@@ -12,6 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -20,6 +21,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace('/login');
     }
   }, [router]);
+
+  useEffect(() => {
+    setMenuAbierto(false);
+  }, [pathname]);
 
 
 
@@ -50,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/" className={styles.brand} aria-label="Alumni UCR — inicio">
             <AlumniLogo height={38} />
           </Link>
-          <nav className={styles.navLinks}>
+          <nav className={`${styles.navLinks} ${menuAbierto ? styles.navLinksOpen : ''}`}>
             <Link href="/" className={styles.navLink}>Inicio</Link>
             <Link href="/admin/matches" className={`${styles.navLink} ${pathname.includes('/matches') ? styles.navLinkActive : ''}`}>Matches</Link>
             <Link href="/admin/usuarios" className={`${styles.navLink} ${pathname.includes('/usuarios') ? styles.navLinkActive : ''}`}>Usuarios</Link>
@@ -58,6 +63,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin/reportes" className={`${styles.navLink} ${pathname.includes('/reportes') ? styles.navLinkActive : ''}`}>Impacto</Link>
             <Link href="/dashboard" className={styles.navLink} style={{ color: 'var(--brand-naranja)', paddingLeft: '2rem' }}>Panel Principal ✨</Link>
           </nav>
+          <button
+            type="button"
+            className={styles.navToggle}
+            aria-label="Abrir menú"
+            aria-expanded={menuAbierto}
+            onClick={() => setMenuAbierto((v) => !v)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
           <button type="button" className={styles.logout} onClick={handleSignOut}>
             <LogOut size={16} /> Cerrar sesión
           </button>

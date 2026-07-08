@@ -7,8 +7,12 @@ import ReportarPerfil from '@/components/ReportarPerfil';
 import StudentNav from '@/components/StudentNav';
 import ProgressBar from '@/components/ui/ProgressBar';
 import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
+import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
 import { apiFetch } from '@/lib/api';
 import { CARRERAS_UCR } from '@/lib/catalogoUCR';
+
+const nombreDe = (catalogo: any[] | undefined, id: any) =>
+  catalogo?.find((c: any) => c.id === id)?.nombre ?? null;
 
 const SEDES_UCR = [
   'Sede Rodrigo Facio (Central)',
@@ -207,6 +211,8 @@ function EstudiantesPageContent() {
   const [enviando, setEnviando] = useState<string | null>(null);
   const [catCarreras, setCatCarreras] = useState<string[]>([]);
   const [catSedes, setCatSedes] = useState<string[]>([]);
+  const [miPerfil, setMiPerfil] = useState<any | null>(null);
+  const [catalogos, setCatalogos] = useState<any | null>(null);
 
   // Filtros pendientes (antes de aplicar)
   const [filtroCarrera, setFiltroCarrera] = useState('');
@@ -229,10 +235,12 @@ function EstudiantesPageContent() {
     let activo = true;
     (async () => {
       try {
-        const [resEstudiantes, resCarreras, resSedes] = await Promise.all([
+        const [resEstudiantes, resCarreras, resSedes, resMiPerfil, resCatalogos] = await Promise.all([
           obtenerDirectorioEstudiantes(token).catch(() => null),
           apiFetch('/carreras', { token }).catch(() => null),
           apiFetch('/sedes-ucr', { token }).catch(() => null),
+          obtenerMiPerfilExalumno(token).catch(() => null),
+          obtenerCatalogos(token).catch(() => null),
         ]);
         if (!activo) return;
         setLista(resEstudiantes?.data ?? []);
@@ -240,6 +248,8 @@ function EstudiantesPageContent() {
         setCatCarreras(carrerasApi.length > 0 ? carrerasApi.sort() : CARRERAS_UCR);
         const sedesApi = (resSedes?.data ?? []).map((s: { nombre: string }) => s.nombre).filter(Boolean);
         setCatSedes(sedesApi.length > 0 ? sedesApi.sort() : SEDES_UCR);
+        setMiPerfil(resMiPerfil?.data?.perfil ?? resMiPerfil?.perfil ?? resMiPerfil ?? null);
+        setCatalogos(resCatalogos?.data ?? resCatalogos ?? null);
       } catch {
         if (activo) setLista([]);
       } finally {
@@ -253,23 +263,60 @@ function EstudiantesPageContent() {
   const opcionesApoyo = BUSCA_LABEL.map((b) => b.label);
   const opcionesTipo = TIPOS_PROYECTO.map((t) => t.label);
 
+  // RF-04: mismo algoritmo de RF-06 (30/30/20/20) visto desde la perspectiva del exalumno,
+  // para ordenar el directorio de estudiantes por afinidad con el propio perfil.
+  const misCarreras: string[] = (miPerfil?.carreras || []).map((id: any) => nombreDe(catalogos?.carreras, id)).filter(Boolean);
+  const misAreas: string[] = (miPerfil?.areas || []).map((id: any) => nombreDe(catalogos?.areas, id)).filter(Boolean);
+  const misSectores: string[] = (miPerfil?.sectores || []).map((id: any) => nombreDe(catalogos?.sectores, id)).filter(Boolean);
+
+  const puntuarEstudiante = (est: Estudiante) => {
+    let score = 0;
+
+    const tieneCarreraComun = (est.carreras || []).some((c) =>
+      misCarreras.some((mc) => mc.toLowerCase().trim() === c.toLowerCase().trim())
+    );
+    if (tieneCarreraComun) score += 30;
+
+    const misAreasSet = new Set(misAreas.map((a) => a.toLowerCase().trim()));
+    const comunes = (est.areas || []).filter((a) => misAreasSet.has(a.toLowerCase().trim()));
+    if (misAreas.length > 0) score += Math.round((comunes.length / misAreas.length) * 30);
+
+    const tieneSectorComun = (est.areas || []).some((a) =>
+      misSectores.some((s) => s.toLowerCase().trim() === a.toLowerCase().trim())
+    );
+    if (tieneSectorComun) score += 20;
+
+    const apoyoComun =
+      (miPerfil?.ofrece_mentoria && est.busca?.mentoria) ||
+      (miPerfil?.ofrece_empleo && est.busca?.empleo) ||
+      (miPerfil?.ofrece_pasantia && est.busca?.pasantia) ||
+      (miPerfil?.ofrece_donacion && est.busca?.financiamiento);
+    if (apoyoComun) score += 20;
+
+    return Math.min(score, 100);
+  };
+
   const filtrada = useMemo(() => {
-    return lista.filter((e) => {
-      if (filtrosAplicados.carrera && !e.carreras.includes(filtrosAplicados.carrera)) return false;
-      if (filtrosAplicados.area && !e.areas.includes(filtrosAplicados.area)) return false;
-      if (filtrosAplicados.sede && e.sede !== filtrosAplicados.sede) return false;
-      if (filtrosAplicados.apoyo) {
-        const encontrado = BUSCA_LABEL.find((b) => b.label === filtrosAplicados.apoyo);
-        if (encontrado && !e.busca[encontrado.clave]) return false;
-      }
-      if (filtrosAplicados.tipo) {
-        const tipoReal = getTipoBadge(e);
-        if (tipoReal !== filtrosAplicados.tipo) return false;
-      }
-      if (filtrosAplicados.areaInteres && !e.areas.includes(filtrosAplicados.areaInteres)) return false;
-      return true;
-    });
-  }, [lista, filtrosAplicados]);
+    return lista
+      .filter((e) => {
+        if (filtrosAplicados.carrera && !e.carreras.includes(filtrosAplicados.carrera)) return false;
+        if (filtrosAplicados.area && !e.areas.includes(filtrosAplicados.area)) return false;
+        if (filtrosAplicados.sede && e.sede !== filtrosAplicados.sede) return false;
+        if (filtrosAplicados.apoyo) {
+          const encontrado = BUSCA_LABEL.find((b) => b.label === filtrosAplicados.apoyo);
+          if (encontrado && !e.busca[encontrado.clave]) return false;
+        }
+        if (filtrosAplicados.tipo) {
+          const tipoReal = getTipoBadge(e);
+          if (tipoReal !== filtrosAplicados.tipo) return false;
+        }
+        if (filtrosAplicados.areaInteres && !e.areas.includes(filtrosAplicados.areaInteres)) return false;
+        return true;
+      })
+      .map((e) => ({ ...e, score_match: puntuarEstudiante(e) }))
+      .sort((a, b) => b.score_match - a.score_match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lista, filtrosAplicados, miPerfil, catalogos]);
 
   function aplicarFiltros() {
     setFiltrosAplicados({ carrera: filtroCarrera, area: filtroArea, sede: filtroSede, apoyo: filtroApoyo, tipo: filtroTipo, areaInteres: filtroAreaInteres });
@@ -381,6 +428,12 @@ function EstudiantesPageContent() {
                     <div className="mb-3">
                       <ProgressBar value={e.proyecto.avance} label="Avance del proyecto" showValue />
                     </div>
+
+                    {e.score_match > 0 && (
+                      <div className="mb-3">
+                        <ProgressBar value={e.score_match} label="Afinidad con tu perfil" showValue />
+                      </div>
+                    )}
 
                     {e.areas.length > 0 && (
                       <div className="mb-3 flex flex-wrap gap-1.5">
