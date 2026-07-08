@@ -17,7 +17,6 @@ import {
 } from '@/lib/perfilExalumno';
 import styles from './perfil-exalumno.module.css';
 
-const ANIO_ACTUAL = new Date().getFullYear();
 const MONEDAS = ['CRC', 'USD'];
 const FOTO_MAX_BYTES = 2 * 1024 * 1024;
 const FOTO_TIPOS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -130,7 +129,7 @@ export default function PerfilExalumnoPage() {
       try {
         const res = await guardarMiPerfilExalumno(token as string, {
           ...form,
-          anio_graduacion: Number(form.anio_graduacion),
+          anio_graduacion: String(form.anio_graduacion).trim(),
           anos_experiencia: Number(form.anos_experiencia),
           horas_disponibles_mes: form.horas_disponibles_mes === '' ? null : Number(form.horas_disponibles_mes),
           monto_maximo_donacion: form.monto_maximo_donacion === '' ? null : Number(form.monto_maximo_donacion),
@@ -256,7 +255,8 @@ export default function PerfilExalumnoPage() {
               </div>
               <div className={styles.campo}>
                 <label className={styles.label} htmlFor="anio">Año de graduación *</label>
-                <input id="anio" className={styles.input} type="number" min={1940} max={ANIO_ACTUAL} value={form.anio_graduacion} onChange={(e) => set('anio_graduacion', e.target.value)} placeholder={`1940 – ${ANIO_ACTUAL}`} required />
+                <input id="anio" className={styles.input} type="text" value={form.anio_graduacion} onChange={(e) => set('anio_graduacion', e.target.value)} placeholder="Ej. 2015 o 1988-1994" required />
+                <span className={styles.hint}>Si cursaste varias carreras en distintos períodos, indicá el rango completo (ej. 1988-1994).</span>
               </div>
               <div className={`${styles.campo} ${styles.full}`}>
                 <label className={styles.label}>Carrera(s) cursada(s) en la UCR * <span className={styles.opcional}>({form.carreras.length})</span></label>

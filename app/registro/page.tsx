@@ -153,9 +153,11 @@ export default function RegistroPage() {
     if (errPass) return setErrorForm(errPass);
     if (carreras.length < 1) return setErrorForm('Selecciona al menos una carrera cursada en la UCR.');
     if (!facultad) return setErrorForm('Selecciona tu escuela o facultad.');
-    const anio = Number(anioGraduacion);
-    if (!Number.isInteger(anio)) {
-      return setErrorForm('Ingresá tu año de graduación.');
+    // Acepta un año único (2015) o un rango (1988-1994), útil cuando el
+    // exalumno cursó varias carreras en distintos períodos.
+    const anioTexto = anioGraduacion.trim();
+    if (!/^\d{4}(\s*-\s*\d{4})?$/.test(anioTexto)) {
+      return setErrorForm('Ingresá tu año de graduación (ej. 2015) o un rango (ej. 1988-1994).');
     }
     run(async () => {
       // El correo es el determinante: si ya existe, avisamos y ofrecemos login.
@@ -165,7 +167,7 @@ export default function RegistroPage() {
       }
       const res = await registrarExalumno({
         correo: correo.trim(), contrasena, nombre: `${nombre.trim()} ${apellidos.trim()}`.trim(),
-        carreras, facultad, anioGraduacion: anio,
+        carreras, facultad, anioGraduacion: anioTexto,
       });
       // Auto-login: si el backend devolvió sesión, entramos directo al panel
       // (la cuenta queda pendiente; el panel muestra el aviso de revisión).
@@ -605,10 +607,11 @@ export default function RegistroPage() {
                               <label className={styles.label} htmlFor="anio">Año de graduación</label>
                               <div className={styles.inputWrap}>
                                 <span className={styles.inputIcon}><ICalendar /></span>
-                                <input id="anio" className={styles.input} type="number"
-                                  placeholder="Ej. 2015"
+                                <input id="anio" className={styles.input} type="text"
+                                  placeholder="Ej. 2015 o 1988-1994"
                                   value={anioGraduacion} onChange={(e) => setAnioGraduacion(e.target.value)} required />
                               </div>
+                              <span className={styles.hint}>Si cursaste varias carreras en distintos períodos, indicá el rango completo (ej. 1988-1994).</span>
                             </div>
 
                             <div className={`${styles.field} ${styles.fieldFull}`}>

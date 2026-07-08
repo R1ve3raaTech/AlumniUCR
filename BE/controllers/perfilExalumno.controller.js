@@ -2,8 +2,6 @@
 
 const servicio = require('../services/perfilExalumno.service');
 
-const ANIO_ACTUAL = new Date().getFullYear();
-
 const errorValidacion = (mensaje) => {
   const err = new Error(mensaje);
   err.statusCode = 400;
@@ -58,9 +56,11 @@ const guardarMiPerfil = async (req, res, next) => {
     if (!Array.isArray(b.carreras) || b.carreras.length < 1) {
       throw errorValidacion('Selecciona al menos una carrera cursada en la UCR.');
     }
-    const anio = Number(b.anio_graduacion);
-    if (!Number.isInteger(anio) || anio < 1940 || anio > ANIO_ACTUAL) {
-      throw errorValidacion(`El año de graduación debe estar entre 1940 y ${ANIO_ACTUAL}.`);
+    // Acepta un año único (2015) o un rango (1988-1994), útil para exalumnos
+    // que cursaron varias carreras en distintos períodos.
+    const anioTexto = String(b.anio_graduacion || '').trim();
+    if (!/^\d{4}(\s*-\s*\d{4})?$/.test(anioTexto)) {
+      throw errorValidacion('El año de graduación debe ser un año (ej. 2015) o un rango (ej. 1988-1994).');
     }
     const exp = Number(b.anos_experiencia);
     if (!Number.isInteger(exp) || exp < 0 || exp > 70) {
@@ -100,7 +100,7 @@ const guardarMiPerfil = async (req, res, next) => {
       cargo: texto(b.cargo),
       anos_experiencia: exp,
       escuela_facultad: texto(b.escuela_facultad),
-      anio_graduacion: anio,
+      anio_graduacion: anioTexto,
       carreras: b.carreras.map(Number),
       sectores: b.sectores.map(Number),
       areas: b.areas.map(Number),

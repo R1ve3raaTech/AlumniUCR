@@ -133,7 +133,6 @@ const registerEstudiante = async (req, res, next) => {
 //  REGISTRO EXALUMNO (por autodeclaración)
 //  Rol ID: 2 = Exalumno. Cualquier dominio de correo.
 // ─────────────────────────────────────────────
-const ANIO_ACTUAL = new Date().getFullYear();
 
 const registerExalumno = async (req, res, next) => {
   try {
@@ -155,9 +154,11 @@ const registerExalumno = async (req, res, next) => {
     if (!facultad || String(facultad).trim() === '') {
       throw errorValidacion('Selecciona tu escuela o facultad.');
     }
-    const anio = Number(anioGraduacion);
-    if (!Number.isInteger(anio) || anio < 1940 || anio > ANIO_ACTUAL) {
-      throw errorValidacion(`El año de graduación debe estar entre 1940 y ${ANIO_ACTUAL}.`);
+    // Acepta un año único (2015) o un rango (1988-1994), útil para exalumnos
+    // que cursaron varias carreras en distintos períodos.
+    const anioTexto = String(anioGraduacion || '').trim();
+    if (!/^\d{4}(\s*-\s*\d{4})?$/.test(anioTexto)) {
+      throw errorValidacion('El año de graduación debe ser un año (ej. 2015) o un rango (ej. 1988-1994).');
     }
 
     const result = await authService.registrarExalumnoAutodeclaracion({
@@ -166,7 +167,7 @@ const registerExalumno = async (req, res, next) => {
       nombre: nombre.trim(),
       carreras,
       facultad,
-      anioGraduacion: anio,
+      anioGraduacion: anioTexto,
     });
 
     // En desarrollo se expone el enlace de confirmación como respaldo (el correo
