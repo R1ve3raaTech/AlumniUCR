@@ -50,6 +50,21 @@ const obtenerAplicantePorId = async (id) => {
 
 const crearAplicante = async (aplicanteData) => {
 
+    // RF-13: "Un estudiante no puede aplicar dos veces a la misma posición".
+    const { data: existente, error: errorExistente } = await supabase
+        .from(TABLA)
+        .select('id')
+        .eq('id_usuario', aplicanteData.id_usuario)
+        .eq('id_empleo', aplicanteData.id_empleo)
+        .maybeSingle();
+
+    if (errorExistente) throw mapDbError(errorExistente);
+    if (existente) {
+        const err = new Error('Ya aplicaste a esta posición anteriormente.');
+        err.statusCode = 409;
+        throw err;
+    }
+
     const nuevoAplicante = {
         id_usuario: aplicanteData.id_usuario,
         id_empleo: aplicanteData.id_empleo,
