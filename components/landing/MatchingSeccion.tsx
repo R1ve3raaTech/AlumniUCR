@@ -28,7 +28,7 @@ const BUSCA_COLOR: Record<Busca, { bg: string; tx: string }> = {
   Financiamiento: { bg: '#F34B26', tx: '#ffffff' },
 };
 
-const F = (id: string) => `https://images.unsplash.com/photo-${id}?w=600&q=80&auto=format&fit=crop`;
+const F = (id: string) => `/images/unsplash/${id}.jpg`;
 
 const COL_A: Perfil[] = [
   { nombre: 'Carlos', edad: 24, carrera: 'Computación', busca: 'Empleo',
@@ -128,6 +128,20 @@ function Card({ p }: { p: Perfil }) {
 }
 
 export default function MatchingSeccion() {
+  const showcaseRef = React.useRef<HTMLDivElement>(null);
+  const [enPantalla, setEnPantalla] = React.useState(true);
+
+  // El marquee solo se anima mientras el showcase está en pantalla: componer
+  // 2 columnas de tarjetas bajo la máscara difuminada durante todo el scroll
+  // era una de las causas de que la landing se sintiera trabada.
+  React.useEffect(() => {
+    const el = showcaseRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setEnPantalla(e.isIntersecting), { threshold: 0.05 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <section id="matching" className={`${styles.section} ${styles.matchTapiz}`}>
       <div className={styles.container}>
@@ -158,7 +172,7 @@ export default function MatchingSeccion() {
           </motion.div>
 
           {/* Showcase: 2 columnas en marquee escalonado */}
-          <div className={styles.imShowcase} aria-hidden>
+          <div ref={showcaseRef} className={`${styles.imShowcase} ${enPantalla ? '' : styles.imQuieto}`} aria-hidden>
             <div className={`${styles.imColumn} ${styles.imColA}`}>
               {[...COL_A, ...COL_A].map((p, i) => <Card key={`a-${p.nombre}-${i}`} p={p} />)}
             </div>

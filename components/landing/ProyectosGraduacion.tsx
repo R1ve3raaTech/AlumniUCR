@@ -30,7 +30,7 @@ const APOYO_COLOR: Record<TipoApoyo, string> = {
   'Apoyo económico': '#F34B26',   // naranja
 };
 
-const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=900&q=80&auto=format&fit=crop`;
+const IMG = (id: string) => `/images/unsplash/${id}.jpg`;
 
 const PROYECTOS: Proyecto[] = [
   { proyecto: 'Med-Link CR', img: IMG('1576091160550-2173dba999ef'), area: 'Salud Digital',

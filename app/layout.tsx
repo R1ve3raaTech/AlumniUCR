@@ -3,9 +3,10 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { PerfilEstudianteProvider } from "@/context/PerfilEstudianteContext";
 import NavigationSpinner from "@/components/NavigationSpinner";
+import TitleUpdater from "@/components/TitleUpdater";
 
 export const metadata: Metadata = {
-  title: "Conectando Talento",
+  title: "Alumni UCR",
   description: "Plataforma de vinculación laboral y académica para la UCR",
 };
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         <AuthProvider>
           <PerfilEstudianteProvider>
             <NavigationSpinner />
+            <TitleUpdater />
             {children}
           </PerfilEstudianteProvider>
         </AuthProvider>
