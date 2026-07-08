@@ -557,7 +557,7 @@ Genera la explicación en español (máximo 90 palabras, directo, en un párrafo
             model: model,
             max_tokens: 250,
             system: promptSistema,
-            temperature: 0.3,
+            // temperature no es compatible con claude-sonnet-5 (deprecado para este modelo)
             messages: [{ role: 'user', content: promptUsuario }],
         });
 
