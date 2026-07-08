@@ -33,20 +33,20 @@ const recibirArchivo = (req, res, next) => {
     });
 };
 
-// POST /api/comprobantes — sube el comprobante (rol exalumno). Devuelve la ruta.
+// POST /api/comprobantes — sube el comprobante (exalumno o voluntario). Devuelve la ruta.
 router.post(
     '/',
     autenticarUsuario,
-    exigirRol('exalumno'),
+    exigirRol(['exalumno', 'voluntario']),
     recibirArchivo,
     comprobanteController.subirComprobante,
 );
 
-// GET /api/comprobantes/url?path=... — signed URL para ver el comprobante (admin o exalumno).
+// GET /api/comprobantes/url?path=... — signed URL para ver el comprobante (admin, exalumno o voluntario).
 router.get(
     '/url',
     autenticarUsuario,
-    exigirRol(['admin', 'exalumno']),
+    exigirRol(['admin', 'exalumno', 'voluntario']),
     comprobanteController.obtenerUrlComprobante,
 );
 
