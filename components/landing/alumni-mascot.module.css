@@ -38,7 +38,7 @@
      a 88x104 con overflow:hidden, recortando casi toda la mascota — por eso
      "no salía" en el teléfono. Con aspect-ratio, el alto siempre acompaña al
      ancho y nunca se recorta la imagen. */
-  width: clamp(155px, 40vw, 260px);
+  width: clamp(140px, 22vw, 190px);
   aspect-ratio: 666 / 375;
   border: none;
   cursor: pointer;
