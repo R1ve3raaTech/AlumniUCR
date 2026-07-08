@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import LandingShell from '@/components/landing/LandingShell';
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
