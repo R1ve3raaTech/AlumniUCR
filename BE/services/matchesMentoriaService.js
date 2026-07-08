@@ -555,15 +555,21 @@ Genera la explicación en español (máximo 90 palabras, directo, en un párrafo
         const model = process.env.CLAUDE_MODEL || 'claude-sonnet-5';
         const response = await claude.messages.create({
             model: model,
-            max_tokens: 250,
+            max_tokens: 800,
             system: promptSistema,
             // temperature no es compatible con claude-sonnet-5 (deprecado para este modelo)
             messages: [{ role: 'user', content: promptUsuario }],
         });
 
-        if (response.content && response.content.length > 0 && response.content[0].text) {
-            return response.content[0].text.trim();
-        }
+        // claude-sonnet-5 puede anteponer bloques de razonamiento: tomar el texto sin
+        // asumir que el primer bloque lo es.
+        const texto = (response.content || [])
+            .filter((b) => b.type === 'text' && b.text)
+            .map((b) => b.text)
+            .join('\n')
+            .trim();
+
+        if (texto) return texto;
         throw new Error('Sin respuesta del servicio de IA');
     } catch (err) {
         console.error('Error al generar explicación del match con Claude:', err.message);

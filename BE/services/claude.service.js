@@ -528,11 +528,13 @@ const generarRespuestaSoporte = async (historial, contexto, usuarioAutenticado) 
   const ultimoMensajeUsuario = [...historial].reverse().find(msg => msg.role === 'user')?.text || '';
 
   if (esExalumno && usuarioAutenticado) {
-    // Buscar patrones como "analiza a Natalia", "match con Juan", "gustos de Maria"
-    const matchAnalisis = ultimoMensajeUsuario.match(/(?:analiz(?:a|ar)|match con|gustos de|afinidad con)\s+([A-Za-záéíóúÁÉÍÓÚñÑ\s]+)/i);
+    // Buscar patrones como "analiza a Natalia", "match con Juan", "gustos de Maria".
+    // El nombre puede ser un usuario tipo "maria.jimenez2026" (con puntos y números),
+    // y suele venir precedido por la preposición "a"/"al", que hay que descartar.
+    const matchAnalisis = ultimoMensajeUsuario.match(/(?:analiz(?:a|ar)|match con|gustos de|afinidad con)\s+([A-Za-z0-9áéíóúÁÉÍÓÚñÑ._\-\s]+)/i);
 
     if (matchAnalisis && matchAnalisis[1]) {
-      const nombreEstudiante = matchAnalisis[1].trim();
+      const nombreEstudiante = matchAnalisis[1].trim().replace(/^a(?:l)?\s+/i, '');
       const estudiante = await buscarEstudiantePorNombre(nombreEstudiante);
 
       if (estudiante) {
@@ -599,8 +601,11 @@ Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sum
   }
 
   // Aumentar tokens para el contexto de CV (que es más extenso por incluir el CV real)
+  // y para el informe de análisis de mentoría (claude-sonnet-5 razona internamente
+  // antes de responder y ese razonamiento también consume tokens del límite).
   const esContextoCV = (contexto?.rol || '').toLowerCase() === 'estudiante' && (contexto?.pathname || '').includes('/mi-curriculum');
-  const maxTokens = esContextoCV ? 1500 : 1024;
+  const esAnalisisMentoria = promptSistema.includes('Score de Compatibilidad Total');
+  const maxTokens = esAnalisisMentoria ? 4000 : esContextoCV ? 1500 : 1024;
 
   try {
     const response = await claude.messages.create({
@@ -611,14 +616,17 @@ Responde utilizando Markdown limpio con viñetas y negritas. Mantén un tono sum
       messages: contents,
     });
 
-    if (
-      response.content &&
-      response.content.length > 0 &&
-      response.content[0].text
-    ) {
-      return response.content[0].text;
-    }
+    // claude-sonnet-5 puede anteponer bloques de razonamiento: tomar los bloques
+    // de texto sin asumir que el primero lo es.
+    const texto = (response.content || [])
+      .filter((b) => b.type === 'text' && b.text)
+      .map((b) => b.text)
+      .join('\n');
 
+    if (texto) return texto;
+
+    console.warn('⚠️ Claude respondió sin bloques de texto. stop_reason:', response.stop_reason,
+      '| bloques:', (response.content || []).map((b) => b.type).join(', '));
     return 'Lo siento, no he podido generar una respuesta en este momento. Inténtalo de nuevo.';
   } catch (error) {
     console.error('🔴 Error en el servicio de Claude Adaptativo:', error);
@@ -731,18 +739,21 @@ Por favor, analiza el perfil anterior y genera la respuesta JSON solicitada.
   try {
     const response = await claude.messages.create({
       model: model,
-      max_tokens: 1200,
+      max_tokens: 2500,
       system: PROMPT_ANALISIS_CARRERA,
       // temperature no es compatible con claude-sonnet-5 (deprecado para este modelo)
       messages: [{ role: 'user', content: contentPrompt }],
     });
 
-    if (
-      response.content &&
-      response.content.length > 0 &&
-      response.content[0].text
-    ) {
-      let rawText = response.content[0].text.trim();
+    // claude-sonnet-5 puede anteponer bloques de razonamiento: tomar el texto sin
+    // asumir que el primer bloque lo es.
+    const textoRespuesta = (response.content || [])
+      .filter((b) => b.type === 'text' && b.text)
+      .map((b) => b.text)
+      .join('\n');
+
+    if (textoRespuesta) {
+      let rawText = textoRespuesta.trim();
       // Limpiar posibles bloques de código markdown que Claude a veces añade por error
       rawText = rawText.replace(/```json/i, '').replace(/```/g, '').trim();
 
