@@ -60,17 +60,19 @@ export async function POST(req: Request) {
     // así, si falla la autenticación o el modelo, el error se captura acá
     // (con detalle real) en vez de que el stream ya iniciado rompa la
     // respuesta a medias con un error genérico e indiagnosticable.
-    const anthropicStream = await client.messages.stream({
+    //
+    // Se usa client.messages.create({ stream: true }) (iterador async plano)
+    // en vez del helper client.messages.stream() — este último (MessageStream)
+    // es también un EventEmitter, y emitir "error" sin listener registrado
+    // hace que Node lo trate como excepción no capturada que se salta
+    // cualquier try/catch (así se manifestaba como 500 genérico de Next.js).
+    const anthropicStream = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 400,
       system: SYSTEM_PROMPT,
       messages: messages.slice(-10), // últimos 10 mensajes para context window
+      stream: true,
     });
-    // MessageStream también es un EventEmitter: si emite "error" sin ningún
-    // listener registrado, Node lo trata como una excepción no capturada que
-    // se salta el try/catch entero (así se manifestaba como un 500 genérico
-    // de Next.js). El error real se sigue manejando vía el for-await de abajo.
-    anthropicStream.on('error', () => {});
 
     /* Streaming SSE */
     const encoder = new TextEncoder();
@@ -104,7 +106,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Alumni chat error:', error);
-    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), {
+    // TODO: volver a un mensaje generico una vez confirmado el fix en produccion.
+    const detalle = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: 'Error interno del servidor', detalle }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
