@@ -4,6 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { PerfilEstudianteProvider } from "@/context/PerfilEstudianteContext";
 import NavigationSpinner from "@/components/NavigationSpinner";
 import TitleUpdater from "@/components/TitleUpdater";
+import AlumniMascot from "@/components/landing/AlumniMascot";
 
 export const metadata: Metadata = {
   title: "Alumni UCR",
@@ -38,6 +39,7 @@ export default function RootLayout({
             <NavigationSpinner />
             <TitleUpdater />
             {children}
+            <AlumniMascot />
           </PerfilEstudianteProvider>
         </AuthProvider>
       </body>

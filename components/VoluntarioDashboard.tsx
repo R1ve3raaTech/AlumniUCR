@@ -205,22 +205,32 @@ export default function VoluntarioDashboard({
         <span className="material-symbols-outlined">menu</span>
       </button>
 
-      {/* Perfil flotante estilo píldora (sin barra de fondo). El voluntario no
-          tiene una página de perfil aparte: la píldora abre el editor. */}
-      <button
-        type="button"
-        onClick={() => setEditando(true)}
-        aria-label="Ver y editar mi perfil"
-        title="Mi Perfil"
-        className="fixed right-4 top-4 z-30 flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40 sm:right-8"
-      >
-        <p className="text-sm font-bold text-on-surface">{nombre}</p>
-        {solicitud?.foto_perfil ? (
-          <img src={solicitud.foto_perfil} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
-        ) : (
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales}</div>
-        )}
-      </button>
+      {/* Volver al inicio (landing) + perfil flotante estilo píldora. El
+          voluntario no tiene una página de perfil aparte: la píldora abre el editor. */}
+      <div className="fixed right-4 top-4 z-30 flex items-center gap-2 sm:right-8">
+        <Link
+          href="/"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40"
+        >
+          <span className="material-symbols-outlined text-on-surface-variant">home</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setEditando(true)}
+          aria-label="Ver y editar mi perfil"
+          title="Mi Perfil"
+          className="flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40"
+        >
+          <p className="text-sm font-bold text-on-surface">{nombre}</p>
+          {solicitud?.foto_perfil ? (
+            <img src={solicitud.foto_perfil} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
+          ) : (
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales}</div>
+          )}
+        </button>
+      </div>
 
       {/* Main */}
       <main className="ml-0 min-h-screen px-4 pb-12 pt-24 sm:px-8 lg:ml-64">

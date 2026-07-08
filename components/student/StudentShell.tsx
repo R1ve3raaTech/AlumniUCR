@@ -185,22 +185,32 @@ export default function StudentShell({
         <AlumniLogo className="!h-8 w-auto" />
       </Link>
 
-      {/* Perfil flotante estilo píldora (sin barra de fondo) */}
-      <Link
-        href="/perfil-estudiante"
-        aria-label="Ir a mi perfil"
-        title="Mi Perfil"
-        className="fixed right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest p-1 pr-3 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40 sm:right-8"
-      >
-        {perfil.foto ? (
-          <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
-        ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-            {iniciales || 'E'}
-          </div>
-        )}
-        <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
-      </Link>
+      {/* Volver al inicio (landing) + perfil flotante estilo píldora */}
+      <div className="fixed right-4 top-4 z-30 flex items-center gap-2 sm:right-8">
+        <Link
+          href="/"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40"
+        >
+          <span className="material-symbols-outlined text-on-surface-variant">home</span>
+        </Link>
+        <Link
+          href="/perfil-estudiante"
+          aria-label="Ir a mi perfil"
+          title="Mi Perfil"
+          className="flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest p-1 pr-3 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40"
+        >
+          {perfil.foto ? (
+            <img src={perfil.foto} alt={nombreMostrar} className="h-9 w-9 rounded-full border-2 border-primary/30 object-cover object-center" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+              {iniciales || 'E'}
+            </div>
+          )}
+          <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
+        </Link>
+      </div>
 
       {/* Main */}
       <main className="ml-0 min-h-screen pb-16 pt-16 lg:ml-64 lg:pb-0">{children}</main>

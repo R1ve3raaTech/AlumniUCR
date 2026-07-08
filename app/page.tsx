@@ -10,7 +10,6 @@ import CTAFinal from '@/components/landing/CTAFinal';
 import MisionFundacion from '@/components/landing/MisionFundacion';
 import Footer from '@/components/landing/Footer';
 import ScrollToHero from '@/components/landing/ScrollToHero';
-import AlumniMascot from '@/components/landing/AlumniMascot';
 import GirasolScroll from '@/components/landing/GirasolScroll';
 
 // Landing pÃºblico de Alumni UCR (diseÃ±o Stitch adaptado a CSS Modules + GSAP).
@@ -31,7 +30,6 @@ export default function Home() {
       </main>
       <Footer />
       <ScrollToHero />
-      <AlumniMascot />
       <GirasolScroll />
     </LandingShell>
   );

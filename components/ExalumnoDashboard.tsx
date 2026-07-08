@@ -489,21 +489,31 @@ export default function ExalumnoDashboard({
         <span className="material-symbols-outlined">menu</span>
       </button>
 
-      {/* Perfil flotante estilo píldora (sin barra de fondo) */}
-      <Link
-        href="/perfil-exalumno"
-        aria-label="Ir a mi perfil"
-        title="Mi Perfil"
-        className="fixed right-4 top-4 z-30 flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40 sm:right-8"
-      >
-        <div className="hidden text-right lg:block">
-          <p className="text-sm font-bold text-on-surface">{nombre}</p>
-          <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
-        </div>
-        {foto
-          ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
-          : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales || 'E'}</div>}
-      </Link>
+      {/* Volver al inicio (landing) + perfil flotante estilo píldora */}
+      <div className="fixed right-4 top-4 z-30 flex items-center gap-2 sm:right-8">
+        <Link
+          href="/"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40"
+        >
+          <span className="material-symbols-outlined text-on-surface-variant">home</span>
+        </Link>
+        <Link
+          href="/perfil-exalumno"
+          aria-label="Ir a mi perfil"
+          title="Mi Perfil"
+          className="flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-lowest py-1.5 pl-4 pr-1.5 shadow-[0_4px_16px_-6px_rgba(0,40,55,0.25)] outline-none transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,40,55,0.3)] focus-visible:ring-2 focus-visible:ring-secondary/40"
+        >
+          <div className="hidden text-right lg:block">
+            <p className="text-sm font-bold text-on-surface">{nombre}</p>
+            <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">Mentor</p>
+          </div>
+          {foto
+            ? <img src={foto} alt={nombre} className="h-10 w-10 rounded-full border-2 border-primary-container object-cover" />
+            : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-xs font-bold text-on-primary">{iniciales || 'E'}</div>}
+        </Link>
+      </div>
 
       {/* Main */}
       <main className="ml-0 min-h-screen px-4 pb-12 pt-24 sm:px-8 lg:ml-64">

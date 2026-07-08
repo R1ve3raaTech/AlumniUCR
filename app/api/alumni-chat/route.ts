@@ -1,7 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 const SYSTEM_PROMPT = `Eres Alumni, el asistente inteligente y mascota oficial de Alumni UCR — la plataforma de la Asociación de Exalumnos de la Universidad de Costa Rica.
 
 Tu personalidad:
@@ -34,6 +32,18 @@ Plataforma Alumni UCR — datos clave (REALES, no inventar otros):
 
 export async function POST(req: Request) {
   try {
+    // Instanciado dentro del handler (no a nivel de módulo): si la key falta,
+    // el SDK lanza una excepción — a nivel de módulo eso tumbaría la función
+    // entera con un 500 genérico de Next.js, sin pasar por este try/catch.
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('Alumni chat error: falta ANTHROPIC_API_KEY en las variables de entorno del frontend (Vercel).');
+      return new Response(JSON.stringify({ error: 'El asistente no está disponible en este momento.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
     const body = await req.json();
     const { messages } = body as {
       messages: { role: 'user' | 'assistant'; content: string }[];
