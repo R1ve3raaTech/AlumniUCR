@@ -69,7 +69,6 @@ export default function RegistroPage() {
   const { error, loading, run, reset } = useAuthForm();
   const reduced = useReducedMotion();
 
-  const ANIO_ACTUAL = new Date().getFullYear();
   const dur = reduced ? 0.01 : 0.22;
 
   const [rol, setRol] = useState<Rol>('estudiante');
@@ -155,8 +154,8 @@ export default function RegistroPage() {
     if (carreras.length < 1) return setErrorForm('Selecciona al menos una carrera cursada en la UCR.');
     if (!facultad) return setErrorForm('Selecciona tu escuela o facultad.');
     const anio = Number(anioGraduacion);
-    if (!Number.isInteger(anio) || anio < 1940 || anio > ANIO_ACTUAL) {
-      return setErrorForm(`El año de graduación debe estar entre 1940 y ${ANIO_ACTUAL}.`);
+    if (!Number.isInteger(anio)) {
+      return setErrorForm('Ingresá tu año de graduación.');
     }
     run(async () => {
       // El correo es el determinante: si ya existe, avisamos y ofrecemos login.
@@ -607,7 +606,7 @@ export default function RegistroPage() {
                               <div className={styles.inputWrap}>
                                 <span className={styles.inputIcon}><ICalendar /></span>
                                 <input id="anio" className={styles.input} type="number"
-                                  min={1940} max={ANIO_ACTUAL} placeholder={`1940 – ${ANIO_ACTUAL}`}
+                                  placeholder="Ej. 2015"
                                   value={anioGraduacion} onChange={(e) => setAnioGraduacion(e.target.value)} required />
                               </div>
                             </div>
