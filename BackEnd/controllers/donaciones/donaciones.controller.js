@@ -39,6 +39,14 @@ const obtenerDonacionPorId = async (req, res, next) => {
             });
         }
 
+        const rol = req.user.profile?.roles?.nombre?.toLowerCase().trim();
+        if (rol !== 'admin' && donacion.id_usuario_exalumno !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permiso para ver esta donación'
+            });
+        }
+
         res.status(200).json({
             success: true,
             data: donacion,
@@ -246,6 +254,14 @@ const obtenerDonacionesPorUsuario = async (req, res, next) => {
             return res.status(400).json({
                 success: false,
                 message: 'El ID del usuario es requerido'
+            });
+        }
+
+        const rol = req.user.profile?.roles?.nombre?.toLowerCase().trim();
+        if (rol !== 'admin' && idUsuarioExalumno !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permiso para ver las donaciones de este usuario'
             });
         }
 
