@@ -14,7 +14,7 @@ relacionado con "el chatbot".
 
 | | Mascota Alumni | Asistente Adaptativo (GlobalChatbot) |
 |---|---|---|
-| Componente FE | `components/landing/AlumniMascot.tsx` | `components/GlobalChatbot.tsx` (+ `ChatbotAvatar.tsx`) |
+| Componente FE | `components/landing/AlumniMascot.tsx` | `components/chatbot/GlobalChatbot.tsx` (+ `components/chatbot/ChatbotAvatar.tsx`) |
 | Endpoint | `POST /api/alumni-chat` (route handler de **Next.js**, no del BE Express) | `POST /api/claude/chat` (BE Express real) |
 | Dónde se renderiza hoy | `app/page.tsx` (landing) y `app/registro/page.tsx` | **Solo** `app/mi-curriculum/plantillas/page.tsx` |
 | Prompts | Fijo, genérico para visitantes | Dinámico por rol + ruta (ver sección 2) |
@@ -103,7 +103,7 @@ graph TD
 4. **`BackEnd/routes/common/claude.routes.js`**:
    - `POST /claude/chat` — pública (`chatSoporte`).
    - `POST /claude/career-analysis` — protegida (`autenticarUsuario` + `careerAnalysis`).
-5. **`components/GlobalChatbot.tsx`** — widget flotante con `ChatbotAvatar.tsx`; usa
+5. **`components/chatbot/GlobalChatbot.tsx`** — widget flotante con `components/chatbot/ChatbotAvatar.tsx`; usa
    `usePathname()` + `useAuth()` para armar el `contexto` (`{ rol, pathname }`) que envía en
    cada request junto con el historial local de la sesión.
 

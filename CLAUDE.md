@@ -50,7 +50,7 @@ Conectando-Talento-UCR/
 - Backend: Express.js (`/BackEnd`) — servidor separado con su propio `package.json` (`npm run dev` = nodemon, `npm start` = node).
 - DB: Supabase (PostgreSQL) — sin NextAuth, auth custom con Magic Link / JWT.
 - IA: Claude API (`@anthropic-ai/sdk`) — modelo por defecto `claude-sonnet-5` (overrideable con `CLAUDE_MODEL`), chat de la mascota en `claude-haiku-4-5-20251001`. Ver `BackEnd/CLAUDE.md` para el detalle completo (hay **dos** integraciones de IA separadas: mascota pública vs. asistente adaptativo por rol).
-- Generación de imágenes: Replicate API (`BackEnd/controllers/replicate.controller.js`, `imageController.js`).
+- Generación de imágenes: Replicate API (`BackEnd/controllers/common/replicate.controller.js`, `BackEnd/controllers/common/imageController.js`).
 - Animaciones: GSAP + Framer Motion (landing).
 
 ---
@@ -72,29 +72,29 @@ BackEnd y FE están **sincronizados** (corregido el 2026-07-02, commit `a8f37fb`
 | **Total máximo** | **100 pts** | |
 
 **Archivos que implementan este algoritmo (deben mantenerse idénticos):**
-1. `BackEnd/services/matchesMentoriaService.js` — función `calcularScore()`, invocada por `generarMatchesPorUsuario()`. Persiste filas reales en la tabla `matches_mentoria`.
-2. `lib/matchesEstudiante.js` — función `puntuar()`, usada por `obtenerSugeridos()` para puntuar el directorio en el cliente.
+1. `BackEnd/services/matching/matchesMentoriaService.js` — función `calcularScore()`, invocada por `generarMatchesPorUsuario()`. Persiste filas reales en la tabla `matches_mentoria`.
+2. `lib/matching/matchesEstudiante.js` — función `puntuar()`, usada por `obtenerSugeridos()` para puntuar el directorio en el cliente.
 
 **⚠️ Matices reales de `puntuar()` (no son 100% "todo o nada" como sugiere la tabla):**
 - El match de carrera y de sector se hace por **substring** (`includes`), no por igualdad estricta de ID — dos carreras con nombres parecidos pueden matchear sin ser la misma.
 - El bloque de "tipo de apoyo" **ignora** la opción de financiamiento/donación como tipo de apoyo válido para este cálculo.
-- `components/ExalumnoDashboard.tsx` tiene su **propia copia** del algoritmo (`puntuarEstudiante()`), ligeramente distinta de `lib/matchesEstudiante.js` → `puntuar()`. Si tocás la lógica de scoring en uno, revisá el otro — hoy pueden divergir silenciosamente.
+- `components/dashboard/ExalumnoDashboard.tsx` tiene su **propia copia** del algoritmo (`puntuarEstudiante()`), ligeramente distinta de `lib/matching/matchesEstudiante.js` → `puntuar()`. Si tocás la lógica de scoring en uno, revisá el otro — hoy pueden divergir silenciosamente.
 
 **Flujo real (ya conectado, ya no es cosmético):**
-- `lib/matchesEstudiante.js` expone `generarMatches()` → `POST /matches-mentoria/generar`.
+- `lib/matching/matchesEstudiante.js` expone `generarMatches()` → `POST /matches-mentoria/generar`.
 - `contactarMatch()` → `PUT /matches-mentoria/:id/contactar` dispara el email real al exalumno.
 - Estados: `sugerido → contactado → activo → cerrado` (`cerrado` con `resultado='cancelado'` = rechazado).
 - Perfiles suspendidos no aparecen en los matches (RF-09.1).
 
 ### 2. RF-08.1 — panel admin "Gestión de Matches"
 
-`BackEnd/services/matching.service.js` — usado solo en `app/admin/matches`. Su score es
+`BackEnd/services/matching/matching.service.js` — usado solo en `app/admin/matches`. Su score es
 `comunes.length + bono interdisciplinario (1 pt si las facultades son distintas)`, en otra
 escala completamente distinta a RF-06. **No es el mismo motor que el de arriba.**
 
 ### 3. RF-10/13 — posiciones de empleo/pasantías
 
-`BackEnd/services/matchesPosicionesService.js` — motor **laboral**, matchea estudiantes contra
+`BackEnd/services/matching/matchesPosicionesService.js` — motor **laboral**, matchea estudiantes contra
 posiciones activas publicadas por exalumnos/voluntarios. Persiste en `matches_posiciones`.
 
 | Criterio | Puntos | Lógica |
@@ -117,9 +117,9 @@ de requisitos, ver comentarios en el archivo).
 - **Voluntario** — colaborador externo (no necesariamente exalumno). Se da de alta vía `/voluntariado`
   (formulario dinámico público, RF nuevo) o `/registro/otros` (formulario legacy); ambos crean una
   `solicitud` que un admin aprueba manualmente. Al aprobar, se crea la cuenta rol 4 y se envía correo con
-  enlace a `/definir-contraseña`. Tiene su propio dashboard (`components/VoluntarioDashboard.tsx`) con
+  enlace a `/definir-contraseña`. Tiene su propio dashboard (`components/dashboard/VoluntarioDashboard.tsx`) con
   acceso a donaciones, publicar posiciones/pasantías, y (si el admin lo habilita) proyectos/mentorías/estudiantes.
-  Archivos clave: `BackEnd/controllers/voluntarios.controller.js`, `BackEnd/services/voluntarios.store.js`,
+  Archivos clave: `BackEnd/controllers/voluntariado/voluntarios.controller.js`, `BackEnd/services/voluntariado/voluntarios.store.js`,
   tabla `solicitudes_voluntarios`.
 - **Admin** — gestiona verificación de exalumnos/voluntarios y la plataforma.
 
@@ -169,17 +169,17 @@ Tipografías: Barlow (titulares), Elza Text (texto principal). Aplicar siempre e
 - `matches_posiciones` — matching de posiciones/empleo (RF-10).
 - `proyecto_graduacion`, `areas_interes*`, `sectores*`, `carreras*`, `facultades`, `cv_versiones`, `donaciones`.
 
-**Nota:** no existe una vista `directorio_exalumnos` en la base de datos. El directorio se arma en `BackEnd/services/perfilExalumno.service.js` uniendo `informacion_exalumno` con `usuarios` directamente.
+**Nota:** no existe una vista `directorio_exalumnos` en la base de datos. El directorio se arma en `BackEnd/services/perfil/perfilExalumno.service.js` uniendo `informacion_exalumno` con `usuarios` directamente.
 
 ---
 
 ## Funcionalidades que faltaban en versiones anteriores de este doc
 
-- **Gamificación "Mi Legado"** (`/mi-legado`, `BackEnd/services/fidelizacion.service.js`) — XP, insignias,
+- **Gamificación "Mi Legado"** (`/mi-legado`, `BackEnd/services/fidelizacion/fidelizacion.service.js`) — XP, insignias,
   línea de tiempo de impacto, árbol de mentorías y leaderboards, con datos reales de Supabase (no hardcodeado).
 - **Bolsa de empleo/pasantías completa** (RF-10/13) — publicación de posiciones, aplicación de estudiantes,
   selección de candidatos, motor de matching propio (ver sección de matching arriba).
-- **Generación de imágenes con Replicate** — `BackEnd/controllers/replicate.controller.js`, `imageController.js`.
+- **Generación de imágenes con Replicate** — `BackEnd/controllers/common/replicate.controller.js`, `BackEnd/controllers/common/imageController.js`.
 
 ## Placeholders activos ("en reconstrucción")
 
@@ -193,12 +193,12 @@ no asumir que están implementadas solo porque el archivo existe:
 
 - **`ANTHROPIC_API_KEY`** debe estar configurada en `BackEnd/.env.local` para que respondan la IA de CV y el chatbot (no commitear esta key — usar `.env.local`, nunca un archivo de prueba tipo `test-key.js` trackeado por git).
 - ~~Recordatorio 48h de donaciones: falta el cron~~ — **ya implementado**: `server.js` (líneas ~164-181) corre un cron con `node-cron` cada hora (`0 * * * *`) que revisa donaciones pendientes con más de **24h** (no 48h) y reenvía el correo al admin vía `enviarRecordatorioDonacionesPendientes()`.
-- **Explicación de match por IA** (`obtenerExplicacionMatchIA` en `lib/matchesEstudiante.js`, ruta `/matches-mentoria/:id/explicacion-ia`) — confirmar que el BackEnd la sirve antes de exponerla en UI.
+- **Explicación de match por IA** (`obtenerExplicacionMatchIA` en `lib/matching/matchesEstudiante.js`, ruta `/matches-mentoria/:id/explicacion-ia`) — confirmar que el BackEnd la sirve antes de exponerla en UI.
 - **Integración de la mascota en más puntos de la landing** (hoy solo widget flotante).
 - **Stats dinámicos desde Supabase** — algunas métricas de la landing siguen hardcodeadas.
 - **Reconciliar** el rediseño de `admin/matches` de la rama `Braks` con el oficial RF-08.1 ya en `Dev` (dos versiones distintas del mismo panel, pendiente de que Braks decida cuál queda).
 - **Guard de admin en cliente débil** (ver sección de roles arriba) — evaluar si vale la pena agregar verificación de rol en `app/admin/layout.tsx`, aunque el BackEnd ya rechace por rol.
-- **`puntuarEstudiante()` duplicado** en `ExalumnoDashboard.tsx` vs `puntuar()` en `lib/matchesEstudiante.js` — evaluar si conviene unificarlos en un solo módulo compartido para evitar que diverjan.
+- **`puntuarEstudiante()` duplicado** en `ExalumnoDashboard.tsx` vs `puntuar()` en `lib/matching/matchesEstudiante.js` — evaluar si conviene unificarlos en un solo módulo compartido para evitar que diverjan.
 
 ---
 
