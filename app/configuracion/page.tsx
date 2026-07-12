@@ -20,7 +20,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
-import { useTema } from '@/lib/useTema';
+import { useTema } from '@/lib/common/useTema';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 

@@ -6,8 +6,8 @@ import AuthCard from '@/components/auth/AuthCard';
 import TextField from '@/components/auth/TextField';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import { useAuth } from '@/context/AuthContext';
-import { completarPerfil } from '@/lib/auth';
-import { validarNombre, validarContrasena } from '@/lib/validaciones';
+import { completarPerfil } from '@/lib/auth/auth';
+import { validarNombre, validarContrasena } from '@/lib/auth/validaciones';
 import authStyles from '@/components/auth/auth.module.css';
 import styles from './completar-perfil.module.css';
 

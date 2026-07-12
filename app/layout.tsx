@@ -3,8 +3,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { PerfilEstudianteProvider } from "@/context/PerfilEstudianteContext";
 import { ProyectoGraduacionProvider } from "@/context/ProyectoGraduacionContext";
-import NavigationSpinner from "@/components/NavigationSpinner";
-import TitleUpdater from "@/components/TitleUpdater";
+import NavigationSpinner from "@/components/common/NavigationSpinner";
+import TitleUpdater from "@/components/common/TitleUpdater";
 import AlumniMascot from "@/components/landing/AlumniMascot";
 
 export const metadata: Metadata = {

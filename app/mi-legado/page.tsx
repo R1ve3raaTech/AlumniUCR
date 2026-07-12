@@ -4,9 +4,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
-import { obtenerMiPerfilExalumno } from '@/lib/perfilExalumno';
-import { obtenerMiLegado } from '@/lib/fidelizacion';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { obtenerMiPerfilExalumno } from '@/lib/perfil/perfilExalumno';
+import { obtenerMiLegado } from '@/lib/common/fidelizacion';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 

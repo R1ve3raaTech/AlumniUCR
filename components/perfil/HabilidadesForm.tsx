@@ -6,7 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerHabilidadesDelEstudiante, guardarHabilidades } from '@/lib/habilidades';
+import { obtenerHabilidadesDelEstudiante, guardarHabilidades } from '@/lib/perfil/habilidades';
 import styles from './perfil.module.css';
 
 export default function HabilidadesForm({ onGuardado }: { onGuardado?: () => void }) {

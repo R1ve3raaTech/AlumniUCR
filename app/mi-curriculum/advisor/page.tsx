@@ -8,7 +8,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import CvDocumento from '@/components/student/CvDocumento';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type Experiencia } from '@/context/PerfilEstudianteContext';

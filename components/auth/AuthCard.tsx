@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import styles from './auth.module.css';
 
 interface AuthCardProps {

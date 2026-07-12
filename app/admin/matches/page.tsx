@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerMatchesAdmin, actualizarMatchAdmin } from '@/lib/adminMatches';
+import { obtenerMatchesAdmin, actualizarMatchAdmin } from '@/lib/matching/adminMatches';
 import styles from './matches.module.css';
 import { AnimatePresence, motion } from 'framer-motion';
 

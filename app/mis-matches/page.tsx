@@ -12,7 +12,7 @@ import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerSugeridos, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
+import { obtenerSugeridos, obtenerMisMatches, conectarConExalumno } from '@/lib/matching/matchesEstudiante';
 
 const APOYO: { k: string; label: string; icon: string }[] = [
   { k: 'mentoria', label: 'Mentoría', icon: 'school' },

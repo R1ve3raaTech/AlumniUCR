@@ -18,13 +18,13 @@ import {
   guardarInformacionEstudiante,
   obtenerCarreraDelEstudiante,
   guardarCarreraEstudiante,
-} from '@/lib/perfilAcademico';
+} from '@/lib/perfil/perfilAcademico';
 import {
   validarCarneUCR,
   validarAnoIngreso,
   validarPromedioPonderado,
   validarAnoGraduacion,
-} from '@/lib/validaciones';
+} from '@/lib/auth/validaciones';
 import styles from './perfil.module.css';
 
 interface OpcionCatalogo {

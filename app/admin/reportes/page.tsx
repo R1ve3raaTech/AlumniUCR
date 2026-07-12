@@ -13,7 +13,7 @@ import {
   obtenerDonaciones,
   obtenerTiposPago,
   obtenerProyectos,
-} from '@/lib/donaciones';
+} from '@/lib/donaciones/donaciones';
 import styles from './reportes.module.css';
 
 interface Donacion {

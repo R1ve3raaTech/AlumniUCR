@@ -9,12 +9,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
 import Toast, { notificar } from '@/components/student/Toast';
 import AvatarUploader from '@/components/student/AvatarUploader';
-import { useTema } from '@/lib/useTema';
+import { useTema } from '@/lib/common/useTema';
 import { gsap } from 'gsap';
 
 // Micro-animación de los íconos del menú al pasar el mouse (misma que en el

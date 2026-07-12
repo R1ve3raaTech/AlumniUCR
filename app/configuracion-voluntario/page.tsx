@@ -8,10 +8,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import AlumniLogo from '@/components/AlumniLogo';
-import { useTema } from '@/lib/useTema';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { useTema } from '@/lib/common/useTema';
 import { useAuth } from '@/context/AuthContext';
-import { useRequireRole } from '@/lib/useRequireRole';
+import { useRequireRole } from '@/lib/auth/useRequireRole';
 
 const SHADOW = 'shadow-[0_12px_32px_-14px_rgba(0,40,55,0.15)]';
 const CARD = `rounded-xl border border-outline-variant bg-surface-container-lowest p-6 ${SHADOW}`;

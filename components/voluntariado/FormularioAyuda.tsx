@@ -7,7 +7,7 @@
 // que ya distingue ambos formularios por la presencia de "tipo_ayuda".
 
 import React, { useEffect, useRef, useState } from 'react';
-import { enviarSolicitudVoluntario } from '@/lib/voluntarios';
+import { enviarSolicitudVoluntario } from '@/lib/voluntariado/voluntarios';
 import { useAuthForm } from '@/hooks/useAuthForm';
 
 export type TipoAyuda = 'donacion' | 'pasantia' | 'mentoria' | 'taller';

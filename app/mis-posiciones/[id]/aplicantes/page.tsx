@@ -9,9 +9,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
-import { obtenerPosicion } from '@/lib/posiciones';
-import { obtenerAplicantesPorPosicion, actualizarEstadoAplicante, seleccionarCandidato } from '@/lib/aplicaciones';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { obtenerPosicion } from '@/lib/matching/posiciones';
+import { obtenerAplicantesPorPosicion, actualizarEstadoAplicante, seleccionarCandidato } from '@/lib/matching/aplicaciones';
 import styles from './aplicantes.module.css';
 
 interface Estudiante { id: string; nombre: string | null; correo_electronico: string | null }

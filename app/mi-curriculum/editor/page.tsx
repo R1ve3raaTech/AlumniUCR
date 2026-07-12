@@ -8,14 +8,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import AvatarUploader from '@/components/student/AvatarUploader';
 import CvDocumento from '@/components/student/CvDocumento';
 import PasosCV from '@/components/student/PasosCV';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante, type Experiencia } from '@/context/PerfilEstudianteContext';
 import { useAuth } from '@/context/AuthContext';
-import { limpiarTexto, tituloCaso, formatearTelefono } from '@/lib/texto';
+import { limpiarTexto, tituloCaso, formatearTelefono } from '@/lib/curriculum/texto';
 import { apiFetch } from '@/lib/api';
 
 const SECCIONES = [

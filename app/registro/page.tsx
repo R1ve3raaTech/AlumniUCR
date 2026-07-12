@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { solicitarMagicLink, registrarEstudiante, registrarExalumno, correoYaRegistrado } from '@/lib/auth';
-import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/validaciones';
+import { solicitarMagicLink, registrarEstudiante, registrarExalumno, correoYaRegistrado } from '@/lib/auth/auth';
+import { validarCorreoPorRol, validarCorreo, validarContrasena } from '@/lib/auth/validaciones';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthForm } from '@/hooks/useAuthForm';
-import AlumniLogo from '@/components/AlumniLogo';
-import { FACULTADES_UCR, CARRERAS_UCR } from '@/lib/catalogoUCR';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { FACULTADES_UCR, CARRERAS_UCR } from '@/lib/perfil/catalogoUCR';
 import styles from './registro.module.css';
 
 type Rol = 'estudiante' | 'exalumno';

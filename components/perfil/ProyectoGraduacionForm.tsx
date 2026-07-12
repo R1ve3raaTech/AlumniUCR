@@ -18,12 +18,12 @@ import {
   agregarAreaInteresProyecto,
   obtenerNecesidadesDelProyecto,
   agregarNecesidadProyecto,
-} from '@/lib/proyectoGraduacion';
+} from '@/lib/curriculum/proyectoGraduacion';
 import {
   validarTituloProyecto,
   validarDescripcionProyecto,
   validarPorcentajeAvance,
-} from '@/lib/validaciones';
+} from '@/lib/auth/validaciones';
 import styles from './proyectoGraduacion.module.css';
 
 interface OpcionCatalogo {

@@ -8,13 +8,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useRequireRole } from '@/lib/useRequireRole';
-import AlumniLogo from '@/components/AlumniLogo';
+import { useRequireRole } from '@/lib/auth/useRequireRole';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import {
   obtenerCatalogos,
   obtenerMiPerfilExalumno,
   guardarMiPerfilExalumno,
-} from '@/lib/perfilExalumno';
+} from '@/lib/perfil/perfilExalumno';
 import styles from './perfil-exalumno.module.css';
 
 const MONEDAS = ['CRC', 'USD'];

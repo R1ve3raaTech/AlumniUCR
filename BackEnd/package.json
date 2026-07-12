@@ -1,0 +1,28 @@
+{
+  "name": "backend-alumniucr",
+  "version": "1.0.0",
+  "description": "Backend Conectando Talento UCR",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.98.0",
+    "@google/genai": "^2.8.0",
+    "@supabase/supabase-js": "^2.107.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "node-cron": "^4.5.0",
+    "resend": "^6.12.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

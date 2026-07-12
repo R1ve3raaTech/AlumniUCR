@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 
 const LINKS = [
   { label: 'Inicio', href: '/' },

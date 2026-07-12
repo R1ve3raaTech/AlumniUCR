@@ -7,7 +7,7 @@
 // propia idea, la IA solo mejora redacción).
 
 import React, { useState } from 'react';
-import { sugerirMejoraTexto, type CampoSugerible } from '@/lib/proyectoGraduacionAsistente';
+import { sugerirMejoraTexto, type CampoSugerible } from '@/lib/curriculum/proyectoGraduacionAsistente';
 
 export default function SugerirMejora({
   campo,

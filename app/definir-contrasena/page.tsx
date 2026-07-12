@@ -7,7 +7,7 @@
 import React, { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { restablecerContrasena } from '@/lib/auth';
+import { restablecerContrasena } from '@/lib/auth/auth';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import styles from '../restablecer/restablecer.module.css';
 

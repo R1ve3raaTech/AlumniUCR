@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView, animate } from 'framer-motion';
 import AtomoImpacto from './AtomoImpacto';
-import { obtenerEstadisticasPublicas } from '@/lib/stats';
+import { obtenerEstadisticasPublicas } from '@/lib/common/stats';
 import styles from './landing.module.css';
 
 type IconKey = 'network' | 'target' | 'people' | 'rocket';

@@ -7,9 +7,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useRequireRole } from '@/lib/useRequireRole';
-import AlumniLogo from '@/components/AlumniLogo';
-import { obtenerMisDonaciones, obtenerTiposPago, obtenerProyectos, obtenerUrlComprobante } from '@/lib/donaciones';
+import { useRequireRole } from '@/lib/auth/useRequireRole';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { obtenerMisDonaciones, obtenerTiposPago, obtenerProyectos, obtenerUrlComprobante } from '@/lib/donaciones/donaciones';
 import styles from './mis-donaciones.module.css';
 
 interface Donacion {

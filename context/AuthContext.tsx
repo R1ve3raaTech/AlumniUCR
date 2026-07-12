@@ -17,7 +17,7 @@ import {
   verificarMagicLink as verificarMagicLinkRequest,
   establecerSesionConToken,
   getStoredSession,
-} from '@/lib/auth';
+} from '@/lib/auth/auth';
 
 // Forma mínima del usuario que devuelve Supabase Auth a través del backend.
 // Se mantiene un index signature para no perder campos adicionales.

@@ -8,10 +8,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
-import { obtenerPosicionesActivas } from '@/lib/posiciones';
-import { obtenerPerfil } from '@/lib/auth';
-import { aplicarAPosicion, obtenerMisAplicaciones } from '@/lib/aplicaciones';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { obtenerPosicionesActivas } from '@/lib/matching/posiciones';
+import { obtenerPerfil } from '@/lib/auth/auth';
+import { aplicarAPosicion, obtenerMisAplicaciones } from '@/lib/matching/aplicaciones';
 import styles from './posiciones.module.css';
 
 interface Posicion {

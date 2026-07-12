@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import AlumniLogo from '@/components/AlumniLogo';
-import { enviarSolicitudVoluntario } from '@/lib/voluntarios';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { enviarSolicitudVoluntario } from '@/lib/voluntariado/voluntarios';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import styles from './otros.module.css';
 

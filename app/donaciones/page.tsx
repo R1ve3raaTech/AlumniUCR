@@ -16,10 +16,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useRequireRole } from '@/lib/useRequireRole';
-import AlumniLogo from '@/components/AlumniLogo';
-import { crearDonacion, obtenerTiposPago, obtenerProyectos, subirComprobante } from '@/lib/donaciones';
-import CargandoGirasol from '@/components/CargandoGirasol';
+import { useRequireRole } from '@/lib/auth/useRequireRole';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { crearDonacion, obtenerTiposPago, obtenerProyectos, subirComprobante } from '@/lib/donaciones/donaciones';
+import CargandoGirasol from '@/components/common/CargandoGirasol';
 import styles from './donaciones.module.css';
 
 interface Opcion { id: number | string; label: string }

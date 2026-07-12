@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { notificar } from '@/components/student/Toast';
-import { listarBlogs, listarEventos, crearBlog, editarBlog, eliminarBlog, misBlogs } from '@/lib/comunidad';
+import { listarBlogs, listarEventos, crearBlog, editarBlog, eliminarBlog, misBlogs } from '@/lib/comunidad/comunidad';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 interface Blog {

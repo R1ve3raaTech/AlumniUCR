@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import StudentShell from '@/components/student/StudentShell';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
-import { enviarReporte, misReportes } from '@/lib/reportesAnomalias';
+import { enviarReporte, misReportes } from '@/lib/admin/reportesAnomalias';
 
 const TIPOS = [
   { key: 'Denuncia', desc: 'Conducta grave o que viola las normas.', icon: 'gavel', cls: 'border-error/40 bg-error/5', act: 'border-error bg-error/10 ring-2 ring-error', ic: 'text-error' },

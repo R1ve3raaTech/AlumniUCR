@@ -1,5 +1,5 @@
 import React from 'react';
-import AlumniLogo from '../AlumniLogo';
+import AlumniLogo from '../common/AlumniLogo';
 
 interface BrandLogoProps {
   /** Conservado por compatibilidad; el logo trae su propio fondo de marca. */

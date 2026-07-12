@@ -4,23 +4,23 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useRequireRole } from '@/lib/useRequireRole';
-import AlumniLogo from '@/components/AlumniLogo';
+import { useRequireRole } from '@/lib/auth/useRequireRole';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import { apiFetch } from '@/lib/api';
 import {
   obtenerMisMatches,
   contactarMatch,
   aceptarMatch,
   rechazarMatch,
-} from '@/lib/matchesEstudiante';
+} from '@/lib/matching/matchesEstudiante';
 import {
   obtenerMiPerfilExalumno,
   guardarMiPerfilExalumno,
   obtenerCatalogos,
-} from '@/lib/perfilExalumno';
-import { obtenerDirectorioEstudiantes } from '@/lib/directorioEstudiantes';
-import { useTema } from '@/lib/useTema';
-import CargandoGirasol from '@/components/CargandoGirasol';
+} from '@/lib/perfil/perfilExalumno';
+import { obtenerDirectorioEstudiantes } from '@/lib/comunidad/directorioEstudiantes';
+import { useTema } from '@/lib/common/useTema';
+import CargandoGirasol from '@/components/common/CargandoGirasol';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 

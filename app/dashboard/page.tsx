@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerPerfil } from '@/lib/auth';
-import ExalumnoDashboard from '@/components/ExalumnoDashboard';
-import AdminDashboard from '@/components/AdminDashboard';
+import { obtenerPerfil } from '@/lib/auth/auth';
+import ExalumnoDashboard from '@/components/dashboard/ExalumnoDashboard';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 import DashboardEstudiante from '@/components/student/DashboardEstudiante';
-import VoluntarioDashboard from '@/components/VoluntarioDashboard';
-import CargandoGirasol from '@/components/CargandoGirasol';
+import VoluntarioDashboard from '@/components/dashboard/VoluntarioDashboard';
+import CargandoGirasol from '@/components/common/CargandoGirasol';
 
 interface Perfil {
   nombre?: string;

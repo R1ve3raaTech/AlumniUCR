@@ -8,8 +8,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AlumniLogo from '@/components/AlumniLogo';
-import { crearPosicion, obtenerAreas } from '@/lib/posiciones';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { crearPosicion, obtenerAreas } from '@/lib/matching/posiciones';
 import styles from './nueva.module.css';
 
 interface Area { id: number | string; nombre: string }

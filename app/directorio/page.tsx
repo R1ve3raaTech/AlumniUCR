@@ -6,12 +6,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import AlumniLogo from '@/components/AlumniLogo';
-import ReportarPerfil from '@/components/ReportarPerfil';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import ReportarPerfil from '@/components/common/ReportarPerfil';
 import DirectorioExalumnos from '@/components/student/DirectorioExalumnos';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerPerfil } from '@/lib/auth';
-import { obtenerDirectorio } from '@/lib/perfilExalumno';
+import { obtenerPerfil } from '@/lib/auth/auth';
+import { obtenerDirectorio } from '@/lib/perfil/perfilExalumno';
 import styles from './directorio.module.css';
 
 interface Exalumno {

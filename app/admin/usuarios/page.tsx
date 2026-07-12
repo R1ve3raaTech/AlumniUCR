@@ -12,7 +12,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerUsuarios, cambiarEstadoUsuario, eliminarUsuario } from '@/lib/usuarios';
+import { obtenerUsuarios, cambiarEstadoUsuario, eliminarUsuario } from '@/lib/admin/usuarios';
 import styles from './usuarios.module.css';
 
 interface Usuario {

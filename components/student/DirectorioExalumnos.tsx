@@ -8,15 +8,15 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import StudentShell from '@/components/student/StudentShell';
-import ReportarPerfil from '@/components/ReportarPerfil';
+import ReportarPerfil from '@/components/common/ReportarPerfil';
 import ProgressBar from '@/components/ui/ProgressBar';
 import { notificar } from '@/components/student/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerDirectorio } from '@/lib/perfilExalumno';
-import { puntuar, obtenerMisMatches, conectarConExalumno } from '@/lib/matchesEstudiante';
+import { obtenerDirectorio } from '@/lib/perfil/perfilExalumno';
+import { puntuar, obtenerMisMatches, conectarConExalumno } from '@/lib/matching/matchesEstudiante';
 import { apiFetch } from '@/lib/api';
-import { CARRERAS_UCR } from '@/lib/catalogoUCR';
+import { CARRERAS_UCR } from '@/lib/perfil/catalogoUCR';
 
 interface Exalumno {
   id: string;

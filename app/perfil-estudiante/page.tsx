@@ -18,10 +18,10 @@ import {
   calcularPorcentajeCompletitud,
   calcularChecklistReglamento,
 } from '@/context/ProyectoGraduacionContext';
-import { FACULTADES_UCR } from '@/lib/catalogoUCR';
+import { FACULTADES_UCR } from '@/lib/perfil/catalogoUCR';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerMisAplicaciones } from '@/lib/aplicaciones';
-import { listarBlogs, listarEventos } from '@/lib/comunidad';
+import { obtenerMisAplicaciones } from '@/lib/matching/aplicaciones';
+import { listarBlogs, listarEventos } from '@/lib/comunidad/comunidad';
 
 const FOTO_MAX_BYTES = 3 * 1024 * 1024;
 

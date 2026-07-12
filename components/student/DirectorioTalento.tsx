@@ -11,7 +11,7 @@ import StudentShell from '@/components/student/StudentShell';
 import AvatarUploader from '@/components/student/AvatarUploader';
 import { notificar } from '@/components/student/Toast';
 import { usePerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { tituloCaso, limpiarTexto } from '@/lib/texto';
+import { tituloCaso, limpiarTexto } from '@/lib/curriculum/texto';
 
 const SEDES = ['Rodrigo Facio (Central)', 'Sede del Pacífico', 'Sede de Occidente', 'Sede del Atlántico', 'Sede de Guanacaste', 'Recinto de Golfito', 'Recinto de Tacares'];
 const TIPOS = ['TFG (Trabajo Final de Graduación)', 'TCU (Trabajo Comunal)', 'Proyecto de Curso'];

@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import StudentShell from '@/components/student/StudentShell';
 import { usePerfilEstudiante, type PerfilEstudiante } from '@/context/PerfilEstudianteContext';
-import { obtenerSugeridos } from '@/lib/matchesEstudiante';
+import { obtenerSugeridos } from '@/lib/matching/matchesEstudiante';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 

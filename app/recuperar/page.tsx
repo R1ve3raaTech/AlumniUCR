@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { solicitarRecuperacion, verificarCodigoRecuperacion } from '@/lib/auth';
+import { solicitarRecuperacion, verificarCodigoRecuperacion } from '@/lib/auth/auth';
 import { useAuthForm } from '@/hooks/useAuthForm';
 import styles from './recuperar.module.css';
 

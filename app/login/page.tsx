@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthForm } from '@/hooks/useAuthForm';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import styles from './login.module.css';
 
 const IMail = () => (

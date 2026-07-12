@@ -19,7 +19,7 @@ import {
   obtenerUsuarios,
   obtenerProyectos,
   obtenerUrlComprobante,
-} from '@/lib/donaciones';
+} from '@/lib/donaciones/donaciones';
 import styles from './donaciones.module.css';
 
 interface Donacion {

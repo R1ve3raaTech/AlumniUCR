@@ -6,7 +6,7 @@
 // registro) sigue existiendo sin cambios, comparten el mismo endpoint del BE.
 
 import React, { useState } from 'react';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import VoluntariadoNavbar from '@/components/voluntariado/VoluntariadoNavbar';
 import Hero from '@/components/voluntariado/Hero';
 import ComoAyudar from '@/components/voluntariado/ComoAyudar';

@@ -15,8 +15,8 @@ out/
 .DS_Store
 Thumbs.db
 # Datos en tiempo de ejecución (store de voluntarios)
-BE/data/
+BackEnd/data/
 
 # Configuración local del agente/editor
 .claude/
-BE/test-key.js
+BackEnd/test-key.js

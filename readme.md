@@ -9,7 +9,7 @@ Conecta estudiantes becados con exalumnos dispuestos a ofrecer mentoría, empleo
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Express](https://img.shields.io/badge/Express-BE-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![Express](https://img.shields.io/badge/Express-BackEnd-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38BDF8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/Licencia-Privada-lightgrey)](#)
@@ -89,7 +89,7 @@ Conectando-Talento-UCR/
 │   ├── mi-legado/            # Línea de tiempo, insignias y árbol de impacto
 │   ├── voluntariado/         # Página pública de postulación
 │   └── admin/                # Panel administrativo
-├── BE/                       # Backend Express, independiente
+├── BackEnd/                       # Backend Express, independiente
 │   ├── services/             # Lógica de negocio (matching, donaciones, fidelización…)
 │   ├── controllers/ routes/  # Capa HTTP
 │   └── db/                   # Scripts SQL de referencia para Supabase
@@ -97,7 +97,7 @@ Conectando-Talento-UCR/
 │   ├── landing/               # Landing pública
 │   ├── student/                # Shell y widgets del estudiante
 │   └── voluntariado/            # Componentes de la página pública de voluntariado
-├── lib/                      # Cliente HTTP hacia el BE + capa de datos por dominio
+├── lib/                      # Cliente HTTP hacia el BackEnd + capa de datos por dominio
 └── context/                  # AuthContext y contexto del perfil del estudiante
 ```
 
@@ -114,11 +114,11 @@ cd AlumniUCR
 npm install
 
 # 2. Instalar dependencias del backend
-cd BE
+cd BackEnd
 npm install
 ```
 
-Creá `BE/.env.local` con tus propias claves:
+Creá `BackEnd/.env.local` con tus propias claves:
 
 ```env
 SUPABASE_URL=
@@ -139,7 +139,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
 ```bash
 # 3. Arrancar el backend
-cd BE && npm run dev
+cd BackEnd && npm run dev
 
 # 4. Arrancar el frontend (en otra terminal, desde la raíz)
 npm run dev

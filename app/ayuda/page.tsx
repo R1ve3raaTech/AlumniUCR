@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '@/components/landing/Navbar';
-import AlumniLogo from '@/components/AlumniLogo';
-import { enviarConsultaSoporte } from '@/lib/consultasSoporte';
-import { obtenerFaqs } from '@/lib/faqs';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { enviarConsultaSoporte } from '@/lib/admin/consultasSoporte';
+import { obtenerFaqs } from '@/lib/common/faqs';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerPerfil } from '@/lib/auth';
+import { obtenerPerfil } from '@/lib/auth/auth';
 import styles from './ayuda.module.css';
 
 // Registro de plugins GSAP

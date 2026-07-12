@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
-import AlumniLogo from '@/components/AlumniLogo';
+import AlumniLogo from '@/components/common/AlumniLogo';
 import styles from './AdminLayout.module.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -7,9 +7,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useRequireRole } from '@/lib/useRequireRole';
-import AlumniLogo from '@/components/AlumniLogo';
-import { obtenerMisPosiciones, actualizarPosicion } from '@/lib/posiciones';
+import { useRequireRole } from '@/lib/auth/useRequireRole';
+import AlumniLogo from '@/components/common/AlumniLogo';
+import { obtenerMisPosiciones, actualizarPosicion } from '@/lib/matching/posiciones';
 import styles from './mis-posiciones.module.css';
 
 interface Posicion {

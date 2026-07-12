@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerSolicitudesRecibidas, responderSolicitudContacto } from '@/lib/directorioEstudiantes';
+import { obtenerSolicitudesRecibidas, responderSolicitudContacto } from '@/lib/comunidad/directorioEstudiantes';
 
 interface Solicitud {
   id: string;

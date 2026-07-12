@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerPerfilOnboarding, guardarPerfilOnboarding } from '@/lib/perfilOnboarding';
+import { obtenerPerfilOnboarding, guardarPerfilOnboarding } from '@/lib/auth/perfilOnboarding';
 
 export interface Experiencia {
   puesto: string;

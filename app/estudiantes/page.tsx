@@ -3,13 +3,13 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import ReportarPerfil from '@/components/ReportarPerfil';
-import StudentNav from '@/components/StudentNav';
+import ReportarPerfil from '@/components/common/ReportarPerfil';
+import StudentNav from '@/components/dashboard/StudentNav';
 import ProgressBar from '@/components/ui/ProgressBar';
-import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/directorioEstudiantes';
-import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfilExalumno';
+import { obtenerDirectorioEstudiantes, solicitarContacto } from '@/lib/comunidad/directorioEstudiantes';
+import { obtenerMiPerfilExalumno, obtenerCatalogos } from '@/lib/perfil/perfilExalumno';
 import { apiFetch } from '@/lib/api';
-import { CARRERAS_UCR } from '@/lib/catalogoUCR';
+import { CARRERAS_UCR } from '@/lib/perfil/catalogoUCR';
 
 const nombreDe = (catalogo: any[] | undefined, id: any) =>
   catalogo?.find((c: any) => c.id === id)?.nombre ?? null;

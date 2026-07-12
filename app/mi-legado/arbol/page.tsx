@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { obtenerMiPerfilExalumno } from '@/lib/perfilExalumno';
-import { obtenerMiLegado } from '@/lib/fidelizacion';
-import ArbolImpactoCibernetico from '@/components/ArbolImpactoCibernetico';
-import CargandoGirasol from '@/components/CargandoGirasol';
+import { obtenerMiPerfilExalumno } from '@/lib/perfil/perfilExalumno';
+import { obtenerMiLegado } from '@/lib/common/fidelizacion';
+import ArbolImpactoCibernetico from '@/components/dashboard/ArbolImpactoCibernetico';
+import CargandoGirasol from '@/components/common/CargandoGirasol';
 
 interface Perfil {
   nombre?: string;
