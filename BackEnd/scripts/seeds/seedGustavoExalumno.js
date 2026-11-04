@@ -9,7 +9,10 @@
  * Es idempotente: si el usuario ya existe, reasegura su contraseña y reescribe
  * su perfil. No toca a ningún otro usuario (no se solapa con Roberto Soto).
  *
- * La foto vive en el FE: public/images/gustavo-machado.jpg (ver FOTO).
+ * La foto vive en el FE: public/images/gustavo-machado.png (ver FOTO).
+ * Ese archivo es PNG por extensión pero contiene bytes JPEG (se recomprimió de
+ * 1.8 MB a 109 KB sin cambiar el nombre, porque esta ruta puede estar ya
+ * guardada en filas de Supabase de corridas previas de este seed).
  *
  * Uso:  node scripts/seedGustavoExalumno.js   (desde la carpeta BackEnd/)
  * Requiere SUPABASE_SECRET_KEY (service_role) en BackEnd/.env.local

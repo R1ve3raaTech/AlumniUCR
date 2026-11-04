@@ -160,9 +160,9 @@ export default function AyudaPage() {
     if (!contactoRef.current) return;
     
     // Tipado estricto para el contexto y el matchMedia
-    let ctx: gsap.Context = gsap.context(() => {
+    const ctx: gsap.Context = gsap.context(() => {
       // Implementación de accesibilidad (prefers-reduced-motion)
-      let mm: gsap.MatchMedia = gsap.matchMedia();
+      const mm: gsap.MatchMedia = gsap.matchMedia();
       
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         // Animaciones complejas de layout y staggers
@@ -426,10 +426,10 @@ export default function AyudaPage() {
             <p className={styles.footerCopy}>© 2026 Alumni UCR. Todos los derechos reservados.</p>
           </div>
           <div className={styles.footerLinks}>
-            <a href="#">Privacidad</a>
-            <a href="#">Términos</a>
+            <Link href="/terminos#privacidad">Privacidad</Link>
+            <Link href="/terminos">Términos</Link>
             <Link href="/login">Iniciar sesión</Link>
-            <a href="#" className={styles.footerActive}>Preguntas Frecuentes</a>
+            <Link href="/ayuda" className={styles.footerActive}>Preguntas Frecuentes</Link>
           </div>
         </div>
       </footer>

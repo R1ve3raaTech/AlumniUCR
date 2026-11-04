@@ -112,10 +112,11 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
+    // El detalle queda solo en los logs del servidor: el mensaje crudo del SDK
+    // puede exponer configuración interna (modelo, estado de la API key) al
+    // cliente, así que la respuesta es genérica.
     console.error('Alumni chat error:', error);
-    // TODO: volver a un mensaje generico una vez confirmado el fix en produccion.
-    const detalle = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: 'Error interno del servidor', detalle }), {
+    return new Response(JSON.stringify({ error: 'Error interno del servidor' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

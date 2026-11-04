@@ -1,7 +1,33 @@
 # Alumni UCR — CLAUDE.md
 
 > Contexto de desarrollo para Claude Code / Antigravity IDE.
-> Última actualización: 2026-07-07 — verificado contra el código real de este repo.
+> Última actualización: 2026-11-03 — verificado contra el código real de este repo.
+
+> **Nota de peso (2026-11-04):** `public/` pasó de **95 MB a 14 MB**. El culpable principal era
+> `images/UCR.mp4` (**72 MB**), que ya había sido reemplazado por `video-ucr.mp4` pero quedó en el repo
+> deployándose. Las imágenes que sí se usan se recomprimieron **sin cambiar dimensiones ni rutas**
+> (verificado: las 51 conservan su tamaño exacto). Reglas aplicadas, por si hay que repetirlo:
+> - JPEG → mozjpeg q82 progresivo.
+> - Logos/gráficos planos → PNG con paleta (medido como imperceptible).
+> - Fotos guardadas como PNG sin transparencia → bytes JPEG **manteniendo el nombre `.png`**
+>   (precedente que ya existía en `campus.png` / `ecosistema-ucr.png`; en `gustavo-machado.png` el nombre
+>   es obligatorio porque esa ruta puede estar guardada en Supabase por el seed).
+> - La mascota se dejó en paleta q100 a propósito: a q80 aparecían artefactos en el borde transparente.
+> - Fuente Elza Text: se agregó `elza-text.woff2` (56 KB) y el `.otf` (130 KB) quedó solo como respaldo.
+>
+> **Antes de subir una imagen nueva:** pasala por compresión. Una foto de perfil no debería pesar más de
+> ~100 KB, y un logo plano menos de ~30 KB.
+>
+> **Pendientes de peso (no hechos):** `images/video-ucr.mp4` sigue en **4.7 MB** y se descarga en el hero
+> del landing — hace falta `ffmpeg` para recomprimirlo (no estaba disponible). Y hay **33 `<img>` crudos**
+> que no usan `next/image`, así que no se benefician de WebP/AVIF ni del redimensionado automático;
+> migrarlos es el siguiente ahorro grande, pero toca render, así que requiere revisar diseño.
+
+> **Nota de limpieza (2026-11-03):** se borraron 30 archivos del BackEnd que nunca se importaban —
+> sobras del refactor BE→BackEnd, donde cada `X.js` tenía ya su reemplazo vivo `XService.js` (varios con
+> typos en el nombre: `becaSocioecomica.js`, `proyectoGraducaion.js`, `responsibilidades.js`). Eran una
+> trampa: editar el archivo equivocado no tenía ningún efecto. Verificado tras el borrado: los 148 módulos
+> restantes del BackEnd cargan sin fallas. Si buscás un servicio y no lo hallás, es `*Service.js`.
 
 ---
 
@@ -50,7 +76,7 @@ Conectando-Talento-UCR/
 - Backend: Express.js (`/BackEnd`) — servidor separado con su propio `package.json` (`npm run dev` = nodemon, `npm start` = node).
 - DB: Supabase (PostgreSQL) — sin NextAuth, auth custom con Magic Link / JWT.
 - IA: Claude API (`@anthropic-ai/sdk`) — modelo por defecto `claude-sonnet-5` (overrideable con `CLAUDE_MODEL`), chat de la mascota en `claude-haiku-4-5-20251001`. Ver `BackEnd/CLAUDE.md` para el detalle completo (hay **dos** integraciones de IA separadas: mascota pública vs. asistente adaptativo por rol).
-- Generación de imágenes: Replicate API (`BackEnd/controllers/common/replicate.controller.js`, `BackEnd/controllers/common/imageController.js`).
+- Generación de imágenes: Replicate API. Dos implementaciones vivas y equivalentes: `app/api/replicate/route.js` (Next.js) y `BackEnd/controllers/common/replicate.controller.js` (Express, montado en `/api/replicate`). **Ninguna UI las llama todavía.**
 - Animaciones: GSAP + Framer Motion (landing).
 
 ---
@@ -123,11 +149,12 @@ de requisitos, ver comentarios en el archivo).
   tabla `solicitudes_voluntarios`.
 - **Admin** — gestiona verificación de exalumnos/voluntarios y la plataforma.
 
-**⚠️ El guard de `app/admin/*` es débil en cliente:** `app/admin/layout.tsx` solo verifica que exista un
-token en `localStorage` (`ct_auth`), **no valida que el rol sea admin**. Cualquier usuario autenticado
-(estudiante, exalumno, voluntario) podría cargar el UI del panel admin en el navegador. La protección real
-depende de que cada endpoint del BackEnd rechace por rol (verificar `exigirRol('admin')` en las rutas antes de
-asumir que algo está protegido). No tratar esto como "ya seguro" solo porque el layout parece bloquear acceso.
+**Guard de `app/admin/*` (corregido el 2026-11-03):** `app/admin/layout.tsx` ahora valida el rol contra el
+BackEnd (`obtenerPerfil()` → `roles.nombre === 'admin'`) y redirige a `/dashboard` a cualquier usuario
+autenticado que no sea admin; antes solo comprobaba que existiera un token en `localStorage` (`ct_auth`), así
+que un estudiante/exalumno/voluntario podía cargar el UI del panel. Aun así, la protección **real** de los
+datos sigue dependiendo de que cada endpoint del BackEnd rechace por rol (verificar `exigirRol('admin')` en
+las rutas): el guard del layout es solo UX, no seguridad.
 
 ---
 
@@ -151,10 +178,9 @@ Tipografías: Barlow (titulares), Elza Text (texto principal). Aplicar siempre e
 - Imagen: `/public/images/3 sin fondo.png` (única imagen de la mascota que usa el código — cualquier otra imagen de mascota en `public/images/` está sin usar).
 - Chat streaming vía `app/api/alumni-chat/route.ts`.
 - Hoy es widget flotante — pendiente integrarla en más puntos de la landing (hero, sección de sostenibilidad, CTA final).
-- **⚠️ El system prompt de `app/api/alumni-chat/route.ts` está desactualizado respecto al producto real**:
-  describe roles "Estudiante, Empresa, Admin" (falta Exalumno y Voluntario) y auth "Magic Link sin
-  contraseña" — el login real hoy es correo + contraseña. Corregir el prompt antes de confiar en que la
-  mascota le da información correcta a un usuario sobre cómo registrarse o iniciar sesión.
+- El system prompt de `app/api/alumni-chat/route.ts` **ya está al día** (verificado 2026-11-03): declara los
+  4 roles reales y "correo y contraseña" como login. La advertencia anterior de este doc sobre roles
+  "Estudiante, Empresa, Admin" y "Magic Link" quedó obsoleta — el prompt ya no dice eso.
 - Existe una integración de IA **separada** (`GlobalChatbot.tsx` → `/claude/chat` en el BackEnd) con prompts
   adaptativos por rol/ruta — ver `BackEnd/CLAUDE.md` sección 0 para no confundirlas.
 
@@ -179,7 +205,10 @@ Tipografías: Barlow (titulares), Elza Text (texto principal). Aplicar siempre e
   línea de tiempo de impacto, árbol de mentorías y leaderboards, con datos reales de Supabase (no hardcodeado).
 - **Bolsa de empleo/pasantías completa** (RF-10/13) — publicación de posiciones, aplicación de estudiantes,
   selección de candidatos, motor de matching propio (ver sección de matching arriba).
-- **Generación de imágenes con Replicate** — `BackEnd/controllers/common/replicate.controller.js`, `BackEnd/controllers/common/imageController.js`.
+- **Generación de imágenes con Replicate** — `BackEnd/controllers/common/replicate.controller.js` y
+  `app/api/replicate/route.js`. El endpoint funciona, pero **ningún componente del FE lo consume todavía**.
+  (`imageController.js` / `imageRoutes.js` eran un tercer borrador en ESM que no podía cargar en este
+  proyecto CommonJS y no estaba montado: borrados el 2026-11-03.)
 
 ## Placeholders activos ("en reconstrucción")
 
@@ -197,7 +226,12 @@ no asumir que están implementadas solo porque el archivo existe:
 - **Integración de la mascota en más puntos de la landing** (hoy solo widget flotante).
 - **Stats dinámicos desde Supabase** — algunas métricas de la landing siguen hardcodeadas.
 - **Reconciliar** el rediseño de `admin/matches` de la rama `Braks` con el oficial RF-08.1 ya en `Dev` (dos versiones distintas del mismo panel, pendiente de que Braks decida cuál queda).
-- **Guard de admin en cliente débil** (ver sección de roles arriba) — evaluar si vale la pena agregar verificación de rol en `app/admin/layout.tsx`, aunque el BackEnd ya rechace por rol.
+- ~~Guard de admin en cliente débil~~ — **ya corregido** (2026-11-03): `app/admin/layout.tsx` valida el rol
+  contra el BackEnd. Ver la sección de roles arriba.
+- **Feature de Replicate sin consumidor** — el endpoint de generación de imágenes funciona en dos lados pero
+  ninguna pantalla lo usa. Decidir si se conecta a alguna UI o se retira.
+- **`/mis-aplicaciones` enlazado pero en reconstrucción** — el menú del estudiante lleva a un placeholder.
+  Valorar esconder el enlace hasta que la pantalla exista, para no mandar al usuario a un callejón.
 - **`puntuarEstudiante()` duplicado** en `ExalumnoDashboard.tsx` vs `puntuar()` en `lib/matching/matchesEstudiante.js` — evaluar si conviene unificarlos en un solo módulo compartido para evitar que diverjan.
 
 ---
@@ -225,9 +259,21 @@ cd BackEnd && npm run dev
 # Build FE
 npm run build
 
-# Lint FE
+# Lint FE (ESLint 9 flat config — ver eslint.config.mjs)
 npm run lint
+
+# Typecheck FE (lo que de verdad atrapa errores de tipos)
+npx tsc --noEmit
 ```
+
+**Sobre el lint (reconfigurado el 2026-11-03):** Next.js 16 eliminó el comando `next lint`, así que
+`npm run lint` estaba roto (interpretaba `lint` como un directorio) y el proyecto no tenía ESLint ni
+configuración. Ahora corre `eslint .` contra `eslint.config.mjs` con `eslint-config-next`.
+- `BackEnd/` queda **excluido** a propósito: es un paquete Express independiente en CommonJS, y las reglas
+  de Next/TS marcaban cada `require()` legítimo como error (eran 480 falsos positivos).
+- El baseline está en **0 errores / ~192 warnings**. Las reglas de deuda de estilo (`no-explicit-any`,
+  `react-hooks/set-state-in-effect`, etc.) están en `warn` a propósito para que el gate sea usable; al bajar
+  el conteo, subirlas a `error` una por una.
 
 ---
 

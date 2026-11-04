@@ -598,8 +598,8 @@ function MentoriasContent() {
           <AlumniLogo height={36} />
           <nav className={styles.footerLinks}>
             <Link href="/ayuda">Contacto</Link>
-            <a href="#">Privacidad</a>
-            <a href="#">Términos</a>
+            <Link href="/terminos#privacidad">Privacidad</Link>
+            <Link href="/terminos">Términos</Link>
             <a href="https://www.ucr.ac.cr" target="_blank" rel="noopener noreferrer">UCR.ac.cr</a>
           </nav>
           <p className={styles.footerCopy}>

@@ -445,7 +445,7 @@ export default function CvAdvisorPage() {
                     {activeSugerencia.aplicarImpacto && (
                       <div className="flex items-center justify-between gap-3 rounded-xl bg-white border border-outline-variant p-3 shadow-sm">
                         <span className="text-[10px] text-secondary font-medium leading-relaxed italic truncate">
-                          "{activeSugerencia.aplicarImpacto.trim()}"
+                          &quot;{activeSugerencia.aplicarImpacto.trim()}&quot;
                         </span>
                         <button
                           type="button"

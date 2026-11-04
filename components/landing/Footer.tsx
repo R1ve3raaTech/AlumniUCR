@@ -4,11 +4,14 @@ import BrandLogo from './BrandLogo';
 import { Mail, Phone, Linkedin, Instagram, Facebook } from './icons';
 import styles from './landing.module.css';
 
+// Privacidad y Términos viven en /terminos (la sección de privacidad tiene
+// ancla propia). Directorio apunta al directorio público real (/directorio),
+// no a la sección de proyectos del landing.
 const ENLACES = [
-  { label: 'Políticas de Privacidad', href: '#' },
-  { label: 'Términos de Servicio', href: '#' },
+  { label: 'Políticas de Privacidad', href: '/terminos#privacidad' },
+  { label: 'Términos de Servicio', href: '/terminos' },
   { label: 'Contacto', href: '#contacto' },
-  { label: 'Directorio', href: '#proyectos' },
+  { label: 'Directorio', href: '/directorio' },
 ];
 
 export default function Footer() {
@@ -34,7 +37,12 @@ export default function Footer() {
             <ul className={styles.footerList}>
               {ENLACES.map((e) => (
                 <li key={e.label}>
-                  <a href={e.href}>{e.label}</a>
+                  {/* Rutas internas con Link (navegación cliente); anclas con <a>. */}
+                  {e.href.startsWith('/') ? (
+                    <Link href={e.href}>{e.label}</Link>
+                  ) : (
+                    <a href={e.href}>{e.label}</a>
+                  )}
                 </li>
               ))}
             </ul>

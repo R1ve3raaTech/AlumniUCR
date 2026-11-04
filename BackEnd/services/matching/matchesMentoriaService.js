@@ -72,8 +72,8 @@ const calcularScore = (exalumno, estudiante, areasExalumno, areasEstudiante, car
     const setSectoresExalumno = new Set(sectoresExalumno.map(s => s.id_sector));
     // Usamos áreas_interes como puente entre sectores y áreas temáticas
     // Si comparten al menos 1 área en común entre sector↔área del proyecto
-    const sectorCoinciде = [...setAreasProyecto].some(a => setSectoresExalumno.has(a));
-    if (sectorCoinciде) score += 20;
+    const sectorCoincide = [...setAreasProyecto].some(a => setSectoresExalumno.has(a));
+    if (sectorCoincide) score += 20;
 
     // 4. Tipo de apoyo ofrecido ↔ buscado (20 pts)
     // Al menos 1 tipo coincide entre lo que ofrece el exalumno y lo que busca el estudiante

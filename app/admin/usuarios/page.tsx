@@ -112,7 +112,7 @@ export default function AdminUsuariosPage() {
 
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    let res = lista.filter((u) => {
+    const res = lista.filter((u) => {
       if (filtroEstado !== 'todos' && u.estado !== filtroEstado) return false;
       if (filtroRol && rolDe(u) !== filtroRol) return false;
       if (q && ![u.nombre, u.correo_electronico].filter(Boolean).join(' ').toLowerCase().includes(q)) return false;

@@ -6,21 +6,52 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import AlumniLogo from '@/components/common/AlumniLogo';
+import { useAuth } from '@/context/AuthContext';
+import { obtenerPerfil } from '@/lib/auth/auth';
+import CargandoGirasol from '@/components/common/CargandoGirasol';
 import styles from './AdminLayout.module.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
+  const { token, loading, signOut } = useAuth();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  // 'verificando' hasta confirmar el rol contra el backend: evita mostrar el
+  // panel admin a un usuario autenticado que no es admin (antes solo se
+  // comprobaba que existiera un token en localStorage).
+  const [accesoAdmin, setAccesoAdmin] = useState<'verificando' | 'ok' | 'denegado'>('verificando');
 
   useEffect(() => {
-    setMounted(true);
-    const raw = typeof window !== 'undefined' ? window.localStorage.getItem('ct_auth') : null;
-    if (!raw) {
+    if (loading) return;
+
+    if (!token) {
       router.replace('/login');
+      return;
     }
-  }, [router]);
+
+    let activo = true;
+    (async () => {
+      try {
+        const res = await obtenerPerfil(token);
+        const rol = res?.data?.roles?.nombre?.toLowerCase().trim();
+        if (!activo) return;
+        if (rol === 'admin') {
+          setAccesoAdmin('ok');
+        } else {
+          setAccesoAdmin('denegado');
+          router.replace('/dashboard');
+        }
+      } catch {
+        if (!activo) return;
+        setAccesoAdmin('denegado');
+        router.replace('/login');
+      }
+    })();
+
+    return () => {
+      activo = false;
+    };
+  }, [loading, token, router]);
 
   useEffect(() => {
     setMenuAbierto(false);
@@ -29,13 +60,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 
   const handleSignOut = () => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('ct_auth');
-    }
+    // Usa el signOut del contexto para que el estado global de sesión se limpie
+    // además del localStorage (antes el contexto quedaba con el usuario cargado).
+    signOut();
     router.replace('/login');
   };
 
-  if (!mounted) return null;
+  // No renderizar el panel hasta confirmar que el rol es admin.
+  if (loading || accesoAdmin !== 'ok') return <CargandoGirasol />;
 
   let pageTitle = 'Administración';
   if (pathname.includes('/matches')) pageTitle = 'Gestión de Matches';

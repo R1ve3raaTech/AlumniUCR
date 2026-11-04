@@ -1,12 +1,23 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 export async function POST(req: Request) {
   try {
+    // Instanciado dentro del handler, no a nivel de módulo: si la key falta,
+    // el SDK explota al construirse, tumbando la función con un 500 genérico
+    // de Next.js en vez de un error diagnosticable (mismo bug ya corregido en
+    // app/api/alumni-chat/route.ts y en proyecto-graduacion/sugerir).
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('Resumen de usuario: falta ANTHROPIC_API_KEY en las variables de entorno.');
+      return NextResponse.json(
+        { error: 'El resumen con IA no está disponible en este momento.' },
+        { status: 500 },
+      );
+    }
+    const client = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
     const body = await req.json();
     const { usuario } = body;
 

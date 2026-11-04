@@ -167,7 +167,6 @@ export function ProyectoGraduacionProvider({ children }: { children: React.React
     } finally {
       setCargando(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   // TODO: cuando exista la migración de BD, cargar acá desde el backend

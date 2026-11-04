@@ -12,6 +12,7 @@ const LINKS = [
   { label: 'Inicio', href: '/' },
   { label: 'Proyectos', href: '/proyectos' },
   { label: 'Mentorías', href: '/mentorias' },
+  { label: 'Voluntariado', href: '/voluntariado' },
 ];
 
 export default function Navbar() {

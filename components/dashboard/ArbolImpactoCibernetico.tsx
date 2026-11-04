@@ -679,7 +679,7 @@ export default function ArbolImpactoCibernetico({ legado, nombre, facultad, anio
                       {selectedNode.raw.tipoSemilla || "Semilla de Legado"}
                     </div>
                     <p className="text-[12.5px] text-slate-600 leading-relaxed font-light">
-                      "{selectedNode.raw.metafora}"
+                      &quot;{selectedNode.raw.metafora}&quot;
                     </p>
                   </div>
 
@@ -697,7 +697,7 @@ export default function ArbolImpactoCibernetico({ legado, nombre, facultad, anio
                       <span className="text-[#059669] font-black">✓</span>
                     </div>
                     <h5 className="text-[14px] font-black text-[#004857] leading-snug pr-6 pl-1">
-                      "{selectedNode.raw.proyecto || 'Proyecto de Graduación'}"
+                      &quot;{selectedNode.raw.proyecto || 'Proyecto de Graduación'}&quot;
                     </h5>
                     <div className="flex justify-between items-center pt-2.5 border-t border-emerald-100 text-[12px] font-mono pl-1">
                       <span className="text-slate-500">Evaluación Tesis:</span>
@@ -716,7 +716,7 @@ export default function ArbolImpactoCibernetico({ legado, nombre, facultad, anio
                       {renderStars(selectedNode.raw.calificacion || 5)}
                     </div>
                     <p className="text-[13px] italic text-purple-950/80 leading-relaxed font-light relative z-10 pl-1.5">
-                      "{selectedNode.raw.resena || 'Agradecido por tu colaboración y mentoría constante.'}"
+                      &quot;{selectedNode.raw.resena || 'Agradecido por tu colaboración y mentoría constante.'}&quot;
                     </p>
                   </div>
 

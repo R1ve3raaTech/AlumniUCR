@@ -532,8 +532,8 @@ function ProyectosContent() {
               </div>
               <div className={styles.footerCol}>
                 <span className={styles.footerColTitle}>Legal</span>
-                <a href="#">Privacidad</a>
-                <a href="#">Términos</a>
+                <Link href="/terminos#privacidad">Privacidad</Link>
+                <Link href="/terminos">Términos</Link>
               </div>
               <div className={styles.footerCol}>
                 <span className={styles.footerColTitle}>Soporte</span>

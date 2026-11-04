@@ -1,12 +1,23 @@
 import { NextResponse } from 'next/server';
 import Replicate from "replicate";
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
 export async function POST(request) {
   try {
+    // Instanciado dentro del handler (no a nivel de módulo): igual que en
+    // app/api/alumni-chat/route.ts, si el token falta el SDK lanza al
+    // construirse, y a nivel de módulo eso tumba la función entera con un 500
+    // genérico de Next.js sin pasar por este try/catch.
+    if (!process.env.REPLICATE_API_TOKEN) {
+      console.error('Replicate: falta REPLICATE_API_TOKEN en las variables de entorno.');
+      return NextResponse.json(
+        { error: "La generación de imágenes no está disponible en este momento." },
+        { status: 500 },
+      );
+    }
+    const replicate = new Replicate({
+      auth: process.env.REPLICATE_API_TOKEN,
+    });
+
     const { prompt, aspect_ratio = "1:1", tipo = "schnell" } = await request.json();
 
     if (!prompt) {
