@@ -2,10 +2,45 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
+// ======================================================
+// CONFIGURACIÓN OBLIGATORIA
+// ======================================================
+// Se comprueba acá, antes de cargar rutas, para que el mensaje se vea claro en
+// la terminal en vez de salir como un stack trace desde el fondo de un require.
+//
+// A diferencia de las credenciales de Supabase (que solo avisan y dejan
+// arrancar con placeholders), esta clave falla CERRADO: firma los enlaces de
+// restablecer contraseña y de aprobación de cuentas, así que arrancar con un
+// valor por defecto conocido permitiría tomar cuentas ajenas.
+if (!process.env.APPROVAL_SECRET && !process.env.SUPABASE_SECRET_KEY) {
+  console.error('\x1b[31m%s\x1b[0m', [
+    '',
+    '🔴 No se puede arrancar: falta la clave para firmar los enlaces de correo.',
+    '',
+    '   Configurá APPROVAL_SECRET en BackEnd/.env.local (ver BackEnd/.env.example).',
+    '   Generar un valor:',
+    '     node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    '',
+    '   Esta clave firma los tokens de restablecer contraseña, confirmar correo y',
+    '   aprobar cuentas. Antes había un valor por defecto en el código, pero estaba',
+    '   publicado en el repositorio: con él, cualquiera que supiera el id de un',
+    '   usuario podía falsificar su enlace de reset y tomarle la cuenta.',
+    '',
+  ].join('\n'));
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Express va detrás del proxy del hosting (Vercel/Render), así que sin esto
+// req.ip es la IP del proxy y TODOS los usuarios compartirían el mismo cupo
+// de rate limit.
+app.set('trust proxy', 1);
 
 // ======================================================
 // RED DE SEGURIDAD GLOBAL
@@ -59,6 +94,68 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 
 // ======================================================
+// CABECERAS DE SEGURIDAD
+// ======================================================
+// Este backend solo sirve JSON, nunca HTML, asi que no necesita CSP (y
+// activarla por defecto rompia nada pero tampoco aportaba). Si se desactiva
+// crossOriginResourcePolicy porque el FE vive en otro dominio y debe poder
+// leer las respuestas.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+  }),
+);
+
+// ======================================================
+// RATE LIMITING
+// ======================================================
+// No habia ninguno. Dos riesgos concretos que esto cierra:
+//  1. Fuerza bruta sobre /auth/login y adivinado del codigo de 6 digitos de
+//     recuperacion de contrasena (un millon de combinaciones es trivial sin
+//     limite de intentos).
+//  2. Coste: /claude y /replicate llaman a APIs que se pagan por uso y
+//     /claude/chat es publico, asi que cualquiera podia gastar el
+//     presupuesto de la asociacion desde una terminal.
+
+const limiteAuth = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // por IP: suficiente para un usuario que se equivoca varias veces
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    mensaje: 'Demasiados intentos. Esperá unos minutos antes de volver a probar.',
+  },
+});
+
+const limiteIA = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    mensaje: 'Demasiadas consultas al asistente. Esperá un momento e intentá de nuevo.',
+  },
+});
+
+// Limite general, holgado: corta scraping y bucles accidentales del FE sin
+// molestar el uso normal de la plataforma.
+const limiteGeneral = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    mensaje: 'Demasiadas peticiones. Esperá un momento e intentá de nuevo.',
+  },
+});
+
+app.use('/api', limiteGeneral);
+
+// ======================================================
 // ROUTES
 // ======================================================
 
@@ -109,7 +206,9 @@ const comprobantesRoutes = require('./routes/donaciones/comprobantes.routes');
 const statsRoutes = require('./routes/common/stats.routes');
 const fidelizacionRoutes = require('./routes/fidelizacion/fidelizacion.routes');
 
-app.use('/api/auth', authRoutes);
+// limiteAuth va primero: login, recuperacion y registro son el objetivo de
+// fuerza bruta y de spam de correos.
+app.use('/api/auth', limiteAuth, authRoutes);
 app.use('/api/aplicantes', aplicantesEmpleoRoutes);
 app.use('/api/areas-interes', areasInteresRoutes);
 app.use('/api/areas-interes-exalumnos', areasInteresExalumnosRoutes);
@@ -142,11 +241,14 @@ app.use('/api/tipos-pago', tipoPagoRoutes);
 app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cv', cvRoutes);
-app.use('/api/voluntarios', voluntariosRoutes);
+// Alta publica de voluntarios: limitada para evitar spam de solicitudes.
+app.use('/api/voluntarios', limiteAuth, voluntariosRoutes);
 app.use('/api/consultas-soporte', consultasRoutes);
 app.use('/api/matching', matchingRoutes);
-app.use('/api/claude', claudeRoutes);
-app.use('/api/replicate', replicateRoutes);
+// limiteIA: /claude/chat es PUBLICO (sin auth), asi que sin limite cualquiera
+// podia gastar el presupuesto de la API de Anthropic.
+app.use('/api/claude', limiteIA, claudeRoutes);
+app.use('/api/replicate', limiteIA, replicateRoutes);
 app.use('/api/matches-mentoria', matchesMentoriaRoutes);
 app.use('/api/matches-posiciones', matchesPosicionesRoutes);
 app.use('/api/admin', adminRoutes);

@@ -9,9 +9,26 @@
 
 const crypto = require('crypto');
 
-// Clave para firmar. Se prefiere una dedicada; si no, se reutiliza la service_role
-// (ya es secreta del backend) para no exigir configuración adicional.
-const SECRET = process.env.APPROVAL_SECRET || process.env.SUPABASE_SECRET_KEY || 'dev-approval-secret';
+// Clave para firmar. Se prefiere una dedicada (APPROVAL_SECRET); si no, se
+// reutiliza la service_role, que ya es secreta del backend.
+//
+// ⚠️ ANTES había un tercer respaldo literal ('dev-approval-secret'). Eso era un
+// agujero crítico: ese string está publicado en el repositorio, así que si las
+// dos variables faltaban, CUALQUIERA que conociera el UUID de un usuario podía
+// calcular su token de restablecer contraseña y tomarle la cuenta (el mismo
+// secreto firma los enlaces de reset, de confirmación de correo y de aprobación
+// de cuentas). Ahora se cae en el arranque en vez de arrancar insegura: para
+// una clave criptográfica, fallar cerrado es lo correcto.
+const SECRET = process.env.APPROVAL_SECRET || process.env.SUPABASE_SECRET_KEY;
+
+if (!SECRET) {
+  throw new Error(
+    'Falta la clave para firmar tokens. Configurá APPROVAL_SECRET (recomendado) ' +
+    'o SUPABASE_SECRET_KEY en BackEnd/.env.local. El servidor NO arranca sin una ' +
+    'clave real: usar un valor por defecto permitiría falsificar enlaces de ' +
+    'restablecer contraseña y tomar cuentas ajenas.',
+  );
+}
 
 /**
  * Genera el token para un id de usuario y un propósito.

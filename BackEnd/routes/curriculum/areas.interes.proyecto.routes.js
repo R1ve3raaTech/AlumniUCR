@@ -3,13 +3,15 @@ const router = express.Router();
 const areasInteresProyectoController = require('../../controllers/curriculum/areas.interes.proyecto.controller');
 const autenticarUsuario = require('../../middlewares/auth.middleware');
 const exigirRol = require('../../middlewares/role.middleware');
+const { exigirPropiedadViaProyecto } = require('../../middlewares/ownership.middleware');
 
 router.get('/', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), areasInteresProyectoController.obtenerAreasInteresProyecto);
 router.get('/proyecto/:idProyecto', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), areasInteresProyectoController.obtenerAreasPorProyecto);
 router.get('/area/:idAreaTematica', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), areasInteresProyectoController.obtenerProyectosPorArea);
 router.get('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno']), areasInteresProyectoController.obtenerAreaInteresProyectoPorId);
 router.post('/', autenticarUsuario, exigirRol(['admin', 'estudiante']), areasInteresProyectoController.crearAreaInteresProyecto);
-router.put('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante']), areasInteresProyectoController.actualizarAreaInteresProyecto);
+// IDOR: el dueno se resuelve via proyecto_graduacion.id_estudiante.
+router.put('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante']), exigirPropiedadViaProyecto({ tabla: 'areas_interes_proyecto' }), areasInteresProyectoController.actualizarAreaInteresProyecto);
 router.delete('/:id', autenticarUsuario, exigirRol('admin'), areasInteresProyectoController.eliminarAreaInteresProyecto);
 
 module.exports = router;

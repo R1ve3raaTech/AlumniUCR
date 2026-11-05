@@ -20,3 +20,10 @@ BackEnd/data/
 # Configuración local del agente/editor
 .claude/
 BackEnd/test-key.js
+
+# Cache incremental de TypeScript: es un artefacto de build y generaba
+# conflictos tontos cada vez que dos personas compilaban.
+tsconfig.tsbuildinfo
+
+# Respaldos locales de lockfiles
+*.bak

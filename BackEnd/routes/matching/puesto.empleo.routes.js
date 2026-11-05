@@ -3,6 +3,7 @@ const router = express.Router();
 const puestoEmpleoController = require('../../controllers/matching/puesto.empleo.controller');
 const autenticarUsuario = require('../../middlewares/auth.middleware');
 const exigirRol = require('../../middlewares/role.middleware');
+const { exigirPropiedadFila } = require('../../middlewares/ownership.middleware');
 
 router.get('/activos', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno', 'voluntario']), puestoEmpleoController.obtenerPuestosActivos);
 router.get('/usuario/:idUsuario', autenticarUsuario, exigirRol(['admin', 'exalumno', 'voluntario']), puestoEmpleoController.obtenerPuestosPorUsuario);
@@ -11,7 +12,8 @@ router.get('/titulo/:titulo', autenticarUsuario, exigirRol(['admin', 'estudiante
 router.get('/', autenticarUsuario, exigirRol('admin'), puestoEmpleoController.obtenerPuestosEmpleo);
 router.get('/:id', autenticarUsuario, exigirRol(['admin', 'estudiante', 'exalumno', 'voluntario']), puestoEmpleoController.obtenerPuestoEmpleoPorId);
 router.post('/', autenticarUsuario, exigirRol(['admin', 'exalumno', 'voluntario']), puestoEmpleoController.crearPuestoEmpleo);
-router.put('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno', 'voluntario']), puestoEmpleoController.actualizarPuestoEmpleo);
+// IDOR: un exalumno/voluntario podia editar la posicion publicada por otro.
+router.put('/:id', autenticarUsuario, exigirRol(['admin', 'exalumno', 'voluntario']), exigirPropiedadFila({ tabla: 'puestos_empleo', columnaDueno: 'id_usuario' }), puestoEmpleoController.actualizarPuestoEmpleo);
 router.delete('/:id', autenticarUsuario, exigirRol('admin'), puestoEmpleoController.eliminarPuestoEmpleo);
 
 // POST /api/puestos-empleo/cerrar-vencidas — admin cierra posiciones con fecha_limite vencida (RF-10)

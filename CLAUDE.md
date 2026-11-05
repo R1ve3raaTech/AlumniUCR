@@ -236,6 +236,107 @@ no asumir que están implementadas solo porque el archivo existe:
 
 ---
 
+## Seguridad — reglas que NO se pueden romper
+
+> Auditoría completa hecha el 2026-11-05. Lo de abajo no es teoría: cada punto
+> corresponde a un agujero real que estaba abierto en este repo.
+
+### 1. El BackEnd corre con `service_role`, así que la BD no protege nada
+
+`config/supabase.js` usa la clave `service_role`, que **omite RLS por completo**.
+Consecuencia: la base de datos **no es una red de seguridad**. Toda la
+autorización vive en el código de Express. Si a un endpoint le falta una
+comprobación, el dato queda expuesto — no hay segunda línea de defensa.
+
+### 2. `exigirRol` NO alcanza: hay que verificar propiedad
+
+`exigirRol` dice *qué es* el usuario, no *si el recurso es suyo*. Faltando eso,
+había **18 endpoints con IDOR**: un estudiante autenticado podía editar o
+borrar los datos de otro cambiando el id en la URL (su proyecto de graduación,
+carrera, habilidades, certificaciones, experiencia), y un exalumno lo mismo con
+los suyos y con las posiciones de empleo publicadas por otro.
+
+**Al crear un endpoint que recibe un id por la URL, usá
+`middlewares/ownership.middleware.js`:**
+
+| situación | middleware |
+|---|---|
+| el parámetro ES el id del usuario | `exigirUsuarioPropio('idUsuario')` |
+| el parámetro es el id de una fila | `exigirPropiedadFila({ tabla, columnaDueno })` |
+| la fila es hija de un proyecto | `exigirPropiedadViaProyecto({ tabla })` |
+
+El rol `admin` siempre pasa. Cuando el recurso es de otro se responde **404, no
+403**, a propósito: un 403 confirmaría que ese id existe.
+Cubierto por tests: `BackEnd/tests/ownership.middleware.test.js` (`npm test`).
+
+### 3. Nunca metas texto de usuario o de IA en HTML sin escapar
+
+Había **dos XSS** por `dangerouslySetInnerHTML`:
+- `app/mentorias/exalumno/page.tsx` volcaba la salida de la IA sin escapar. La IA
+  resume perfiles escritos por otros usuarios, así que un `<img src=x onerror=…>`
+  en un perfil ejecutaba script **en el navegador del exalumno**. Con el JWT en
+  `localStorage`, eso es robo de sesión.
+- `app/proyecto-graduacion/vista-previa/page.tsx` interpolaba los campos del
+  proyecto, que además se exportan a un `.doc` que se comparte con tutores.
+
+Ambos escapan ahora **antes** de generar el HTML. Si agregás markdown o
+plantillas HTML, escapá primero y generá las etiquetas después.
+
+### 4. La clave que firma los enlaces de correo falla cerrado
+
+`utils/aprobacionToken.js` firma los tokens de restablecer contraseña, confirmar
+correo y aprobar cuentas. Tenía un respaldo literal `'dev-approval-secret'`
+**publicado en este repositorio**: con él, cualquiera que supiera el UUID de un
+usuario podía falsificar su enlace de reset y tomarle la cuenta. Ese respaldo se
+eliminó y el servidor **ya no arranca** sin una clave real (ver
+`BackEnd/.env.example` → `APPROVAL_SECRET`). No lo "arregles" devolviendo un
+valor por defecto.
+
+### 5. Todo lo que gasta dinero exige sesión
+
+`/api/claude/chat` y `/api/replicate/generate` estaban **abiertos sin
+autenticación**, y cada llamada se le factura a la asociación. Ahora exigen
+sesión, y `server.js` aplica rate limiting (`limiteIA`). Las rutas de API de
+Next usan `lib/auth/verificarSesionServidor.ts`, que valida el token contra el
+BackEnd (`/auth/perfil`) — no dupliques esa lógica.
+
+**Excepción conocida:** `app/api/alumni-chat/route.ts` (mascota de la landing)
+es pública por diseño y **no tiene rate limit** — en serverless un contador en
+memoria no persiste. Queda como exposición de costo pendiente: lo correcto es
+un rate limit en el borde (Vercel WAF) o un contador en Redis/Upstash.
+
+### 6. Rate limiting
+
+No existía ninguno. `server.js` define tres: `limiteAuth` (20/15min, cubre
+fuerza bruta de login y el adivinado del código de 6 dígitos de recuperación,
+que es stateless y no puede contar intentos por sí mismo), `limiteIA` (30/10min)
+y `limiteGeneral` (1000/15min). Requiere `app.set('trust proxy', 1)`, que ya
+está: sin eso todos los usuarios comparten el cupo de la IP del proxy.
+
+### Riesgos aceptados (documentados, no arreglados)
+
+- **JWT en `localStorage`** (no en cookie `httpOnly`): cualquier XSS permite
+  robar la sesión. Es la razón por la que el punto 3 es crítico. Cambiarlo a
+  cookies es un rediseño del flujo de auth.
+- **`mimetype` de las subidas es declarado por el cliente** y se puede falsear
+  (`routes/donaciones/comprobantes.routes.js`). Mitigado: los archivos van a un
+  bucket privado y se sirven por signed URL, nunca se ejecutan.
+
+### Revisado y correcto (no tocar “por si acaso”)
+
+- `auth.middleware.js` valida el token **contra Supabase**, no lo decodifica
+  solo, bloquea cuentas suspendidas y toma el rol de la BD, no del token.
+- Las rutas de `routes/admin/` exigen rol admin. Los dos endpoints de
+  `reportes.routes.js` sin `exigirRol` son correctos: el estudiante crea y ve
+  **sus propios** reportes.
+- El código de recuperación es HMAC derivado estilo TOTP con comparación de
+  tiempo constante.
+- No hay inyección PostgREST: los `.ilike()` pasan el valor como parámetro y el
+  único `.or()` usa una fecha generada en el servidor.
+- No hay secretos commiteados, ni `eval`, ni `new Function`.
+
+---
+
 ## Convenciones del proyecto
 
 - Español en comentarios, UI y mensajes de error al usuario.
@@ -279,6 +380,7 @@ configuración. Ahora corre `eslint .` contra `eslint.config.mjs` con `eslint-co
 
 ## Reglas de git del equipo
 
-- El repositorio vive en `github.com/R1ve3raaTech/Conectando-Talento-UCR` (dueño: Camil, líder del proyecto desde 2026-07-06). Equipo: Camil, Stacy, Braksley, Steven.
+- El repositorio vive en `github.com/R1ve3raaTech/AlumniUCR` (dueño: Camil, líder del proyecto desde 2026-07-06). Equipo: Camil, Stacy, Braksley, Steven.
+  La rama por defecto del remoto es `Dev`; `main` existe y se mantiene al día con ella.
 - **Camil aprueba/mergea los PRs hacia `Dev`.** Pushear a ramas de otros compañeros requiere su autorización explícita.
 - Antes de mergear `Dev` en otra rama, verificar con `git merge-tree` que no haya conflictos con trabajo en curso de otro compañero (p. ej. `admin/matches` tiene dos versiones distintas: Braks vs. RF-08.1).

@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { sugerirMejoraTexto, type CampoSugerible } from '@/lib/curriculum/proyectoGraduacionAsistente';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SugerirMejora({
   campo,
@@ -18,6 +19,8 @@ export default function SugerirMejora({
   texto: string;
   onAplicar: (sugerencia: string) => void;
 }) {
+  // La ruta de IA exige sesion, asi que hay que pasarle el token.
+  const { token } = useAuth();
   const [cargando, setCargando] = useState(false);
   const [sugerencia, setSugerencia] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export default function SugerirMejora({
     setError(null);
     setSugerencia(null);
     try {
-      const resultado = await sugerirMejoraTexto(campo, texto);
+      const resultado = await sugerirMejoraTexto(campo, texto, token);
       setSugerencia(resultado);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo generar la sugerencia.');

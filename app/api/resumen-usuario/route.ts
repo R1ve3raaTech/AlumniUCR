@@ -1,8 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { verificarSesion, noAutorizado, prohibido } from '@/lib/auth/verificarSesionServidor';
 
 export async function POST(req: Request) {
   try {
+    // Solo admin: es una función del panel de administración y gasta API de
+    // Claude. Antes estaba abierta, sin sesión ni comprobación de rol.
+    const sesion = await verificarSesion(req);
+    if (!sesion) return noAutorizado();
+    if (sesion.rol !== 'admin') return prohibido();
+
     // Instanciado dentro del handler, no a nivel de módulo: si la key falta,
     // el SDK explota al construirse, tumbando la función con un 500 genérico
     // de Next.js en vez de un error diagnosticable (mismo bug ya corregido en

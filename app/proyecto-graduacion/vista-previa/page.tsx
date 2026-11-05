@@ -42,30 +42,47 @@ function generarRecomendaciones(p: ReturnType<typeof useProyectoGraduacion>['pro
   return recs;
 }
 
+/**
+ * Escapa el HTML para que el texto del proyecto se muestre como texto.
+ *
+ * Los campos los escribe el estudiante y el resultado se inyecta con
+ * dangerouslySetInnerHTML, además de exportarse a un .doc que se comparte con
+ * tutores: sin escapar, cualquier etiqueta escrita en el proyecto se ejecutaba
+ * al abrir la vista previa o el archivo exportado.
+ */
+function esc(valor: unknown): string {
+  return String(valor ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function generarHtmlAcademico(p: ReturnType<typeof useProyectoGraduacion>['proyecto']): string {
-  const lista = (arr: string[]) => arr.filter((x) => x.trim()).map((x) => `<li>${x}</li>`).join('');
+  const lista = (arr: string[]) => arr.filter((x) => x.trim()).map((x) => `<li>${esc(x)}</li>`).join('');
   return `
-    <h1>${p.titulo || '(Sin título)'}</h1>
-    <p><em>${p.descripcion || ''}</em></p>
-    <p><strong>Área temática:</strong> ${p.areaTematica || '—'} &nbsp; <strong>Modalidad:</strong> ${p.modalidad || '—'} &nbsp; <strong>Avance:</strong> ${p.porcentajeAvance}%</p>
+    <h1>${esc(p.titulo) || '(Sin título)'}</h1>
+    <p><em>${esc(p.descripcion)}</em></p>
+    <p><strong>Área temática:</strong> ${esc(p.areaTematica) || '—'} &nbsp; <strong>Modalidad:</strong> ${esc(p.modalidad) || '—'} &nbsp; <strong>Avance:</strong> ${esc(p.porcentajeAvance)}%</p>
     <h2>1. Introducción</h2>
-    <p><strong>Planteamiento del problema:</strong> ${p.planteamientoProblema || '—'}</p>
-    <p><strong>Delimitación:</strong> ${p.delimitacion || '—'}</p>
-    <p><strong>Justificación:</strong> ${p.justificacion || '—'}</p>
+    <p><strong>Planteamiento del problema:</strong> ${esc(p.planteamientoProblema) || '—'}</p>
+    <p><strong>Delimitación:</strong> ${esc(p.delimitacion) || '—'}</p>
+    <p><strong>Justificación:</strong> ${esc(p.justificacion) || '—'}</p>
     <h2>2. Objetivos</h2>
-    <p><strong>Objetivo general:</strong> ${p.objetivoGeneral || '—'}</p>
+    <p><strong>Objetivo general:</strong> ${esc(p.objetivoGeneral) || '—'}</p>
     <p><strong>Objetivos específicos:</strong></p>
     <ul>${lista(p.objetivosEspecificos) || '<li>—</li>'}</ul>
     <h2>3. Marco Teórico</h2>
-    <p>${p.marcoTeorico || '—'}</p>
+    <p>${esc(p.marcoTeorico) || '—'}</p>
     <h2>4. Metodología</h2>
-    <p>${p.metodologia || '—'}</p>
+    <p>${esc(p.metodologia) || '—'}</p>
     <h2>5. Referencias</h2>
     <ul>${lista(p.referencias) || '<li>—</li>'}</ul>
     <h2>6. Cronograma</h2>
     <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%">
       <tr><th>Actividad</th><th>Inicio</th><th>Fin</th></tr>
-      ${p.cronograma.map((c) => `<tr><td>${c.actividad || '—'}</td><td>${c.inicio || '—'}</td><td>${c.fin || '—'}</td></tr>`).join('') || '<tr><td colspan="3">—</td></tr>'}
+      ${p.cronograma.map((c) => `<tr><td>${esc(c.actividad) || '—'}</td><td>${esc(c.inicio) || '—'}</td><td>${esc(c.fin) || '—'}</td></tr>`).join('') || '<tr><td colspan="3">—</td></tr>'}
     </table>
   `;
 }

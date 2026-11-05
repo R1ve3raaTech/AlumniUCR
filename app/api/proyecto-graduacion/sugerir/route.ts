@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { verificarSesion, noAutorizado } from '@/lib/auth/verificarSesionServidor';
 
 // IA de "Sugerir mejora" del asistente de Proyecto de Graduación.
 // Alcance ESTRICTO: solo mejora redacción de 4 campos (planteamiento del
@@ -19,6 +20,10 @@ const ETIQUETAS: Record<CampoPermitido, string> = {
 
 export async function POST(req: Request) {
   try {
+    // Exige sesión: esta ruta gasta API de Claude, y antes estaba abierta.
+    const sesion = await verificarSesion(req);
+    if (!sesion) return noAutorizado();
+
     // Instanciado dentro del handler, no a nivel de módulo: si la key falta,
     // el SDK explota al importar, tumbando la función con un 500 genérico
     // de Next.js en vez de un error diagnosticable (bug real que ya

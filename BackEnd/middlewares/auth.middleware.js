@@ -36,10 +36,13 @@ const autenticarUsuario = async (req, res, next) => {
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (error || !user) {
+            // El detalle del error de Supabase queda solo en el log del
+            // servidor: devolverlo al cliente describe el estado interno de la
+            // autenticación sin aportarle nada al usuario legítimo.
+            if (error) console.error('Auth: token rechazado por Supabase:', error.message);
             return res.status(401).json({
                 success: false,
-                mensaje: 'Token de autenticación inválido o expirado.',
-                error: error ? error.message : null
+                mensaje: 'Token de autenticación inválido o expirado.'
             });
         }
 

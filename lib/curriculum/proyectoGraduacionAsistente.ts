@@ -36,10 +36,14 @@ export async function guardarProyectoGraduacionAsistente(
 // Express) — mismo patrón que app/api/alumni-chat y app/api/resumen-usuario.
 export type CampoSugerible = 'planteamientoProblema' | 'justificacion' | 'objetivoGeneral' | 'objetivoEspecifico';
 
-export async function sugerirMejoraTexto(campo: CampoSugerible, texto: string): Promise<string> {
+// La ruta exige sesión (gasta API de Claude), así que hay que mandarle el token.
+export async function sugerirMejoraTexto(campo: CampoSugerible, texto: string, token?: string | null): Promise<string> {
   const res = await fetch('/api/proyecto-graduacion/sugerir', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ campo, texto }),
   });
   const data = await res.json();

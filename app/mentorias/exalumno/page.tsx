@@ -67,11 +67,30 @@ const NAV = [
 const cardClass = 'rounded-3xl border border-outline-variant/40 bg-surface-container-lowest shadow-[0_2px_12px_-4px_rgba(0,40,55,0.08)] transition-shadow duration-300 hover:shadow-[0_8px_24px_-10px_rgba(0,40,55,0.18)] p-6 bento-card';
 
 // Helper simple para renderizar Markdown a HTML con estilos de marca
+/**
+ * Escapa el HTML para que el texto se muestre como texto y nunca se ejecute.
+ *
+ * Es imprescindible acá: el contenido que entra viene de la IA, que resume
+ * datos de perfil escritos por otros usuarios. Sin escapar, un estudiante que
+ * pusiera <img src=x onerror=...> en su perfil lograba que ese script se
+ * ejecutara en el navegador del EXALUMNO al abrir el análisis (el resultado se
+ * inyecta con dangerouslySetInnerHTML). Como el JWT vive en localStorage, eso
+ * permitía robarle la sesión. Se escapa ANTES de aplicar el markdown, para que
+ * las etiquetas que genera parseMarkdownToHtml sigan funcionando.
+ */
+function escaparHtml(texto: string) {
+  return texto
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function parseMarkdownToHtml(markdown: string) {
   if (!markdown) return '';
-  let html = markdown
+  let html = escaparHtml(markdown)
     // Bold
-    .replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     // Bullet points
     .replace(/^\s*-\s+(.*?)$/gm, '<li class="ml-4 list-disc my-1.5 text-sm text-on-surface-variant">$1</li>')

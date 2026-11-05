@@ -61,9 +61,13 @@ export default function AdminUsuariosPage() {
     setResumenIA('');
     setCargandoResumen(true);
     try {
+      // La ruta exige sesión de admin (gasta API de Claude), de ahí el token.
       const res = await fetch('/api/resumen-usuario', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           usuario: {
             nombre: u.nombre,
